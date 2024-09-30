@@ -1,12 +1,7 @@
 # dependencies
 library(startR)
-source( "clim4health_load.R" )
 
-
-clim4health_index <- function (path, var, mod_vals = TRUE,  non_values = NA, sel_val = 1, bigger_val = 0, lower_val = 0, bigger_close = FALSE, lower_close = FALSE) {
-
-  # Load the qube with startR
-  qube <- clim4health_load (path, var)
+clim4health_index <- function (qube, mod_vals = TRUE,  non_values = NA, sel_val = 1, bigger_val = 0, lower_val = 0, bigger_close = FALSE, lower_close = FALSE) {
 
   # Don't modify the values that do not accomplish the condition
   if (!mod_vals) {
@@ -36,6 +31,3 @@ clim4health_index <- function (path, var, mod_vals = TRUE,  non_values = NA, sel
 
   return (qube_modified)
 }
-
-
-
