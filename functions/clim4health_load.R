@@ -13,14 +13,13 @@ clim4health_load <- function(path, var = NULL) {
       
       # Use startR function to open the files
       data <- Start(
-             dataset     = path,
-             var         = var,
-             time        = "all",
-             ensemble    = "all",
-             latitude    = "all",
-             longitude   = "all",
-             return_vars = list(time = NULL, latitude = NULL, longitude = NULL),
-             retrieve    = TRUE)
+            dataset     = path,
+            var         = var,
+            time        = "all",
+            ensemble    = "all",
+            latitude    = "all",
+            longitude   = "all",
+            retrieve    = TRUE)
 
     } else {
 
@@ -30,4 +29,5 @@ clim4health_load <- function(path, var = NULL) {
     }
 
   return (data)
+
 }
