@@ -4,9 +4,10 @@
 library(startR)
 library(lubridate)
 library(easyNCDF)
+library(CSTools)
 
 # main function
-clim4health_load <- function(path, var = NULL) {
+clim4health_load <- function(path, var = NULL, lat_selection = 'all', lon_selection = 'all') {
 
     # Read .csv files
     if (all(tools::file_ext(path) == 'csv')) {
@@ -31,12 +32,29 @@ clim4health_load <- function(path, var = NULL) {
         lon <- c(lon, as.integer(strsplit(coords[cc], '; ')[[1]][2]))
       }
 
-      # convert values to array # potential issue depending on the row order in the csv !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      data.array <- array(data[,var.col], dim = c(latitude = length(lat), longitude = length(lon), time = length(dates))) 
-      
+      # convert table to array
+      #data.array <- array(data[,var.col], dim = c(latitude = length(lat), longitude = length(lon), time = length(dates))) 
+      data.array <- array(NA, dim = c(latitude = length(lat), longitude = length(lon), time = length(dates))) 
+      for(ll in 1:length(lat)){
+        data.array[ll, ll, ] <- data[which(data[,lat.col]==lat[ll] & data[,lon.col]==lon[ll]),var.col]
+      }
+
       # format to s2dv_cube
       data <- list(data = data.array, coords = list(latitude = lat, longitude = lon, time = dates))
       attr(data, 'class') <- 's2dv_cube'
+
+      # subset to only the requested coordinates (lat_selection and lon_selection)
+      if (any(lat_selection == 'all')){
+        lat_select <- 1:length(lat)
+      } else {
+        lat_select <- which(lat >= lat_selection[1] & lat <= lat_selection[2])
+      }
+      if (any(lon_selection == 'all')){
+        lon_select <- 1:length(lon)
+      } else {
+        lon_select <- which(lon >= lon_selection[1] & lon <= lon_selection[2])
+      }
+      data <- CST_Subset(data, along = c('latitude', 'longitude'), indices = list(lat_select, lon_select), drop = 'none')
 
     # Read .nc files
     } else if (all(tools::file_ext(path) == 'nc')) {
@@ -53,13 +71,13 @@ clim4health_load <- function(path, var = NULL) {
       # Use startR function to open the files
       if (any(c('ensemble', 'member', 'number') %in% names(NcReadDims(path)))){
         data <- Start(
-              dataset     = dataset,
-              var         = var,
-              time        = "all",
-              ensemble    = "all",
-              latitude = 'all', #values(list(42, 45)),
+              dataset = dataset,
+              var = var,
+              time = "all",
+              ensemble = "all",
+              latitude = 'all', #ifelse(lat_selection == 'all', 'all', values(list(lat_selection[1], lat_selection[2]))), #values(list(42, 45)),
               latitude_reorder = Sort(decreasing = TRUE),
-              longitude = 'all', #values(list(0, 3)),
+              longitude = 'all', #ifelse(lon_selection == 'all', 'all', values(list(lon_selection[1], lon_selection[2]))), #values(list(0, 3)),
               longitude_reorder = CircularSort(-180, 180),
               synonims = list(latitude = c('lat', 'latitude'),
                                       longitude = c('lon', 'longitude'),
@@ -68,18 +86,37 @@ clim4health_load <- function(path, var = NULL) {
               retrieve    = TRUE)
       } else {
         data <- Start(
-              dataset     = dataset,
-              var         = var,
-              time        = "all",
-              latitude = 'all', #values(list(42, 45)),
+              dataset = dataset,
+              var = var,
+              time = "all",
+              latitude = 'all', #ifelse(lat_selection == 'all', 'all', values(list(lat_selection[1], lat_selection[2]))), #values(list(42, 45)),
               latitude_reorder = Sort(decreasing = TRUE),
-              longitude = 'all', #values(list(0, 3)),
+              longitude = 'all', #ifelse(lon_selection == 'all', 'all', values(list(lon_selection[1], lon_selection[2]))), #values(list(0, 3)),
               longitude_reorder = CircularSort(-180, 180),
               synonims = list(latitude = c('lat', 'latitude'),
                                       longitude = c('lon', 'longitude'),
                                       time = c('time', 'date', 'month')),
               retrieve    = TRUE)
       }
+
+      # transform to sd2v_cube
+      data <- as.s2dv_cube(data)
+
+      # subset lat lon
+      lat <- data$coords$latitude
+      lon <- data$coords$longitude
+      if (any(lat_selection == 'all')){
+        lat_select <- 1:length(lat)
+      } else {
+        lat_select <- which(lat >= lat_selection[1] & lat <= lat_selection[2])
+      }
+      if (any(lon_selection == 'all')){
+        lon_select <- 1:length(lon)
+      } else {
+        lon_select <- which(lon >= lon_selection[1] & lon <= lon_selection[2])
+      }
+      data <- CST_Subset(data, along = c('latitude', 'longitude'), indices = list(lat_select, lon_select), drop = 'none')
+
     } else {
 
       # If the extension of the files is not in the previous if conditions stop the script
