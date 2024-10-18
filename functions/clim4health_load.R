@@ -1,4 +1,4 @@
-# load data into R object
+# function to load data into R object as s2dv_cube (array with metadata)
 
 # dependencies
 library(startR)
@@ -120,7 +120,7 @@ clim4health_load <- function(path, var = NULL, lat_selection = 'all', lon_select
     } else {
 
       # If the extension of the files is not in the previous if conditions stop the script
-      stop ("The type_file has to be csv or nc, not other type files are allowed at the moment")
+      stop ("The type_file has to be csv or nc, no other type files are allowed at the moment")
     
     }
 

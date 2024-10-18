@@ -1,0 +1,11 @@
+# example:
+source('functions/clim4health_load.R')
+source('functions/clim4health_index.R')
+data <- clim4health_load('sample_data/era5land/t2m_201205.nc')
+upper_threshold <- 290
+lower_threshold <- 280
+upper_close <- TRUE
+lower_close <- TRUE
+s2dv::PlotEquiMap(var = qube, lat = data$coords$lat, lon = data$coords$lon, filled.continents = FALSE, fileout = 'plot_qube.png')
+s2dv::PlotEquiMap(var = qube_modified, lat = data$coords$lat, lon = data$coords$lon, filled.continents = FALSE, fileout = 'plot_0-1.png')
+s2dv::PlotEquiMap(var = data$data, lat = data$coords$lat, lon = data$coords$lon, filled.continents = FALSE, fileout = 'plot_original.png')
