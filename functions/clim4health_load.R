@@ -25,7 +25,12 @@ clim4health_load <- function(path, var = NULL, lat_selection = 'all', lon_select
       # obtain metadata
       lat <- c() # initialise
       lon <- c() # initialise
-      dates <- as.Date(unique(data[,time.col]))
+      #dates <- as.Date(unique(data[,time.col]), format = "%d-%m-%Y", "%Y/%m/%d")
+      if (any(is.na(ymd(unique(data[,time.col]))))){
+        dates <- dmy(unique(data[,time.col]))
+      } else {
+        dates <- ymd(unique(data[,time.com]))
+      }
       coords <- unique(paste0(data[,lat.col], '; ', data[,lon.col]))
       for (cc in 1:length(coords)){
         lat <- c(lat, as.integer(strsplit(coords[cc], '; ')[[1]][1]))
@@ -99,9 +104,23 @@ clim4health_load <- function(path, var = NULL, lat_selection = 'all', lon_select
               retrieve    = TRUE)
       }
 
+      # keep dates
+      dim_attributes <- attr(data, "Variables")$common[[var]]$dim
+      for (dd in 1:length(dim_attributes)){
+        if (dim_attributes[[dd]]$name == 'time'){
+          time_attributes <- dim_attributes[[dd]]
+        }
+      }
+      time_units_number <- time_attributes$vals
+      time_units_units <- time_attributes$units # "hours since..."
+      if ("hours since " %in% time_units_units){
+        metadata_dates <- as.Date(gsub("hours since ", "", time_units_units)) + time_units_number/24 # /24 from hours to days
+      } 
+
       # transform to sd2v_cube
       data <- as.s2dv_cube(data)
-
+      data$coords$time <- metadata_dates
+      
       # subset lat lon
       lat <- data$coords$latitude
       lon <- data$coords$longitude
