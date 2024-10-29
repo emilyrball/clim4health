@@ -2,12 +2,17 @@
 #'
 #' @param pat Your personal acces token (PAT). You can find your PAT in your CDS
 #' profile after logging in.
-#' @param timeres Can be 'hourly' or 'monthly'. Default is 'hourly'.
+#' @param dataset The name of the dataset you want to load. available datasets
+#' can be found via clim4health_get_datasets().
+#' @param product_type The product type that you want to load. Available
+#' variables can be found via clim4health_get_product_types().
+#' @param variable The variable that you want to load. Available variables can
+#' be found via clim4health_get_variables().
 #' @param years A vector of years, starting in 1950.
 #' @param months A vector of months. e.g. c(1,2) for January and February.
 #' Default is all months.
 #' @param days A vector of days in the month. Default is all days.
-#' @param times A vector of hours (0-23). Only needed when timeres = 'hourly'.
+#' @param times A vector of hours (0-23). Only needed when datasets are hourly.
 #' Default is all hours.
 #' @param coords A vector of coordinates. (in order: South, North, West, East)
 #' @param outname The name (and path) of the resultant netcdf file
@@ -32,13 +37,15 @@ clim4health_get(pat = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
                 coords = c(43, 2.5, 42.5, 3))
 
 clim4health_get(pat = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-                timeres = "monthly",
                 years = c(2020), coords = c(43, 2.9, 42.9, 3),
                 outname = "dailytest")
 
+source("dataset_info.R")
 
 clim4health_get <- function(pat,
-                            timeres = "hourly",
+                            dataset,
+                            product_type,
+                            variable,
                             years,
                             months = c(1:12),
                             days = c(1:31),
@@ -47,8 +54,22 @@ clim4health_get <- function(pat,
                             outname = paste0("clim4health_")) {
 
   # check the parameters of the function and give error messages
-  if (!(timeres %in% c("hourly", "monthly"))) {
-    stop(paste0("Value for time resolution is not valid. Must be 'hourly' or 'monthly' but is ", timeres))
+  datasets <- names(datasets_info)
+
+  if (!dataset %in% datasets){
+    stop(paste0("Dataset is not valid. Dataset must be one of the following: ",
+                paste(datasets, collapse = ", ")))
+  }
+  if (!product_type %in% datasets_info[[dataset]][["product_types"]]) {
+    stop(paste0("Product type is not valid. For the selected dataset,
+                product type must be one of the following: ",
+                paste(datasets_info[[dataset]][["product_types"]],
+                      collapse = ", ")))
+  }
+  if (!variable %in% datasets_info[[dataset]][["variables"]]) {
+    stop(paste0("Variable is not valid. For the selected dataset,
+         variable must be one of the following: ",
+         paste(datasets_info[[dataset]][["variables"]], collapse = ", ")))
   }
   if (!(is.numeric(years)) || any(years > format(Sys.Date(), "%Y")) || any(years < 1950)) {
     stop("Years but be numeric and between 1950 and current year.")
@@ -78,13 +99,9 @@ clim4health_get <- function(pat,
     outname <- substr(outname, 1, nchar(outname) - 3)
   }
   # select monthly data if monthly, other wise use the hourly data
-  if (timeres == "monthly") {
-    source <- "reanalysis-era5-land-monthly-means"
-    product <- "monthly_averaged_reanalysis"
+  if (grepl("monthly",dataset)) {
     time <- "'00:00'"
   } else {
-    source <- "reanalysis-era5-land"
-    product <- "reanalysis"
     time <- paste0(sprintf("%02d", times), ":00")
   }
 
@@ -97,9 +114,9 @@ clim4health_get <- function(pat,
   for (year in years) {
     for (month in months) {
       request <- list(
-        dataset_short_name = source,
-        product_type = product,
-        variable = "2m_temperature",
+        dataset_short_name = dataset,
+        product_type = product_type,
+        variable = variable,
         year = year,
         month = month,
         day = days,
@@ -119,3 +136,5 @@ clim4health_get <- function(pat,
     }
   }
 }
+
+### END
