@@ -113,7 +113,7 @@ clim4health_load <- function(path, var = NULL, lat_selection = 'all', lon_select
       }
       time_units_number <- time_attributes$vals
       time_units_units <- time_attributes$units # "hours since..."
-      if ("hours since " %in% time_units_units){
+      if (grepl("hours since ", time_units_units, fixed = TRUE)){
         metadata_dates <- as.Date(gsub("hours since ", "", time_units_units)) + time_units_number/24 # /24 from hours to days
       } 
 
