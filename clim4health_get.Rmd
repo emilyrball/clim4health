@@ -1,0 +1,141 @@
+---
+output: html_document
+---
+
+# clim4health_GET
+
+The objective of clim4health_get is to download climate data from the Copernicus Climate Data Store (CDS). To access data from the CDS, authentication is required. In the function call you need to specify your personal access token and all details of the dataset you want. The function will save the dataset as a netcdf file in
+
+---
+
+## 1. Obtain your Personal Access Token (PAT)
+
+---
+
+
+If you don't already have an ECMWF account, you can go to the [ECMWF page](https://www.ecmwf.int/) and create a new account.
+With these credentials you can now log into the [CDS](https://cds.climate.copernicus.eu/). Under "your profile", you can find your personal access token. Save your personal access token, you will need it in [step 4](##-4.-Get-the-data)
+
+### Using Non European contributions
+
+If you will be using Non European contributions, such as XXX. Then you need to agree to the additional dataset license, which you can find under your profile too.
+
+---
+
+## 2. Working directory and library dependencies
+
+---
+
+Obtain current path, which need to be the path where the clim4health repository is cloned, and source the *clim4health_get* function
+
+```r
+path <- getwd()
+source(paste0(path, '/functions/clim4health_get.R'))        
+```
+
+At the moment the function is loaded, the dependencies will also be loaded, if some error ocurres, make sure that all the necessary dependencies are installed:
+
+```
+install.packages("ecmwfr")
+library(ecmwfr)
+```
+
+## 3. Decide what data you need
+
+If you already know which datasets, variables and parameters you require can skip this step.
+
+You can check all the datasets that are currently available by calling the clim4health_get_datasets() function:
+
+```{r setup, eval = FALSE}
+clim4health_get_datasets()
+```
+
+The result will look like this
+
+``` 
+Available climate datasets:
+- reanalysis-era5-land 
+- reanalysis-era5-land-monthly-means 
+- reanalysis-era5-single-levels 
+- reanalysis-era5-single-levels-monthly-means 
+- seasonal-monthly-single-levels 
+```
+
+Once you know which dataset you will use, you need the variables
+
+
+```{r cars, eval = FALSE}
+clim4health_get_variables()
+```
+
+Which will yield a result like this:
+
+```
+Available climate variables are:
+- 2m_dewpoint_temperature 
+- 2m_temperature 
+- skin_temperature 
+- soil_temperature_level_1 
+- soil_temperature_level_2 
+.....
+```
+
+Finally, each dataset can have a different set of required parameters. All require a set time period and spatial extent, other may require additional information such as 
+
+```r
+function
+```
+
+---
+
+## 4. Get the data
+
+---
+
+```r
+clim4health_get(pat = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                dataset = "reanalysis-era5-land-monthly-means",
+                product_types = "monthly_averaged_reanalysis",
+                variable = "2m_temperature",
+                years = c(2010, 2011, 2012),
+                months = c(4, 5),
+                coords = c(33, -93, -23, -17),
+                outname = "era5land")
+```
+
+```r
+clim4health_get(pat = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                dataset = "seasonal-monthly-single-levels",
+                originating_centre = c("ecmwf"),
+                system = c("51"),
+                variable = c("2m_temperature"),
+                product_types = c("monthly_mean"),
+                year = c("2010", "2011", "2012"),
+                month = c("04"),
+                leadtime_month = c("1", "2", "3"),
+                coords = c(33, -93, -23, -17),
+                outname = "hindcast")
+```
+
+```r
+clim4health_get(pat = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                dataset = "seasonal-monthly-single-levels",
+                originating_centre = c("ecmwf"),
+                system = c("51"),
+                variable = c("2m_temperature"),
+                product_types = c("monthly_mean"),
+                year = c("2024"),
+                month = c("04"),
+                leadtime_month = c("1", "2", "3"),
+                coords = c(33, -93, -23, -17),
+                outname = "forecast")
+```
+
+
+
+<!-- ## Potential errorsNon European contributions, -->
+
+<!-- ``` -->
+<!-- Error: permission deniedrequired licences not accepted403Not all the required licences have been accepted; please visit https://cds.climate.copernicus.eu/datasets/seasonal-monthly-single-levels?tab=download#manage-licences to accept the required licence(s).https://cds.climate.copernicus.eu/api/retrieve/v1/processes/seasonal-monthly-single-levels/executeeca44435-0976-4e4f-b864-a3c43d108ba4 -->
+<!-- ``` -->
+<!-- if this fails, you may need to accept a special license at this link: https://cds.climate.copernicus.eu/datasets/seasonal-monthly-single-levels?tab=download#manage-licences -->
