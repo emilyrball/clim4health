@@ -1,10 +1,13 @@
 <img src='figures/general/logo_harmonize.png' align="left" height="50" /></a>
-<img src='figures/general/logo_bsc.png' align="right" height="50" /></a>
+<img src='figures/general/logo_bsc.png' align="left" height="50" /></a>
 
+<br>
 <br>
 
 <img src='figures/general/logo_clim4health.svg' align="left" height="100" /></a>
 
+<br>
+<br>
 <br>
 
 # Tutorial to use clim4health_load function 
