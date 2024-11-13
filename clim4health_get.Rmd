@@ -16,7 +16,7 @@ The objective of clim4health_get is to download climate data from the Copernicus
 If you don't already have an ECMWF account, you can go to the [ECMWF page](https://www.ecmwf.int/) and create a new account.
 With these credentials you can now log into the [CDS](https://cds.climate.copernicus.eu/). Under "your profile", you can find your personal access token. Save your personal access token, you will need it in [step 4](##-4.-Get-the-data)
 
-### Using Non European contributions
+#### Using Non European contributions
 
 If you will be using Non European contributions, such as XXX. Then you need to agree to the additional dataset license, which you can find under your profile too.
 
@@ -33,9 +33,9 @@ path <- getwd()
 source(paste0(path, '/functions/clim4health_get.R'))        
 ```
 
-At the moment the function is loaded, the dependencies will also be loaded, if some error ocurres, make sure that all the necessary dependencies are installed:
+At the moment the function is loaded, the dependencies will also be loaded, if some error occurs, make sure that all the necessary dependencies are installed:
 
-```
+```r
 install.packages("ecmwfr")
 library(ecmwfr)
 ```
@@ -44,15 +44,11 @@ library(ecmwfr)
 
 If you already know which datasets, variables and parameters you require can skip this step.
 
-You can check all the datasets that are currently available by calling the clim4health_get_datasets() function:
+To know what to ask for in the function, you can use clim4health_get_help().
+If the function is run without any parameters, it will return the datasets that are currently available to download within clim4health. It will look like this
 
-```{r setup, eval = FALSE}
-clim4health_get_datasets()
-```
-
-The result will look like this
-
-``` 
+``` r
+> clim4health_get_help()
 Available climate datasets:
 - reanalysis-era5-land 
 - reanalysis-era5-land-monthly-means 
@@ -61,29 +57,28 @@ Available climate datasets:
 - seasonal-monthly-single-levels 
 ```
 
-Once you know which dataset you will use, you need the variables
+Once you know what dataset you will be using, you can run the function with your selected dataset as a parameter to obtain the required parameters needed to download it. It look like follows:
 
-
-```{r cars, eval = FALSE}
-clim4health_get_variables()
-```
-
-Which will yield a result like this:
-
-```
-Available climate variables are:
-- 2m_dewpoint_temperature 
-- 2m_temperature 
-- skin_temperature 
-- soil_temperature_level_1 
-- soil_temperature_level_2 
-.....
+```r
+> clim4health_get_help("reanalysis-era5-land")
+Required parameters:
+- product_types 
+- variables 
+- years 
+- months 
 ```
 
 Finally, each dataset can have a different set of required parameters. All require a set time period and spatial extent, other may require additional information such as 
 
 ```r
-function
+> clim4health_get_help("reanalysis-era5-land", "variables")
+Possible options for variables:
+- 2m_dewpoint_temperature 
+- 2m_temperature 
+- skin_temperature 
+- soil_temperature_level_1 
+- soil_temperature_level_2 
+...
 ```
 
 ---
@@ -91,6 +86,9 @@ function
 ## 4. Get the data
 
 ---
+
+Once you know your PAT, the dataset, and the required parameters you can call clim4health like you can see below. In these 3 examples, you will download reanalysis data from era5land, and the seasonal forecats, once as hindcast and once as forecast.
+These will be the sample data that the rest of the functions are working with.
 
 ```r
 clim4health_get(pat = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
