@@ -1,9 +1,10 @@
 <img src='figures/general/logo_harmonize.png' align="left" height="50" /></a>
+<img src='figures/general/logo_clim4health.svg' align="centered" height="50" /></a>
 <img src='figures/general/logo_bsc.png' align="right" height="50" /></a>
 
 <br>
 
-# <img src='figures/general/logo_clim4health.svg' align="left" height="100" /></a> Tutorial to use clim4health_load function 
+# Tutorial to use clim4health_load function 
 
 *clim4health_load* allows to load data from a local file in the *.csv* or *.nc* (netcdf file) formats. The data will be loaded in the R session as a *s2dv_cube* object which can be input in other *clim4health* functions.
 ![clim4health_structure_load](./figures/clim4health_load/clim4health_structure_load.png)
