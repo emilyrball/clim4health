@@ -1,6 +1,15 @@
-# Tutorial to use clim4health function
+# Tutorial to use clim4health_load function
+<img src='figures/general/logo_clim4health.svg' align="right" height="139" /></a>
+<img src='figures/general/logo_harmonize.svg' align="right" height="139" /></a>
+<img src='figures/general/logo_bsc.svg' align="right" height="139" /></a>
 
-## Objective
+*clim4health_load* allows to load data from a local file in the *.csv* or *.nc* (netcdf file) formats. The data will be loaded in the R session as a *s2dv_cube* object which can be input in other *clim4health* functions.
+<img src='figures/clim4health_load/clim4health_structure_load.svg' align="right" height="139" /></a>
+
+*s2dv_cube* is an object in the form of a multidimensional array, containing one or several variables in the dimensions of latitude, longitude and time, and the possibility of more dimensions (like ensemble member and/or leadtime). In addition to the array structure, the object includes attributes or information about its metadata, like the values of its coordinates or the name of the original files.
+![s2dv_cube](./figures/general/s2dv_cube.png)
+
+## Objective of this tutorial
 - To show how to load a forecast with its corresponding hindcast and reference reanalysis in a format that allows for the application of other **clim4health** functions
 - To show how to load data from a .csv in a format that allows for the application of other clim4health functions (e.g. *clim4health_postprocess* to obtain downscaled forecasts to point locations)
 
@@ -8,8 +17,8 @@
 Obtain current path, which need to be the path where the clim4health repository is cloned, and source the *clim4health_load* function
 
 ```r
-path <- getwd()
-source(paste0(path, '/functions/clim4health_load.R'))        
+clim4health_path <- getwd()
+source(paste0(clim4health_path, '/functions/clim4health_load.R'))        
 ```
 
 At the moment the function is loaded, the dependencies will also be loaded, if some error ocurres, make sure that all the necessary dependencies are installed:
@@ -33,8 +42,7 @@ library(CSTools)
 Load forecast data from sample data in **clim4health**, it is possible to select a different path to load a forecast from a different file
 
 ```r
-path <- getwd()
-fcst <- clim4health_load(paste0(path, '/sample_data/ecmwf51/forecast/t2m_20240401.nc'))        
+fcst <- clim4health_load(paste0(clim4health_path, '/sample_data/ecmwf51/forecast/t2m_20240401.nc'))        
 ```
 
 ### Check loaded forecast
@@ -79,9 +87,8 @@ Load hindcast (past forecast) and reference dataset (from netcdf or csv) from sa
 In this case we want to load the hindcast issued in the same month as the forecast (in this example April) but for each of the year in the past (in this case 2010, 2011 and 2012)
 
 ```r
-path <- getwd()
 for (yy in c(2010, 2011, 2012)){
-    hcst <- clim4health_load(paste0(path, '/sample_data/ecmwf51/hindcast/t2m_', yy, '0401.nc'))        
+    hcst <- clim4health_load(paste0(clim4health_path, '/sample_data/ecmwf51/hindcast/t2m_', yy, '0401.nc'))        
 }
 ```
 
