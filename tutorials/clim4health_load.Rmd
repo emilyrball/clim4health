@@ -4,7 +4,7 @@
 <br>
 <br>
 
-<img src='figures/general/logo_clim4health.svg' align="left" height="100" /></a>
+<img src='figures/general/logo_clim4health.svg' align="right" height="100" /></a>
 
 <br>
 <br>
