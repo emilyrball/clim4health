@@ -1,8 +1,7 @@
 <img src='figures/general/logo_harmonize.png' align="left" height="50" /></a>
 <img src='figures/general/logo_bsc.png' align="right" height="50" /></a>
 
-
-
+&nbsp
 
 # Tutorial to use clim4health_load function <img src='figures/general/logo_clim4health.svg' align="right" height="100" /></a>
 
