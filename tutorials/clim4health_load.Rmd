@@ -1,10 +1,9 @@
-# Tutorial to use clim4health_load function 
-<img src='figures/general/logo_clim4health.svg' align="left" height="139" /></a>
-<img src='figures/general/logo_harmonize.png' align="right" height="139" /></a>
-<img src='figures/general/logo_bsc.png' align="center" height="139" /></a>
+# Tutorial to use clim4health_load function <img src='figures/general/logo_clim4health.svg' align="right" height="139" /></a>
+<img src='figures/general/logo_harmonize.png' align="center" height="50" /></a>
+<img src='figures/general/logo_bsc.png' align="right" height="50" /></a>
 
 *clim4health_load* allows to load data from a local file in the *.csv* or *.nc* (netcdf file) formats. The data will be loaded in the R session as a *s2dv_cube* object which can be input in other *clim4health* functions.
-<img src='figures/clim4health_load/clim4health_structure_load.svg' align="right" height="139" /></a>
+![clim4health_structure_load](./figures/clim4health_load/clim4health_structure_load.png)
 
 *s2dv_cube* is an object in the form of a multidimensional array, containing one or several variables in the dimensions of latitude, longitude and time, and the possibility of more dimensions (like ensemble member and/or leadtime). In addition to the array structure, the object includes attributes or information about its metadata, like the values of its coordinates or the name of the original files.
 ![s2dv_cube](./figures/general/s2dv_cube.png)
