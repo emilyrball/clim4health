@@ -2,6 +2,7 @@
 
 # dependencies
 library(startR)
+library(s2dv)
 library(lubridate)
 library(easyNCDF)
 library(CSTools)
