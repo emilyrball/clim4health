@@ -1,36 +1,45 @@
+# function to obtain a threshold-based indicator, maintaining the same object dimensions and adding information to the metadata
+
 # dependencies
-library(startR)
+# none
 
+clim4health_index <- function (data, mod_vals = TRUE,  lower_threshold = 0, upper_threshold = 0, lower_close = FALSE, upper_close = FALSE) {
 
-clim4health_index <- function (qube, mod_vals = TRUE,  non_values = NA, sel_val = 1, bigger_val = 0, lower_val = 0, bigger_close = FALSE, lower_close = FALSE) {
+    qube <- data$data
 
-  # Don't modify the values that do not accomplish the condition
-  if (mod_vals == FALSE) {
+    # Modify the values in the indicated range
+    if (upper_close && lower_close) {
 
-    non_values = qube
-  
-  }
+        qube_modified <- ifelse(qube >= lower_threshold & qube <= upper_threshold, 1, 0)
+    
+    } else if (upper_close && lower_close == FALSE) {
 
-  # Modify the values in the indicated range
-  if (bigger_close && lower_close) {
+        qube_modified <- ifelse(qube >= lower_threshold & qube < upper_threshold, 1, 0)
+    
+    } else if (upper_close == FALSE && lower_close) {
 
-    qube_modified <- ifelse(qube >= lower_val & qube <= bigger_val, sel_val, non_values)
-  
-  } else if (bigger_close && lower_close == FALSE) {
+        qube_modified <- ifelse(qube > lower_threshold & qube <= upper_threshold, 1, 0)
+    
+    } else {
 
-    qube_modified <- ifelse(qube >= lower_val & qube < bigger_val, sel_val, non_values)
-  
-  } else if (bigger_close == FALSE && lower_close) {
+        qube_modified <- ifelse(qube > lower_threshold & qube < upper_threshold, 1, 0)
+    
+    }
+    
+    # if mod_vals == TRUE, return original values where the condition is fullfilled and NA where it is not
+    # else, return 1 where the condition is fullfielled and 0 where it is not
+    if (mod_vals) {
+        qube[which(qube_modified == 0)] <- NA
+    } else {
+        qube <- qube_modified
+    }
 
-    qube_modified <- ifelse(qube > lower_val & qube <= bigger_val, sel_val, non_values)
-  
-  } else {
-
-    qube_modified <- ifelse(qube > lower_val & qube < bigger_val, sel_val, non_values)
-  
-  }
-  
-  qube[] <- qube_modified
-
-  return (qube)
+    # metadata
+    result <- data
+    result$data <- qube
+    result$attrs$index$mod_vals <- mod_vals
+    result$attrs$index$lower_threshold <- paste0(ifelse(lower_close, '>=', '>'), lower_threshold)
+    result$attrs$index$upper_threshold <- paste0(ifelse(upper_close, '<=', '<'), upper_threshold)
+    
+    return (result)
 }

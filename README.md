@@ -23,5 +23,6 @@ The functions that are part of the tool allow for:
 - POSTPROCESS: calibration/downscaling and quality assessment -> Alba
 - INDEX: calculation of simple indices (threshold based) to return NA vs original values or 0 vs 1 -> Raúl
 - TIME: temporal harmonization from subdaily to daily, daily to weekly, daily to monthly, and monthly to annual -> Raúl
+- TABLE: from array to table -> Alba
 - PLOT: visualization (save plot png) -> (to do later)
 - SAVE: transform array to table and save as csv or save grid -> (to do later)
