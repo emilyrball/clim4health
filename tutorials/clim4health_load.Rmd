@@ -12,30 +12,29 @@
 
 # Tutorial to use clim4health_load function 
 
-*clim4health_load* allows to load data from a local file in the *.csv* or *.nc* (netcdf file) formats. The data will be loaded in the R session as a *s2dv_cube* object which can be input in other *clim4health* functions.
+*clim4health_load* allows the user to load data from a local file in either *.csv* or *.nc* (netcdf file) format. The data will be loaded in the R session as an *s2dv_cube* object which can be input in other *clim4health* functions. *s2dv_cube* objects are discussed in more detail later in this tutorial.
 
+The general process to follow when using the *clim4health* package is:
 <br>
 
 ![clim4health_structure_load](./figures/clim4health_load/clim4health_structure_load.png)
 
-*s2dv_cube* is an object in the form of a multidimensional array, containing one or several variables in the dimensions of latitude, longitude and time, and the possibility of more dimensions (like ensemble member and/or leadtime). In addition to the array structure, the object includes attributes or information about its metadata, like the values of its coordinates or the name of the original files.
-![s2dv_cube](./figures/general/s2dv_cube.png)
 
 ## Objectives of this tutorial
 - To show how to load a forecast with its corresponding hindcast and reference reanalysis in a format that allows for the application of other **clim4health** functions
 - To show how to load data from a .csv in a format that allows for the application of other clim4health functions (e.g. *clim4health_postprocess* to obtain downscaled forecasts to point locations)
 
 ### Working directory and library dependencies
-Obtain current path, which need to be the path where the clim4health repository is cloned, and source the *clim4health_load* function
+First obtain current path, which needs to be the path where the clim4health repository is cloned, and source the *clim4health_load* function
 
 ```r
 clim4health_path <- getwd()
 source(paste0(clim4health_path, '/functions/clim4health_load.R'))        
 ```
 
-At the moment the function is loaded, the dependencies will also be loaded, if some error ocurres, make sure that all the necessary dependencies are installed:
+When the function is loaded, the dependencies will also be loaded - if some error occurs, make sure that all the necessary dependencies are installed:
 
-```
+```R
 install.packages("startR")
 library(startR)
 
@@ -50,12 +49,26 @@ library(CSTools)
 ```
 
 ### Climate data
+This tutorial uses several different types of climate data.
+- **Observations** of climate data are directly observed meteorological variables that come from a variety of sources, including satellites, radar, meteorological stations, aircraft, buoys, and more. Some of these formats are records of climate data in only one location. An example of observational data can be found ![in the copernicus climate data store](https://cds.climate.copernicus.eu/datasets/insitu-observations-gruan-reference-network?tab=overview) and the diagram below illustrates a global system of observations.
 
-- Observations
-- Reanalysis
-- Climate predictions
+    ![WMO-global-observing-system](./figures/clim4health_load/WMO-global-observing-system.jpg){width=50%}
 
-(to be further explained)
+- **Reanalyses** are another form of "observed" climate data, and are what will be used in this tutorial. Reanalysis datasets are created by running a climate model that is combined with observational data. The benefit of reanalysis data is that it is a physically-consistent, temporally and spatially gridded dataset of past climate, which can be useful if direct observational coverage is sparse. It can also be useful because we can obtain estimates of variables that were not directly observed.
+
+![ecmwf_reanalysis](./figures/clim4health_load/ecmwf_reanalysis.jpg){width=50%}![spatial_resolution](./figures/clim4health_load/spatial_resolution_cajamarca.png){width=50%}
+
+- **Climate predictions** are model-based projections of *future* climate. This future can be 1 week, 1 month, 1 year, or 10 years away depending on the question being asked. Typically climate projections are created using some initial condition (based on the current state of the weather/climate/ocean) and, if they are long term, can be forced by long-term projections of future greenhouse gases and aerosol concentrations.
+    - Climate predictions are often run with multiple **ensemble members**, which are the same experiment run multiple times starting from slightly different initial conditions. The figure below illustrates how multiple ensemble members can result in different predictions.
+    - A **forecast** is one type of prediction which can predict weather on timescales of days/weeks and climate on scales of months/years. This tutorial will use **seasonal forecasts**, which predict climate for the upcoming months.
+    - It is possible to use an initial condition from the past to generate a prediction of past climate, called a **hindcast**.
+![ensemble_members](./figures/clim4health_load/ensemble_members.jpg)
+
+clim4health_load loads climate data from a netCDF or csv file into R in the form of an *s2dv_cube*.
+
+*s2dv_cube* is an object in the form of a multidimensional array, containing one or more variables in the dimensions of latitude, longitude and time, and the possibility of more dimensions (like ensemble member and/or leadtime). In addition to the array structure, the object includes attributes or information about its metadata, like the values of its coordinates or the name of the original files.
+![s2dv_cube](./figures/general/s2dv_cube.png)
+
 
 ### Load forecast
 Load forecast data from sample data in **clim4health**, it is possible to select a different path to load a forecast from a different file
