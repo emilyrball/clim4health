@@ -67,6 +67,7 @@ This tutorial uses several different types of climate data.
 clim4health_load loads climate data from a netCDF or csv file into R in the form of an *s2dv_cube*.
 
 *s2dv_cube* is an object in the form of a multidimensional array, containing one or more variables in the dimensions of latitude, longitude and time, and the possibility of more dimensions (like ensemble member and/or leadtime). In addition to the array structure, the object includes attributes or information about its metadata, like the values of its coordinates or the name of the original files.
+
 ![s2dv_cube](./figures/general/s2dv_cube.png)
 
 
