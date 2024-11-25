@@ -27,3 +27,21 @@ dim(fcst$data)
 table.test<- clim4health_table(fcst)
 
 fcst$data[1,1,1,1,1,1]
+
+
+
+# Example s2dv_cube structure
+example_array <- list(
+   data = array(data = runif(24), dim = c(2, 3, 4),
+                dimnames = list(dataset = NULL, var = NULL, time = NULL)),
+   dims = list(dataset = 1:2, var = 1:3, time = 1:4),
+   coords = list(
+     dataset = c("Model1", "Model2"),
+     var = c("Temperature", "Precipitation", "Pressure"),
+     time = seq.Date(from = as.Date("2023-01-01"), by = "day", length.out = 4)
+   )
+ )
+
+ # Convert to a well-formatted data frame
+ formatted_table <- clim4health_table(example_array)
+ head(formatted_table)
