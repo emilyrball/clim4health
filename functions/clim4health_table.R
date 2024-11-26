@@ -1,9 +1,11 @@
 #' Convert s2dv_cube Data to a Well-Formatted Data Frame
 #'
 #' This function processes data in an `s2dv_cube` object into a data frame format,
-#' assigning to each data value the appropriate factor levels from each dimension using the `coords` metadata. 
+#' assigning to each data value the appropriate factor levels from each dimension
+#' using the `coords` metadata. 
 #'
-#' @param array An`s2dv_cube` object. This object has the form of a multidimensional array and must contain:
+#' @param array An`s2dv_cube` object. This object has the form of a multidimensional array 
+#' and must contain:
 #'   \itemize{
 #'     \item `data`: A multidimensional array containing the primary data.
 #'     \item `dims`: A named list specifying the dimensions of the array.
@@ -70,11 +72,12 @@ clim4health_table <- function(array) {
                paste(missing_coords, collapse = ", ")))
   }
   
-  # Ensure each coordinate in 'coords' matches the length of its corresponding dimension in 'data'
+  # Ensure each coordinate in 'coords' matches the length of
+  # its corresponding dimension in 'data'
   for (dim_name in dim_names) {
     if (length(array$coords[[dim_name]]) != dim(array$data)[[dim_name]]) {
-      stop(paste("The length of 'array$coords[[", dim_name, "]]' does not match the size of the '",
-                 dim_name, "' dimension in 'array$data'.", sep = ""))
+      stop(paste("The length of 'array$coords[[", dim_name, "]]' does not match 
+      the size of the '", dim_name, "' dimension in 'array$data'.", sep = ""))
     }
   }
 
@@ -91,7 +94,8 @@ clim4health_table <- function(array) {
     if (dim_name %in% colnames(table.format)) {
       # Update factor levels in each column using 
       # the corresponding s2dv_cube coords element
-      levels(table.format[[dim_name]]) <- array$coords[[dim_name]][1:length(array$coords[[dim_name]])]
+      levels(table.format[[dim_name]]) <- 
+      array$coords[[dim_name]][1:length(array$coords[[dim_name]])]
     }
   }
 
