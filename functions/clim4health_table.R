@@ -31,7 +31,53 @@
 #' @export
 
 clim4health_table <- function(array) {
-    
+
+ # Check if input data is an s2dv_cube multidimensional array object
+  if (!("s2dv_cube" %in% class(array))) {
+    stop("Input 'array' must be an object of class 's2dv_cube'.")
+  }
+  
+  # Required fields in s2dv_cube
+  required_fields <- c("data", "coords")
+  
+  # Check if required fields are present
+  missing_fields <- setdiff(required_fields, names(array))
+
+  if (length(missing_fields) > 0) {
+    stop(paste("The following required fields are missing from the input 'array':",
+               paste(missing_fields, collapse = ", ")))
+  }
+  
+  # Validate the 'data' field
+  if (!is.array(array$data)) {
+    stop("'array$data' must be a multidimensional array.")
+  }
+  
+  # Validate the 'coords' field
+  if (!is.list(array$coords)) {
+    stop("'array$coords' must be a list.")
+  }
+  
+  # Ensure the names of the dimensions in 'data' match the names in 'coords'
+  dim_names <- names(dim(array$data))
+  if (is.null(dim_names)) {
+    stop("The dimensions of 'array$data' must have names.")
+  }
+  
+  missing_coords <- setdiff(dim_names, names(array$coords))
+  if (length(missing_coords) > 0) {
+    stop(paste("The following dimension names are missing in 'array$coords':",
+               paste(missing_coords, collapse = ", ")))
+  }
+  
+  # Ensure each coordinate in 'coords' matches the length of its corresponding dimension in 'data'
+  for (dim_name in dim_names) {
+    if (length(array$coords[[dim_name]]) != dim(array$data)[[dim_name]]) {
+      stop(paste("The length of 'array$coords[[", dim_name, "]]' does not match the size of the '",
+                 dim_name, "' dimension in 'array$data'.", sep = ""))
+    }
+  }
+
   # Convert s2dv_cube data to a data frame with factor levels
   table.format <- as.data.frame.table(array$data)
   
@@ -40,10 +86,11 @@ clim4health_table <- function(array) {
   names(table.format) <- c(names(dim(array$data)), 'values') 
   
   # Loop through each dimension in the s2dv_cube
-  for (dim_name in names(array$dims)) {
+  for (dim_name in names(dim(array$data))) {
     # Check if the column exists in table.format
     if (dim_name %in% colnames(table.format)) {
-      # Update factor levels in each column using the corresponding s2dv_cube coords element
+      # Update factor levels in each column using 
+      # the corresponding s2dv_cube coords element
       levels(table.format[[dim_name]]) <- array$coords[[dim_name]][1:length(array$coords[[dim_name]])]
     }
   }

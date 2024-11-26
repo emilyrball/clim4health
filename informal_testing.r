@@ -10,7 +10,7 @@ library(exactextractr)
 path <- getwd()
 source(paste0(path, '/functions/clim4health_load.R'))        
 
-path <- getwd()
+########## function with fcst ############
 
 ## load forecast fcst
 fcst <- clim4health_load(paste0(path, '/sample_data/ecmwf51/forecast/t2m_20240401.nc'))        
@@ -22,12 +22,11 @@ dim(fcst$data)
 #  dataset       var      time  ensemble  latitude longitude
 #        1         1         3        51        57        77
 
-########## function with fcst ############
+########## function with hcst ##########
 
 f.table.test<- clim4health_table(fcst)
 
-fcst$data[1,1,1,1,1,1]
-
+fcst$data[1,1,1,1,1,1
 
 ## load hindcast hcst
 
@@ -54,3 +53,9 @@ h.table.test<- clim4health_table(hcst)
 table(h.table.test$time)
 
 table(h.table.test$ensemble)
+
+
+########## function with non s2dv_cube ##########
+
+array<- fcst
+class(array)
