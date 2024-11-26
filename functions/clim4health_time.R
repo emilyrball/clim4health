@@ -1,24 +1,25 @@
+# function to aggregate temporaly (from days to weeks, weeks to months or months to years)
+
 # dependencies
-print(getwd())
-library(startR)
 library(lubridate)
 library(abind)
-source( "./functions/clim4health_load.R" )
 
+clim4health_time <- function (data, aggregation = 'day2week') {
 
-clim4health_time <- function (qube, agregation = 'day') {
+    # check
+    agg <- strsplit(aggregation, '2')
+    if (agg[1] == 'day' & agg[2] == 'week')............
+  aggregation = tolower(aggregation)
 
-  agregation = tolower(agregation)
+  # if (aggregation == 'day') {
 
-  # if (agregation == 'day') {
+  # } else if (aggregation == 'week'){
 
-  # } else if (agregation == 'week'){
+  # } else if (aggregation =='month') {
 
-  # } else if (agregation =='month') {
+  # } else if (aggregation == 'year') {
 
-  # } else if (agregation == 'year') {
-
-  # } else if (agregation == 'epi_week')
+  # } else if (aggregation == 'epi_week')
 
   return (qube)
 
