@@ -8,7 +8,7 @@ library(easyNCDF)
 library(CSTools)
 
 # main function
-clim4health_load <- function(path, var = NULL, lat_selection = 'all', lon_selection = 'all') {
+clim4health_load <- function(path, var = NULL, sdates = NULL, lat_selection = 'all', lon_selection = 'all') {
 
     # Read .csv files
     if (all(tools::file_ext(path) == 'csv')) {
@@ -69,17 +69,23 @@ clim4health_load <- function(path, var = NULL, lat_selection = 'all', lon_select
       if (is.null(var)){
         var <- strsplit(strsplit(path, '/')[[1]][length(strsplit(path, '/')[[1]])], '_')[[1]][1] # assuming filename "var"+"_"+"date"+".nc"
       }
+      if (is.null(sdates)){
+        sdates <- unlist(lapply(strsplit(path, "_"), function(x) strsplit(x, ".nc")[[length(x)]])) # assuming filename "var"+"_"+"date"+".nc"
+      }
       dataset <- gsub(var, '$var$', path)
-
+      ### at the moment only checking against the first element of sdates
+      
+      dataset <- gsub(sdates, '$sdate$', dataset)
+      
       # read netcdf file dimensions:
       file.dims <- names(NcReadDims(path))
-
       # Use startR function to open the files
       if (any(c('ensemble', 'member', 'number') %in% names(NcReadDims(path)))){
         data <- Start(
               dataset = dataset,
               var = var,
-              time = "all",
+              sdate = sdates,
+              time = 'all',#indices(1:NcReadDims(path)[[which(file.dims == "time")]]),
               ensemble = "all",
               latitude = 'all', #ifelse(lat_selection == 'all', 'all', values(list(lat_selection[1], lat_selection[2]))), #values(list(42, 45)),
               latitude_reorder = Sort(decreasing = TRUE),
@@ -87,41 +93,53 @@ clim4health_load <- function(path, var = NULL, lat_selection = 'all', lon_select
               longitude_reorder = CircularSort(-180, 180),
               synonims = list(latitude = c('lat', 'latitude'),
                                       longitude = c('lon', 'longitude'),
-                                      time = c('time', 'date', 'month'),
+                                      time = c('time', 'date', 'month', 'day'),
                                       ensemble = c('ensemble', 'member', 'number')),
-              retrieve    = TRUE)
+              return_vars = list(latitude = 'dataset',
+                                 longitude = 'dataset',
+                                 time = 'sdate'),
+              retrieve    = TRUE,
+              split_multiselected_dims = TRUE)
       } else {
         data <- Start(
               dataset = dataset,
               var = var,
-              time = "all",
+              sdate = sdates,
+              time = 'all',#indices(1:NcReadDims(path)[[which(file.dims == "time")]]),
               latitude = 'all', #ifelse(lat_selection == 'all', 'all', values(list(lat_selection[1], lat_selection[2]))), #values(list(42, 45)),
               latitude_reorder = Sort(decreasing = TRUE),
               longitude = 'all', #ifelse(lon_selection == 'all', 'all', values(list(lon_selection[1], lon_selection[2]))), #values(list(0, 3)),
               longitude_reorder = CircularSort(-180, 180),
               synonims = list(latitude = c('lat', 'latitude'),
                                       longitude = c('lon', 'longitude'),
-                                      time = c('time', 'date', 'month')),
-              retrieve    = TRUE)
+                                      time = c('time', 'date', 'month', 'day')),
+              return_vars = list(latitude = 'dataset',
+                                 longitude = 'dataset',
+                                 time = 'sdate'),
+              retrieve    = TRUE,
+              split_multiselected_dims = TRUE)
       }
 
       # keep dates
+      #return(data)
+      dates <- attr(data, "Variables")$common$time
       dim_attributes <- attr(data, "Variables")$common[[var]]$dim
-      for (dd in 1:length(dim_attributes)){
-        if (dim_attributes[[dd]]$name == 'time'){
-          time_attributes <- dim_attributes[[dd]]
-        }
-      }
-      time_units_number <- time_attributes$vals
-      time_units_units <- time_attributes$units # "hours since..."
-      if (grepl("hours since ", time_units_units, fixed = TRUE)){
-        metadata_dates <- as.Date(gsub("hours since ", "", time_units_units)) + time_units_number/24 # /24 from hours to days
-      } 
+      
+      #for (dd in 1:length(dim_attributes)){
+      #  if (dim_attributes[[dd]]$name == 'time'){
+      #    time_attributes <- dim_attributes[[dd]]
+      #  }
+      #}
+      #time_units_number <- time_attributes$vals
+      #time_units_units <- time_attributes$units # "hours since..."
+      #if (grepl("hours since ", time_units_units, fixed = TRUE)){
+      #  metadata_dates <- as.Date(gsub("hours since ", "", time_units_units)) + time_units_number/24 # /24 from hours to days
+      #}
 
       # transform to sd2v_cube
       data <- as.s2dv_cube(data)
-      data$coords$time <- metadata_dates
-      
+      #data$coords$time <- metadata_dates
+      data$attrs$Dates <- as.Date(data$attrs$Dates)
       # subset lat lon
       lat <- data$coords$latitude
       lon <- data$coords$longitude

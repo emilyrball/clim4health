@@ -29,7 +29,7 @@ First obtain current path, which needs to be the path where the clim4health repo
 
 ```r
 clim4health_path <- getwd()
-source(paste0(clim4health_path, '/functions/clim4health_load.R'))        
+source(paste0(clim4health_path, '/functions/clim4health_load.R'))
 ```
 
 When the function is loaded, the dependencies will also be loaded - if some error occurs, make sure that all the necessary dependencies are installed:
@@ -145,12 +145,23 @@ Load hindcast (past forecast) and reference dataset (from netcdf or csv) from sa
 In this case we want to load the hindcast issued in the same month as the forecast (in this example April) but for each of the year in the past (in this case 2010, 2011 and 2012)
 
 ```r
+sdates <- c()
+hcst_path <- c(paste0(clim4health_path, '/sample_data/ecmwf51/hindcast/t2m_20100401.nc'))
 for (yy in c(2010, 2011, 2012)){
-    hcst <- clim4health_load(paste0(clim4health_path, '/sample_data/ecmwf51/hindcast/t2m_', yy, '0401.nc'))        
+    #hcst_path <- c(hcst_path, paste0(clim4health_path, '/sample_data/ecmwf51/hindcast/t2m_', yy, '0401.nc'))
+    sdates <- c(sdates, paste0(yy, '0401'))
 }
+hcst <- clim4health_load(hcst_path, sdates = sdates)
 ```
 
 #### Load reference
 ##### from *.nc*
 ##### from *.csv*
 ##### harmonize reference with hindcast
+
+dates <- hcst$attrs$Dates
+#  dim(dates) <- hcst$dims[c("sday", "sweek", "syear", "time")]
+dates_file <- format(as.Date(dates, '%Y%m%d'), "%Y%m")
+
+obs <- clim4health_load(
+    paste0(clim4health_path, '/sample_data/era5land/t2m_201004.nc'), sdates = dates_file)
