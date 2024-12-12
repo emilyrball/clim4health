@@ -8,7 +8,7 @@ library(easyNCDF)
 library(CSTools)
 
 # main function
-clim4health_load <- function(path, var = NULL, sdates = NULL, time_freq = NULL,
+clim4health_load <- function(path, var = NULL, sdates = NULL,
                              lat_selection = 'all', lon_selection = 'all') {
 
     # Read .csv files
@@ -75,21 +75,25 @@ clim4health_load <- function(path, var = NULL, sdates = NULL, time_freq = NULL,
       }
       dataset <- gsub(var, '$var$', path)
 
-      ### at the moment only checking against the first element of sdates
-      dataset <- gsub(sdates, '$sdate$', dataset)
-      
+      ### replace any instance of dates in filename with $sdate$
+      for (sdate in sdates) {
+        dataset <- gsub(sdate, '$sdate$', dataset)
+      }
       # read netcdf file dimensions:
       file.dims <- names(NcReadDims(path))
 
-      # define all necessary input parameters to startR
+      # define initial input parameters to startR
       start_parameters <- list(
               dataset = dataset,
               var = var,
               sdate = sdates,
-              time = 'all')#indices(1:NcReadDims(path)[[which(file.dims == "time")]])
+              time = 'all')
+
+      # if file includes ensemble dimension, add to startR parameters
       if (any(c('ensemble', 'member', 'number') %in% file.dims)){
         start_parameters$ensemble <- "all"
       }
+      # if file includes day dimension, add to startR parameters
       if (any(c('day') %in% file.dims)){
         start_parameters$day <- "all"
       }
@@ -104,7 +108,7 @@ clim4health_load <- function(path, var = NULL, sdates = NULL, time_freq = NULL,
                           longitude = 'dataset',
                           time = 'sdate')
 
-      # add necessary synonyms
+      # if file includes ensemble dimension, add to synonims
       if (any(c('ensemble', 'member', 'number') %in% file.dims)){
         synonims$ensemble <- c('ensemble', 'member', 'number')
       }
@@ -118,7 +122,7 @@ clim4health_load <- function(path, var = NULL, sdates = NULL, time_freq = NULL,
       start_parameters$return_vars <- return_vars
       start_parameters$retrieve <- TRUE
       start_parameters$split_multiselected_dims <- TRUE
-      print(start_parameters)
+
       # Use startR function to open the files
       data <- do.call(Start, start_parameters)
 
@@ -126,21 +130,28 @@ clim4health_load <- function(path, var = NULL, sdates = NULL, time_freq = NULL,
       dates <- attr(data, "Variables")$common$time
       dim_attributes <- attr(data, "Variables")$common[[var]]$dim
       
-      #for (dd in 1:length(dim_attributes)){
-      #  if (dim_attributes[[dd]]$name == 'time'){
-      #    time_attributes <- dim_attributes[[dd]]
-      #  }
-      #}
-      #time_units_number <- time_attributes$vals
-      #time_units_units <- time_attributes$units # "hours since..."
-      #if (grepl("hours since ", time_units_units, fixed = TRUE)){
-      #  metadata_dates <- as.Date(gsub("hours since ", "", time_units_units)) + time_units_number/24 # /24 from hours to days
-      #}
+      for (dd in 1:length(dim_attributes)){
+        if (dim_attributes[[dd]]$name == 'time'){
+          time_attributes <- dim_attributes[[dd]]
+        }
+      }
+      time_units_number <- time_attributes$vals
+      time_units_units <- time_attributes$units # "hours since..."
+      if (grepl("hours since ", time_units_units, fixed = TRUE)){
+        metadata_dates <- as.Date(gsub("hours since ", "", time_units_units)) + time_units_number/24 # /24 from hours to days
+      }
 
       # transform to sd2v_cube
       data <- as.s2dv_cube(data)
-      #data$coords$time <- metadata_dates
+
+      # if we load one file, save dates
+      if (data$dims[["sdate"]] == 1) {
+        data$coords$time <- metadata_dates
+      }
+
+      # store loaded dates in Date format
       data$attrs$Dates <- as.Date(data$attrs$Dates)
+
       # subset lat lon
       lat <- data$coords$latitude
       lon <- data$coords$longitude
