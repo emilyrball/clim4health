@@ -8,7 +8,8 @@ library(easyNCDF)
 library(CSTools)
 
 # main function
-clim4health_load <- function(path, var = NULL, sdates = NULL, lat_selection = 'all', lon_selection = 'all') {
+clim4health_load <- function(path, var = NULL, sdates = NULL, time_freq = NULL,
+                             lat_selection = 'all', lon_selection = 'all') {
 
     # Read .csv files
     if (all(tools::file_ext(path) == 'csv')) {
@@ -73,55 +74,55 @@ clim4health_load <- function(path, var = NULL, sdates = NULL, lat_selection = 'a
         sdates <- unlist(lapply(strsplit(path, "_"), function(x) strsplit(x, ".nc")[[length(x)]])) # assuming filename "var"+"_"+"date"+".nc"
       }
       dataset <- gsub(var, '$var$', path)
+
       ### at the moment only checking against the first element of sdates
-      
       dataset <- gsub(sdates, '$sdate$', dataset)
       
       # read netcdf file dimensions:
       file.dims <- names(NcReadDims(path))
-      # Use startR function to open the files
-      if (any(c('ensemble', 'member', 'number') %in% names(NcReadDims(path)))){
-        data <- Start(
+
+      # define all necessary input parameters to startR
+      start_parameters <- list(
               dataset = dataset,
               var = var,
               sdate = sdates,
-              time = 'all',#indices(1:NcReadDims(path)[[which(file.dims == "time")]]),
-              ensemble = "all",
-              latitude = 'all', #ifelse(lat_selection == 'all', 'all', values(list(lat_selection[1], lat_selection[2]))), #values(list(42, 45)),
-              latitude_reorder = Sort(decreasing = TRUE),
-              longitude = 'all', #ifelse(lon_selection == 'all', 'all', values(list(lon_selection[1], lon_selection[2]))), #values(list(0, 3)),
-              longitude_reorder = CircularSort(-180, 180),
-              synonims = list(latitude = c('lat', 'latitude'),
-                                      longitude = c('lon', 'longitude'),
-                                      time = c('time', 'date', 'month', 'day'),
-                                      ensemble = c('ensemble', 'member', 'number')),
-              return_vars = list(latitude = 'dataset',
-                                 longitude = 'dataset',
-                                 time = 'sdate'),
-              retrieve    = TRUE,
-              split_multiselected_dims = TRUE)
-      } else {
-        data <- Start(
-              dataset = dataset,
-              var = var,
-              sdate = sdates,
-              time = 'all',#indices(1:NcReadDims(path)[[which(file.dims == "time")]]),
-              latitude = 'all', #ifelse(lat_selection == 'all', 'all', values(list(lat_selection[1], lat_selection[2]))), #values(list(42, 45)),
-              latitude_reorder = Sort(decreasing = TRUE),
-              longitude = 'all', #ifelse(lon_selection == 'all', 'all', values(list(lon_selection[1], lon_selection[2]))), #values(list(0, 3)),
-              longitude_reorder = CircularSort(-180, 180),
-              synonims = list(latitude = c('lat', 'latitude'),
-                                      longitude = c('lon', 'longitude'),
-                                      time = c('time', 'date', 'month', 'day')),
-              return_vars = list(latitude = 'dataset',
-                                 longitude = 'dataset',
-                                 time = 'sdate'),
-              retrieve    = TRUE,
-              split_multiselected_dims = TRUE)
+              time = 'all')#indices(1:NcReadDims(path)[[which(file.dims == "time")]])
+      if (any(c('ensemble', 'member', 'number') %in% file.dims)){
+        start_parameters$ensemble <- "all"
       }
+      if (any(c('day') %in% file.dims)){
+        start_parameters$day <- "all"
+      }
+      
+
+      # define synonyms for startR call
+      synonims <- list(latitude = c('lat', 'latitude'),
+                       longitude = c('lon', 'longitude'),
+                       time = c('time', 'date', 'month'))
+
+      return_vars <- list(latitude = 'dataset',
+                          longitude = 'dataset',
+                          time = 'sdate')
+
+      # add necessary synonyms
+      if (any(c('ensemble', 'member', 'number') %in% file.dims)){
+        synonims$ensemble <- c('ensemble', 'member', 'number')
+      }
+      
+      # define final necessary parameters to startR
+      start_parameters$latitude <- 'all' #ifelse(lat_selection == 'all', 'all', values(list(lat_selection[1], lat_selection[2]))), #values(list(42, 45)),
+      start_parameters$latitude_reorder <- Sort(decreasing = TRUE)
+      start_parameters$longitude <- 'all' #ifelse(lon_selection == 'all', 'all', values(list(lon_selection[1], lon_selection[2]))), #values(list(0, 3)),
+      start_parameters$longitude_reorder <- CircularSort(-180, 180)
+      start_parameters$synonims <- synonims
+      start_parameters$return_vars <- return_vars
+      start_parameters$retrieve <- TRUE
+      start_parameters$split_multiselected_dims <- TRUE
+      print(start_parameters)
+      # Use startR function to open the files
+      data <- do.call(Start, start_parameters)
 
       # keep dates
-      #return(data)
       dates <- attr(data, "Variables")$common$time
       dim_attributes <- attr(data, "Variables")$common[[var]]$dim
       
