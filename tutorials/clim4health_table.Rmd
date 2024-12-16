@@ -1,17 +1,97 @@
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, results = 'markup')
+```
+
+<img src='figures/general/logo_harmonize.png' align="left" height="50" /></a>
+<img src='figures/general/logo_bsc.png' align="left" height="50" /></a>
+
+<br>
+<br>
+
+<img src='figures/general/logo_clim4health.svg' align="right" height="100" /></a>
+
+<br>
+<br>
+<br>
+
+
 # Tutorial to use clim4health_table function 
 
+The *clim4health* package provides tools for working with climate data in the form of s2dv_cube objects.
+
+The general workflow for the *clim4health* package is illustrated below:
+<br>
+
+![clim4health_structure_load](./figures/clim4health_table/clim4health_structure_table.jpg)
+
+
 *clim4health_table* allows the user to load data from an *s2dv_cube* object 
-and output the data into dataframe in a tidy format where there is a row for 
-each data point and one column for each dimension in the *s2dv_cube*. 
-*s2dv_cube* objects are discussed in more detail later in this tutorial. 
+and output the data into a tidy dataframe. 
 
-```r
+An *s2dv_cube* is a multidimensional array object designed for climate data analysis.
+It organizes one or more variables along key dimensions, such as latitude, longitude,
+ and time, with additional dimensions often included, such as ensemble members or
+  lead time. Beyond the array structure, the s2dv_cube also stores metadata attributes,
+   such as coordinate values or the names of the original data files. The structure 
+   of an *s2dv_cube* is illustrated below. 
 
-path <- getwd()
-source(paste0(path, '/functions/clim4health_load.R'))   
-source(paste0(path, '/functions/clim4health_table.R'))   
-fcst <- clim4health_load(paste0(path, '/sample_data/ecmwf51/forecast/t2m_20240401.nc'))        
+![s2dv_cube](./figures/general/s2dv_cube.png)
+
+
+*clim4health_table* transforms data from a multidimensional array into a tidy data frame.
+ In this format, each row corresponds to a single data point, with columns representing
+  the various dimensions (e.g., time, ensemble, latitude, longitude, etc.).
+
+
+## Example: Using *clim4health_table*
+
+### Load example climate dataset in *s2dv_cube* format
+
+
+First obtain current path, which needs to be the path where the clim4health repository is cloned. 
+Next, source the *clim4health_load* function which will load climate data into 
+an *s2dv_cube* format, and the the *clim4health_table* function to transform the 
+*s2dv_cube* into a dataframe.
+
+```R
+
+clim4health_path <- getwd()
+
+source(paste0(clim4health_path, '/functions/clim4health_load.R'))   
+source(paste0(clim4health_path, '/functions/clim4health_table.R'))   
+```
+
+
+When the function is loaded, the dependencies will also be loaded 
+- if some error occurs, make sure that all the necessary dependencies are installed:
+
+```R
+install.packages("startR")
+library(startR)
+
+install.packages("lubridate")
+library(lubridate)
+
+install.packages("easyNCDF")
+library(easyNCDF)
+
+install.packages("CSTools")
+library(CSTools)
+```
+
+The clim4health_load function loads a NetCDF file into an *s2dv_cube* object.
+Here’s an example with a sample dataset:
+
+```R
+
+fcst <- clim4health_load(paste0(clim4health_path, '/sample_data/ecmwf51/forecast/t2m_20240401.nc'))     
+
+```
+
+Inspect the *s2dv_cube* object
+
+```R
 class(fcst)
 #[1] "s2dv_cube"
  dim(fcst$data)
@@ -19,7 +99,33 @@ class(fcst)
 #    1         1         3        51        57        77
 fcst$coords$time
 # [1] "2024-04-01" "2024-05-01" "2024-06-01"
+
+```
+
+
+Convert the *s2dv_cube* object into a tidy data frame using *clim4health_table*:
+```R
+
 formatted.table <- clim4health_table(fcst)
 
+# Display the first few rows as a table
 head(formatted.table)
+```
+
+
+|dataset |var |time       |ensemble |latitude |longitude | values|
+|:-------|:---|:----------|:--------|:--------|:---------|------:|
+|dat1    |t2m |2024-04-01 |1        |33       |-93       | 291.61|
+|dat1    |t2m |2024-05-01 |1        |33       |-93       | 298.08|
+|dat1    |t2m |2024-06-01 |1        |33       |-93       | 301.45|
+|dat1    |t2m |2024-04-01 |2        |33       |-93       | 292.39|
+|dat1    |t2m |2024-05-01 |2        |33       |-93       | 296.74|
+|dat1    |t2m |2024-06-01 |2        |33       |-93       | 299.25|
+
+
+Inspect the output dataframe
+
+```R
+
+table(formatted.table)
 ```
