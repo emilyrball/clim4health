@@ -382,13 +382,16 @@ pre code {
 <div id="load-example-climate-dataset-in-s2dv_cube-format" class="section level3">
 <h3>Load example climate dataset in <em>s2dv_cube</em> format</h3>
 <p>First obtain current path, which needs to be the path where the clim4health repository is cloned. Next, source the <em>clim4health_load</em> function which will load climate data into an <em>s2dv_cube</em> format, and the the <em>clim4health_table</em> function to transform the <em>s2dv_cube</em> into a dataframe.</p>
-<pre class="r"><code>
+<pre class="r"><code># Obtain the current working directory 
 clim4health_path &lt;- getwd()
 
+# Source the required functions to load and transform data.
 source(paste0(clim4health_path, &#39;/functions/clim4health_load.R&#39;))   
 source(paste0(clim4health_path, &#39;/functions/clim4health_table.R&#39;))   </code></pre>
-<p>When the function is loaded, the dependencies will also be loaded - if some error occurs, make sure that all the necessary dependencies are installed:</p>
-<pre class="r"><code>install.packages(&quot;startR&quot;)
+<p>When the function is loaded, the dependencies will also be loaded. If some error occurs, make sure that all the necessary dependencies are installed:</p>
+<pre class="r"><code>
+# Install and load required packages.
+install.packages(&quot;startR&quot;)
 library(startR)
 
 install.packages(&quot;lubridate&quot;)
@@ -399,24 +402,34 @@ library(easyNCDF)
 
 install.packages(&quot;CSTools&quot;)
 library(CSTools)</code></pre>
-<p>The clim4health_load function loads a NetCDF file into an <em>s2dv_cube</em> object. Here’s an example with a sample dataset:</p>
+<p>The clim4health_load function loads a NetCDF file into an <em>s2dv_cube</em> object.</p>
+<p>Here’s an example with a sample dataset:</p>
 <pre class="r"><code>
 fcst &lt;- clim4health_load(paste0(clim4health_path, &#39;/sample_data/ecmwf51/forecast/t2m_20240401.nc&#39;))     
 </code></pre>
 <p>Inspect the <em>s2dv_cube</em> object</p>
-<pre class="r"><code>class(fcst)
+<pre class="r"><code>
+# Check the class of the object.
+class(fcst)
 #[1] &quot;s2dv_cube&quot;
+
+# Inspect the dimensions of the data array.
  dim(fcst$data)
 # dataset       var      time  ensemble  latitude longitude
 #    1         1         3        51        57        77
+
+# Check the time coordinates.
 fcst$coords$time
 # [1] &quot;2024-04-01&quot; &quot;2024-05-01&quot; &quot;2024-06-01&quot;
 </code></pre>
-<p>Convert the <em>s2dv_cube</em> object into a tidy data frame using <em>clim4health_table</em>:</p>
+</div>
+<div id="convert-the-s2dv_cube-object-into-a-tidy-data-frame-using-clim4health_table" class="section level3">
+<h3>Convert the <em>s2dv_cube</em> object into a tidy data frame using <em>clim4health_table</em></h3>
 <pre class="r"><code>
+# Transform the s2dv_cube into a tidy dataframe using clim4health_table.
 formatted.table &lt;- clim4health_table(fcst)
 
-# Display the first few rows as a table
+# Display the first few rows of the tidy dataframe.
 knitr::kable(head(formatted.table), format = &quot;markdown&quot;)</code></pre>
 <table>
 <thead>
@@ -487,6 +500,30 @@ knitr::kable(head(formatted.table), format = &quot;markdown&quot;)</code></pre>
 </tr>
 </tbody>
 </table>
+<p>Inspect the output tidy dataframe</p>
+<pre class="r"><code>
+# Check the class of the dataframe.
+class(formatted.table)
+# [1] &quot;data.frame&quot;
+
+# View the structure of the dataframe.
+str(formatted.table)
+
+#&#39;data.frame&#39;:   671517 obs. of  7 variables:
+# $ dataset  : Factor w/ 1 level &quot;dat1&quot;: 1 1 1 1 1 1 1 1 1 1 ...
+# $ var      : Factor w/ 1 level &quot;t2m&quot;: 1 1 1 1 1 1 1 1 1 1 ...
+# $ time     : Factor w/ 3 levels &quot;2024-04-01&quot;,&quot;2024-05-01&quot;,..: 1 2 3 1 2 3 1 2 3 1 ...
+# $ ensemble : Factor w/ 51 levels &quot;1&quot;,&quot;2&quot;,&quot;3&quot;,&quot;4&quot;,..: 1 1 1 2 2 2 3 3 3 4 ...
+# $ latitude : Factor w/ 57 levels &quot;33&quot;,&quot;32&quot;,&quot;31&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
+# $ longitude: Factor w/ 77 levels &quot;-93&quot;,&quot;-92&quot;,&quot;-91&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
+# $ values   : num  292 298 301 292 297 ...
+
+# Verify unique time values in the dataframe.
+unique(formatted.table$time)
+# [1] 2024-04-01 2024-05-01 2024-06-01
+
+</code></pre>
+<p>The dates in <em>time</em> variable of the dataframe match the dates in the <em>time</em> coordinate of the <em>s2dv_cube</em> object</p>
 </div>
 </div>
 </div>
