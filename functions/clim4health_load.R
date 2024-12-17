@@ -75,38 +75,59 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
       }
       dataset <- gsub(var, '$var$', path)
 
-      ### replace any instance of dates in filename with $sdate$
+      ### replace any instance of dates in filename with $fdate$
       for (sdate in sdates) {
         dataset <- gsub(sdate, '$sdate$', dataset)
       }
       # read netcdf file dimensions:
       file.dims <- names(NcReadDims(path))
-
+      print(file.dims)
       # define initial input parameters to startR
       start_parameters <- list(
               dataset = dataset,
               var = var,
-              sdate = sdates,
-              time = 'all')
+              sdate = sdates)
+
+      # define synonyms for startR call
+      synonims <- list(latitude = c("lat", 'latitude'),
+                       longitude = c("lon", 'longitude'))
 
       # if file includes ensemble dimension, add to startR parameters
       if (any(c('ensemble', 'member', 'number') %in% file.dims)){
         start_parameters$ensemble <- "all"
       }
+
+      # open by file dimensions
+      # if file includes time dimension, add to startR parameters
+      if (any(c('time') %in% file.dims)){
+        start_parameters$time <- "all"
+      }
       # if file includes day dimension, add to startR parameters
       if (any(c('day') %in% file.dims)){
         start_parameters$day <- "all"
+        synonims$day <- c('day')
+      }
+      # if file includes week dimension, add to startR parameters
+      if (any(c('week', 'sweek') %in% file.dims)){
+        start_parameters$week <- "all"
+        synonims$week <- c('week', 'sweek')
+      }
+      # if file includes month dimension, add to startR parameters
+      if (any(c('month', 'smonth') %in% file.dims)){
+        start_parameters$month <- "all"
+        synonims$month <- c('month', 'smonth')
+      }
+      # if file includes year dimension, add to startR parameters
+      if (any(c('year') %in% file.dims)){
+        start_parameters$year <- "all"
+        synonims$year <- c('year', 'syear')
       }
       
 
-      # define synonyms for startR call
-      synonims <- list(latitude = c('lat', 'latitude'),
-                       longitude = c('lon', 'longitude'),
-                       time = c('time', 'date', 'month'))
+      
 
       return_vars <- list(latitude = 'dataset',
-                          longitude = 'dataset',
-                          time = 'sdate')
+                          longitude = 'dataset')
 
       # if file includes ensemble dimension, add to synonims
       if (any(c('ensemble', 'member', 'number') %in% file.dims)){
@@ -114,20 +135,21 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
       }
       
       # define final necessary parameters to startR
-      start_parameters$latitude <- 'all' #ifelse(lat_selection == 'all', 'all', values(list(lat_selection[1], lat_selection[2]))), #values(list(42, 45)),
+      start_parameters$latitude <- ifelse(lat_selection == 'all', 'all', values(list(lat_selection[1], lat_selection[2]))) #values(list(42, 45)),
       start_parameters$latitude_reorder <- Sort(decreasing = TRUE)
-      start_parameters$longitude <- 'all' #ifelse(lon_selection == 'all', 'all', values(list(lon_selection[1], lon_selection[2]))), #values(list(0, 3)),
+      start_parameters$longitude <- ifelse(lon_selection == 'all', 'all', values(list(lon_selection[1], lon_selection[2]))) #values(list(0, 3)),
       start_parameters$longitude_reorder <- CircularSort(-180, 180)
       start_parameters$synonims <- synonims
       start_parameters$return_vars <- return_vars
       start_parameters$retrieve <- TRUE
       start_parameters$split_multiselected_dims <- TRUE
 
+      print(start_parameters)
       # Use startR function to open the files
       data <- do.call(Start, start_parameters)
 
       # keep dates
-      dates <- attr(data, "Variables")$common$time
+      #dates <- attr(data, "Variables")$common$time
       dim_attributes <- attr(data, "Variables")$common[[var]]$dim
       
       for (dd in 1:length(dim_attributes)){
