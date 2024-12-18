@@ -178,7 +178,6 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
         if (data$dims[["sdate"]] == 1) {
           data$coords$time <- metadata_dates
         }
-        data$coords$sdate <- as.Date
       }
 
       # store loaded dates in Date format
