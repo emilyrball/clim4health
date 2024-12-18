@@ -206,8 +206,36 @@ dim(hcst$attrs$Dates)
 ##### from *.csv*
 ##### harmonize reference with hindcast
 
+To load the same dates as in the hindcast, we can extract the dates and use this to load the reference dataset.
+
+## We can also subset by hindcast lat/lon
+
+```r
 dates <- hcst$attrs$Dates
+
 dates_file <- format(as.Date(dates, '%Y%m%d'), "%Y%m")
 
 obs <- clim4health_load(
     paste0(clim4health_path, '/sample_data/era5land/t2m_201004.nc'), sdates = dates_file)
+```
+
+
+### Check loaded reference
+Check what has been loaded in the object *obs*
+
+```r
+class(obs)
+#[1] "s2dv_cube"
+
+dim(obs$data)
+#  dataset       var     sdate      time  latitude longitude 
+#        1         1         6         1       561       761 
+
+summary(obs$data)
+#   Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+#  265.9   296.3   298.4   296.8   299.2   304.1  608080 
+
+obs$data <- obs$data - 273.15
+obs$attrs$Variable$metadata$t2m$units <- "C"
+
+```
