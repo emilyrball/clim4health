@@ -81,7 +81,7 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
       }
       # read netcdf file dimensions:
       file.dims <- names(NcReadDims(path))
-      print(file.dims)
+
       # define initial input parameters to startR
       start_parameters <- list(
               dataset = dataset,
@@ -89,7 +89,7 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
               sdate = sdates)
 
       # define synonyms for startR call
-      synonims <- list(latitude = c("lat", 'latitude'),
+      synonims <- list(latitude  = c("lat",  'latitude'),
                        longitude = c("lon", 'longitude'))
 
       # if file includes ensemble dimension, add to startR parameters
@@ -101,6 +101,10 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
       # if file includes time dimension, add to startR parameters
       if (any(c('time') %in% file.dims)){
         start_parameters$time <- "all"
+        start_parameters$time_across <- "sdate"
+        time_dim <- TRUE
+      } else {
+        time_dim <- FALSE
       }
       # if file includes day dimension, add to startR parameters
       if (any(c('day') %in% file.dims)){
@@ -126,7 +130,7 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
 
       
 
-      return_vars <- list(latitude = 'dataset',
+      return_vars <- list( latitude = 'dataset',
                           longitude = 'dataset')
 
       # if file includes ensemble dimension, add to synonims
@@ -144,7 +148,7 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
       start_parameters$retrieve <- TRUE
       start_parameters$split_multiselected_dims <- TRUE
 
-      print(start_parameters)
+
       # Use startR function to open the files
       data <- do.call(Start, start_parameters)
 
@@ -152,23 +156,29 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
       #dates <- attr(data, "Variables")$common$time
       dim_attributes <- attr(data, "Variables")$common[[var]]$dim
       
-      for (dd in 1:length(dim_attributes)){
-        if (dim_attributes[[dd]]$name == 'time'){
-          time_attributes <- dim_attributes[[dd]]
+      if (time_dim == TRUE) {
+        for (dd in 1:length(dim_attributes)){
+          if (dim_attributes[[dd]]$name == 'time'){
+            time_attributes <- dim_attributes[[dd]]
+          }
         }
-      }
-      time_units_number <- time_attributes$vals
-      time_units_units <- time_attributes$units # "hours since..."
-      if (grepl("hours since ", time_units_units, fixed = TRUE)){
-        metadata_dates <- as.Date(gsub("hours since ", "", time_units_units)) + time_units_number/24 # /24 from hours to days
+        time_units_number <- time_attributes$vals
+        time_units_units <- time_attributes$units # "hours since..."
+        if (grepl("hours since ", time_units_units, fixed = TRUE)){
+          metadata_dates <- as.Date(gsub("hours since ", "", time_units_units)) + time_units_number/24 # /24 from hours to days
+        }
+        
       }
 
       # transform to sd2v_cube
       data <- as.s2dv_cube(data)
 
-      # if we load one file, save dates
-      if (data$dims[["sdate"]] == 1) {
-        data$coords$time <- metadata_dates
+      if (time_dim == TRUE) {
+        # if we load one file, save dates
+        if (data$dims[["sdate"]] == 1) {
+          data$coords$time <- metadata_dates
+        }
+        data$coords$sdate <- as.Date
       }
 
       # store loaded dates in Date format
