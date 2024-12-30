@@ -10,6 +10,9 @@ library(exactextractr)
 path <- getwd()
 source(paste0(path, '/functions/clim4health_load.R'))        
 
+source(paste0(path, '/functions/clim4health_table.R'))        
+
+
 ########## function with fcst ############
 
 ## load forecast fcst
@@ -24,9 +27,8 @@ dim(fcst$data)
 
 ########## function with hcst ##########
 
-f.table.test<- clim4health_table(fcst)
+f.table <- clim4health_table(fcst)
 
-fcst$data[1,1,1,1,1,1
 
 ## load hindcast hcst
 
@@ -59,3 +61,5 @@ table(h.table.test$ensemble)
 
 array<- fcst
 class(array)
+
+
