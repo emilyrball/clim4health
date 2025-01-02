@@ -8,7 +8,7 @@ library(easyNCDF)
 library(CSTools)
 
 # main function
-clim4health_load <- function(path, var = NULL, sdates = NULL,
+clim4health_load <- function(path, var = NULL, years = NULL, months = NULL, days = NULL,
                              lat_selection = 'all', lon_selection = 'all') {
 
     # Read .csv files
@@ -65,19 +65,67 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
 
     # Read .nc files
     } else if (all(tools::file_ext(path) == 'nc')) {
-      
+      sdates <- unlist(lapply(strsplit(path, "_"), function(x) strsplit(x, ".nc")[[length(x)]])) # assuming filename "var"+"_"+"date"+".nc"
+      syears <- substr(sdates, 1, 4)
+      if (nchar(sdates) > 4) {
+        smonths <- substr(sdates, 5, 6)
+      } else {
+        smonths <- ""
+      }
+      if (nchar(sdates) > 6) {
+        sdays <- substr(sdates, 7, 8)
+      } else {
+        sdays <- ""
+      }
       # var (internal netcdf variable name needs to be the same in the file name)
       if (is.null(var)){
         var <- strsplit(strsplit(path, '/')[[1]][length(strsplit(path, '/')[[1]])], '_')[[1]][1] # assuming filename "var"+"_"+"date"+".nc"
       }
-      if (is.null(sdates)){
-        sdates <- unlist(lapply(strsplit(path, "_"), function(x) strsplit(x, ".nc")[[length(x)]])) # assuming filename "var"+"_"+"date"+".nc"
+      if (is.null(years) && is.null(months) && is.null(days)){
+        sdates <- sdates
+      } else if (is.null(years)) {
+        stop ("If days or months provided, years must also be provided.")
+      } else if (class(years) != "character") {
+        syears <- paste0(years)
+      } else if (class(years) == "character") {
+        syears <- paste0(years)
       }
+      if (is.null(days)) {
+        days <- ""
+      } else if (class(days) != "character") {
+        sdays <- paste0(days)
+        for (i in seq(sdays)) {
+          if (nchar(sdays[i]) == 1) {
+            sdays[i] <- paste0("0", sdays[i])
+          }
+        }
+      } else if (class(days) == "character") {
+        sdays <- paste0(days)
+      }
+      if (is.null(months)) {
+        months <- ""
+      } else if (class(months) != "character") {
+        smonths <- paste0(months)
+        for (i in seq(smonths)) {
+          if (nchar(smonths[i]) == 1) {
+            smonths[i] <- paste0("0", smonths[i])
+          }
+        }
+      } else if (class(months) == "character") {
+        smonths <- paste0(months)
+      }
+      sdates <- outer(syears, smonths, FUN = "paste0")
+      sdates <- t(sdates)
+      dim(sdates) <- NULL
+
+      sdates <- outer(sdates, sdays, FUN = "paste0")
+      sdates <- t(sdates)
+      dim(sdates) <- NULL
       dataset <- gsub(var, '$var$', path)
 
-      ### replace any instance of dates in filename with $fdate$
+      ### replace any instance of dates in filename with $sdate$
       for (sdate in sdates) {
-        dataset <- gsub(sdate, '$sdate$', dataset)
+        dataset <- gsub(sdate, '$syear$$smonth$$sday$', dataset)
       }
       # read netcdf file dimensions:
       file.dims <- names(NcReadDims(path))
@@ -86,49 +134,56 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
       start_parameters <- list(
               dataset = dataset,
               var = var,
-              sdate = sdates)
+              #sdate = sdates,
+              syear = syears,
+              smonth = smonths,
+              sday = sdays)
 
       # define synonyms for startR call
       synonims <- list(latitude  = c("lat",  'latitude'),
                        longitude = c("lon", 'longitude'))
 
-      # if file includes ensemble dimension, add to startR parameters
-      if (any(c('ensemble', 'member', 'number') %in% file.dims)){
-        start_parameters$ensemble <- "all"
-      }
+      
 
       # open by file dimensions
       # if file includes time dimension, add to startR parameters
       if (any(c('time') %in% file.dims)){
         start_parameters$time <- "all"
-        start_parameters$time_across <- "sdate"
+        #start_parameters$time_across <- "sdate"
         time_dim <- TRUE
       } else {
         time_dim <- FALSE
       }
       # if file includes day dimension, add to startR parameters
       if (any(c('day') %in% file.dims)){
-        start_parameters$day <- "all"
-        synonims$day <- c('day')
+        start_parameters$sday <- "all"
+        synonims$sday <- c('day', 'sday')
+        start_parameters$dataset <- gsub("\\$sday\\$", "", start_parameters$dataset)
       }
       # if file includes week dimension, add to startR parameters
       if (any(c('week', 'sweek') %in% file.dims)){
-        start_parameters$week <- "all"
-        synonims$week <- c('week', 'sweek')
+        start_parameters$sweek <- "all"
+        synonims$sweek <- c('week', 'sweek')
+        start_parameters$dataset <- gsub("\\$sweek\\$", "", start_parameters$dataset)
       }
       # if file includes month dimension, add to startR parameters
       if (any(c('month', 'smonth') %in% file.dims)){
-        start_parameters$month <- "all"
-        synonims$month <- c('month', 'smonth')
+        start_parameters$smonth <- "all"
+        synonims$smonth <- c('month', 'smonth')
+        start_parameters$dataset <- gsub("\\$smonth\\$", "", start_parameters$dataset)
       }
       # if file includes year dimension, add to startR parameters
       if (any(c('year') %in% file.dims)){
-        start_parameters$year <- "all"
-        synonims$year <- c('year', 'syear')
+        start_parameters$syear <- "all"
+        synonims$syear <- c('year', 'syear')
+        start_parameters$dataset <- gsub("\\$syear\\$", "", start_parameters$dataset)
       }
       
 
-      
+      # if file includes ensemble dimension, add to startR parameters
+      if (any(c('ensemble', 'member', 'number') %in% file.dims)){
+        start_parameters$ensemble <- "all"
+      }
 
       return_vars <- list( latitude = 'dataset',
                           longitude = 'dataset')
@@ -139,9 +194,9 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
       }
       
       # define final necessary parameters to startR
-      start_parameters$latitude <- ifelse(lat_selection == 'all', 'all', values(list(lat_selection[1], lat_selection[2]))) #values(list(42, 45)),
+      start_parameters$latitude <- 'all' #ifelse(lat_selection == 'all', 'all', values(list(lat_selection[1], lat_selection[2]))) #values(list(42, 45)),
       start_parameters$latitude_reorder <- Sort(decreasing = TRUE)
-      start_parameters$longitude <- ifelse(lon_selection == 'all', 'all', values(list(lon_selection[1], lon_selection[2]))) #values(list(0, 3)),
+      start_parameters$longitude <- 'all' #ifelse(lon_selection == 'all', 'all', values(list(lon_selection[1], lon_selection[2]))) #values(list(0, 3)),
       start_parameters$longitude_reorder <- CircularSort(-180, 180)
       start_parameters$synonims <- synonims
       start_parameters$return_vars <- return_vars
@@ -151,9 +206,8 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
 
       # Use startR function to open the files
       data <- do.call(Start, start_parameters)
-
       # keep dates
-      #dates <- attr(data, "Variables")$common$time
+      
       dim_attributes <- attr(data, "Variables")$common[[var]]$dim
       
       if (time_dim == TRUE) {
@@ -172,13 +226,13 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
 
       # transform to sd2v_cube
       data <- as.s2dv_cube(data)
-
-      if (time_dim == TRUE) {
-        # if we load one file, save dates
-        if (data$dims[["sdate"]] == 1) {
-          data$coords$time <- metadata_dates
-        }
-      }
+      #return(data)
+      #if (time_dim == TRUE) {
+      #  # if we load one file, save dates
+      #  if (data$dims[["sdate"]] == 1) {
+      #    data$coords$time <- metadata_dates
+      #  }
+      #}
 
       # store loaded dates in Date format
       data$attrs$Dates <- as.Date(data$attrs$Dates)
