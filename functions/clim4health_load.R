@@ -148,8 +148,7 @@ clim4health_load <- function(path, var = NULL, years = NULL, months = NULL, days
       # open by file dimensions
       # if file includes time dimension, add to startR parameters
       if (any(c('time') %in% file.dims)){
-        start_parameters$time <- "all"
-        #start_parameters$time_across <- "sdate"
+        start_parameters$time <- indices(1:NcReadDims(path)[[which(file.dims == "time")]])
         time_dim <- TRUE
       } else {
         time_dim <- FALSE
@@ -186,7 +185,8 @@ clim4health_load <- function(path, var = NULL, years = NULL, months = NULL, days
       }
 
       return_vars <- list( latitude = 'dataset',
-                          longitude = 'dataset')
+                          longitude = 'dataset',
+                          time = c('syear','smonth','sday'))
 
       # if file includes ensemble dimension, add to synonims
       if (any(c('ensemble', 'member', 'number') %in% file.dims)){
@@ -194,9 +194,9 @@ clim4health_load <- function(path, var = NULL, years = NULL, months = NULL, days
       }
       
       # define final necessary parameters to startR
-      start_parameters$latitude <- 'all' #ifelse(lat_selection == 'all', 'all', values(list(lat_selection[1], lat_selection[2]))) #values(list(42, 45)),
+      start_parameters$latitude <- 'all'
       start_parameters$latitude_reorder <- Sort(decreasing = TRUE)
-      start_parameters$longitude <- 'all' #ifelse(lon_selection == 'all', 'all', values(list(lon_selection[1], lon_selection[2]))) #values(list(0, 3)),
+      start_parameters$longitude <- 'all'
       start_parameters$longitude_reorder <- CircularSort(-180, 180)
       start_parameters$synonims <- synonims
       start_parameters$return_vars <- return_vars
