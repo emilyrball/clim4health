@@ -137,7 +137,7 @@ PlotEquiMap(var = MeanDims(fcst$data[1,1,1,time_idx,,,], 'ensemble'),
             lon = fcst$coords$longitude,
             filled.continents = FALSE,
             units = 'Temperature (C)', # text to appear in the legend
-            toptitle = paste0('Forecast', as.Date(fcst$coords$time[time_idx]), ' (ensemble mean)'), # text to appear as overall title
+            toptitle = paste0('Forecast ', as.Date(fcst$coords$time[time_idx]), ' (ensemble mean)'), # text to appear as overall title
             fileout = paste0(clim4health_path, '/tutorials/figures/clim4health_load/fcst.png')
             )
 ```
