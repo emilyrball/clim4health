@@ -125,7 +125,7 @@ fcst$coords$longitude[1:length(fcst$coords$longitude)]
 # [77] -17
 ```
 
-We could also run ```fcst$coords$latitude``` which will show more information about the latitude in addition to the values.
+We could also run the command ```fcst$coords$latitude``` which will show more information about the latitude in addition to the values.
 
 ### Visualize loaded forecast
 
@@ -198,7 +198,7 @@ The times shown correspond to the initialisation dates and the leadtimes of all 
 ##### from *.csv*
 ##### harmonize reference with hindcast
 
-We would now like to load an observational (reference) dataset. To load the same dates as in the hindcast, we can extract the dates using the *hcst$coords$time* object as above. We can also subset by latitude and longitude using *lat_selection* and *lon_selection* parameters.
+We would now like to load an observational (reference) dataset. To load the same dates as in the hindcast, we can extract the dates using the ```hcst$coords$time``` object as above. We can also subset by latitude and longitude using *lat_selection* and *lon_selection* parameters.
 
 ```r
 # extract lat/lon range from hcst object
