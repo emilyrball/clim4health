@@ -141,7 +141,7 @@ clim4health_load <- function(path, var = NULL, sdates = NULL, ext = 'nc',
       if (any(c('time') %in% file.dims)){
         start_parameters$time <- 'all'
         if (length(sdates > 1)) {
-          start_parameters$time_across <- 'sdate'
+          #start_parameters$time_across <- 'sdate'
           return_vars$time <- "sdate"
         }
       }
