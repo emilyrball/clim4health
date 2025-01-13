@@ -1,9 +1,5 @@
 <img src='figures/general/logo_harmonize.png' align="left" height="50" /></a>
 <img src='figures/general/logo_bsc.png' align="left" height="50" /></a>
-
-<br>
-<br>
-
 <img src='figures/general/logo_clim4health.svg' align="right" height="100" /></a>
 
 <br>
@@ -24,7 +20,7 @@ The general process to follow when using the *clim4health* package is:
 - To show how to load a forecast with its corresponding hindcast and reference reanalysis in a format that allows for the application of other **clim4health** functions
 - To show how to load data from a .csv in a format that allows for the application of other clim4health functions (e.g. *clim4health_postprocess* to obtain downscaled forecasts to point locations)
 
-### Working directory and library dependencies
+## Working directory and library dependencies
 First obtain current path, which needs to be the path where the clim4health repository is cloned, and source the *clim4health_load* function
 
 ```r
@@ -48,7 +44,7 @@ install.packages("CSTools")
 library(CSTools)
 ```
 
-### Climate data
+## Climate data
 This tutorial uses several different types of climate data.
 - **Observations** of climate data are directly observed meteorological variables that come from a variety of sources, including satellites, radar, meteorological stations, aircraft, buoys, and more. Some of these formats are records of climate data in only one location. An example of observational data can be found ![in the copernicus climate data store](https://cds.climate.copernicus.eu/datasets/insitu-observations-gruan-reference-network?tab=overview) and the diagram below illustrates a global system of observations.
 
@@ -71,7 +67,7 @@ clim4health_load loads climate data from a netCDF or csv file into R in the form
 ![s2dv_cube](./figures/general/s2dv_cube.png)
 
 
-### Load forecast
+## Load forecast
 Load forecast data from sample data in **clim4health**. It is possible to select a different path to load a forecast from a different file
 
 ```r
@@ -129,7 +125,7 @@ fcst$coords$longitude[1:length(fcst$coords$longitude)]
 # [77] -17
 ```
 
-We could also run ```r fcst$coords$latitude``` which will show more information about the latitude in addition to the values.
+We could also run ```fcst$coords$latitude``` which will show more information about the latitude in addition to the values.
 
 ### Visualize loaded forecast
 
@@ -146,22 +142,17 @@ PlotEquiMap(var = MeanDims(fcst$data[1,1,1,1,,,], 'ensemble'),
 ```
 ![forecast](./figures/clim4health_load/fcst.png)
 
-### Load hindcast and reference
-We can now load hindcast (past forecast) and reference (observational) dataset (from netcdf or csv) from sample data in **clim4health**
+## Load hindcast and reference
+We can now load hindcast (past forecast) and reference (observational) dataset (from netcdf or csv) from sample data.
 
 #### Load hindcast
-In this case we want to load the hindcast issued in the same month as the forecast (in this example April) but for each year in the past (in this case 2010, 2011 and 2012). We choose an example file within the folder as our hindcast path.
+In this case we want to load the hindcast issued in the same month as the forecast (in this example April) but for each year in the past (in this case 2010, 2011 and 2012). We choose an example file within the folder as our hindcast path. We use the parameters *years* and *months* to specify the files to load.
 
 ```r
-sdates <- c()
-hcst_path <- c(paste0(clim4health_path, '/sample_data/ecmwf51/hindcast/'))
-for (yy in c(2010, 2011, 2012)){
-    sdates <- c(sdates, paste0(yy, '0401'))
-}
-hcst <- clim4health_load(hcst_path, var = "t2m",
-                         sdates = sdates, ext = 'nc')
-```
 
+hcst_path <- c(paste0(clim4health_path, '/sample_data/ecmwf51/hindcast/t2m_20100401.nc'))
+hcst <- clim4health_load(hcst_path, years = c(2010, 2011, 2012), months = "04")
+```
 
 ### Check loaded hindcast
 Check what has been loaded in the object *hcst*
@@ -183,9 +174,9 @@ hcst$attrs$Variable$metadata$t2m$units <- "C"
 
 ```
 
-Note that the *hcst* object has different dimensions. We have loaded data from 3 years with the same initialisation month (so we have *syear=3*, *smonth=1*).
+Note that the *hcst* object has different dimensions. We have loaded data from 3 years with the same initialisation month (so we have ```syear=3```, ```smonth=1```).
 
-If we check the temporal coordinates of the hcst *s2dv_cube*, we can see that there are 9 time values, even though forecast leadtime is still 3. This is because clim4health_load is saving the time values across all start dates, so there are 3 x 3.
+If we check the temporal coordinates of the hcst *s2dv_cube*, we can see that now *time* must be saved as an index.
 
 ```r
 hcst$coords$time
@@ -200,24 +191,23 @@ The times shown correspond to the initialisation dates and the leadtimes of all 
 ##### from *.csv*
 ##### harmonize reference with hindcast
 
-We would now like to load an observational (reference) dataset. To load the same dates as in the hindcast, we can extract the dates using the *hcst$coords$time* object as above. We can also subset by latitude and longitude using *lat_selection* and *lon_selection* parameters.
+We would now like to load an observational (reference) dataset. To load the same dates as in the hindcast, we can extract the dates using the *hcst$attrs$Dates* object as above. We can also subset by latitude and longitude using *lat_selection* and *lon_selection* parameters.
 
 ```r
-# extract latitudes and longitudes from hcst object
+dates <- hcst$attrs$Dates
+years <- unique(year(dates))
+months <- unique(month(dates))
 latitudes <- hcst$coords$latitude
 longitudes <- hcst$coords$longitude
+# get the latitude and longitude limits
 lats <- c(min(latitudes), max(latitudes))
 lons <- c(min(longitudes), max(longitudes))
 
-# extract dates from hcst object
-dates <- as.Date(hcst$coords$time)
-sdates <- format(dates, "%Y%m")
 
-obs_path <- paste0(clim4health_path, '/sample_data/era5land/')
-obs <- clim4health_load(obs_path, var = "t2m", sdates = sdates,
+obs_path <- paste0(clim4health_path, '/sample_data/era5land/t2m_201004.nc')
+obs <- clim4health_load(obs_path, years = years, months = months,
                         lat_selection = lats, lon_selection = lons)
 ```
-
 
 ### Check loaded reference
 Check what has been loaded in the object *obs*
@@ -236,16 +226,15 @@ summary(obs$data)
 
 obs$data <- obs$data - 273.15
 obs$attrs$Variable$metadata$t2m$units <- "C"
-
 ```
 
 Note the large number of NA values in *obs*. This is currently because we have attempted to load 3 months of observational data where there are only 2 months available in our sample datasets. See below:
 
 ```r
-obs$coords$time
-# [1] "2010-04-01 UTC" "2010-05-01 UTC" NA               "2011-04-01 UTC"
-# [5] "2011-05-01 UTC" NA               "2012-04-01 UTC" "2012-05-01 UTC"
-# [9] NA         
+obs$attrs$Dates
+# [1] "2010-04-01" "2011-04-01" "2012-04-01" "2010-05-01" "2011-05-01"
+# [6] "2012-05-01" NA           NA           NA 
+
 ```
 This is nice in the sense that clim4health_load has preserved the same indices as the hindcast.
 
