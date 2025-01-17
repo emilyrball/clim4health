@@ -69,10 +69,10 @@ clim4health_load loads climate data from a netCDF or csv file into R in the form
 
 ## Load forecast
 Load forecast data from sample data in **clim4health**. It is possible to select a different path to load a forecast from a different file.
-Input parameters for clim4health_load are *path*, *var*, *sdates*, and *ext*. *Path* is a common string to the folder containing the files to be loaded, *var* is the name of the variable to be extracted from the files, *sdates* is a list or vector of strings identifying which start dates to load, and *ext* = 'nc' or 'csv' specifies the file extension.
+Input parameters for clim4health_load are *path*, *var*, *sdates*, *data_type* and *ext*. *Path* is a common string to the folder containing the files to be loaded, *var* is the name of the variable to be extracted from the files, *sdates* is a list or vector of strings identifying which start dates to load, *data_type* should specify if the data is a forecast or observational dataset, and *ext* = 'nc' or 'csv' specifies the file extension.
 ```r
 fcst_path <- paste0(clim4health_path, '/sample_data/ecmwf51/forecast/')
-fcst <- clim4health_load(fcst_path, var = "t2m",
+fcst <- clim4health_load(fcst_path, var = "t2m", data_type = "fcst",
                          sdates = "20240401", ext = 'nc')  
 ```
 
@@ -84,8 +84,10 @@ class(fcst)
 #[1] "s2dv_cube"
 
 dim(fcst$data)
-# dataset       var     sdate      time  ensemble  latitude longitude 
-#       1         1         1         3        51        57        77 
+#  dataset       var     sdate      year     month       day      time lead_time 
+#        1         1         1         1         3         1         1         3 
+# ensemble  latitude longitude 
+#       51        57        77 
 
 summary(fcst$data)
 #   Min. 1st Qu.  Median    Mean 3rd Qu.    Max.
@@ -97,7 +99,7 @@ print(fcst$attrs$Variable$metadata$t2m$units)
 
 The object *fcst* is an *s2dv_cube* with the above dimensions in **data**.
 *sdate* is the initialization (start) date of the loaded file(s).
-*time* is the leadtime in the netcdf file, *ensemble* is each of the ensemble members of forecast model.
+*year*, *month*, *day* and *time* are the dates within the file. If the data is a forecast, *lead_time* is the leadtime in the netcdf file. *ensemble* is each of the ensemble members of forecast model.
 
 
 Note that the data is in units of Kelvin. In case we want to transform to degree C, we can do it now. We can also change the attributes of the *s2dv_cube* to record this change.
@@ -109,8 +111,11 @@ fcst$attrs$Variable$metadata$t2m$units <- "C"
 We can check the spatial and temporal coordinates of the *s2dv_cube*, which are read from the netcdf file when the data is loaded:
 
 ```r
-fcst$coords$time
+fcst$coords$lead_time
 # [1] "2024-04-01 UTC" "2024-05-01 UTC" "2024-06-01 UTC"
+
+fcst$coords$year
+# [1] 2024
 
 fcst$coords$latitude[1:length(fcst$coords$latitude)]
 #  [1]  33  32  31  30  29  28  27  26  25  24  23  22  21  20  19  18  17  16  15
@@ -132,12 +137,12 @@ We could also run ```fcst$coords$latitude``` which will show more information ab
 Using the function *PlotEquiMap* from the *s2dv* package, we can plot the spatial array. First, we need to reduce the rest of dimensions; in this case we select the first time and do an ensemble mean.
 ```r
 time_idx = 1
-PlotEquiMap(var = MeanDims(fcst$data[1,1,1,time_idx,,,], 'ensemble'),
+PlotEquiMap(var = MeanDims(drop(fcst$data)[1,time_idx,,,], 'ensemble'),
             lat = fcst$coords$latitude,
             lon = fcst$coords$longitude,
             filled.continents = FALSE,
             units = 'Temperature (C)', # text to appear in the legend
-            toptitle = paste0('Forecast ', as.Date(fcst$coords$time[time_idx]), ' (ensemble mean)'), # text to appear as overall title
+            toptitle = paste0('Forecast ', as.Date(fcst$coords$lead_time[time_idx]), ' (ensemble mean)'), # text to appear as overall title
             fileout = paste0(clim4health_path, '/tutorials/figures/clim4health_load/fcst.png')
             )
 ```
@@ -156,7 +161,7 @@ for (yy in c(2010, 2011, 2012)){
     sdates <- c(sdates, paste0(yy, '0401'))
 }
 
-hcst <- clim4health_load(hcst_path, var = "t2m",
+hcst <- clim4health_load(hcst_path, var = "t2m", data_type = "hcst",
                          sdates = sdates, ext = 'nc')
 ```
 
@@ -168,8 +173,10 @@ class(hcst)
 #[1] "s2dv_cube"
 
 dim(hcst$data)
-# dataset       var     sdate      time  ensemble  latitude longitude 
-#       1         1         3         3        25        57        77 
+#  dataset       var     sdate      year     month       day      time lead_time 
+#        1         1         3         3         3         1         1         3 
+# ensemble  latitude longitude 
+#       25        57        77 
 
 summary(hcst$data)
 #   Min. 1st Qu.  Median    Mean 3rd Qu.    Max.
@@ -182,21 +189,23 @@ hcst$attrs$Variable$metadata$t2m$units <- "C"
 Check the temporal coordinates of the hcst *s2dv_cube*
 
 ```r
-hcst$coords$time
-# [1] "2010-04-01 UTC" "2011-04-01 UTC" "2012-04-01 UTC" "2010-05-01 UTC"
-# [5] "2011-05-01 UTC" "2012-05-01 UTC" "2010-06-01 UTC" "2011-06-01 UTC"
-# [9] "2012-06-01 UTC"
+dim(hcst$coords$lead_time)
+# [1] 1 2 3
+# attr(,"indices")
+# [1] TRUE
 
-dim(hcst$coords$time)
-# sdate  time
-#     3     3
+hcst$attrs$Dates
+# [1] "2010-04-01" "2011-04-01" "2012-04-01" "2010-05-01" "2011-05-01"
+# [6] "2012-05-01" "2010-06-01" "2011-06-01" "2012-06-01"
+
+dim(hcst$attrs$Dates)
+#    sdate lead_time 
+#        3         3
 ```
-The times shown correspond to the initialisation dates and the leadtimes of all files loaded.
+As we have loaded 3 start dates, lead time changes over these files and so is now saved as index. The ```hcst$attrs$Dates``` has stored the dates of the loaded files and the dimensions that these are saved in.
 
 #### Load reference
 ##### from *.nc*
-##### from *.csv*
-##### harmonize reference with hindcast
 
 We would now like to load an observational (reference) dataset. To load the same dates as in the hindcast, we can extract the dates using the *hcst$coords$time* object as above. We can also subset by latitude and longitude using *lat_selection* and *lon_selection* parameters.
 
@@ -208,12 +217,16 @@ lats <- c(min(latitudes), max(latitudes))
 lons <- c(min(longitudes), max(longitudes))
 
 # extract dates from hcst object. We are careful here to transpose the dates so that they are ordered correctly.
-dates <- as.Date(hcst$coords$time)
+dates <- as.Date(hcst$attrs$Dates)
 dates <- t(dates)
-sdates <- format(dates, "%Y%m")
+sdates <- format(dates, "%Y%m")[c(1,2,4,5,7,8)]
+
+print(sdates)
+# [1] "201004" "201005" "201006" "201104" "201105" "201106"
 
 obs_path <- paste0(clim4health_path, '/sample_data/era5land/')
-obs <- clim4health_load(obs_path, var = "t2m", sdates = sdates,
+obs <- clim4health_load(obs_path, var = "t2m",
+                        sdates = sdates, data_type = "obs",
                         lat_selection = lats, lon_selection = lons)
 
 ```
@@ -226,25 +239,27 @@ class(obs)
 #[1] "s2dv_cube"
 
 dim(obs$data)
-# dataset       var     sdate      time  latitude longitude 
-#       1         1         9         1       561       761 
+#  dataset       var     sdate      year     month       day      time lead_time 
+#        1         1         1         3         2         1         1         1 
+# ensemble  latitude longitude 
+#        1       561       761 
 
 summary(obs$data)
 #   Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
-#  265.9   296.2   297.9   296.5   298.8   305.6 3105003 
+#  265.9   296.2   297.9   296.5   298.8   305.6 1824240
 
 obs$data <- obs$data - 273.15
 obs$attrs$Variable$metadata$t2m$units <- "C"
 ```
 
-Note the large number of NA values in *obs*. This is currently because we have attempted to load 3 months of observational data where there are only 2 months available in our sample datasets. See below:
-
 ```r
-obs$coords$time
-# [1] "2010-04-01 UTC" "2010-05-01 UTC" NA               "2011-04-01 UTC"
-# [5] "2011-05-01 UTC" NA               "2012-04-01 UTC" "2012-05-01 UTC"
-# [9] NA
+obs$attrs$Dates
+# [1] "2010-04-01" "2010-05-01" "2011-04-01" "2011-05-01" "2012-04-01"
+# [6] "2012-05-01"
 ```
-This is nice in the sense that clim4health_load has preserved the same indices as the hindcast.
 
-Our forecast, hindcast, and observational datasets have all been loaded in the same format. However, it is important to note that the *time* dimension means something different in the forecast/hindcast compared to the observations. In the first case, *time* refers to the leadtime of the forecast/hindcast, whereas in the observations, time refers to the date of the observation.
+Our forecast, hindcast, and observational datasets have all been loaded in the same format.
+
+
+##### from *.csv*
+##### harmonize reference with hindcast

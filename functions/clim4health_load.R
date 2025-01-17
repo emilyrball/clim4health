@@ -8,8 +8,18 @@ library(easyNCDF)
 library(CSTools)
 
 # main function
-clim4health_load <- function(path, var = NULL, sdates = NULL, ext = 'nc',
-                             lat_selection = 'all', lon_selection = 'all') {
+clim4health_load <- function(path, var = NULL, sdates = NULL,
+                             data_type = "", ext = 'nc',
+                             lat_selection = 'all',
+                             lon_selection = 'all') {
+    if (!(data_type %in% c("fcst", "hcst", "obs"))) {
+      # user must select whether data is observation or forecast/hindcast
+      stop ("Please select data_type. Valid options are \"fcst\", \"hcst\", or \"obs\".")
+    
+    } else if (!(ext %in% c("nc", "csv"))) {
+      # If the extension of the files is not in the previous if conditions stop the script
+      stop ("The type_file has to be csv or nc, no other type files are allowed at the moment")
+    }
     full_path <- outer(paste0(path, var, '_'), sdates, FUN = "paste0")
     full_path <- t(full_path)
     dim(full_path) <- NULL
@@ -22,7 +32,7 @@ clim4health_load <- function(path, var = NULL, sdates = NULL, ext = 'nc',
     if (ext == 'csv') {
   
       # read file
-      data <- read.csv(path)
+      data <- read.csv(full_path)
 
       # read headers
       headers <- colnames(data)
@@ -74,147 +84,218 @@ clim4health_load <- function(path, var = NULL, sdates = NULL, ext = 'nc',
     } else if (ext == 'nc') {
       dataset <- paste0(path, '$var$_$sdate$.nc')
 
-      # read netcdf file dimensions:
+      # read netcdf file dimensions
       file.dims <- names(NcReadDims(full_path[1]))
+
+      synonims <- list()
+      return_vars <- list()
+
+      ### extract time dimensions from files ###
+      time_dims <- c()
+      for (f in c("year", "month", "week", "day", "date", "time")) {
+        if (f %in% file.dims) {
+          time_dims <- c(time_dims, f)
+        }
+      }
       # define initial input parameters to startR
       start_parameters <- list(
               dataset = dataset,
               var = var,
               sdate = sdates)
-
-      synonims <- list()
-      return_vars <- list()
-
-      lat.dim <- which(file.dims %in% c("latitude","lat"))
-      lon.dim <- which(file.dims %in% c("longitude","lon"))
-
-      lat.length <- NcReadDims(full_path[1])[[lat.dim]]
-      lon.length <- NcReadDims(full_path[1])[[lon.dim]]
-
-      # define synonyms for startR call
-      if (lat.length != 1) {
-        synonims$latitude <- c("lat",  'latitude')
-        return_vars$latitude <- 'dataset'
-      } else {
-        lat.val <- NcVarReader(file_path=full_path[1],
-                               var_name="lat",
-                               synonims=list(lat=c("lat","latitude")))[[1]]
-      }
-      if (lon.length != 1) {
-        synonims$longitude <- c("lon", 'longitude')
-        return_vars$longitude <- 'dataset'
-      } else {
-        lon.val <- NcVarReader(file_path=full_path[1],
-                               var_name="lon",
-                               synonims=list(lon=c("lon","longitude")))[[1]]
-      }
-      # open by file dimensions
-      # if file includes year dimension, add to startR parameters
-      if (any(c('year', 'syear') %in% file.dims)){
-        start_parameters$year <- "all"
-        synonims$year <- c('year', 'syear')
-        #start_parameters$year_across <- 'sdate'
-        #return_vars$year <- "sdate"
-      }
-      # if file includes month dimension, add to startR parameters
-      if (any(c('month', 'smonth') %in% file.dims)){
-        start_parameters$month <- "all"
-        synonims$month <- c('month', 'smonth')
-        #start_parameters$month_across <- 'sdate'
-        #return_vars$month <- "sdate"
-      }
-      # if file includes week dimension, add to startR parameters
-      if (any(c('week', 'sweek') %in% file.dims)){
-        start_parameters$week <- "all"
-        synonims$week <- c('week', 'sweek')
-        #start_parameters$week_across <- 'sdate'
-        #return_vars$week <- "sdate"
-      }
-      # if file includes day dimension, add to startR parameters
-      if (any(c('day', 'sday') %in% file.dims)){
-        start_parameters$day <- "all"
-        synonims$day <- c('day', 'sday')
-        #start_parameters$day_across <- 'sdate'
-        #return_vars$day <- c("sdate")
-      }
-      # if file includes time dimension, add to startR parameters
-      if (any(c('time') %in% file.dims)){
-        start_parameters$time <- 'all'
-        if (length(sdates > 1)) {
-          #start_parameters$time_across <- 'sdate'
-          return_vars$time <- "sdate"
+      # add time dimensions
+      for (f in time_dims) {
+        if ((data_type != "obs") && (f == "time")) {
+          f <- paste0("lead_", f)
+          synonims$lead_time <- c("time", 'lead_time')
         }
+        start_parameters[f] <- "all"
+        if ((data_type== "obs") && (f == "time")) {
+          start_parameters[paste0(f, "_across")] <- "sdate"
+        }
+        return_vars[f] <- "sdate"
       }
 
       # if file includes ensemble dimension, add to startR parameters
       if (any(c('ensemble', 'member', 'number') %in% file.dims)){
         start_parameters$ensemble <- "all"
-      }
-
-
-      
-      #if (any(c('time') %in% file.dims)){
-      #  #return_vars$time <- 'sdate'
-      #  start_parameters$time_across <- 'sdate'
-      #}
-
-      # if file includes ensemble dimension, add to synonims
-      if (any(c('ensemble', 'member', 'number') %in% file.dims)){
         synonims$ensemble <- c('ensemble', 'member', 'number')
       }
-      
-      # define final necessary parameters to startR
-      if (lat.length != 1) {
-        start_parameters$latitude <- 'all'
-        start_parameters$latitude_reorder <- Sort(decreasing = TRUE)
+
+      # get latitude values
+      if (any(c("latitude", "lat") %in% file.dims)) {
+        lat.dim <- which(file.dims %in% c("latitude","lat"))
+        lat.length <- NcReadDims(full_path[1])[[lat.dim]]
+        if (lat.length > 1) {
+          synonims$latitude <- c("lat",  'latitude')
+          return_vars$latitude <- 'dataset'
+          start_parameters$latitude <- 'all'
+          start_parameters$latitude_reorder <- Sort(decreasing = TRUE)
+        } else {
+          lat.val <- NcVarReader(file_path=full_path[1],
+                                 var_name="lat",
+                                 synonims=list(lat=c("lat",
+                                                     "latitude")))[[1]]
+        }
+      } else {
+        lat.val <- indices(1)
       }
-      if (lon.length != 1) {
-        start_parameters$longitude <- 'all'
-        start_parameters$longitude_reorder <- CircularSort(-180, 180)
+      # get longitude values
+      if (any(c("longitude", "lon") %in% file.dims)) {
+        lon.dim <- which(file.dims %in% c("longitude","lon"))
+        lon.length <- NcReadDims(full_path[1])[[lon.dim]]
+        if (lon.length > 1) {
+          synonims$longitude <- c("lon", 'longitude')
+          return_vars$longitude <- 'dataset'
+          start_parameters$longitude <- 'all'
+          start_parameters$longitude_reorder <- CircularSort(-180, 180)
+        } else {
+          lon.val <- NcVarReader(file_path=full_path[1],
+                                 var_name="lon",
+                                 synonims=list(lon=c("lon",
+                                                     "longitude")))[[1]]
+        }
+      } else {
+        lon.val <- indices(1)
       }
 
+      # define final parameters for startR calls
       start_parameters$synonims <- synonims
       start_parameters$return_vars <- return_vars
-      start_parameters$retrieve <- TRUE
+      start_parameters$retrieve <- FALSE
       start_parameters$split_multiselected_dims <- TRUE
       start_parameters$merge_across_dims <- TRUE
       start_parameters$merge_across_dims_narm <- TRUE
       start_parameters$largest_dims_length <- TRUE
 
-      # Use startR function to open the files
+      # Use startR function to get the dates
       data <- do.call(Start, start_parameters)
       # keep dates
-      
       if (any(c('time') %in% file.dims)){
-        time_attributes <- attr(data, "Variables")$common$time
-        #time_units_number <- time_attributes$vals
-        #time_units_units <- time_attributes$units # "hours since..."
-        #if (grepl("hours since ", time_units_units, fixed = TRUE)){
-        #  metadata_dates <- as.POSIXct(gsub("hours since ", "", time_units_units),tz="UTC")+as.difftime(time_units_number,units="hours")
-        #}
+        if (data_type == "obs") {
+          time_attributes <- attr(data, "Variables")$common$time
+        } else {
+          time_attributes <- attr(data, "Variables")$common$lead_time
+        }
         metadata_dates <- as.POSIXct(time_attributes)
+        years <- unique(year(metadata_dates))
+        months <- unique(month(metadata_dates))
+        days <- unique(day(metadata_dates))
+        hours <- hour(metadata_dates)
+        minutes <- minute(metadata_dates)
+        seconds <- second(metadata_dates)
+        hours <- paste(hours, minutes, seconds, sep = ':')
+        hours <- unique(hours)
+        #reshape dates as needed
+        if (data_type == "obs") {
+          dim(metadata_dates) <- c(length(years), length(months),
+                                   length(days), length(hours), 1)
+          names(dim(metadata_dates)) <- c("year", "month", "day",
+                                          "time", "lead_time")
+        } else {
+          dim(metadata_dates) <- c(length(years), length(months),
+                                   length(days), length(hours))
+          names(dim(metadata_dates)) <- c("year", "month", "day",
+                                           "time")
+        }
+
+        if (data_type == "obs") {
+          start_parameters$time <- values(metadata_dates)
+        } else {
+          start_parameters$lead_time <- 'all'#values(metadata_dates)
+        }
+      } else {
+        if ("year" %in% time_dims) {
+          years <- attr(data, "Variables")$common$year
+        } else {
+          years <- sdates
+        }
+        if ("month" %in% time_dims) {
+          months <- attr(data, "Variables")$common$month
+          for (i in seq_along(months)) {
+            if (nchar(months[i]) == 1) {
+              months[i] <- paste0('0', months[i])
+            }
+          }
+        } else {
+          months <- indices(1)
+        }
+        if ("day" %in% time_dims) {
+          days <- attr(data, "Variables")$common$day
+          for (i in seq_along(days)) {
+            if (nchar(days[i]) == 1) {
+              days[i] <- paste0('0', days[i])
+            }
+          }
+        } else {
+          days <- indices(1)
+        }
       }
 
+      
+      start_parameters$retrieve <- TRUE
+      data <- do.call(Start, start_parameters)
       # transform to sd2v_cube
       data <- as.s2dv_cube(data)
 
-      if (any(c('time') %in% file.dims)){
-        data$coords$time <- metadata_dates
-      #  #if ()
-      }
-
+      #if (any(c('time') %in% file.dims)){
+      #  if (data_type == "obs") {
+      #    data$coords$time <- metadata_dates
+      #  } else {
+      #    data$coords$lead_time <- metadata_dates
+      #  }
+      #}
       # store loaded dates in Date format
-      data$attrs$Dates <- as.Date(data$attrs$Dates)
-
-      # add lat/lon if needed
-      if (lat.length <= 1) {
-        data <- CST_InsertDim(data, length(dim(data$data)) + 1, 1, "latitude", values = lat.val)
-      }
-      if (lon.length <= 1) {
-        data <- CST_InsertDim(data, length(dim(data$data)) + 1, 1,"longitude", values = lon.val)
-      }
+      dates <- as.Date(data$attrs$Dates)
+      data$attrs$Dates <- dates
+      out_dims <- names(data$dim)
+      
       if (!("sdate" %in% names(dim(data$data)))) {
-        data <- CST_InsertDim(data, 3, length(sdates),"sdate", values = sdates)
+        if (data_type == "obs") {
+          data <- CST_InsertDim(data, 3, 1,"sdate", values = sdates[1])
+        } else {
+          data <- CST_InsertDim(data, 3, length(sdates),"sdate", values = sdates)
+        }
+      }
+
+      if (!("year" %in% out_dims)) {
+        data <- CST_InsertDim(data, 4, length(years),
+                              "year", values = years)
+      }
+      if (!("month" %in% out_dims)) {
+        data <- CST_InsertDim(data, 5, length(months),
+                              "month", values = months)
+      }
+      if (!("day" %in% out_dims)) {                        
+        data <- CST_InsertDim(data, 6, length(days),
+                              "day", values = days)
+      }
+      if (!("time" %in% out_dims)) {                        
+        data <- CST_InsertDim(data, 7, length(hours),
+                              "time", values = hours)
+      }
+      if (data_type == "obs") {
+        data$coords$year <- years
+        data$coords$month <- months
+        data$coords$day <- days
+        data$coords$time <- hours
+      }
+      if (!("lead_time" %in% out_dims)) {
+        data <- CST_InsertDim(data, 8,
+                              1, "lead_time",
+                              values = indices(1))
+      }
+      if (!("ensemble" %in% out_dims)) {
+        data <- CST_InsertDim(data, 9,
+                              1, "ensemble",
+                              values = indices(1))
+      }
+      if (!("latitude" %in% out_dims)) {
+        data <- CST_InsertDim(data, 10,
+                              1, "latitude", values = lat.val)
+      }
+      if (!("longitude" %in% out_dims)) {
+        data <- CST_InsertDim(data, 11,
+                              1,"longitude", values = lon.val)
       }
       
       # subset lat lon
@@ -230,15 +311,10 @@ clim4health_load <- function(path, var = NULL, sdates = NULL, ext = 'nc',
       } else {
         lon_select <- which(lon >= lon_selection[1] & lon <= lon_selection[2])
       }
-      data <- CST_Subset(data, along = c('latitude', 'longitude'), indices = list(lat_select, lon_select), drop = 'none')
-
-    } else {
-
-      # If the extension of the files is not in the previous if conditions stop the script
-      stop ("The type_file has to be csv or nc, no other type files are allowed at the moment")
-    
+      data <- CST_Subset(data, along = c('latitude', 'longitude'),
+                         indices = list(lat_select, lon_select),
+                         drop = 'none')
     }
-
   return (data)
 
 }
