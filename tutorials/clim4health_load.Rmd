@@ -73,7 +73,7 @@ Input parameters for clim4health_load are *path*, *var*, *sdates*, *data_type* a
 ```r
 fcst_path <- paste0(clim4health_path, '/sample_data/ecmwf51/forecast/')
 fcst <- clim4health_load(fcst_path, var = "t2m", data_type = "fcst",
-                         sdates = "20240401", ext = 'nc')  
+                         sdates = "20240401", ext = 'nc')
 ```
 
 ### Check loaded forecast
@@ -84,10 +84,10 @@ class(fcst)
 #[1] "s2dv_cube"
 
 dim(fcst$data)
-#  dataset       var     sdate      year     month       day      time lead_time 
-#        1         1         1         1         3         1         1         3 
-# ensemble  latitude longitude 
-#       51        57        77 
+#     dataset         var        year       month         day time_of_day 
+#           1           1           1           3           1           1 
+#    ensemble    latitude   longitude 
+#          51          57          77
 
 summary(fcst$data)
 #   Min. 1st Qu.  Median    Mean 3rd Qu.    Max.
@@ -98,9 +98,7 @@ print(fcst$attrs$Variable$metadata$t2m$units)
 ```
 
 The object *fcst* is an *s2dv_cube* with the above dimensions in **data**.
-*sdate* is the initialization (start) date of the loaded file(s).
-*year*, *month*, *day* and *time* are the dates within the file. If the data is a forecast, *lead_time* is the leadtime in the netcdf file. *ensemble* is each of the ensemble members of forecast model.
-
+*year*, *month*, *day* and *time_of_day* contain information on the dates within the file. *ensemble* is each of the ensemble members of forecast model.
 
 Note that the data is in units of Kelvin. In case we want to transform to degree C, we can do it now. We can also change the attributes of the *s2dv_cube* to record this change.
 ```r
@@ -108,11 +106,25 @@ fcst$data <- fcst$data - 273.15
 fcst$attrs$Variable$metadata$t2m$units <- "C"
 ```
 
-We can check the spatial and temporal coordinates of the *s2dv_cube*, which are read from the netcdf file when the data is loaded:
+We can check the spatial and temporal coordinates of the *s2dv_cube*, which are read from the netcdf file when the data is loaded.
+
+If the data is a forecast, we can find the lead times and start date of the forecast in the metadata.
 
 ```r
-fcst$coords$lead_time
+print(fcst$attrs$Dates$metadata)
 # [1] "2024-04-01 UTC" "2024-05-01 UTC" "2024-06-01 UTC"
+
+print(dim(fcst$attrs$Dates$metadata))
+#    sdate lead_time
+#        1         3
+
+##### to print the forecast start date #####
+print(fcst$attrs$Dates$metadata[ , 1])
+# [1] "2024-04-01 UTC"
+##### or #####
+print(fcst$attrs$Dates$sdate)
+# [1] "20240401"
+############################################
 
 fcst$coords$year
 # [1] 2024
@@ -137,12 +149,12 @@ We could also run the command ```fcst$coords$latitude``` which will show more in
 Using the function *PlotEquiMap* from the *s2dv* package, we can plot the spatial array. First, we need to reduce the rest of dimensions; in this case we select the first time and do an ensemble mean.
 ```r
 time_idx = 1
-PlotEquiMap(var = MeanDims(drop(fcst$data)[1,time_idx,,,], 'ensemble'),
+PlotEquiMap(var = MeanDims(drop(fcst$data)[time_idx,,,], 'ensemble'),
             lat = fcst$coords$latitude,
             lon = fcst$coords$longitude,
             filled.continents = FALSE,
             units = 'Temperature (C)', # text to appear in the legend
-            toptitle = paste0('Forecast ', as.Date(fcst$coords$lead_time[time_idx]), ' (ensemble mean)'), # text to appear as overall title
+            toptitle = paste0('Forecast ', as.Date(fcst$attrs$Dates$Dates[time_idx]), ' (ensemble mean)'), # text to appear as overall title
             fileout = paste0(clim4health_path, '/tutorials/figures/clim4health_load/fcst.png')
             )
 ```
@@ -173,10 +185,10 @@ class(hcst)
 #[1] "s2dv_cube"
 
 dim(hcst$data)
-#  dataset       var     sdate      year     month       day      time lead_time 
-#        1         1         3         3         3         1         1         3 
-# ensemble  latitude longitude 
-#       25        57        77 
+#    dataset         var        year       month         day time_of_day
+#          1           1           3           3           1           1
+#   ensemble    latitude   longitude
+#         25          57          77
 
 summary(hcst$data)
 #   Min. 1st Qu.  Median    Mean 3rd Qu.    Max.
@@ -186,23 +198,23 @@ hcst$data <- hcst$data - 273.15
 hcst$attrs$Variable$metadata$t2m$units <- "C"
 
 ```
-Check the temporal coordinates of the hcst *s2dv_cube*
+Check the temporal coordinates of the hcst *s2dv_cube*.
 
 ```r
-dim(hcst$coords$lead_time)
-# [1] 1 2 3
-# attr(,"indices")
-# [1] TRUE
+print(hcst$attrs$Dates$metadata)
+# [1] "2010-04-01 UTC" "2011-04-01 UTC" "2012-04-01 UTC" "2010-05-01 UTC"
+# [5] "2011-05-01 UTC" "2012-05-01 UTC" "2010-06-01 UTC" "2011-06-01 UTC"
+# [9] "2012-06-01 UTC"
 
-hcst$attrs$Dates
-# [1] "2010-04-01" "2011-04-01" "2012-04-01" "2010-05-01" "2011-05-01"
-# [6] "2012-05-01" "2010-06-01" "2011-06-01" "2012-06-01"
+print(dim(hcst$attrs$Dates$metadata)) 
+#     sdate lead_time 
+#         3         3
 
-dim(hcst$attrs$Dates)
-#    sdate lead_time 
-#        3         3
+##### to get the hindcast start dates #####
+print(hcst$attrs$Dates$metadata[ , 1])
+# [1] "2010-04-01 UTC" "2011-04-01 UTC" "2012-04-01 UTC"
 ```
-As we have loaded 3 start dates, lead time changes over these files and so is now saved as index. The ```hcst$attrs$Dates``` has stored the dates of the loaded files and the dimensions that these are saved in.
+As we have loaded 3 start dates, each with 3 lead times, there are now 3x3 dates in the file.
 
 #### Load reference
 ##### from *.nc*
@@ -217,9 +229,10 @@ lats <- c(min(latitudes), max(latitudes))
 lons <- c(min(longitudes), max(longitudes))
 
 # extract dates from hcst object. We are careful here to transpose the dates so that they are ordered correctly.
-dates <- as.Date(hcst$attrs$Dates)
-dates <- t(dates)
-sdates <- format(dates, "%Y%m")[c(1,2,4,5,7,8)]
+dates <- as.Date(hcst$attrs$Dates$Dates)
+dates <- t(drop(dates)[,c(1,2)])
+dim(dates) <- NULL
+sdates <- format(dates, "%Y%m")
 
 print(sdates)
 # [1] "201004" "201005" "201006" "201104" "201105" "201106"
@@ -239,10 +252,10 @@ class(obs)
 #[1] "s2dv_cube"
 
 dim(obs$data)
-#  dataset       var     sdate      year     month       day      time lead_time 
-#        1         1         1         3         2         1         1         1 
-# ensemble  latitude longitude 
-#        1       561       761 
+#  dataset         var        year       month         day time_of_day 
+#        1           1           3           2           1           1 
+# ensemble    latitude   longitude 
+#        1         561         761 
 
 summary(obs$data)
 #   Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
@@ -250,12 +263,13 @@ summary(obs$data)
 
 obs$data <- obs$data - 273.15
 obs$attrs$Variable$metadata$t2m$units <- "C"
-```
 
-```r
-obs$attrs$Dates
+obs$attrs$Dates$Dates
 # [1] "2010-04-01" "2010-05-01" "2011-04-01" "2011-05-01" "2012-04-01"
 # [6] "2012-05-01"
+
+obs$attrs$Dates$metadata
+# NULL
 ```
 
 Our forecast, hindcast, and observational datasets have all been loaded in the same format.
