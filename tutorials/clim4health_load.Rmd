@@ -276,4 +276,23 @@ Our forecast, hindcast, and observational datasets have all been loaded in the s
 
 
 ##### from *.csv*
+
+We can also load data in csv format. For example, try:
+
+```r
+point_locs <- clim4health_load(paste0(clim4health_path, "/sample_data/point_locations/weather_stations"),
+                               data_type = "obs", ext = "csv")
+
+dim(point_locs$data)
+#     dataset         var        year       month         day time_of_day 
+#          1           1           2          12          31           1 
+#   ensemble    latitude   longitude 
+#          1           2           2
+
+summary(point_locs$data)
+#   Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+#  20.00   21.30   22.50   22.51   23.80   25.00    1514 
+```
+
+
 ##### harmonize reference with hindcast

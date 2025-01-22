@@ -20,26 +20,65 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
       # If the extension of the files is not in the previous if conditions stop the script
       stop ("The type_file has to be csv or nc, no other type files are allowed at the moment")
     }
-    full_path <- outer(paste0(path, var, '_'), sdates, FUN = "paste0")
-    full_path <- t(full_path)
-    dim(full_path) <- NULL
+    if (!(is.null(sdates))) {
+      full_path <- outer(paste0(path, var, '_'), sdates, FUN = "paste0")
+      full_path <- t(full_path)
+      dim(full_path) <- NULL
+    } else {
+      full_path <- paste0(path, var)
+    }
 
     full_path <- outer(full_path, paste0('.', ext), FUN = "paste0")
     full_path <- t(full_path)
     dim(full_path) <- NULL
-
+    print(full_path)
     # Read .csv files
     if (ext == 'csv') {
-  
+      if (!(data_type == "obs")) {
+        stop("Cannot currently load forecast/hindcast data in csv format.")
+      }
       # read file
       data <- read.csv(full_path)
-
+      if (ncol(data) == 1) {
+        for (i in 1:11) {
+          if (ncol(read.csv(full_path, skip = i)) > 1) {
+            break
+          }
+        }
+        if (i == 11) {
+          stop("Too many header lines in csv file, please delete some!")
+        } else {
+          data <- read.csv(full_path, skip = i)
+          metadata <- head(read.csv(full_path), i - 1)
+        }
+      } else {
+        metadata <- NULL
+      }
+      
       # read headers
       headers <- colnames(data)
-      lat.col <- which(headers %in% c('y', 'lat', 'latitude'))
-      lon.col <- which(headers %in% c('x', 'lon', 'longitude'))
-      time.col <- which(headers %in% c('time', 'date', 'day', 'week', 'month', 'year',
-                                       'Time', 'Date', 'Day', 'Week', 'Month', 'Year'))
+      ### get lats/lons ###
+      if (any(c("y", "lat", "latitude") %in% headers)) {
+        lat.col <- which(headers %in% c('y', 'lat', 'latitude'))
+      } else {
+        lat.col <- NULL
+      }
+      if (any(c("x", "lon", "longitude") %in% headers)) {
+        lon.col <- which(headers %in% c('x', 'lon', 'longitude'))
+      } else {
+        lon.col <- NULL
+      }
+
+      ### get time columns ###
+      time_dim <- list()
+      for (f in c('time', 'date', 'day', 'week', 'month', 'year',
+                  'Time', 'Date', 'Day', 'Week', 'Month', 'Year')) {
+        if (f %in% headers) {
+          time_dim[f] <- which(headers == f)
+        }
+      }
+
+      ### get variable ###
       if (!is.null(var)) {
         var.col <- which(headers %in% var)
       }
@@ -52,68 +91,145 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
       lat <- c() # initialise
       lon <- c() # initialise
       #dates <- as.Date(unique(data[,time.col]), format = "%d-%m-%Y", "%Y/%m/%d")
-      if (any(is.na(ymd(unique(data[,time.col]))))){
-        dates <- dmy(unique(data[,time.col]))
+      if (any(c("time", "Time", "date", "Date") %in% names(time_dim))) {
+        dates <- tryCatch({ymd(data[,names(time_dim)])},
+          error = function(x) {return(NA)},
+          warning = function(x) {return(NA)})
+        if (typeof(dates) == "logical") {
+          dates <- tryCatch({dmy(data[,names(time_dim)])},
+            error = function(x) {return(NA)},
+            warning = function(x) {return(NA)})
+        }
+        if (typeof(dates) == "logical") {
+          dates <- tryCatch({as.POSIXct(data[,names(time_dim)])},
+            error = function(x) {return(NA)},
+            warning = function(x) {return(NA)})
+        }
+        if (typeof(dates) == "logical") {
+          dates <- tryCatch({ym(data[,names(time_dim)])},
+            error = function(x) {return(NA)},
+            warning = function(x) {return(NA)})
+        }
+        if (typeof(dates) == "logical") {
+          dates <- tryCatch({year(data[,names(time_dim)])},
+            error = function(x) {return(NA)},
+            warning = function(x) {return(NA)})
+        }
+        if (typeof(dates) == "logical") {
+          stop("Cannot parse dates. Stopping")
+        }
+        all_years <- year(dates)
+        years <- unique(all_years)
+        all_months <- month(dates)
+        months <- unique(all_months)
+        all_days <- day(dates)
+        days <- unique(all_days)
+        hours <- hour(dates)
+        minutes <- minute(dates)
+        seconds <- second(dates)
+        all_hours <- paste(hours, minutes, seconds, sep = ':')
+        hours <- unique(all_hours)
       } else {
-        dates <- ymd(unique(data[,time.col]))
+        dates <- data[,names(time_dim)]
+        if (any(c("year", "Year") %in% names(time_dim))) {
+          all_years <- dates
+          years <- unique(all_years)
+        } else {
+          all_years <- rep(1, length(dates))
+          years <- indices(1)
+        }
+        if (any(c("month", "Month") %in% names(time_dim))) {
+          all_months <- dates
+          months <- unique(all_months)
+        } else {
+          all_months <- rep(1, length(dates))
+          months <- indices(1)
+        }
+        if (any(c("day", "Day") %in% names(time_dim))) {
+          all_days <- dates
+          days <- unique(all_days)
+        } else {
+          all_days <- rep(1, length(dates))
+          days <- indices(1)
+        }
+        all_hours <- rep("00:00:00", length(dates))
+        hours <- "00:00:00"
       }
-      print(dates)
-      dates <- as.POSIXct(dates)
-      years <- unique(year(dates))
-      months <- unique(month(dates))
-      days <- unique(day(dates))
-      hours <- hour(dates)
-      minutes <- minute(dates)
-      seconds <- second(dates)
-      hours <- paste(hours, minutes, seconds, sep = ':')
-      hours <- unique(hours)
 
-      coords <- unique(paste0(data[,lat.col], '; ', data[,lon.col]))
-      for (cc in 1:length(coords)){
-        lat <- c(lat, as.integer(strsplit(coords[cc], '; ')[[1]][1]))
-        lon <- c(lon, as.integer(strsplit(coords[cc], '; ')[[1]][2]))
-      }
-
-      # convert table to array
-      #data.array <- array(data[,var.col], dim = c(latitude = length(lat), longitude = length(lon), time = length(dates))) 
-      data.array <- array(data, dim = c(dataset = 1, var = 1, sdate = length(sdates),
-                                      year = length(years), month = length(months),
-                                      day = length(days), time = length(hours),
-                                      lead_time = 1, ensemble = 1,
-                                      latitude = length(lat), longitude = length(lon))) 
-
-      if (any(c('y', 'lat', 'latitude') %in% headers)) {
-        for(ll in 1:length(lat)){
-          data.array[, , , , , , ll, ll] <- data[which(data[,lat.col]==lat[ll] & data[,lon.col]==lon[ll]),var.col]
+      if (!(is.null(lat.col)) && !(is.null(lon.col))) {
+        coords <- unique(paste0(data[,lat.col], '; ', data[,lon.col]))
+        for (cc in 1:length(coords)){
+          lat <- c(lat, as.integer(strsplit(coords[cc], '; ')[[1]][1]))
+          lon <- c(lon, as.integer(strsplit(coords[cc], '; ')[[1]][2]))
         }
       } else {
         lat <- indices(1)
         lon <- indices(1)
       }
 
-      dim(dates) <- c(length(years), length(months),
-                                   length(days), length(hours), 1)
-      names(dim(dates)) <- c("year", "month", "day",
-                                          "time", "lead_time")
+      # convert table to array
+      #data.array <- array(data[,var.col], dim = c(latitude = length(lat), longitude = length(lon), time = length(dates))) 
+      data.array <- array(data[, var.col], dim = c(dataset = 1, var = 1,
+                                      year = length(years), month = length(months),
+                                      day = length(days), time_of_day = length(hours),
+                                      ensemble = 1,
+                                      latitude = length(lat), longitude = length(lon))) 
+
+      dates_tmp <- c(unique(dates),
+                     rep(NA, length(years)*length(months)*length(days)*length(hours)-
+                              length(unique(dates))))
+      dim(dates_tmp) <- c(length(years), length(months),
+                                   length(days), length(hours))
+      names(dim(dates_tmp)) <- c("year", "month", "day", "time_of_day")
+
+      for (hh in 1:length(hours)) {
+        hhx <- which(all_hours == hours[hh])
+        for (dd in 1:length(days)) {
+          ddx <- which(all_days == days[dd])
+          for (mm in 1:length(months)) {
+            mmx <- which(all_months == months[mm])
+            for (yy in 1:length(years)) {
+              yyx <- which(all_years == years[yy])
+              idxs <- Reduce(intersect, list(hhx, ddx, mmx, yyx))
+                if (!(length(idxs) == 0)) {
+                  dates_tmp[yy, mm, dd, hh] <- dates[idxs[1]]
+                } else {
+                  dates_tmp[yy, mm, dd, hh] <- NA
+                }
+              for (ln in 1:length(lon)) {
+                lnx <- which(data[,lon.col]==lon[ln])
+                for (ll in 1:length(lat)) {
+                  llx <- which(data[,lat.col]==lat[ll])
+                  idxs <- Reduce(intersect, list(lnx, llx, hhx, ddx, mmx, yyx))
+                  if (!(length(idxs) == 0)) {
+                    data.array[ , , yy, mm, dd, hh, , ll, ln] <- data[idxs, var.col]
+                  } else {
+                    data.array[ , , yy, mm, dd, hh, , ll, ln] <- NA
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+
+      dates <- dates_tmp
 
       # format to s2dv_cube
       data_tmp <- s2dv_cube(
                    data = data.array,
                    coords = list(dataset = 1,
                                  var = var,
-                                 sdate = sdates,
                                  year = years,
                                  month = months,
                                  day = days,
-                                 time = hours,
-                                 lead_time = 1,
+                                 time_of_day = hours,
                                  ensemble = 1,
                                  latitude = lat,
                                  longitude = lon),
                    varName = var,
                    Dates = dates)
       #attr(data, 'class') <- 's2dv_cube'
-      return(data_tmp)
       # subset to only the requested coordinates (lat_selection and lon_selection)
       if (any(lat_selection == 'all')){
         lat_select <- 1:length(lat)
@@ -125,8 +241,12 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
       } else {
         lon_select <- which(lon >= lon_selection[1] & lon <= lon_selection[2])
       }
-      data <- CST_Subset(data, along = c('latitude', 'longitude'), indices = list(lat_select, lon_select), drop = 'none')
-
+      data <- CST_Subset(data_tmp, along = c('latitude', 'longitude'),
+                         indices = list(lat_select, lon_select), drop = 'none')
+      if (!is.null(metadata)) {
+        data$attrs$Variable$metadata <- metadata
+      }
+      data$attrs$Dates <- list(Dates = dates)
     # Read .nc files
     } else if (ext == 'nc') {
       dataset <- paste0(path, '$var$_$sdate$.nc')
