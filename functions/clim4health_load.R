@@ -7,6 +7,24 @@ library(lubridate)
 library(easyNCDF)
 library(CSTools)
 
+# helper functions
+paste_hours_minutes <- function(hours, minutes) {
+  hours <- paste0(hours)
+  minutes <- paste0(minutes)
+  hours <- paste_zeros(hours)
+  minutes <- paste_zeros(minutes)
+  return(paste(hours, minutes, sep = ':'))
+}
+
+paste_zeros <- function(times) {
+  for (i in seq_along(times)) {
+    if (nchar(times[i]) == 1) {
+      times[i] <- paste0("0", times[i])
+    }
+  }
+  return(times)
+}
+
 # main function
 clim4health_load <- function(path, var = NULL, sdates = NULL,
                              data_type = "", ext = 'nc',
@@ -31,7 +49,7 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
     full_path <- outer(full_path, paste0('.', ext), FUN = "paste0")
     full_path <- t(full_path)
     dim(full_path) <- NULL
-    print(full_path)
+
     # Read .csv files
     if (ext == 'csv') {
       if (!(data_type == "obs")) {
@@ -39,6 +57,7 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
       }
       # read file
       data <- read.csv(full_path)
+      ### skip up to 10 lines of header
       if (ncol(data) == 1) {
         for (i in 1:11) {
           if (ncol(read.csv(full_path, skip = i)) > 1) {
@@ -60,16 +79,20 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
       ### get lats/lons ###
       if (any(c("y", "lat", "latitude") %in% headers)) {
         lat.col <- which(headers %in% c('y', 'lat', 'latitude'))
+        all_lats <- data[, lat.col]
       } else {
         lat.col <- NULL
+        all_lats <- rep(indices(1), length(data[,1]))
       }
       if (any(c("x", "lon", "longitude") %in% headers)) {
         lon.col <- which(headers %in% c('x', 'lon', 'longitude'))
+        all_lons <- data[, lon.col]
       } else {
         lon.col <- NULL
+        all_lons <- rep(indices(1), length(data[,1]))
       }
 
-      ### get time columns ###
+      ### get time columns ### test what happens if for example you have a year and month column
       time_dim <- list()
       for (f in c('time', 'date', 'day', 'week', 'month', 'year',
                   'Time', 'Date', 'Day', 'Week', 'Month', 'Year')) {
@@ -80,7 +103,11 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
 
       ### get variable ###
       if (!is.null(var)) {
-        var.col <- which(headers %in% var)
+        if (any(headers %in% var)) { # if var name exists in file
+          var.col <- which(headers %in% var)
+        } else { # if var name does not exist
+          stop(paste0("var name ", var, " not found"))
+        }
       }
       else {
         var.col <- length(headers)
@@ -90,26 +117,32 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
       # obtain metadata
       lat <- c() # initialise
       lon <- c() # initialise
-      #dates <- as.Date(unique(data[,time.col]), format = "%d-%m-%Y", "%Y/%m/%d")
+
+      # run through possible time/date combinations #
       if (any(c("time", "Time", "date", "Date") %in% names(time_dim))) {
+        # most likely stored as YYYY/MM/DD
         dates <- tryCatch({ymd(data[,names(time_dim)])},
           error = function(x) {return(NA)},
           warning = function(x) {return(NA)})
+        # could be stored as DD/MM/YYYY
         if (typeof(dates) == "logical") {
           dates <- tryCatch({dmy(data[,names(time_dim)])},
             error = function(x) {return(NA)},
             warning = function(x) {return(NA)})
         }
+        # could be stored as "YYYY/MM/DD hh:mm:ss"
         if (typeof(dates) == "logical") {
           dates <- tryCatch({as.POSIXct(data[,names(time_dim)])},
             error = function(x) {return(NA)},
             warning = function(x) {return(NA)})
         }
+        # monthly data can be stored as YYYY/MM
         if (typeof(dates) == "logical") {
           dates <- tryCatch({ym(data[,names(time_dim)])},
             error = function(x) {return(NA)},
             warning = function(x) {return(NA)})
         }
+        # final option could be year is stored as date
         if (typeof(dates) == "logical") {
           dates <- tryCatch({year(data[,names(time_dim)])},
             error = function(x) {return(NA)},
@@ -118,6 +151,8 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
         if (typeof(dates) == "logical") {
           stop("Cannot parse dates. Stopping")
         }
+        ### now we need to retain all date values to ensure
+        ### that our array will be reshaped correctly
         all_years <- year(dates)
         years <- unique(all_years)
         all_months <- month(dates)
@@ -126,34 +161,40 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
         days <- unique(all_days)
         hours <- hour(dates)
         minutes <- minute(dates)
-        seconds <- second(dates)
-        all_hours <- paste(hours, minutes, seconds, sep = ':')
+        all_hours <- paste_hours_minutes(hours, minutes)
         hours <- unique(all_hours)
       } else {
+        ## if time_dim is not called time/date
         dates <- data[,names(time_dim)]
         if (any(c("year", "Year") %in% names(time_dim))) {
-          all_years <- dates
+          year.col <- which(any(c("year", "Year") %in% headers))
+          all_years <- data[,year.col]
           years <- unique(all_years)
         } else {
-          all_years <- rep(1, length(dates))
+          all_years <- rep(1, length(t(dates)))
           years <- indices(1)
         }
         if (any(c("month", "Month") %in% names(time_dim))) {
-          all_months <- dates
+          month.col <- which(any(c("month", "Month") %in% headers))
+          all_months <- data[,month.col]
           months <- unique(all_months)
+          months <- paste_zeros(months)
         } else {
-          all_months <- rep(1, length(dates))
+          all_months <- rep(1, length(t(dates)))
           months <- indices(1)
         }
         if (any(c("day", "Day") %in% names(time_dim))) {
-          all_days <- dates
+          day.col <- which(any(c("day", "Day") %in% headers))
+          all_days <- data[, day.col]
           days <- unique(all_days)
+          days <- paste_zeros(days)
         } else {
-          all_days <- rep(1, length(dates))
+          all_days <- rep(1, length(t(dates)))
           days <- indices(1)
         }
-        all_hours <- rep("00:00:00", length(dates))
-        hours <- "00:00:00"
+        ## assume that time of day is not stored
+        all_hours <- rep("00:00", length(t(dates)))
+        hours <- "00:00"
       }
 
       if (!(is.null(lat.col)) && !(is.null(lon.col))) {
@@ -167,8 +208,7 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
         lon <- indices(1)
       }
 
-      # convert table to array
-      #data.array <- array(data[,var.col], dim = c(latitude = length(lat), longitude = length(lon), time = length(dates))) 
+      # convert table to array of correct dimensions for s2dv_cube
       data.array <- array(data[, var.col], dim = c(dataset = 1, var = 1,
                                       year = length(years), month = length(months),
                                       day = length(days), time_of_day = length(hours),
@@ -182,6 +222,7 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
                                    length(days), length(hours))
       names(dim(dates_tmp)) <- c("year", "month", "day", "time_of_day")
 
+      # reshape data and dates
       for (hh in 1:length(hours)) {
         hhx <- which(all_hours == hours[hh])
         for (dd in 1:length(days)) {
@@ -191,16 +232,17 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
             for (yy in 1:length(years)) {
               yyx <- which(all_years == years[yy])
               idxs <- Reduce(intersect, list(hhx, ddx, mmx, yyx))
-                if (!(length(idxs) == 0)) {
-                  dates_tmp[yy, mm, dd, hh] <- dates[idxs[1]]
-                } else {
-                  dates_tmp[yy, mm, dd, hh] <- NA
-                }
+              if (!(length(idxs) == 0)) {
+                dates_tmp[yy, mm, dd, hh] <- paste0(
+                  years[yy],"-", months[mm],"-", days[dd]," ",hours[hh])
+              } else {
+                dates_tmp[yy, mm, dd, hh] <- NA
+              }
               for (ln in 1:length(lon)) {
-                lnx <- which(data[,lon.col]==lon[ln])
+                lnx <- which(all_lons==lon[ln])
                 for (ll in 1:length(lat)) {
-                  llx <- which(data[,lat.col]==lat[ll])
-                  idxs <- Reduce(intersect, list(lnx, llx, hhx, ddx, mmx, yyx))
+                  llx <- which(all_lats==lat[ll])
+                  idxs <- Reduce(intersect, list(lnx, llx, idxs))
                   if (!(length(idxs) == 0)) {
                     data.array[ , , yy, mm, dd, hh, , ll, ln] <- data[idxs, var.col]
                   } else {
@@ -229,7 +271,7 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
                                  longitude = lon),
                    varName = var,
                    Dates = dates)
-      #attr(data, 'class') <- 's2dv_cube'
+
       # subset to only the requested coordinates (lat_selection and lon_selection)
       if (any(lat_selection == 'all')){
         lat_select <- 1:length(lat)
@@ -243,17 +285,20 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
       }
       data <- CST_Subset(data_tmp, along = c('latitude', 'longitude'),
                          indices = list(lat_select, lon_select), drop = 'none')
+
       if (!is.null(metadata)) {
         data$attrs$Variable$metadata <- metadata
       }
       data$attrs$Dates <- list(Dates = dates)
-    # Read .nc files
-    } else if (ext == 'nc') {
+
+
+    } else if (ext == 'nc') { # Read .nc files
       dataset <- paste0(path, '$var$_$sdate$.nc')
 
-      # read netcdf file dimensions
+      # read netcdf file dimensions of first file specified
       file.dims <- names(NcReadDims(full_path[1]))
 
+      # initialise startR parameters
       synonims <- list()
       return_vars <- list()
 
@@ -269,12 +314,13 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
               dataset = dataset,
               var = var,
               sdate = sdates)
+
       # add time dimensions
       for (f in time_dims) {
+        # treat case of "time" differently for obs/fcst
         if ((data_type != "obs") && (f == "time")) {
           f <- paste0("lead_", f)
           synonims$lead_time <- c("time", 'lead_time')
-          #start_parameters[paste0(f, "_across")] <- "sdate"
         }
         if ((data_type== "obs") && (f == "time")) {
           f <- paste0(f, "_of_day")
@@ -291,6 +337,7 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
         synonims$ensemble <- c('ensemble', 'member', 'number')
       }
 
+      # select lat and lon
       if (any(lat_selection == 'all')){
         lat_select <- 'all'
       } else {
@@ -312,6 +359,7 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
           start_parameters$latitude <- lat_select
           start_parameters$latitude_reorder <- Sort(decreasing = TRUE)
         } else {
+          # in case startR drops latitude value
           lat.val <- NcVarReader(file_path=full_path[1],
                                  var_name="lat",
                                  synonims=list(lat=c("lat",
@@ -319,7 +367,7 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
                                                      "lat_1",
                                                      "lat_2")))[[1]]
         }
-      } else {
+      } else { # if lat is not stored in file
         lat.val <- indices(1)
       }
       # get longitude values
@@ -332,6 +380,7 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
           start_parameters$longitude <- lon_select
           start_parameters$longitude_reorder <- CircularSort(-180, 180)
         } else {
+          # in case startR drops longitude value
           lon.val <- NcVarReader(file_path=full_path[1],
                                  var_name="lon",
                                  synonims=list(lon=c("lon",
@@ -339,7 +388,7 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
                                                      'lon_1',
                                                      'lon_2')))[[1]]
         }
-      } else {
+      } else { # if lon is not stored in file
         lon.val <- indices(1)
       }
 
@@ -351,8 +400,9 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
       start_parameters$merge_across_dims <- TRUE
       start_parameters$merge_across_dims_narm <- TRUE
       start_parameters$largest_dims_length <- TRUE
+      start_parameters$silent <- TRUE
 
-      # Use startR function to get the dates
+      # Use startR function with retrieve=FALSE to get the dates
       data <- do.call(Start, start_parameters)
       # keep dates
       if (any(c('time') %in% file.dims)){
@@ -369,7 +419,7 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
         days <- unique(day(metadata_dates))
         hours <- hour(metadata_dates)
         minutes <- minute(metadata_dates)
-        hours <- paste(hours, minutes, sep = ':')
+        hours <- paste_hours_minutes(hours, minutes)
         hours <- unique(hours)
 
         dim(metadata_dates) <- c(length(years), length(months),
@@ -377,7 +427,7 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
         names(dim(metadata_dates)) <- c("year", "month", "day",
                                          "time_of_day")
 
-        
+        # load data with dates in required shape
         if (data_type == "obs") {
           start_parameters$time_of_day <- values(metadata_dates)
         } else {
@@ -399,42 +449,36 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
         }
         if ("month" %in% time_dims) {
           months <- attr(data, "Variables")$common$month
-          for (i in seq_along(months)) {
-            if (nchar(months[i]) == 1) {
-              months[i] <- paste0('0', months[i])
-            }
-          }
+          months <- paste_zeros(months)
         } else {
           months <- indices(1)
         }
         if ("day" %in% time_dims) {
           days <- attr(data, "Variables")$common$day
-          for (i in seq_along(days)) {
-            if (nchar(days[i]) == 1) {
-              days[i] <- paste0('0', days[i])
-            }
-          }
+          days <- paste0(days)
         } else {
           days <- indices(1)
         }
       }
 
+      # load data as StartR array
       start_parameters$retrieve <- TRUE
-      
+      start_parameters$silent <- FALSE
       data <- do.call(Start, start_parameters)
+
       # transform to sd2v_cube
       data <- as.s2dv_cube(data)
       # store loaded dates in Date format
       dates <- as.Date(data$attrs$Dates)
       data$attrs$Dates <- list(Dates = dates)
       if (!(data_type == "obs")) {
+        # store start dates and lead times
         data$attrs$Dates$metadata <- time_attributes
         data$attrs$Dates$sdate <- sdates
-        #data$attrs$Dates$metadata["sdate"] <- time_attributes[, 1]
       }
       out_dims <- names(data$dim)
       
-
+      # if any dimensions are missing, insert length 1
       if (!("year" %in% out_dims)) {
         data <- CST_InsertDim(data, 3, length(years),
                               "year", values = years)
@@ -452,6 +496,7 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
                               "time_of_day", values = hours)
       }
 
+      # rename coordinates
       data$coords$year <- years
       data$coords$month <- months
       data$coords$day <- days
@@ -472,6 +517,6 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
       }
       
     }
+  # return s2dv_cube from csv or nc
   return (data)
-
 }
