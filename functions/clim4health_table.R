@@ -20,6 +20,7 @@
 #' 
 #' @example
 #' path <- getwd()
+#' source(paste0(path, '/functions/clim4health_load.R'))   
 #' fcst <- clim4health_load(paste0(path, '/sample_data/ecmwf51/forecast/t2m_20240401.nc'))        
 #' class(fcst)
 #' #[1] "s2dv_cube"
