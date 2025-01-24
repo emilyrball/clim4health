@@ -294,8 +294,16 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
 
 
     } else if (ext == 'nc') { # Read .nc files
-      dataset <- paste0(path, '$var$_$sdate$.nc')
 
+      if (!is.null(var)) {
+        if (length(var) == 1) {
+          # if one variable is provided, assume the path is the directory containing the files
+          dataset <- paste0(path, '$var$_$sdate$.nc')
+        } else {
+          # if more than one variable is provided, assume files are stored as path/var/var_sdate.nc
+          dataset <- paste0(path, '$var$/$var$_$sdate$.nc')
+        }
+      }
       # read netcdf file dimensions of first file specified
       file.dims <- names(NcReadDims(full_path[1]))
 
@@ -412,7 +420,8 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
         } else {
           time_attributes <- attr(data, "Variables")$common$lead_time
         }
-        #reshape dates as needed
+        # reshape dates as needed - metadata_dates object contains all the dates within the loaded
+        # files, reshaped with dims year, month, day, time_of_day
         metadata_dates <- as.POSIXct(time_attributes)
 
         years <- unique(year(metadata_dates))
@@ -432,6 +441,7 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
         if (data_type == "obs") {
           start_parameters$time_of_day <- values(metadata_dates)
         } else {
+          # rename lead_time to time_of_day
           names(start_parameters)[names(start_parameters) == "lead_time"] <- "time_of_day"
           start_parameters$time_of_day <- values(metadata_dates)
           names(start_parameters$return_vars)[
@@ -442,35 +452,55 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
             names(start_parameters$synonims) == "lead_time"] <- "time_of_day"
           start_parameters$synonims["time_of_day"] <- c("time", 'lead_time', 'time_of_day')
         }
-      } else {
+      } else { # if time is not stored
         if ("year" %in% time_dims) {
           years <- attr(data, "Variables")$common$year
+          start_parameters$year_across <- "sdate"
         } else {
           years <- sdates
         }
         if ("month" %in% time_dims) {
           months <- attr(data, "Variables")$common$month
           months <- paste_zeros(months)
+          if (!("year" %in% time_dims)) {
+            start_parameters$month_across <- "sdate"
+          }
         } else {
-          months <- indices(1)
+          months <- "01"
         }
         if ("day" %in% time_dims) {
           days <- attr(data, "Variables")$common$day
-          days <- paste0(days)
+          days <- paste_zeros(days)
+          if (!(any(c("month", "year") %in% time_dims))) {
+            start_parameters$day_across <- "sdate"
+          }
         } else {
-          days <- indices(1)
+          days <- "01"
         }
+        ## assume time_of_day is not stored
+        hours <- "00:00:00"
+        # reshape dates
+        metadata_dates <- outer(years, paste0('-', months), FUN = "paste0")
+        metadata_dates <- outer(metadata_dates, paste0("-", days), FUN = "paste0")
+        metadata_dates <- outer(metadata_dates, paste0(" ", hours), FUN = "paste0")
+        names(dim(metadata_dates)) <- c("year", "month", "day",
+                                         "time_of_day")
       }
 
       # load data as StartR array
       start_parameters$retrieve <- TRUE
       start_parameters$silent <- FALSE
+      print(start_parameters$year_across)
       data <- do.call(Start, start_parameters)
 
       # transform to sd2v_cube
       data <- as.s2dv_cube(data)
       # store loaded dates in Date format
-      dates <- as.Date(data$attrs$Dates)
+      if (!is.null(data$attrs$Dates)) {
+        dates <- as.Date(data$attrs$Dates)
+      } else {
+        dates <- metadata_dates
+      }
       data$attrs$Dates <- list(Dates = dates)
       if (!(data_type == "obs")) {
         # store start dates and lead times
