@@ -86,9 +86,17 @@ Here’s an example with a sample dataset:
 
 ```R
 
-fcst <- clim4health_load(paste0(clim4health_path, '/sample_data/ecmwf51/forecast/t2m_20240401.nc'))     
+fcst_path <- paste0(clim4health_path, '/sample_data/ecmwf51/forecast/')
+
+fcst <- clim4health_load(fcst_path, var = "t2m", data_type = "fcst",
+                         sdates = "20240401", ext = 'nc')
+     
 
 ```
+
+This data set contains temperature data for 3 months ( "2024-04-01" "2024-05-01" "2024-06-01"), 
+51 ensembles, 57 latitude and 77 longitude points. Time information is divided
+into year, month, day and time_of_day dimensions.  
 
 Inspect the *s2dv_cube* object
 
@@ -100,8 +108,12 @@ class(fcst)
 
 # Inspect the dimensions of the data array.
  dim(fcst$data)
-# dataset       var      time  ensemble  latitude longitude
-#    1         1         3        51        57        77
+
+# dataset         var        year       month         day time_of_day 
+#      1           1           1           3           1           1 
+
+# ensemble  latitude longitude
+#      51        57        77
 ```
 
 Inspect the elements of each dimension in the *s2dv_cube* object. 
@@ -113,9 +125,21 @@ coordinate.
 fcst$coords$var
 # [1] "t2m"
 
-# Check the time coordinates.
-fcst$coords$time
-# [1] "2024-04-01" "2024-05-01" "2024-06-01"
+# Check the year coordinates.
+fcst$coords$year
+# [1] 2024
+
+# Check the month coordinates.
+fcst$coords$month
+# [1] 4 5 6
+
+# Check the day coordinates.
+fcst$coords$day
+# [1] 1
+
+# Check the time_of_day coordinates.
+fcst$coords$time_of_day
+# [1] "00:00"
 
 # Check the ensemble coordinates.
 fcst$coords$ensemble
@@ -138,7 +162,6 @@ fcst$coords$longitude[1:length(fcst$coords$longitude)]
 # [77] -17
 
 ```
-
 
 ### Convert the *s2dv_cube* object into a tidy data frame using *clim4health_table*
 
@@ -174,14 +197,16 @@ class(formatted.table)
 str(formatted.table)
 
 #'data.frame':   671517 obs. of  7 variables:
-# $ dataset  : Factor w/ 1 level "dat1": 1 1 1 1 1 1 1 1 1 1 ...
-# $ var      : Factor w/ 1 level "t2m": 1 1 1 1 1 1 1 1 1 1 ...
-# $ time     : Factor w/ 3 levels "2024-04-01","2024-05-01",..: 1 2 3 1 2 3 1 2 3 1 ...
-# $ ensemble : Factor w/ 51 levels "1","2","3","4",..: 1 1 1 2 2 2 3 3 3 4 ...
-# $ latitude : Factor w/ 57 levels "33","32","31",..: 1 1 1 1 1 1 1 1 1 1 ...
-# $ longitude: Factor w/ 77 levels "-93","-92","-91",..: 1 1 1 1 1 1 1 1 1 1 ...
-# $ values   : num  292 298 301 292 297 ...
-
+# $ dataset    : Factor w/ 1 level "dat1": 1 1 1 1 1 1 1 1 1 1 ...
+# $ var        : Factor w/ 1 level "t2m": 1 1 1 1 1 1 1 1 1 1 ...
+# $ year       : Factor w/ 1 level "2024": 1 1 1 1 1 1 1 1 1 1 ...
+# $ month      : Factor w/ 3 levels "4","5","6": 1 2 3 1 2 3 1 2 3 1 ...
+# $ day        : Factor w/ 1 level "1": 1 1 1 1 1 1 1 1 1 1 ...
+# $ time_of_day: Factor w/ 1 level "00:00": 1 1 1 1 1 1 1 1 1 1 ...
+# $ ensemble   : Factor w/ 51 levels "1","2","3","4",..: 1 1 1 2 2 2 3 3 3 4 ...
+# $ latitude   : Factor w/ 57 levels "33","32","31",..: 1 1 1 1 1 1 1 1 1 1 ...
+# $ longitude  : Factor w/ 77 levels "-93","-92","-91",..: 1 1 1 1 1 1 1 1 1 1 ...
+# $ values     : num  292 298 301 292 297 ...
 
 
 ```

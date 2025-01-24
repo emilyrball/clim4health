@@ -12,6 +12,7 @@ source(paste0(path, '/functions/clim4health_load.R'))
 
 source(paste0(path, '/functions/clim4health_table.R'))        
 
+devtools::load_all()
 
 ########## function with fcst ############
 
