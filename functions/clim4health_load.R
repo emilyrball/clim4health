@@ -27,7 +27,7 @@ paste_zeros <- function(times) {
 
 # main function
 clim4health_load <- function(path, var = NULL, sdates = NULL,
-                             data_type = "", ext = 'nc',
+                             data_type = "", ext = NULL,
                              lat_selection = 'all',
                              lon_selection = 'all') {
     if (substr(path, nchar(path), nchar(path)) != '/'){path <- paste0(path, '/')}
@@ -96,7 +96,7 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
       ### get time columns ### test what happens if for example you have a year and month column
       time_dim <- list()
       for (f in c('time', 'date', 'day', 'week', 'month', 'year',
-                  'Time', 'Date', 'Day', 'Week', 'Month', 'Year')) {
+                  'Time', 'Date', 'Day', 'Week', 'Month', 'Year', "date_obs")) {
         if (f %in% headers) {
           time_dim[f] <- which(headers == f)
         }
@@ -120,38 +120,39 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
       lon <- c() # initialise
 
       # run through possible time/date combinations #
-      if (any(c("time", "Time", "date", "Date") %in% names(time_dim))) {
-        # most likely stored as YYYY/MM/DD
-        dates <- tryCatch({ymd(data[,names(time_dim)])},
-          error = function(x) {return(NA)},
-          warning = function(x) {return(NA)})
-        # could be stored as DD/MM/YYYY
-        if (typeof(dates) == "logical") {
-          dates <- tryCatch({dmy(data[,names(time_dim)])},
-            error = function(x) {return(NA)},
-            warning = function(x) {return(NA)})
-        }
+      if (any(c("time", "Time", "date", "Date", "date_obs") %in% names(time_dim))) {
+        time.col <- which(headers %in% c("time", "Time", "date", "Date", "date_obs"))
+        print(headers)
+        print(time.col)
         # could be stored as "YYYY/MM/DD hh:mm:ss"
-        if (typeof(dates) == "logical") {
-          dates <- tryCatch({as.POSIXct(data[,names(time_dim)])},
+        print("Trying YYYY/MM/DD hh:mm:ss date format")
+        dates <- tryCatch({as.POSIXct(data[,time.col])},
             error = function(x) {return(NA)},
             warning = function(x) {return(NA)})
-        }
-        # monthly data can be stored as YYYY/MM
+        # most likely stored as YYYY/MM/DD
         if (typeof(dates) == "logical") {
-          dates <- tryCatch({ym(data[,names(time_dim)])},
-            error = function(x) {return(NA)},
-            warning = function(x) {return(NA)})
+          print("Trying date formats")
+          sumNA <- length(data[,time.col])
+          for (f in list(ymd, dmy, mdy, ym, my)) {
+            dates_tmp <- f(data[,time.col])
+            if (sum(is.na(dates_tmp)) < sumNA) {
+              dates <- dates_tmp
+              sumNA <- sum(is.na(dates_tmp))
+              ## choose a date format that produces least NAs
+            }
+          }
         }
         # final option could be year is stored as date
         if (typeof(dates) == "logical") {
-          dates <- tryCatch({year(data[,names(time_dim)])},
+          print("Trying YYYY date format")
+          dates <- tryCatch({year(data[,time.col])},
             error = function(x) {return(NA)},
             warning = function(x) {return(NA)})
         }
         if (typeof(dates) == "logical") {
           stop("Cannot parse dates. Stopping")
         }
+
         ### now we need to retain all date values to ensure
         ### that our array will be reshaped correctly
         all_years <- year(dates)
