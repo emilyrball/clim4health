@@ -28,11 +28,11 @@
 
 clim4health_get(pat = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
                 dataset = "reanalysis-era5-land-monthly-means",
-                product_types = "monthly_averaged_reanalysis",
+                product_type = "monthly_averaged_reanalysis",
                 variable = "2m_temperature",
-                years = c(2010, 2011, 2012),
-                months = c(4, 5),
-                coords = c(33, -93, -23, -17),
+                year = c(2010, 2011, 2012),
+                month = c(4, 5),
+                area = c(33, -93, -23, -17),
                 outname = "era5land")
 
 clim4health_get(pat = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
@@ -40,11 +40,11 @@ clim4health_get(pat = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
                 originating_centre = c("ecmwf"),
                 system = c("51"),
                 variable = c("2m_temperature"),
-                product_types = c("monthly_mean"),
+                product_type = c("monthly_mean"),
                 year = c("2010", "2011", "2012"),
                 month = c("04"),
                 leadtime_month = c("1", "2", "3"),
-                coords = c(33, -93, -23, -17),
+                area = c(33, -93, -23, -17),
                 outname = "hindcast")
 
 
@@ -53,11 +53,11 @@ clim4health_get(pat = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
                 originating_centre = c("ecmwf"),
                 system = c("51"),
                 variable = c("2m_temperature"),
-                product_types = c("monthly_mean"),
+                product_type = c("monthly_mean"),
                 year = c("2024"),
                 month = c("04"),
                 leadtime_month = c("1", "2", "3"),
-                coords = c(33, -93, -23, -17),
+                area = c(33, -93, -23, -17),
                 outname = "forecast")
 
 
@@ -177,8 +177,7 @@ clim4health_get <- function(pat,
         path = "."
       )
       t2 <- Sys.time()
-      print(paste0( t2 - t1))
-      print(paste0(month_x, "-", year_x, " took ", t2 - t1))
+      print(paste0("Loaded ", month_x, "-", year_x, " took ", t2 - t1))
     }
   }
 }
