@@ -4,41 +4,34 @@
 
 # Function for Aggregation
 clim4health_time <- function(data_clim, aggregation = "yearly") {
-
-  data <- data_clim$data
-  time <- data_clim$coords$time
     
   # Check if aggregation type is valid
   if (!aggregation %in% c("monthly", "yearly", "daily")) {
     stop("Aggregation must be 'daily', 'monthly' or 'yearly'")
   }
+
+  perm_array <- aperm(data_clim$data, c(1, 2, 3, 4, 5, 7, 8, 9, 6))
+  average_time_of_day <- rowMeans(perm_array, dims = 8)
+  
+  perm_array <- aperm(average_time_of_day, c(1, 2, 3, 4, 6, 7, 8, 5))
+  average_day <- rowMeans(perm_array, dims = 7)
+  
+  perm_array <- aperm(average_day, c(1, 2, 3, 5, 6, 7, 4))
+  average_month <- rowMeans(perm_array, dims = 6)
+  
+  perm_array <- aperm(average_month, c(1, 2, 4, 5, 6, 3))
+  average_year <- rowMeans(perm_array, dims = 5)
   
   # Parse time into appropriate groups
   time_groups <- if (aggregation == "yearly") {
-    dates <- unique(format(data_clim$coords$time, "%Y"))
-    year(time)  # Extract years
+    data_clim$data <- average_year
   } else if (aggregation == "monthly") {
-    dates <- unique(format(time, "%Y-%m"))
-    format(time, "%Y-%m")  # Extract year-month as groups
+    data_clim$data <- average_month
   } else if (aggregation == "daily") {
-    dates <- unique(format(time, "%Y-%m-%d"))
-    format(time, "%Y-%m-%d")  # Extract daily as groups
+    data_clim$data <- average_day
   }
   
-  # Assign time groups to data
-  # Reshape the data into a long format for easier aggregation
-  dims <- dim(data)
-  reshaped_data <- array(data, dim = c(prod(dims[1:2]), dims[3], dims[4], dims[5], dims[6]))
-    
-  # Aggregate along the time dimension (dimension 3)
-  aggregated_data <- apply(reshaped_data, c(1, 3, 4, 5), function(x) tapply(x, time_groups, mean))
-                           
-  # Reshape back into the required format
-  final_dims <- c(dims[1:2], length(unique(time_groups)), dims[4], dims[5], dims[6])
-  aggregated_data <- array(unlist(aggregated_data), dim = final_dims)
-                           
-  data_clim$data        <- aggregated_data
-  data_clim$coords$time <- dates
+  # data_clim$coords$time <- dates
   
   return(data_clim)
 }
