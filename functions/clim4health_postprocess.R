@@ -12,7 +12,13 @@ clim4health_skill <- function() {
   # calls CST_RPSS
 }
 
-clim4health_postprocess <- function() {
+rename_region <- function() {
+  # if using output of clim4health_spatial
+}
+
+clim4health_postprocess <- function(data) {
+  # data an s2dv cube object with dimensions: dataset, var, time, ensemble,
+  # latitude, longitude (output of load)
   # calls clim4health_calibrate
   # calls clim4health_skill
 }
