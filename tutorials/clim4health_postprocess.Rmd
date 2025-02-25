@@ -51,6 +51,7 @@ calibration, downscaling, and quality assessment.
 ```R
 # Obtain the current working directory
 clim4health_path <- getwd()
+library(CSTools)
 
 # Source the required functions to load and transform data.
 source(paste0(clim4health_path, '/functions/clim4health_load.R'))
@@ -68,7 +69,9 @@ Let's use our three sample datasets:
 obs_path <- paste0(clim4health_path, "/sample_data/era5land/")
 
 obs <- clim4health_load(obs_path, var = "t2m", data_type = "obs",
-                         sdates = c("201004", "201104", "201204"), ext = 'nc')
+                        sdates = c("201004", "201005",
+                                   "201104", "201105",
+                                   "201204", "201205"), ext = 'nc')
 
 
 hcst_path <- paste0(clim4health_path, "/sample_data/ecmwf51/hindcast/")
@@ -83,12 +86,13 @@ fcst <- clim4health_load(fcst_path, var = "t2m", data_type = "fcst",
                          sdates = c("20240401"), ext = 'nc')
 ```
 
-The observational data set contains temperature data for 2 months ( "2010-04-01" "2010-05-01" ), 
-1 ensemble member (as it is observational data), 561 latitude and 761 longitude points.
+Let's make sure we have the same times saved in obs and hcst.
 
-
-## Example using gridded data
-In this example, we directly use the output of **clim4health_load** to downscale.
+```r
+names(dim(hcst$attrs$Dates)) <- c("sdate", "leadtime")
+hcst <- CSTools::CST_Subset(hcst, along = "time",
+                        indices = which(hcst$coords$time %in% obs$coords$time))
+```
 
 ## Example using spatially aggregated data
 In this example, we can use the output of **clim4health_spatial** and downscale this.
@@ -104,17 +108,34 @@ shp_file <- paste0(clim4health_path, "/sample_data/shapefiles/MGN_ANM_MPIOS.shp"
 
 ```r
 
-result_obs  <- clim4health_spatial(obs,  shp_file)
-result_fcst <- clim4health_spatial(fcst, shp_file)
+obs_shp  <- clim4health_spatial(obs,  shp_file)
+hcst_shp <- clim4health_spatial(hcst, shp_file)
 
-dim(result_obs)
-#  dataset      var     time ensemble   region
-#        1        1        2        1     1122
-
-result_fcst <- clim4health_spatial(fcst, shp_file)
-
-dim(result_fcst)
-#  dataset      var     time ensemble   region 
-#        1        1        6       51     1122 
-
+output <- clim4health_postprocess(obs_shp, hcst_shp, sdate_dim = "time")
 ```
+
+Explore the output of **clim4health_postprocess**. It is a list, containing
+elements called ```hcstcal```, ```fcstcal```, ```bss10```, ```bss90```, and
+```crpss```.
+
+```r
+print(names(output))
+# [1] "hcstcal" "fcstcal" "bss10"   "bss90"   "crpss"
+
+print(dim(output$hcstcal))
+# dataset      var     time ensemble   region
+#       1        1        6       25     1122
+
+print(output$fcstcal)
+# NULL
+
+print(names(output$bss10))
+# [1] "rpss" "sign"
+
+print(names(output$crpss))
+# [1] "crpss" "sign"
+```
+
+## Example using gridded data
+In this example, we directly use the output of **clim4health_load** to
+downscale and then perform the quality assessment.

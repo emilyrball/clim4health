@@ -6,6 +6,16 @@ library(CSTools)
 library(s2dv)
 library(parallel)
 
+get_data <- function(data) {
+  if (class(data) == "s2dv_cube") {
+    return(data$data)
+  } else if (class(data) == "array") {
+    return(data)
+  } else {
+    stop("data must be an s2dv_cube or an array")
+  }
+}
+
 clim4health_calibrate <- function(ref, hcst, fcst = NULL,
                                   cal_method = "evmos",
                                   eval_method = "leave-one-out",
@@ -71,7 +81,7 @@ clim4health_skill <- function(hcst, ref, threshold = NULL,
   if (is.null(threshold)) {
     skill <- s2dv::CRPSS(exp = hcst, obs = ref,
                          clim.cross.val = TRUE,
-                         time_dim = "sdate",
+                         time_dim = sdate_dim,
                          memb_dim = memb_dim,
                          ncores = ncores)
   } else {
@@ -79,7 +89,7 @@ clim4health_skill <- function(hcst, ref, threshold = NULL,
     skill <- s2dv::RPSS(exp = hcst, obs = ref,
                         prob_thresholds = threshold,
                         cross.val = TRUE,
-                        time_dim = "sdate",
+                        time_dim = sdate_dim,
                         memb_dim = memb_dim,
                         ncores = ncores)
   }
@@ -106,6 +116,12 @@ clim4health_postprocess <- function(ref, hcst, fcst = NULL,
   # if skill = TRUE, additionally calls clim4health_skill
   if (is.null(ref) || is.null(hcst)) {
     stop("ref and hcst must be specified")
+  }
+
+  ref <- get_data(ref)
+  hcst <- get_data(hcst)
+  if (!is.null(fcst)) {
+    fcst <- get_data(fcst)
   }
 
   if (is.null(ncores)) {
@@ -152,17 +168,16 @@ clim4health_postprocess <- function(ref, hcst, fcst = NULL,
   if (skill == TRUE) {
     # if thresholds not specified, use default value
     data$bss10 <- clim4health_skill(ref = ref, hcst = data$hcstcal,
-                                    thresholds = c(0.1),
+                                    threshold = c(0.1),
                                     sdate_dim = sdate_dim,
                                     memb_dim = memb_dim)
     data$bss90 <- clim4health_skill(ref = ref, hcst = data$hcstcal,
-                                    thresholds = c(0.9),
+                                    threshold = c(0.9),
                                     sdate_dim = sdate_dim,
                                     memb_dim = memb_dim)
     data$crpss <- clim4health_skill(ref = ref, hcst = data$hcstcal,
                                     sdate_dim = sdate_dim,
                                     memb_dim = memb_dim)
   }
-
   return(data)
 }
