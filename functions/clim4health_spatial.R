@@ -20,8 +20,9 @@ clim4health_spatial <- function(data, shapefile,
   shp <- sf::st_read(shapefile)
 
   # read metadata
-  lat <- data$coords$latitude
-  lon <- data$coords$longitude
+  coords <- data$coords
+  lat <- coords$latitude
+  lon <- coords$longitude
 
   # transform array to raster stack
   out <- NULL
@@ -76,5 +77,22 @@ clim4health_spatial <- function(data, shapefile,
     ee  <- as.integer(index[[cc]][4])
     result[dat, vv, tt, ee, ] <- out_dt[, cc]
   }
-  return(result)
+
+  # format to s2dv_cube
+  replacement_coords <- coords[- which(names(coords) %in%
+                                         c("latitude", "longitude"))]
+  replacement_coords[["region"]] <- seq_len(nrow(shp))
+
+  replacement_dims <- dim(result)
+  names(replacement_dims) <- c("dataset", "var", "time", "ensemble", "region")
+
+  replacement_attrs <- data$attrs
+
+  data <- list(data = result,
+               coords = replacement_coords,
+               dims = replacement_dims,
+               attrs = replacement_attrs)
+  attr(data, "class") <- "s2dv_cube"
+
+  return(data)
 }
