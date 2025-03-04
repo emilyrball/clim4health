@@ -54,9 +54,9 @@ clim4health_path <- getwd()
 library(CSTools)
 
 # Source the required functions to load and transform data.
-source(paste0(clim4health_path, '/functions/clim4health_load.R'))
-source(paste0(clim4health_path, '/functions/clim4health_spatial.R'))
-source(paste0(clim4health_path, '/functions/clim4health_postprocess.R'))
+source(paste0(clim4health_path, "/functions/clim4health_load.R"))
+source(paste0(clim4health_path, "/functions/clim4health_spatial.R"))
+source(paste0(clim4health_path, "/functions/clim4health_postprocess.R"))
 ```
 
 ### Load example climate dataset in *s2dv_cube* format
@@ -71,19 +71,19 @@ obs_path <- paste0(clim4health_path, "/sample_data/era5land/")
 obs <- clim4health_load(obs_path, var = "t2m", data_type = "obs",
                         sdates = c("201004", "201005",
                                    "201104", "201105",
-                                   "201204", "201205"), ext = 'nc')
+                                   "201204", "201205"), ext = "nc")
 
 
 hcst_path <- paste0(clim4health_path, "/sample_data/ecmwf51/hindcast/")
 
 hcst <- clim4health_load(hcst_path, var = "t2m", data_type = "hcst",
                          sdates = c("20100401", "20110401",
-                                    "20120401"), ext = 'nc')
+                                    "20120401"), ext = "nc")
 
 fcst_path <- paste0(clim4health_path, "/sample_data/ecmwf51/forecast/")
 
 fcst <- clim4health_load(fcst_path, var = "t2m", data_type = "fcst",
-                         sdates = c("20240401"), ext = 'nc')
+                         sdates = c("20240401"), ext = "nc")
 ```
 
 Let's make sure we have the same times saved in obs and hcst.
@@ -101,17 +101,15 @@ Load an example shapefile.
 
 ```r
 shp_file <- paste0(clim4health_path, "/sample_data/shapefiles/MGN_ANM_MPIOS.shp")
-
 ```
 
 ### Spatially aggregate the data using **clim4health_spatial**
 
 ```r
-
 obs_shp  <- clim4health_spatial(obs,  shp_file)
 hcst_shp <- clim4health_spatial(hcst, shp_file)
 
-output <- clim4health_postprocess(obs_shp, hcst_shp, sdate_dim = "time")
+output_shp <- clim4health_postprocess(obs_shp, hcst_shp, sdate_dim = "time")
 ```
 
 Explore the output of **clim4health_postprocess**. It is a list, containing
@@ -119,23 +117,54 @@ elements called ```hcstcal```, ```fcstcal```, ```bss10```, ```bss90```, and
 ```crpss```.
 
 ```r
-print(names(output))
+print(names(output_shp))
 # [1] "hcstcal" "fcstcal" "bss10"   "bss90"   "crpss"
 
-print(dim(output$hcstcal))
+print(dim(output_shp$hcstcal))
 # dataset      var     time ensemble   region
 #       1        1        6       25     1122
 
-print(output$fcstcal)
+print(output_shp$fcstcal)
 # NULL
 
-print(names(output$bss10))
+print(names(output_shp$bss10))
 # [1] "rpss" "sign"
 
-print(names(output$crpss))
+print(names(output_shp$crpss))
 # [1] "crpss" "sign"
 ```
 
 ## Example using gridded data
 In this example, we directly use the output of **clim4health_load** to
 downscale and then perform the quality assessment.
+
+First, let's reduce the spatial extent to a
+smaller region, e.g. Cajamarca, Colombia.
+
+```r
+lons.min <- -78
+lons.max <- -72
+lats.min <- 1
+lats.max <- 8
+
+obs <- CSTools::CST_Subset(obs, along = c("longitude", "latitude"),
+                           indices = list(which(obs$coords$longitude >= lons.min &
+                                           obs$coords$longitude <= lons.max),
+                                           which(obs$coords$latitude >= lats.min &
+                                           obs$coords$latitude <= lats.max)))
+
+hcst <- CSTools::CST_Subset(hcst, along = c("longitude", "latitude"),
+                            indices = list(which(hcst$coords$longitude >= (lons.min - 1) &
+                                           hcst$coords$longitude <= (lons.max + 1)),
+                                           which(hcst$coords$latitude >= (lats.min - 1) &
+                                           hcst$coords$latitude <= (lats.max + 1))))
+
+fcst <- CSTools::CST_Subset(fcst, along = c("longitude", "latitude"),
+                            indices = list(which(fcst$coords$longitude >= lons.min - 1 &
+                                           fcst$coords$longitude <= lons.max + 1),
+                                           which(fcst$coords$latitude >= lats.min - 1 &
+                                           fcst$coords$latitude <= lats.max + 1)))
+
+output <- clim4health_postprocess(obs, hcst, sdate_dim = "time",
+                                  ref_path = paste0(obs_path, "t2m_201004.nc"))
+```
