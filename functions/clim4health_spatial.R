@@ -1,10 +1,7 @@
 # function to aggregate gridded data to a shapefile
 
 # dependencies
-#library(lubridate)
-#library(raster)
 library(sf)
-#library(tidyverse)
 library(exactextractr)
 
 paste_zeros <- function(x) {
@@ -17,7 +14,11 @@ clim4health_spatial <- function(data, shapefile,
                                 lon_dim_name = "longitude",
                                 aggregation_function = "mean") {
   # read shapefile from file:
-  shp <- sf::st_read(shapefile)
+  if (class(shapefile) == "character") {
+    shp <- sf::st_read(shapefile)
+  } else {
+    shp <- shapefile
+  }
 
   # read metadata
   coords <- data$coords
