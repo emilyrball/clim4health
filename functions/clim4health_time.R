@@ -20,6 +20,15 @@ clim4health_time <- function(data_clim, aggregation = "yearly",
                 "your epiweek starts"))
   }
 
+  # Sum or Mean
+  if (agg_fun == "mean") {
+    agg_fun <- mean
+  } else if (agg_fun == "sum") {
+    agg_fun <- sum
+  } else {
+    stop("Please select 'mean' or 'sum' to aggregate.")
+  }
+
   # Parse time into appropriate groups
   time_groups <- if (aggregation == "yearly") {
     # Extract years
@@ -60,7 +69,7 @@ clim4health_time <- function(data_clim, aggregation = "yearly",
   date_dim <- which(names(dims) == "time")
 
   aggregated_data <- apply(data, seq(dims)[ -date_dim], 
-                           function(x) tapply(x, time_groups, mean))
+                           function(x) tapply(x, time_groups, agg_fun))
   if (length(dims) == length(dim(aggregated_data))) {
     names(dim(aggregated_data)) <- c("time", names(dims)[ -date_dim])
 
