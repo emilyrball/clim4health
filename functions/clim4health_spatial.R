@@ -12,7 +12,7 @@ paste_zeros <- function(x) {
 clim4health_spatial <- function(data, shapefile,
                                 lat_dim_name = "latitude",
                                 lon_dim_name = "longitude",
-                                aggregation_function = "mean") {
+                                agg_fun = "mean") {
   # read shapefile from file:
   if (class(shapefile) == "character") {
     shp <- sf::st_read(shapefile)
@@ -60,7 +60,7 @@ clim4health_spatial <- function(data, shapefile,
   out <- raster::stack(out)
 
   # extract region data (for all regions in shp) with exact_extractr
-  out_dt <- exactextractr::exact_extract(out, shp, fun = aggregation_function)
+  out_dt <- exactextractr::exact_extract(out, shp, fun = agg_fun, na.rm = TRUE)
   # __if (is.null(dim(out_dt))){out_dt <- data.frame(out_dt)}
   # __names(out_dt) <- columns_dates
 
