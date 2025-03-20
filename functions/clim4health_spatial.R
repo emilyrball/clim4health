@@ -60,7 +60,7 @@ clim4health_spatial <- function(data, shapefile,
   out <- raster::stack(out)
 
   # extract region data (for all regions in shp) with exact_extractr
-  out_dt <- exactextractr::exact_extract(out, shp, fun = agg_fun, na.rm = TRUE)
+  out_dt <- exactextractr::exact_extract(out, shp, fun = agg_fun)
   # __if (is.null(dim(out_dt))){out_dt <- data.frame(out_dt)}
   # __names(out_dt) <- columns_dates
 
