@@ -32,6 +32,8 @@ clim4health_spatial <- function(data, shapefile,
   columns_dates <- c()
   columns_index <- c()
 
+  shp <- sf::st_transform(shp, crs = 4326)
+
   ref <- terra::crs(shp, describe = TRUE)$code
 
   for (dat in seq(dim(data$data)["dataset"])) {
