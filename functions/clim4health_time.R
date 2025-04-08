@@ -3,6 +3,9 @@ library(lubridate)
 library(s2dv)
 # library(dplyr)
 
+paste_zeros <- function(x) {
+  return(paste0(ifelse(x < 10, "0", ""), x))
+}
 
 # Function for Aggregation
 clim4health_time <- function(data_clim, aggregation = "yearly",
@@ -38,9 +41,9 @@ clim4health_time <- function(data_clim, aggregation = "yearly",
     # Extract year-month as groups
     years <- lubridate::year(time)
     month <- lubridate::month(time)
-    dates_tmp <- paste(years, paste0(month), sep = "-")
+    dates_tmp <- paste(years, paste_zeros(month), sep = "-")
     dates <- unique(dates_tmp)
-    paste(years, paste0(month), sep = "-")
+    paste(years, paste_zeros(month), sep = "-")
   } else if (aggregation == "daily") {
     # Extract daily as groups
     dates <- unique(lubridate::ymd(time))
@@ -58,9 +61,9 @@ clim4health_time <- function(data_clim, aggregation = "yearly",
     # assign previous year to first days of January if necessary
     epiyears[lubridate::month(time) == 1 & epiweeks > 50] <-
       epiyears[lubridate::month(time) == 1 & epiweeks > 50] - 1
-    dates_tmp <- paste(epiyears, epiweeks, sep = "-")
+    dates_tmp <- paste(epiyears, paste_zeros(epiweeks), sep = "-")
     dates <- unique(dates_tmp)
-    paste(epiyears, epiweeks, sep = "-")
+    paste(epiyears, paste_zeros(epiweeks), sep = "-")
   }
 
   # Assign time groups to data
