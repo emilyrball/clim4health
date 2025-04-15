@@ -1,17 +1,10 @@
----
-title: Tutorial to use clim4health_load 
-# Author
-date: "`r Sys.Date()`"
-output:
-  rmarkdown::html_vignette:
-    toc: true
----
+# Tutorial to use clim4health_load 
 
 <img src='figures/general/logo_harmonize.png' align="left" height="50" /></a>
 <img src='figures/general/logo_bsc.png' align="left" height="50" /></a>
 <img src='figures/general/logo_clim4health.svg' align="center" height="50" width="100" /></a>
 
-</br>
+<br>
 
 ## Overview and objectives
 
@@ -21,7 +14,8 @@ The general process to follow when using the **clim4health** package is:
 <br>
 
 ![](./figures/clim4health_load/clim4health_structure_load.png)
-</br> </br>
+<br> <br>
+
 The objetives of this tutorial are as follows:
 
 - To show how to load netCDF forecast, hindcast and reanalysis netCDF data into *s2dv_cube* objects.
