@@ -4,11 +4,11 @@
 <img src='figures/general/logo_bsc.png' align="left" height="50" /></a>
 <img src='figures/general/logo_clim4health.svg' align="center" height="50" width="100" /></a>
 
-<br>
-
 ---
 
 ## Overview and objectives
+
+---
 
 The first step in the **clim4health** is to get the climate data. The goal of `clim4health_get` is to download climate data from the Copernicus Climate Data Store (CDS) to be used in all subsequent steps. Note that this step is optional if data from another source is already available.
 
@@ -24,8 +24,10 @@ The objective of this tutorial is to show how to use `clim4health_get` including
 
 ## 1. Obtain your Personal Access Token (PAT)
 
+---
+
 If you don't already have an ECMWF account, you can go to the [ECMWF page](https://www.ecmwf.int/) and create a new account.
-With these credentials you can now log into the [CDS](https://cds.climate.copernicus.eu/). Under "your profile", you can find your Personal API Access Token (PAT). Save it, you will need it in [step 4](#get-the-data).
+With these credentials you can now log into the [CDS](https://cds.climate.copernicus.eu/). Under "your profile", you can find your Personal API Access Token (PAT). Save it, you will need it later when downloading the data.
 
 ```r
 pat_api <- "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
@@ -36,6 +38,8 @@ For the data in this tutorial, you will need to accept additional licenses found
 ---
 
 ## 2. Working directory and library dependencies
+
+---
 
 
 Before loading the function, make sure that all the necessary dependencies are installed:
@@ -55,6 +59,8 @@ source(paste0(path, '/functions/clim4health_get_help.R'))
 ---
 
 ## 3. Decide what data you need
+
+---
 
 To know what datasets can be downloaded, you can use `clim4health_get_help()`. 
 If the function is run without any parameters, it will return the datasets that are currently available to download within **clim4health**. It will look like this:
@@ -105,7 +111,9 @@ clim4health_get_help("reanalysis-era5-land", "area")
 
 ---
 
-## 4. Get the data {#get-the-data}
+## 4. Get the data
+
+---
 
 Once you know your PAT, the dataset, and the required parameters, you can call `clim4health_get` like you can see below. In these 3 examples, we download reanalysis data from era5land, and the seasonal monthly forecasts, once as hindcast and once as forecast (see more details of the climate products in the `clim4health_load` tutorial).
 
@@ -159,5 +167,3 @@ clim4health_get(pat = pat_api,
 <!-- Error: permission deniedrequired licences not accepted403Not all the required licences have been accepted; please visit https://cds.climate.copernicus.eu/datasets/seasonal-monthly-single-levels?tab=download#manage-licences to accept the required licence(s).https://cds.climate.copernicus.eu/api/retrieve/v1/processes/seasonal-monthly-single-levels/executeeca44435-0976-4e4f-b864-a3c43d108ba4 -->
 <!-- ``` -->
 <!-- if this fails, you may need to accept a special license at this link: https://cds.climate.copernicus.eu/datasets/seasonal-monthly-single-levels?tab=download#manage-licences -->
-
----
