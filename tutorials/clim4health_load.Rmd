@@ -1,4 +1,4 @@
-# Tutorial to use clim4health_load 
+# Tutorial: clim4health_load 
 
 <img src='figures/general/logo_harmonize.png' align="left" height="50" /></a>
 <img src='figures/general/logo_bsc.png' align="left" height="50" /></a>
@@ -8,13 +8,12 @@
 
 ## Overview and objectives
 
-`clim4health_load` allows the user to load different types of climate data (see [background information](#background-information)) in the form a local file in either *.csv* or *.nc* (NetCDF file) format. The data will be loaded in the R session as an *s2dv_cube* object (see [background information](#background-information)) which can be used in other **clim4health** functions. 
+The second step in **clim4health** is to load the dowloaded data in the previous step (see `clim4health_get` tutorial) to start working with it. 
 
-The general process to follow when using the **clim4health** package is:
-<br>
+![](./figures/general/clim4health_structure.png)
+<br> 
 
-![](./figures/clim4health_load/clim4health_structure_load.png)
-<br> <br>
+The function `clim4health_load` allows the user to load different types of climate data (see [background information](#background-information)) in the form a local file in either *.csv* or *.nc* (NetCDF file) format. The data will be loaded in the R session as an *s2dv_cube* object (see [background information](#background-information)) which can be used in other **clim4health** functions. 
 
 The objetives of this tutorial are as follows:
 
@@ -43,8 +42,8 @@ This tutorial uses several different types of climate data:
 
 There are different types of predictions:
 
-- A **forecast** can predict weather on timescales of days/weeks and climate on scales of months/years. This tutorial will use **seasonal forecasts**, which predict climate for the upcoming months.
-- It is also possible to use an initial condition from the past to generate a prediction of past climate, called a **hindcast**.
+- A **forecast** can predict weather on timescales of days/weeks and climate on scales of months/years. This tutorial will use seasonal forecasts, which predict climate for the upcoming months.
+- A **hindcast**, which uses an initial condition from the past to generate a prediction of past climate.
     
 ### s2dv_cube object
 
@@ -54,20 +53,20 @@ clim4health_load loads climate data from a netCDF or csv file into R in the form
 
 ![](./figures/general/s2dv_cube.png)
 
+<br>
+Now that we have all the background information, let's get started loading the data. To follow the tutorial, please clone the repository and change directory to the root of the repo.
 
-## Setup
+## 1. Setup
 
 First of all, let's check whether all the necessary dependencies are available and if not,
 install them:
 
 ```R
-
 if (!requireNamespace("startR", quietly = TRUE)) install.packages("pkgname")
 if (!requireNamespace("lubridate", quietly = TRUE)) install.packages("pkgname")
 if (!requireNamespace("easyNCDF", quietly = TRUE)) install.packages("pkgname")
 if (!requireNamespace("CSTools", quietly = TRUE)) install.packages("pkgname")
 ```
-
 
 Next, we source the *clim4health_load* function (make sure that the working directory is set to the path where the clim4health repository has been cloned).
 
@@ -76,7 +75,7 @@ clim4health_path <- getwd()
 source(paste0(clim4health_path, '/functions/clim4health_load.R'))
 ```
 
-## Load forecast data
+## 2. Load and visualize forecast data
 
 To load forecast data in **clim4health**, the function `clim4health_load` is used. 
 The function arguments include:
@@ -178,7 +177,7 @@ PlotEquiMap(var = MeanDims(drop(fcst$data)[time_idx,,,], 'ensemble'),
 ```
 ![](./figures/clim4health_load/fcst.png)
 
-## Load hindcast data
+## 3. Load hindcast data
 
 We load the hindcast issued in the same month as the forecast (in this example April) for past years (in this case 2010, 2011 and 2012). We choose an example file within the folder as our hindcast path. We use the parameters `years` and `months` to specify the files to load.
 
@@ -233,7 +232,7 @@ print(hcst$attrs$Dates$metadata[ , 1])
 ```
 As we have loaded 3 start dates, each with 3 lead times, there are now 3x3 dates in the file.
 
-## Load reference data
+## 4. Load reference data
 
 ### From a netCDF file
 
