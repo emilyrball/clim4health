@@ -26,6 +26,24 @@ paste_zeros <- function(times) {
   return(times)
 }
 
+# helper functions
+paste_hours_minutes <- function(hours, minutes) {
+  hours <- paste0(hours)
+  minutes <- paste0(minutes)
+  hours <- paste_zeros(hours)
+  minutes <- paste_zeros(minutes)
+  return(paste(hours, minutes, sep = ':'))
+}
+
+paste_zeros <- function(times) {
+  for (i in seq_along(times)) {
+    if (nchar(times[i]) == 1) {
+      times[i] <- paste0("0", times[i])
+    }
+  }
+  return(times)
+}
+
 # main function
 clim4health_load <- function(path, var = NULL, sdates = NULL,
                              data_type = "", ext = 'nc',
