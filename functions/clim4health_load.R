@@ -6,6 +6,25 @@ library(s2dv)
 library(lubridate)
 library(easyNCDF)
 library(CSTools)
+library(ncdf4)
+
+# helper functions
+paste_hours_minutes <- function(hours, minutes) {
+  hours <- paste0(hours)
+  minutes <- paste0(minutes)
+  hours <- paste_zeros(hours)
+  minutes <- paste_zeros(minutes)
+  return(paste(hours, minutes, sep = ':'))
+}
+
+paste_zeros <- function(times) {
+  for (i in seq_along(times)) {
+    if (nchar(times[i]) == 1) {
+      times[i] <- paste0("0", times[i])
+    }
+  }
+  return(times)
+}
 
 # helper functions
 paste_hours_minutes <- function(hours, minutes) {
@@ -27,10 +46,9 @@ paste_zeros <- function(times) {
 
 # main function
 clim4health_load <- function(path, var = NULL, sdates = NULL,
-                             data_type = "", ext = NULL,
+                             data_type = "", ext = 'nc',
                              lat_selection = 'all',
                              lon_selection = 'all') {
-    if (substr(path, nchar(path), nchar(path)) != '/'){path <- paste0(path, '/')}
     if (!(data_type %in% c("fcst", "hcst", "obs"))) {
       # user must select whether data is observation or forecast/hindcast
       stop ("Please select data_type. Valid options are \"fcst\", \"hcst\", or \"obs\".")
@@ -96,7 +114,7 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
       ### get time columns ### test what happens if for example you have a year and month column
       time_dim <- list()
       for (f in c('time', 'date', 'day', 'week', 'month', 'year',
-                  'Time', 'Date', 'Day', 'Week', 'Month', 'Year', "date_obs")) {
+                  'Time', 'Date', 'Day', 'Week', 'Month', 'Year')) {
         if (f %in% headers) {
           time_dim[f] <- which(headers == f)
         }
@@ -120,39 +138,38 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
       lon <- c() # initialise
 
       # run through possible time/date combinations #
-      if (any(c("time", "Time", "date", "Date", "date_obs") %in% names(time_dim))) {
-        time.col <- which(headers %in% c("time", "Time", "date", "Date", "date_obs"))
-        print(headers)
-        print(time.col)
-        # could be stored as "YYYY/MM/DD hh:mm:ss"
-        print("Trying YYYY/MM/DD hh:mm:ss date format")
-        dates <- tryCatch({as.POSIXct(data[,time.col])},
+      if (any(c("time", "Time", "date", "Date") %in% names(time_dim))) {
+        # most likely stored as YYYY/MM/DD
+        dates <- tryCatch({ymd(data[,names(time_dim)])},
+          error = function(x) {return(NA)},
+          warning = function(x) {return(NA)})
+        # could be stored as DD/MM/YYYY
+        if (typeof(dates) == "logical") {
+          dates <- tryCatch({dmy(data[,names(time_dim)])},
             error = function(x) {return(NA)},
             warning = function(x) {return(NA)})
-        # most likely stored as YYYY/MM/DD
+        }
+        # could be stored as "YYYY/MM/DD hh:mm:ss"
         if (typeof(dates) == "logical") {
-          print("Trying date formats")
-          sumNA <- length(data[,time.col])
-          for (f in list(ymd, dmy, mdy, ym, my)) {
-            dates_tmp <- f(data[,time.col])
-            if (sum(is.na(dates_tmp)) < sumNA) {
-              dates <- dates_tmp
-              sumNA <- sum(is.na(dates_tmp))
-              ## choose a date format that produces least NAs
-            }
-          }
+          dates <- tryCatch({as.POSIXct(data[,names(time_dim)])},
+            error = function(x) {return(NA)},
+            warning = function(x) {return(NA)})
+        }
+        # monthly data can be stored as YYYY/MM
+        if (typeof(dates) == "logical") {
+          dates <- tryCatch({ym(data[,names(time_dim)])},
+            error = function(x) {return(NA)},
+            warning = function(x) {return(NA)})
         }
         # final option could be year is stored as date
         if (typeof(dates) == "logical") {
-          print("Trying YYYY date format")
-          dates <- tryCatch({year(data[,time.col])},
+          dates <- tryCatch({year(data[,names(time_dim)])},
             error = function(x) {return(NA)},
             warning = function(x) {return(NA)})
         }
         if (typeof(dates) == "logical") {
           stop("Cannot parse dates. Stopping")
         }
-
         ### now we need to retain all date values to ensure
         ### that our array will be reshaped correctly
         all_years <- year(dates)
@@ -295,16 +312,8 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
 
 
     } else if (ext == 'nc') { # Read .nc files
+      dataset <- paste0(path, '$var$_$sdate$.nc')
 
-      if (!is.null(var)) {
-        if (length(var) == 1) {
-          # if one variable is provided, assume the path is the directory containing the files
-          dataset <- paste0(path, '$var$_$sdate$.nc')
-        } else {
-          # if more than one variable is provided, assume files are stored as path/var/var_sdate.nc
-          dataset <- paste0(path, '$var$/$var$_$sdate$.nc')
-        }
-      }
       # read netcdf file dimensions of first file specified
       file.dims <- names(NcReadDims(full_path[1]))
 
@@ -421,8 +430,7 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
         } else {
           time_attributes <- attr(data, "Variables")$common$lead_time
         }
-        # reshape dates as needed - metadata_dates object contains all the dates within the loaded
-        # files, reshaped with dims year, month, day, time_of_day
+        #reshape dates as needed
         metadata_dates <- as.POSIXct(time_attributes)
 
         years <- unique(year(metadata_dates))
@@ -442,7 +450,6 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
         if (data_type == "obs") {
           start_parameters$time_of_day <- values(metadata_dates)
         } else {
-          # rename lead_time to time_of_day
           names(start_parameters)[names(start_parameters) == "lead_time"] <- "time_of_day"
           start_parameters$time_of_day <- values(metadata_dates)
           names(start_parameters$return_vars)[
@@ -453,55 +460,35 @@ clim4health_load <- function(path, var = NULL, sdates = NULL,
             names(start_parameters$synonims) == "lead_time"] <- "time_of_day"
           start_parameters$synonims["time_of_day"] <- c("time", 'lead_time', 'time_of_day')
         }
-      } else { # if time is not stored
+      } else {
         if ("year" %in% time_dims) {
           years <- attr(data, "Variables")$common$year
-          start_parameters$year_across <- "sdate"
         } else {
           years <- sdates
         }
         if ("month" %in% time_dims) {
           months <- attr(data, "Variables")$common$month
           months <- paste_zeros(months)
-          if (!("year" %in% time_dims)) {
-            start_parameters$month_across <- "sdate"
-          }
         } else {
-          months <- "01"
+          months <- indices(1)
         }
         if ("day" %in% time_dims) {
           days <- attr(data, "Variables")$common$day
-          days <- paste_zeros(days)
-          if (!(any(c("month", "year") %in% time_dims))) {
-            start_parameters$day_across <- "sdate"
-          }
+          days <- paste0(days)
         } else {
-          days <- "01"
+          days <- indices(1)
         }
-        ## assume time_of_day is not stored
-        hours <- "00:00:00"
-        # reshape dates
-        metadata_dates <- outer(years, paste0('-', months), FUN = "paste0")
-        metadata_dates <- outer(metadata_dates, paste0("-", days), FUN = "paste0")
-        metadata_dates <- outer(metadata_dates, paste0(" ", hours), FUN = "paste0")
-        names(dim(metadata_dates)) <- c("year", "month", "day",
-                                         "time_of_day")
       }
 
       # load data as StartR array
       start_parameters$retrieve <- TRUE
       start_parameters$silent <- FALSE
-      print(start_parameters$year_across)
       data <- do.call(Start, start_parameters)
 
       # transform to sd2v_cube
       data <- as.s2dv_cube(data)
       # store loaded dates in Date format
-      if (!is.null(data$attrs$Dates)) {
-        dates <- as.Date(data$attrs$Dates)
-      } else {
-        dates <- metadata_dates
-      }
+      dates <- as.Date(data$attrs$Dates)
       data$attrs$Dates <- list(Dates = dates)
       if (!(data_type == "obs")) {
         # store start dates and lead times

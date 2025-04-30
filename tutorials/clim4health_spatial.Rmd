@@ -1,0 +1,106 @@
+# Tutorial: clim4health_spatial
+
+<img src='figures/general/logo_harmonize.png' align="left" height="50" /></a>
+<img src='figures/general/logo_bsc.png' align="left" height="50" /></a>
+<img src='figures/general/logo_clim4health.svg' align="center" height="50" width="100" /></a>
+
+
+## Overview and objectives
+
+Once the data has been downloaded and loaded using `clim4health_load`, several transformations can be applied to the data depending on the needs of the specific application. The objetive of this tutorial is to show the use `clim4health_spatial` function for spatial aggregation of climate products into polygon geometries.
+
+<br>
+
+![](./figures/general/clim4health_structure.png)
+
+<br>
+
+
+`clim4health_spatial` works with *s2dv_cube* objects and different types of climate data, for more background information please check the `clim4health_load`  tutorial. To follow this tutorial, please clone the repository and change directory to the project's root.
+
+
+## 1. Setup
+
+First of all, let's check whether all the necessary dependencies are available and if not,
+install them:
+
+```R
+# Requirements for clim4health_load
+if (!requireNamespace("startR", quietly = TRUE)) install.packages("startR")
+if (!requireNamespace("lubridate", quietly = TRUE)) install.packages("lubridate")
+if (!requireNamespace("easyNCDF", quietly = TRUE)) install.packages("easyNCDF")
+if (!requireNamespace("CSTools", quietly = TRUE)) install.packages("CSTools")
+
+# Requirements for clim4health_spatial
+if (!requireNamespace("exactextractr", quietly = TRUE)) install.packages("exactextractr")
+```
+
+
+Next, we source the *clim4health_load* and *clim4health_spatial* functions 
+(make sure that the working directory is set to the path where the clim4health 
+repository has been cloned).
+
+```R
+# Obtain the current working directory
+clim4health_path <- getwd()
+
+# Source the required functions to load and transform data.
+source(paste0(clim4health_path, '/functions/clim4health_load.R'))
+source(paste0(clim4health_path, '/functions/clim4health_spatial.R'))
+```
+
+## 2. Loading data
+
+We use `clim4health_load` with available temperature data to load temperature 
+reanalyses and forecasts into memory as *s2dv_cube* objects.
+
+```r
+# Reanalysis data (observations)
+obs_path <- paste0(clim4health_path, "/sample_data/era5land/")
+
+obs <- clim4health_load(obs_path, var = "t2m", data_type = "obs",
+                         sdates = c("201004", "201005"), ext = "nc")
+dim(obs$data)
+#  dataset       var      time  ensemble  latitude longitude 
+#        1         1         2         1       561       761 
+
+# Forecast data 
+fcst_path <- paste0(clim4health_path, "/sample_data/ecmwf51/forecast/")
+fcst <- clim4health_load(fcst_path, var = "t2m", data_type = "fcst",
+                         sdates = c("20240401"), ext = "nc")
+dim(fcst$data)
+#  dataset       var      time  ensemble  latitude longitude 
+#        1         1         3        51        57        77 
+```
+Next, we specify the path to the vector data containing polygon geometries for
+which we want to aggregate, which in our case is a shapefile.
+
+```r
+shp_file <- paste0(clim4health_path, "/sample_data/shapefiles/MGN_ANM_MPIOS.shp")
+```
+
+## 3. Spatially aggregating the data
+
+To produce the spatial aggregation, we simply pass the *s2dv_cube* object and the path
+to the file containing the polygons for the extraction to `clim4health_spatial`. 
+The function will convert the cube into a georeferenced raster from which the intersecting
+cells are extracted and summarised using a function (by default the mean).
+
+```r
+# Run it with the observations
+result_obs  <- clim4health_spatial(obs, shp_file, agg_fun = "mean")
+
+class(result_obs)
+# [1] "s2dv_cube"
+
+# Run it with the forecast
+result_fcst <- clim4health_spatial(fcst, shp_file)
+
+dim(result_obs$data)
+#  dataset      var     time ensemble   region 
+#        1        1        2        1     1122 
+
+dim(result_fcst$data)
+#  dataset      var     time ensemble   region 
+#        1        1        3       51     1122 
+```
