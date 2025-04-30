@@ -53,6 +53,42 @@ A netcdf file.
 \description{
 Download netcdf files from the climate data store
 }
+\examples{
+\dontrun{
+clim4health_get(pat = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                dataset = "reanalysis-era5-land-monthly-means",
+                product_type = "monthly_averaged_reanalysis",
+                variable = "2m_temperature",
+                year = c(2010, 2011, 2012),
+                month = c(4, 5),
+                area = c(33, -93, -23, -17),
+                outname = "era5land")
+
+clim4health_get(pat = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                dataset = "seasonal-monthly-single-levels",
+                originating_centre = c("ecmwf"),
+                system = c("51"),
+                variable = c("2m_temperature"),
+                product_type = c("monthly_mean"),
+                year = c("2010", "2011", "2012"),
+                month = c("04"),
+                leadtime_month = c("1", "2", "3"),
+                area = c(33, -93, -23, -17),
+                outname = "hindcast")
+
+clim4health_get(pat = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                dataset = "seasonal-monthly-single-levels",
+                originating_centre = c("ecmwf"),
+                system = c("51"),
+                variable = c("2m_temperature"),
+                product_type = c("monthly_mean"),
+                year = c("2024"),
+                month = c("04"),
+                leadtime_month = c("1", "2", "3"),
+                area = c(33, -93, -23, -17),
+                outname = "forecast")
+}
+}
 \author{
 Daniela Lührsen
 }

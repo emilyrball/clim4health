@@ -25,10 +25,8 @@ datasets that can be usedfor health and climate research, specifically
 using ERA5 reanalysis datasets.
 }
 \examples{
-# clim4health_get_help()
-# clim4health_get_help("era5land")
-# clim4health_get_help("reanalysis-era5-land")
-# clim4health_get_help("reanalysis-era5-land", "height")
-# clim4health_get_help("reanalysis-era5-land", "variables")
-
+clim4health_get_help()
+clim4health_get_help("reanalysis-era5-land")
+clim4health_get_help("reanalysis-era5-land", "product_type")
+clim4health_get_help("reanalysis-era5-land", "variable")
 }

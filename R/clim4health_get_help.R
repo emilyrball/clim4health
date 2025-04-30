@@ -14,19 +14,16 @@
 #' parameters or options to the console.
 #'
 #' @examples
-#' # clim4health_get_help()
-#' # clim4health_get_help("era5land")
-#' # clim4health_get_help("reanalysis-era5-land")
-#' # clim4health_get_help("reanalysis-era5-land", "height")
-#' # clim4health_get_help("reanalysis-era5-land", "variables")
-#'
+#' clim4health_get_help()
+#' clim4health_get_help("reanalysis-era5-land")
+#' clim4health_get_help("reanalysis-era5-land", "product_type")
+#' clim4health_get_help("reanalysis-era5-land", "variable")
 #' @export
-#'
 
 clim4health_get_help <- function(dataset, parameter) {
-  source("dataset_info.R")
-
-  datasets <- names(datasets_info)
+  
+  # Retrieve the long list with the catalogue
+  datasets <- names(.datasets_info)
 
   # if dataset is missing, return list of available datasets
   if (missing(dataset)) {
@@ -44,7 +41,7 @@ clim4health_get_help <- function(dataset, parameter) {
   }
 
   # get required parameters for selected dataset
-  required_params <- names(datasets_info[[dataset]])
+  required_params <- names(.datasets_info[[dataset]])
 
   # if dataset correct and parameter missing, return list of parameters
   if (dataset %in% datasets && missing(parameter)) {
@@ -62,7 +59,7 @@ clim4health_get_help <- function(dataset, parameter) {
   }
 
   # get options for parameters
-  options <- datasets_info[[dataset]][[parameter]]
+  options <- .datasets_info[[dataset]][[parameter]]
 
   cat(paste0("Possible options for ", parameter, ":\n"))
   for (o in options) {

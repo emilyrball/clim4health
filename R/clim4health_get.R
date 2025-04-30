@@ -22,40 +22,40 @@
 #' @export
 #' 
 #' @examples
-# clim4health_get(pat = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-#                 dataset = "reanalysis-era5-land-monthly-means",
-#                 product_type = "monthly_averaged_reanalysis",
-#                 variable = "2m_temperature",
-#                 year = c(2010, 2011, 2012),
-#                 month = c(4, 5),
-#                 area = c(33, -93, -23, -17),
-#                 outname = "era5land")
-
-# clim4health_get(pat = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-#                 dataset = "seasonal-monthly-single-levels",
-#                 originating_centre = c("ecmwf"),
-#                 system = c("51"),
-#                 variable = c("2m_temperature"),
-#                 product_type = c("monthly_mean"),
-#                 year = c("2010", "2011", "2012"),
-#                 month = c("04"),
-#                 leadtime_month = c("1", "2", "3"),
-#                 area = c(33, -93, -23, -17),
-#                 outname = "hindcast")
-
-
-# clim4health_get(pat = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-#                 dataset = "seasonal-monthly-single-levels",
-#                 originating_centre = c("ecmwf"),
-#                 system = c("51"),
-#                 variable = c("2m_temperature"),
-#                 product_type = c("monthly_mean"),
-#                 year = c("2024"),
-#                 month = c("04"),
-#                 leadtime_month = c("1", "2", "3"),
-#                 area = c(33, -93, -23, -17),
-#                 outname = "forecast")
-
+#' \dontrun{
+#' clim4health_get(pat = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+#'                 dataset = "reanalysis-era5-land-monthly-means",
+#'                 product_type = "monthly_averaged_reanalysis",
+#'                 variable = "2m_temperature",
+#'                 year = c(2010, 2011, 2012),
+#'                 month = c(4, 5),
+#'                 area = c(33, -93, -23, -17),
+#'                 outname = "era5land")
+#' 
+#' clim4health_get(pat = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+#'                 dataset = "seasonal-monthly-single-levels",
+#'                 originating_centre = c("ecmwf"),
+#'                 system = c("51"),
+#'                 variable = c("2m_temperature"),
+#'                 product_type = c("monthly_mean"),
+#'                 year = c("2010", "2011", "2012"),
+#'                 month = c("04"),
+#'                 leadtime_month = c("1", "2", "3"),
+#'                 area = c(33, -93, -23, -17),
+#'                 outname = "hindcast")
+#' 
+#' clim4health_get(pat = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+#'                 dataset = "seasonal-monthly-single-levels",
+#'                 originating_centre = c("ecmwf"),
+#'                 system = c("51"),
+#'                 variable = c("2m_temperature"),
+#'                 product_type = c("monthly_mean"),
+#'                 year = c("2024"),
+#'                 month = c("04"),
+#'                 leadtime_month = c("1", "2", "3"),
+#'                 area = c(33, -93, -23, -17),
+#'                 outname = "forecast")
+#' }
 
 clim4health_get <- function(pat,
                             dataset,
@@ -177,25 +177,3 @@ clim4health_get <- function(pat,
     }
   }
 }
-
-# ### END
-# 
-# clim4health_get()
-# clim4health_get(dataset = "reanalysis-era5-land")
-# clim4health_get(dataset = "reanalysis-era5-land", product_type = "dfgdfg", variable = "bla", year = "area",area ="bla")
-# clim4health_get(dataset = "reanalysis-era5-land", product_type = "reanalysis", variable = "2m_temperature", year = "1950",area ="bla")
-# clim4health_get(dataset = "reanalysis-era5-land",
-#                 product_type = "reanalysis",
-#                 variable = "2m_temperature",
-#                 year = "1950",
-#                 area =c(1,-1,-1,1))
-# clim4health_get(pat = "c6a8ca0f-5bfe-45e3-a211-30046195f446",
-#                 dataset = "reanalysis-era5-land",
-#                 product_type = "reanalysis",
-#                 variable = "2m_temperature",
-#                 year = 2020,
-#                 month = 1,
-#                 day = 1,
-#                 area =c(41,1,42,2))
-
-
