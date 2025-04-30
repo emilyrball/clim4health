@@ -17,15 +17,11 @@
 #' @param coords A vector of coordinates. (in order: South, North, West, East)
 #' @param outname The name (and path) of the resultant netcdf file
 #' @returns A netcdf file.
-#' @examples
-#' clim4health_get(pat = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-#' "hourly", years = c(2020:2021),
-#' months = c(1:12), days = c(1:31), times = c(1:31), coords = coords)
-#' add(10, 1)
+#' 
 #' @author Daniela Lührsen
-#' @import ecmwfr
-
-
+#' @export
+#' 
+#' @examples
 # clim4health_get(pat = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
 #                 dataset = "reanalysis-era5-land-monthly-means",
 #                 product_type = "monthly_averaged_reanalysis",
