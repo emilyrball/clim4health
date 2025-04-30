@@ -1,10 +1,7 @@
 # function to aggregate gridded data to a shapefile
 
 # dependencies
-#library(lubridate)
-#library(raster)
 library(sf)
-#library(tidyverse)
 library(exactextractr)
 
 paste_zeros <- function(x) {
@@ -15,9 +12,13 @@ paste_zeros <- function(x) {
 clim4health_spatial <- function(data, shapefile,
                                 lat_dim_name = "latitude",
                                 lon_dim_name = "longitude",
-                                aggregation_function = "mean") {
+                                agg_fun = "mean") {
   # read shapefile from file:
-  shp <- sf::st_read(shapefile)
+  if (class(shapefile) == "character") {
+    shp <- sf::st_read(shapefile)
+  } else {
+    shp <- shapefile
+  }
 
   # read metadata
   coords <- data$coords
@@ -30,6 +31,8 @@ clim4health_spatial <- function(data, shapefile,
   num <- 0
   columns_dates <- c()
   columns_index <- c()
+
+  shp <- sf::st_transform(shp, crs = 4326)
 
   ref <- terra::crs(shp, describe = TRUE)$code
 
@@ -59,7 +62,7 @@ clim4health_spatial <- function(data, shapefile,
   out <- raster::stack(out)
 
   # extract region data (for all regions in shp) with exact_extractr
-  out_dt <- exactextractr::exact_extract(out, shp, fun = aggregation_function)
+  out_dt <- exactextractr::exact_extract(out, shp, fun = agg_fun)
   # __if (is.null(dim(out_dt))){out_dt <- data.frame(out_dt)}
   # __names(out_dt) <- columns_dates
 
