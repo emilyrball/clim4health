@@ -14,11 +14,11 @@
 #' parameters or options to the console.
 #'
 #' @examples
-#' clim4health_get_help()
-#' clim4health_get_help("era5land")
-#' clim4health_get_help("reanalysis-era5-land")
-#' clim4health_get_help("reanalysis-era5-land", "height")
-#' clim4health_get_help("reanalysis-era5-land", "variables")
+#' # clim4health_get_help()
+#' # clim4health_get_help("era5land")
+#' # clim4health_get_help("reanalysis-era5-land")
+#' # clim4health_get_help("reanalysis-era5-land", "height")
+#' # clim4health_get_help("reanalysis-era5-land", "variables")
 #'
 #' @export
 #'

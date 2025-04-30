@@ -18,19 +18,19 @@
 #'   }
 #'   Factor levels for each dimension are set based on the `coords` metadata.
 #' 
-#' @example
-#' path <- getwd()
-#' source(paste0(path, '/functions/clim4health_load.R'))   
-#' fcst <- clim4health_load(paste0(path, '/sample_data/ecmwf51/forecast/t2m_20240401.nc'))        
-#' class(fcst)
+#' @examples
+#' # path <- getwd()
+#' # source(paste0(path, '/functions/clim4health_load.R'))   
+#' # fcst <- clim4health_load(paste0(path, '/sample_data/ecmwf51/forecast/t2m_20240401.nc'))        
+#' # class(fcst)
 #' #[1] "s2dv_cube"
-#' dim(fcst$data)
+#' # dim(fcst$data)
 #' #  dataset       var      time  ensemble  latitude longitude
 #' #        1         1         3        51        57        77
-#' fcst$coords$time
+#' # fcst$coords$time
 #' # [1] "2024-04-01" "2024-05-01" "2024-06-01"
-#' formatted.table <- clim4health_table(fcst)
-#' head(formatted.table)
+#' # formatted.table <- clim4health_table(fcst)
+#' # head(formatted.table)
 #' @export
 
 clim4health_table <- function(array) {
