@@ -6,6 +6,7 @@ library(s2dv)
 library(lubridate)
 library(easyNCDF)
 library(CSTools)
+library(ncdf4)
 
 # helper functions
 paste_hours_minutes <- function(hours, minutes) {
