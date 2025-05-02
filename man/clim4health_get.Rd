@@ -33,25 +33,68 @@ variables can be found via clim4health_get_product_types().}
 \item{variable}{The variable that you want to load. Available variables can
 be found via clim4health_get_variables().}
 
-\item{outname}{The name (and path) of the resultant netcdf file}
+\item{year}{A vector of years, starting in 1950.}
 
-\item{years}{A vector of years, starting in 1950.}
-
-\item{months}{A vector of months. e.g. c(1,2) for January and February.
+\item{month}{A vector of months. e.g. c(1,2) for January and February.
 Default is all months.}
 
-\item{days}{A vector of days in the month. Default is all days.}
+\item{day}{A vector of days in the month. Default is all days.}
 
-\item{times}{A vector of hours (0-23). Only needed when datasets are hourly.
+\item{time}{A vector of hours (0-23). Only needed when datasets are hourly.
 Default is all hours.}
 
-\item{coords}{A vector of coordinates. (in order: South, North, West, East)}
+\item{area}{A vector of coordinates. (in order: South, North, West, East).}
+
+\item{leadtime_month}{A vector of months for the forecast leadtime. e.g. c(1,2)
+for January and February. Default is all months.}
+
+\item{originating_centre}{DESCRIPTION PENDING!}
+
+\item{system}{DESCRIPTION PENDING!}
+
+\item{outname}{The name (and path) of the resultant netcdf file.}
 }
 \value{
 A netcdf file.
 }
 \description{
 Download netcdf files from the climate data store
+}
+\examples{
+\dontrun{
+clim4health_get(pat = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                dataset = "reanalysis-era5-land-monthly-means",
+                product_type = "monthly_averaged_reanalysis",
+                variable = "2m_temperature",
+                year = c(2010, 2011, 2012),
+                month = c(4, 5),
+                area = c(33, -93, -23, -17),
+                outname = "era5land")
+
+clim4health_get(pat = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                dataset = "seasonal-monthly-single-levels",
+                originating_centre = c("ecmwf"),
+                system = c("51"),
+                variable = c("2m_temperature"),
+                product_type = c("monthly_mean"),
+                year = c("2010", "2011", "2012"),
+                month = c("04"),
+                leadtime_month = c("1", "2", "3"),
+                area = c(33, -93, -23, -17),
+                outname = "hindcast")
+
+clim4health_get(pat = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                dataset = "seasonal-monthly-single-levels",
+                originating_centre = c("ecmwf"),
+                system = c("51"),
+                variable = c("2m_temperature"),
+                product_type = c("monthly_mean"),
+                year = c("2024"),
+                month = c("04"),
+                leadtime_month = c("1", "2", "3"),
+                area = c(33, -93, -23, -17),
+                outname = "forecast")
+}
 }
 \author{
 Daniela Lührsen

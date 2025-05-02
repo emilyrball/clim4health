@@ -1,9 +1,24 @@
-#Dependencies
-# library(lubridate)
-# library(dplyr)
+#' Temporal aggregation of climate products.
+#'
+#' @param data_clim s2dv_cube object with the climate data to be aggregated,
+#' usually read using `clim4health_load`.
+#' @param aggregation string indicating the type of temporal aggregations to be
+#' performed. Options are "monthly", "yearly", and "daily". Defaults to "yearly".
+#'
+#' @returns 2dv_cube object with the temporally aggregated climate data.
+#' @export
+#' 
+#' @examples
+#' # Monthly aggregation of reanalysis data
+#' obs_path <- system.file("extdata/reanalysis/", package = "clim4health")
+#' obs_path <- paste0(obs_path, "/")
+#' obs <- clim4health_load(obs_path, var = "t2m", data_type = "obs",
+#'                          sdates = "201004", ext = 'nc')
+#' obs_month <- clim4health_time(obs, aggregation = "monthly")
+#' dim(obs_month$data)
 
-# Function for Aggregation
-clim4health_time <- function(data_clim, aggregation = "yearly") {
+clim4health_time <- function(data_clim,
+                             aggregation = "yearly") {
     
   # Check if aggregation type is valid
   if (!aggregation %in% c("monthly", "yearly", "daily")) {
@@ -23,7 +38,7 @@ clim4health_time <- function(data_clim, aggregation = "yearly") {
   average_year <- rowMeans(perm_array, dims = 5)
   
   # Parse time into appropriate groups
-  time_groups <- if (aggregation == "yearly") {
+  if (aggregation == "yearly") {
     data_clim$data <- average_year
   } else if (aggregation == "monthly") {
     data_clim$data <- average_month
