@@ -8,14 +8,18 @@
 #' variables can be found via clim4health_get_product_types().
 #' @param variable The variable that you want to load. Available variables can
 #' be found via clim4health_get_variables().
-#' @param years A vector of years, starting in 1950.
-#' @param months A vector of months. e.g. c(1,2) for January and February.
+#' @param year A vector of years, starting in 1950.
+#' @param month A vector of months. e.g. c(1,2) for January and February.
 #' Default is all months.
-#' @param days A vector of days in the month. Default is all days.
-#' @param times A vector of hours (0-23). Only needed when datasets are hourly.
+#' @param day A vector of days in the month. Default is all days.
+#' @param time A vector of hours (0-23). Only needed when datasets are hourly.
 #' Default is all hours.
-#' @param coords A vector of coordinates. (in order: South, North, West, East)
-#' @param outname The name (and path) of the resultant netcdf file
+#' @param area A vector of coordinates. (in order: South, North, West, East).
+#' @param leadtime_month A vector of months for the forecast leadtime. e.g. c(1,2) 
+#' for January and February. Default is all months.
+#' @param originating_centre DESCRIPTION PENDING!
+#' @param system DESCRIPTION PENDING!
+#' @param outname The name (and path) of the resultant netcdf file.
 #' @returns A netcdf file.
 #' 
 #' @author Daniela Lührsen
@@ -72,10 +76,8 @@ clim4health_get <- function(pat,
                             outname = paste0("cds_")) {
   all_params <- c(as.list(environment()))
 
-  source("dataset_info.R")
-  
   # check the parameters of the function and give error messages
-  datasets <- names(datasets_info)
+  datasets <- names(.datasets_info)
   
   # check whether the dataset is valid
   if (missing(dataset) || !dataset %in% datasets) {
@@ -84,7 +86,7 @@ clim4health_get <- function(pat,
   }
 
   # check whether there are missing required parameters
-  required_params <- names(datasets_info[[dataset]])
+  required_params <- names(.datasets_info[[dataset]])
   passed_params <- names(all_params[sapply(all_params, function(x) !is.symbol(x))])
   missing_params <- required_params[!required_params %in% passed_params]
   if (length(missing_params) != 0) {
@@ -95,7 +97,7 @@ clim4health_get <- function(pat,
 
   # check if all required params have correct values
   for (p in required_params) {
-    if (!all(all_params[[p]] %in% datasets_info[[dataset]][[p]])) {
+    if (!all(all_params[[p]] %in% .datasets_info[[dataset]][[p]])) {
       if (p == "area") {
         if (!(length(area) == 4 && is.numeric(area) &
           all(area[c(1, 3)] > -90) || all(area[c(1, 3)] < 90) &&
@@ -108,7 +110,7 @@ clim4health_get <- function(pat,
       } else {
         cat(paste0("Your value for ", p,
                    " is not valid. It must be one of the following: ",
-                   paste(datasets_info[[dataset]][[p]], collapse = ", ")))
+                   paste(.datasets_info[[dataset]][[p]], collapse = ", ")))
         return(invisible(NULL))        
       }
     }

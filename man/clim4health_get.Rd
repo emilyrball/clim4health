@@ -33,19 +33,26 @@ variables can be found via clim4health_get_product_types().}
 \item{variable}{The variable that you want to load. Available variables can
 be found via clim4health_get_variables().}
 
-\item{outname}{The name (and path) of the resultant netcdf file}
+\item{year}{A vector of years, starting in 1950.}
 
-\item{years}{A vector of years, starting in 1950.}
-
-\item{months}{A vector of months. e.g. c(1,2) for January and February.
+\item{month}{A vector of months. e.g. c(1,2) for January and February.
 Default is all months.}
 
-\item{days}{A vector of days in the month. Default is all days.}
+\item{day}{A vector of days in the month. Default is all days.}
 
-\item{times}{A vector of hours (0-23). Only needed when datasets are hourly.
+\item{time}{A vector of hours (0-23). Only needed when datasets are hourly.
 Default is all hours.}
 
-\item{coords}{A vector of coordinates. (in order: South, North, West, East)}
+\item{area}{A vector of coordinates. (in order: South, North, West, East).}
+
+\item{leadtime_month}{A vector of months for the forecast leadtime. e.g. c(1,2)
+for January and February. Default is all months.}
+
+\item{originating_centre}{DESCRIPTION PENDING!}
+
+\item{system}{DESCRIPTION PENDING!}
+
+\item{outname}{The name (and path) of the resultant netcdf file.}
 }
 \value{
 A netcdf file.

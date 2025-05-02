@@ -17,7 +17,10 @@ Imports:
     ncdf4,
     ecmwfr,
     sf,
-    exactextractr
+    exactextractr,
+    raster,
+    s2dv,
+    terra
 Suggests: 
     testthat (>= 3.0.0),
 Config/testthat/edition: 3
