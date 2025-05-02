@@ -2,6 +2,8 @@
 
 export(clim4health_get)
 export(clim4health_get_help)
+export(clim4health_index)
 export(clim4health_load)
 export(clim4health_space)
 export(clim4health_table)
+export(clim4health_time)
