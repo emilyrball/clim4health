@@ -2,15 +2,14 @@
 % Please edit documentation in R/clim4health_load.R
 \name{clim4health_load}
 \alias{clim4health_load}
-\title{Load forecast, hindcast, or observational climate data (reanalysis or stations)
-as s2dv_cube object.}
+\title{clim4health_load}
 \usage{
 clim4health_load(
   path,
   var = NULL,
   sdates = NULL,
-  data_type = NULL,
-  ext = "nc",
+  data_type = "",
+  ext = NULL,
   lat_selection = "all",
   lon_selection = "all"
 )
@@ -19,12 +18,13 @@ clim4health_load(
 \item{path}{String to the folder containing the files to be loaded.}
 
 \item{var}{String containing the name of the variable to be extracted from
-the files.}
+the files. It will be concatenated to path to identify the files to be loaded.}
 
-\item{sdates}{List or vector of strings identifying which start dates to load.}
+\item{sdates}{List or vector of strings identifying the start dates. It will
+be concatenated to path to identify the files to be loaded.}
 
-\item{data_type}{String indicating the type of data to be loaded. Options include
-forecast ("fcst"), hindcast ("hcst") or observational ("obs") data.}
+\item{data_type}{String indicating the type of data to be loaded. Options
+include forecast ("fcst"), hindcast ("hcst") or observational ("obs") data.}
 
 \item{ext}{File extension. Options include ".nc" and ".csv".}
 
@@ -37,7 +37,7 @@ An s2dv_cube object.
 }
 \description{
 Load forecast, hindcast, or observational climate data (reanalysis or stations)
-as s2dv_cube object.
+as an s2dv_cube object.
 }
 \examples{
 # Forecast data included in the package
@@ -50,4 +50,5 @@ fcst <- clim4health_load(fcst_path, var = "t2m", data_type = "fcst",
 class(fcst)
 dim(fcst$data)
 summary(fcst$data)
+
 }
