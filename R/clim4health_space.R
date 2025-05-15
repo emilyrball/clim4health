@@ -76,16 +76,12 @@ clim4health_space <- function(data,
           #columns_dates <- c(columns_dates,
           #  paste0('ensemble_', ifelse(ee<10, '0', ''), ee,
           #  '_date_', substr(dates[yy,tt], 1,10)))
-          
-          paste_zeros2 <- function(x) {
-            return(paste0(ifelse(x < 10, "0", ""), x))
-          }
-          
+
           columns_index <- c(columns_index,
-                             paste0(paste_zeros2(dat), "_",
-                                    paste_zeros2(vv),  "_",
-                                    paste_zeros2(tt),  "_",
-                                    paste_zeros2(ee),  "_"))
+                             paste0(sprintf("%02d", dat), "_",
+                                    sprintf("%02d", vv),  "_",
+                                    sprintf("%02d", tt),  "_",
+                                    sprintf("%02d", ee),  "_"))
         }
       }
     }
