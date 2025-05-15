@@ -107,9 +107,8 @@ clim4health_load <- function(path,
     # files are stored as path/var/var_sdate.nc
     dataset <- paste0(path, "$var$/$var$_$sdate$.nc")
   }
-  
+
   # read netcdf file dimensions of first file specified
-  ### tryCatch alternative for era5land data?
   file_dims <- easyNCDF::NcReadDims(full_path[1], var = var)
   parameters <- list(path = path,
                      full_path = full_path,
@@ -125,21 +124,25 @@ clim4health_load <- function(path,
   lat_val <- start_parameters$lat
   lon_val <- start_parameters$lon
   start_parameters <- start_parameters$sp
-  
+
   start_parameters$retrieve <- FALSE
   start_parameters$silent <- TRUE
+
+  start_parameters$latitude_var <- "latitude"
+  start_parameters$longitude_var <- "longitude"
+  start_parameters$pattern_dims <- "dataset"
   # Use startR function with retrieve = FALSE to get the dates
   data <- do.call(startR::Start, start_parameters)
-  
+
   if (any(c("time", "valid_time") %in% names(file_dims))) {
     if (data_type == "obs") {
       time_attributes <- attr(data, "Variables")$common$time
     } else {
       time_attributes <- attr(data, "Variables")$common$lead_time
     }
-    
+
     metadata_dates <- as.POSIXct(time_attributes)
-    
+
     # load data with dates in required shape
     if (!(data_type == "obs")) {
       # rename lead_time to time
@@ -155,37 +158,38 @@ clim4health_load <- function(path,
         unique(c(start_parameters$synonims[["time"]], "lead_time"))
     }
     start_parameters$time <- "all"
-    start_parameters$time_across <- "sdate"
+    #start_parameters$time_across <- "sdate"
   } else if (all(c("forecastMonth", "forecast_reference_time")
                  %in% names(file_dims))) {
     # case of ecmwf seasonal forecast data downloaded using get
     time_attributes <- attr(data, "Variables")$common$lead_time
     start_dates <- attr(data, "Variables")$common$time
-    
-    metadata_dates <- start_dates %m+% months(time_attributes - 1)
-    
+
+    metadata_dates <- lubridate::add_with_rollback(start_dates,
+                                                   months(time_attributes - 1))
+
     dim(metadata_dates) <- dim(time_attributes)
     names(dim(metadata_dates)) <- c("sdate", "time")
-    
+
     start_parameters$time <- "all"
-    start_parameters$time_across <- "sdate"
+    #start_parameters$time_across <- "sdate"
   }
-  
+
   # load data as StartR array
   start_parameters$retrieve <- TRUE
   start_parameters$silent <- FALSE
-  
+
   data <- do.call(startR::Start, start_parameters)
-  
+
   # transform to sd2v_cube
   data <- CSTools::as.s2dv_cube(data)
   dates <- metadata_dates
-  
+
   if (all(c("forecastMonth", "forecast_reference_time")
           %in% names(file_dims))) {
     data <- CSTools::CST_MergeDims(data, merge_dims = c("lead_time", "time"),
                                    rename_dim = "time", na.rm = FALSE)
-    data$coords$time <- dates
+    #data$coords$time <- dates
     dim(data$coords$time) <- NULL
   }
   
@@ -202,17 +206,22 @@ clim4health_load <- function(path,
   out_dims <- names(data$dim)
   
   # if any dimensions are missing, insert length 1
+  if (!("sdate" %in% out_dims)) {
+    data <- CSTools::CST_InsertDim(data, 3,
+                                   1, "sdate",
+                                   values = startR::indices(1))
+  }
   if (!("ensemble" %in% out_dims)) {
-    data <- CSTools::CST_InsertDim(data, 4,
+    data <- CSTools::CST_InsertDim(data, 5,
                                    1, "ensemble",
                                    values = startR::indices(1))
   }
   if (!("latitude" %in% out_dims)) {
-    data <- CSTools::CST_InsertDim(data, 5,
+    data <- CSTools::CST_InsertDim(data, 6,
                                    1, "latitude", values = lat_val)
   }
   if (!("longitude" %in% out_dims)) {
-    data <- CSTools::CST_InsertDim(data, 6,
+    data <- CSTools::CST_InsertDim(data, 7,
                                    1, "longitude", values = lon_val)
   }
   return(data)
