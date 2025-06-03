@@ -347,53 +347,81 @@
     # files are stored as path/var/var_date.nc
     dataset <- paste0(path, "$var$/$var$_$date$.nc")
   }
-  # if date does not have sdate dimension, add it
-  if (is.null(dim(date))) {
-    dim(date) <- c(sdate = 1, dtime = length(date))
-  } else if ((length(dim(date)) == 1) && names(dim(date)) == "time") {
-    # if date has only time dimension, add sdate dimension
-    dim(date) <- c(sdate = 1, dtime = length(date))
-  } else if ((length(dim(date)) == 1) && names(dim(date)) == "sdate") {
-    # if date has only sdate dimension, add time dimension
-    dim(date) <- c(sdate = length(date), dtime = 1)
-  }
 
-  start_parameters <- list(dataset = dataset,
-                           var = var,
-                           date = date,
-                           time = "all",
-                           latitude = .spatial_select(lat_selection),
-                           latitude_var = "latitude",
-                           longitude = .spatial_select(lon_selection),
-                           longitude_var = "longitude",
-                           pattern_dims = "dataset",
-                           latitude_reorder = startR::Sort(decreasing = TRUE),
-                           longitude_reorder = startR::CircularSort(-180, 180),
-                           return_vars = list(latitude = "dataset",
-                                              longitude = "dataset",
-                                              time = "date"),
-                           synonims = list(time = c("time", "valid_time")),
-                           split_multiselected_dims = TRUE,
-                           #time_across = c("date"),
-                           #merge_across_dims = TRUE,
-                           silent = TRUE,
-                           retrieve = TRUE)
+  if (!("sdate" %in% names(dim(date)))) {
+    start_parameters <- list(dataset = dataset,
+                             var = var,
+                             date = date,
+                             time = "all",
+                             latitude = .spatial_select(lat_selection),
+                             latitude_var = "latitude",
+                             longitude = .spatial_select(lon_selection),
+                             longitude_var = "longitude",
+                             pattern_dims = "dataset",
+                             latitude_reorder =
+                               startR::Sort(decreasing = TRUE),
+                             longitude_reorder =
+                               startR::CircularSort(-180, 180),
+                             return_vars = list(latitude = "dataset",
+                                                longitude = "dataset",
+                                                time = "date"),
+                             synonims = list(time = c("time", "valid_time")),
+                             time_across = c("date"),
+                             merge_across_dims = TRUE,
+                             silent = TRUE,
+                             retrieve = TRUE)
 
-  data <- do.call(startR::Start, start_parameters)
-
-  # transform to sd2v_cube
-  data <- CSTools::as.s2dv_cube(data)
-  print(names(data$coords))
-  if (!("sdate" %in% names(data$coords))) {
-    data <- CSTools::CST_InsertDim(data, 3,
-                                   1, "sdate",
+    data <- do.call(startR::Start, start_parameters)
+    # transform to sd2v_cube
+    data <- CSTools::as.s2dv_cube(data)
+    data <- CSTools::CST_InsertDim(data, 3, 1, "sdate",
                                    values = data$attrs$Dates[1])
     dim(data$attrs$Dates) <- c(sdate = 1, time = length(data$attrs$Dates))
-  }
-  if ("dtime" %in% names(data$coords)) {
-    data <- CSTools::CST_MergeDims(data, merge_dims = c("time", "dtime"),
-                                   rename_dim = "time", na.rm = FALSE)
-    dim(data$attrs$Dates) <- c(sdate = 1, time = length(data$attrs$Dates))
+  } else {
+    dims <- names(dim(date))
+    sdate_dim <- which(dims == "sdate")
+    data <- NULL
+    for (i in seq(dim(date)[["sdate"]])) {
+      idx <- vector("list", length(dims))
+      idx[] <- TRUE
+      idx[[sdate_dim]] <- i
+      date_tmp <- do.call(`[`, c(list(date), idx))
+      dim(date_tmp) <- c(sdate = 1, time = length(date_tmp))
+      start_parameters <- list(dataset = dataset,
+                               var = var,
+                               date = date_tmp,
+                               time = "all",
+                               latitude = .spatial_select(lat_selection),
+                               latitude_var = "latitude",
+                               longitude = .spatial_select(lon_selection),
+                               longitude_var = "longitude",
+                               pattern_dims = "dataset",
+                               latitude_reorder =
+                                 startR::Sort(decreasing = TRUE),
+                               longitude_reorder =
+                                 startR::CircularSort(-180, 180),
+                               return_vars = list(latitude = "dataset",
+                                                  longitude = "dataset",
+                                                  time = "date"),
+                               synonims = list(time = c("time", "valid_time")),
+                               time_across = c("date"),
+                               merge_across_dims = TRUE,
+                               silent = TRUE,
+                               retrieve = TRUE)
+
+      data_tmp <- do.call(startR::Start, start_parameters)
+      # transform to sd2v_cube
+      data_tmp <- CSTools::as.s2dv_cube(data_tmp)
+      data_tmp <- CSTools::CST_InsertDim(data_tmp, 3, 1, "sdate",
+                                         values = data_tmp$attrs$Dates[1])
+      dim(data_tmp$attrs$Dates) <- c(sdate = 1,
+                                     time = length(data_tmp$attrs$Dates))
+      if (i == 1) {
+        data <- data_tmp
+      } else {
+        data <- CSTools::CST_BindDim(data, data_tmp, along = "sdate")
+      }
+    }
   }
   return(data)
 }
@@ -478,7 +506,7 @@
   # transform to sd2v_cube
   data <- do.call(startR::Start, start_parameters)
   data <- CSTools::as.s2dv_cube(data)
-  print(class(data))
+
   # store dates
   data$attrs$Dates <- metadata_dates
 
