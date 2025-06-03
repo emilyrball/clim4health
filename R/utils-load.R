@@ -1,3 +1,6 @@
+#source(paste0("https://earth.bsc.es/gitlab/external/cstools/-/blob/",
+#              "master/R/CST_BindDim.R"))
+source(paste0("R/CST_BindDim.R"))
 #' .paste_hours_minutes
 #'
 #' TBC
@@ -131,136 +134,6 @@
                                        synonims = list(dim = dim_name))[[1]]
   }
   return(spatial_val)
-}
-
-
-
-#' .get_start_parameters
-#'
-#' TBC
-#'
-#' @param path TBC
-#' @param full_path TBC
-#' @param file_dims TBC
-#' @param dataset TBC
-#' @param var TBC
-#' @param date TBC
-#' @param data_type TBC
-#' @param lat_selection TBC
-#' @param lon_selection TBC
-#'
-#' @returns TBC
-.get_start_parameters <- function(path, full_path, file_dims,
-                                  dataset = NULL, var = NULL, date = NULL,
-                                  data_type = NULL,
-                                  lat_selection = NULL, lon_selection = NULL) {
-
-  possible_time_names <- .get_time_names()
-  possible_lat_names <- c("latitude", "lat", "lat_1", "lat_2")
-  possible_lon_names <- c("longitude", "lon", "lon_1", "lon_2")
-
-  # file dim names
-  file_dim_names <- names(file_dims)
-
-  # initialise startR parameters
-  synonims <- list()
-  return_vars <- list()
-
-  # extract time dimensions from files
-  time_dims <- c()
-  lower_time_dims <- c()
-
-  for (f in possible_time_names) {
-    # add f to time_dims if included in file_dims
-    if (any(grep(f, tolower(file_dim_names)))) {
-      dim_name_in_file <- file_dim_names[grep(f, tolower(file_dim_names))]
-      time_dims <- c(time_dims, dim_name_in_file)
-      lower_time_dims <- c(lower_time_dims, f)
-      if (dim_name_in_file != f) {
-        synonims[[f]] <- c(f, dim_name_in_file)
-      }
-    }
-  }
-
-  # define initial input parameters to startR
-  start_parameters <- list(dataset = dataset,
-                           var = var,
-                           date = date)
-
-  if ("time" %in% names(synonims)) {
-    if (!(data_type == "obs")) {
-      # if loading fcst/hcst, rename time to lead_time
-      names(synonims)[which("time" == names(synonims))] <- "lead_time"
-    } else {
-      # if loading obs, rename time to time
-      names(synonims)[which("time" == names(synonims))] <- "time"
-    }
-    # case of ecmwf seasonal forecast data downloaded using get
-    if (all(c("forecastMonth", "forecast_reference_time")
-            %in% file_dim_names)) {
-      names(synonims)[which("lead_time" == names(synonims))] <- "time"
-      names(synonims)[which("month" == names(synonims))] <- "lead_time"
-    }
-  } else {
-    if (!(data_type == "obs")) {
-      # if loading fcst/hcst, rename time to lead_time
-      synonims$lead_time <- c("lead_time", "time")
-    } else if ("time" %in% lower_time_dims) {
-      start_parameters[["time"]] <- "all"
-      return_vars[["time"]] <- "date"
-    }
-  }
-
-  for (f in names(synonims)) {
-    start_parameters[[f]] <- "all"
-    return_vars[[f]] <- "date"
-  }
-
-  # if file includes ensemble dimension, add to startR parameters
-  if (any(c("ensemble", "member", "number") %in% file_dim_names)) {
-    start_parameters$ensemble <- "all"
-    synonims$ensemble <- c("ensemble", "member", "number")
-  }
-
-  # select lat and lon
-  lat_select <- .spatial_select(lat_selection)
-  lon_select <- .spatial_select(lon_selection)
-
-  lat_name <- .get_spatial_name(file_dim_names, possible_lat_names)
-  lon_name <- .get_spatial_name(file_dim_names, possible_lon_names)
-
-  lat_length <- .get_spatial_length(lat_name, file_dims)
-  lon_length <- .get_spatial_length(lon_name, file_dims)
-
-  lat_val <- .get_spatial_val(lat_length, full_path, lat_name, "latitude")
-  lon_val <- .get_spatial_val(lon_length, full_path, lon_name, "longitude")
-
-  if (is.null(lat_val)) {
-    if (lat_name != "latitude") {
-      synonims$latitude <- c("latitude", lat_name)
-    }
-    return_vars$latitude <- "dataset"
-    start_parameters$latitude <- lat_select
-    start_parameters$latitude_reorder <- startR::Sort(decreasing = TRUE)
-  }
-  if (is.null(lon_val)) {
-    if (lon_name != "longitude") {
-      synonims$longitude <- c("longitude", lon_name)
-    }
-    return_vars$longitude <- "dataset"
-    start_parameters$longitude <- lon_select
-    start_parameters$longitude_reorder <- startR::CircularSort(-180, 180)
-  }
-
-  # define final parameters for startR calls
-  start_parameters$synonims <- synonims
-  start_parameters$return_vars <- return_vars
-  start_parameters$split_multiselected_dims <- TRUE
-  start_parameters$merge_across_dims <- TRUE
-  start_parameters$merge_across_dims_narm <- TRUE
-  start_parameters$largest_dims_length <- TRUE
-
-  return(list(sp = start_parameters, lat = lat_val, lon = lon_val))
 }
 
 #' .get_csv_dims
@@ -419,9 +292,11 @@
       if (i == 1) {
         data <- data_tmp
       } else {
-        data <- CSTools::CST_BindDim(data, data_tmp, along = "sdate")
+        data <- CST_BindDim(x = list(data, data_tmp), along = "sdate",
+                            var_dim = "var", dat_dim = "dataset")
       }
     }
+    data$coords$sdate <- data$attrs$Dates[, 1]
   }
   return(data)
 }
