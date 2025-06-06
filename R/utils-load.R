@@ -196,6 +196,7 @@ source(paste0("R/CST_BindDim.R"))
                                               time = "date"),
                            synonims = list(time = c("time", "valid_time")),
                            split_multiselected_dims = TRUE,
+                           largest_dims_length = TRUE,
                            silent = TRUE,
                            retrieve = TRUE)
 
@@ -241,6 +242,7 @@ source(paste0("R/CST_BindDim.R"))
                              synonims = list(time = c("time", "valid_time")),
                              time_across = c("date"),
                              merge_across_dims = TRUE,
+                             largest_dims_length = TRUE,
                              silent = TRUE,
                              retrieve = TRUE)
 
@@ -279,6 +281,7 @@ source(paste0("R/CST_BindDim.R"))
                                synonims = list(time = c("time", "valid_time")),
                                time_across = c("date"),
                                merge_across_dims = TRUE,
+                               largest_dims_length = TRUE,
                                silent = TRUE,
                                retrieve = TRUE)
 
@@ -344,6 +347,7 @@ source(paste0("R/CST_BindDim.R"))
                            synonims =
                              list(time = c("time", "forecastMonth"),
                                   ensemble = c("ensemble", "number")),
+                           largest_dims_length = TRUE,
                            silent = TRUE,
                            retrieve = FALSE)
 
@@ -375,6 +379,7 @@ source(paste0("R/CST_BindDim.R"))
                            synonims =
                              list(time = c("time", "forecastMonth"),
                                   ensemble = c("ensemble", "number")),
+                           largest_dims_length = TRUE,
                            silent = TRUE,
                            retrieve = TRUE)
 
