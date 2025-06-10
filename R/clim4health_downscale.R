@@ -33,7 +33,8 @@ library(multiApply)
 #' # TBD
 clim4health_downscale <- function(downscale_function,
   # required/overlapping inputs for all CSDownscale functions
-  exp, obs, exp_cor = NULL, region = NULL, ncores = NULL, target_grid = NULL,
+  exp, obs = NULL, exp_cor = NULL, region = NULL, ncores = NULL,
+  target_grid = NULL,
   # additional inputs for Intbc
   bc_method = NULL, method_remap = NULL, points = NULL,
   method_point_interp = NULL, loocv = FALSE,
@@ -53,11 +54,14 @@ clim4health_downscale <- function(downscale_function,
   time_dim <- "time"
   # ref, hcst, (fcst) s2dv_cube objects with dimensions
   #
-  if (is.null(obs) || is.null(exp)) {
-    stop("ref and exp must be specified")
+  if (is.null(exp)) {
+    stop("parameter 'exp' must be specified")
   } else if (is.null(downscale_function)) {
     stop("Please specify a downscaling function. Options are: ",
          "'Interpolation', 'Intbc', 'Analogs', 'Intlr'")
+  } else if (is.null(obs) && downscale_function != "Interpolation") {
+    stop(paste0("parameter 'obs' must be specified for 'downscale_function' =",
+                " '", downscale_function, "'"))
   }
 
   # catch missing arguments for each downscaling function
@@ -84,7 +88,7 @@ clim4health_downscale <- function(downscale_function,
                 "indicating the coarse grid to be passed to CDO, and it must",
                 " be a grid recognised by CDO or a NetCDF file."))
   }
-  spatial_type <- .determine_spatial_type(obs$data)
+  spatial_type <- .determine_spatial_type(exp$data)
   if (spatial_type == "region") {
     stop("Cannot downscale if data has been aggregated to regions")
   }
@@ -107,8 +111,21 @@ clim4health_downscale <- function(downscale_function,
   if (!is.null(exp_cor)) {
     exp_dims <- dim(exp_cor$data)
   }
+  if (downscale_function == "Interpolation") {
+    out <- CST_Interpolation(exp = exp, points = points,
+                             method_remap = method_remap,
+                             target_grid = target_grid,
+                             lat_dim = lat_dim,
+                             lon_dim = lon_dim,
+                             region = region,
+                             method_point_interp = method_point_interp,
+                             ncores = ncores)
 
-  if (downscale_function == "Intbc") {
+    # CST_Interpolation returns list with reordered s2dv_cube objects
+    out$exp$data <- s2dv::Reorder(out$exp$data, order = exp_dims)
+
+    out$exp$dims <- dim(out$exp$data)
+  } else if (downscale_function == "Intbc") {
     out <- CST_Intbc(exp = exp, obs = obs, exp_cor = exp_cor,
                      target_grid = target_grid, bc_method = bc_method,
                      int_method = method_remap, points = points,
@@ -122,8 +139,8 @@ clim4health_downscale <- function(downscale_function,
     out$exp$data <- s2dv::Reorder(out$exp$data, order = exp_dims)
     out$obs$data <- s2dv::Reorder(out$obs$data, order = obs_dims)
 
-    out$exp$dim <- dim(out$exp$data)
-    out$obs$dim <- dim(out$obs$data)
+    out$exp$dims <- dim(out$exp$data)
+    out$obs$dims <- dim(out$obs$data)
   } else if (downscale_function == "Intlr") {
     out <- CST_Intlr(exp = exp, obs = obs, exp_cor = exp_cor,
                      lr_method = lr_method, target_grid = target_grid,
@@ -141,8 +158,8 @@ clim4health_downscale <- function(downscale_function,
     out$exp$data <- s2dv::Reorder(out$exp$data, order = exp_dims)
     out$obs$data <- s2dv::Reorder(out$obs$data, order = obs_dims)
 
-    out$exp$dim <- dim(out$exp$data)
-    out$obs$dim <- dim(out$obs$data)
+    out$exp$dims <- dim(out$exp$data)
+    out$obs$dims <- dim(out$obs$data)
   } else if (downscale_function == "Analogs") {
     out <- CST_Analogs(exp = exp, obs = obs, obsL = obsL,
                        grid_exp = target_grid, nanalogs = nanalogs,
@@ -152,6 +169,13 @@ clim4health_downscale <- function(downscale_function,
                        member_dim = member_dim, metric = metric,
                        region = region, return_indices = return_indices,
                        loocv_window = loocv_window, ncores = ncores)
+
+    # CST_Analogs returns list with reordered s2dv_cube objects
+    out$exp$data <- s2dv::Reorder(out$exp$data, order = c(exp_dims, "analogs"))
+    out$obs$data <- s2dv::Reorder(out$obs$data, order = obs_dims)
+
+    out$exp$dims <- dim(out$exp$data)
+    out$obs$dims <- dim(out$obs$data)
   }
 
   return(out)
