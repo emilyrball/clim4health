@@ -1,17 +1,14 @@
 #' Postprocess climate data including calibration...
 #'
+#' @param exp TBD
+#' @param obs TBD
 #' @param ref TBD
-#' @param hcst TBD
-#' @param fcst TBD
-#' @param ref_path TBD
 #' @param var TBD
-#' @param method TBD
-#' @param skill TBD
-#' @param cal_method TBD
-#' @param eval_method TBD
-#' @param wet_day TBD
-#' @param memb_dim TBD
+#' @param lower TBD
+#' @param upper TBD
+#' @param cross_val TBD
 #' @param sdate_dim TBD
+#' @param memb_dim TBD
 #' @param ncores TBD
 #'
 #' @returns TBD
@@ -19,23 +16,23 @@
 #'
 #' @examples
 #' # TBD
-clim4health_postprocess <- function(ref,
-                                    hcst,
+clim4health_postprocess <- function(exp,
+                                    obs,
+                                    ref = NULL,
                                     var = NULL,
                                     lower = 0.1,
                                     upper = 0.9,
+                                    cross_val = TRUE,
                                     sdate_dim = "sdate",
                                     memb_dim = "ensemble",
                                     ncores = NULL) {
-  # ref, hcst, fcst s2dv_cube objects with dimensions:
-  # if skill = TRUE, additionally calls clim4health_skill
-  if (is.null(ref) || is.null(hcst)) {
-    stop("ref and hcst must be specified")
+  if (is.null(exp) || is.null(obs)) {
+    stop("Parameters 'exp' and 'obs' must be specified")
   }
 
   # get var name
   if (is.null(var)) {
-    var <- .get_var(ref)
+    var <- .get_var(obs)
   }
 
   if (is.null(ncores)) {
@@ -46,30 +43,33 @@ clim4health_postprocess <- function(ref,
     stop("ncores cannot be equal to or greater than the available cores")
   }
 
-  ref <- .get_array(ref)
-  hcst <- .get_array(hcst)
+  obs <- .get_array(obs)
+  exp <- .get_array(exp)
 
   data <- list()
 
   # skill
   # if thresholds not specified, use default value
-  data[[paste0("bss", lower)]] <- s2dv::RPSS(exp = hcst,
-                                             obs = ref,
+  data[[paste0("bss", lower)]] <- s2dv::RPSS(exp = exp,
+                                             obs = obs,
+                                             ref = ref,
                                              prob_thresholds = lower,
-                                             cross.val = TRUE,
+                                             cross.val = cross_val,
                                              time_dim = sdate_dim,
                                              memb_dim = memb_dim,
                                              ncores = ncores)
-  data[[paste0("bss", upper)]] <- s2dv::RPSS(exp = hcst,
-                                             obs = ref,
+  data[[paste0("bss", upper)]] <- s2dv::RPSS(exp = exp,
+                                             obs = obs,
+                                             ref = ref,
                                              prob_thresholds = upper,
-                                             cross.val = TRUE,
+                                             cross.val = cross_val,
                                              time_dim = sdate_dim,
                                              memb_dim = memb_dim,
                                              ncores = ncores)
-  data[["crpss"]] <- s2dv::CRPSS(exp = hcst,
-                                 obs = ref,
-                                 clim.cross.val = TRUE,
+  data[["crpss"]] <- s2dv::CRPSS(exp = exp,
+                                 obs = obs,
+                                 ref = ref,
+                                 clim.cross.val = cross_val,
                                  time_dim = sdate_dim,
                                  memb_dim = memb_dim,
                                  ncores = ncores)
