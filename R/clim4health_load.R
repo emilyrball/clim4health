@@ -51,9 +51,9 @@ clim4health_load <- function(path,
 
   if (ext == "csv") { # Read .csv files
     if (!(is.null(date))) {
-      full_path <- .paste_outer(paste0(path, var, "_"), date)
+      full_path <- .paste_outer(paste0(path, "_"), date)
     } else {
-      full_path <- paste0(path, var)
+      full_path <- paste0(path)
     }
 
     full_path <- .paste_outer(full_path, paste0(".", ext))
@@ -173,22 +173,23 @@ clim4health_load <- function(path,
 #' @returns TBC
 .clim4health_load_csv <- function(full_path, var = NULL, date = NULL,
                                   data_type = NULL,
-                                  lat_selection = NULL, lon_selection = NULL) {
+                                  lat_selection = "all",
+                                  lon_selection = "all") {
   # read file
-  data <- utils::read.csv(full_path)
+  data <- data.table::fread(full_path)
 
   # skip up to 10 lines of header
   if (ncol(data) == 1) {
     for (i in 1:11) {
-      if (ncol(utils::read.csv(full_path, skip = i)) > 1) {
+      if (ncol(data.table::fread(full_path, skip = i)) > 1) {
         break
       }
     }
     if (i == 11) {
       stop("Currently cannot handle >10 header lines in file.")
     } else {
-      data <- utils::read.csv(full_path, skip = i)
-      metadata <- utils::head(utils::read.csv(full_path), i - 1)
+      data <- data.table::fread(full_path, skip = i)
+      metadata <- utils::head(data.table::fread(full_path), i - 1)
     }
   } else {
     metadata <- NULL
@@ -196,154 +197,17 @@ clim4health_load <- function(path,
 
   # read headers
   headers <- colnames(data)
-  # get lats/lons
-  lats <- .get_csv_dims(headers, data, c("y", "lat", "latitude"))
-  lons <- .get_csv_dims(headers, data, c("x", "lon", "longitude"))
 
-  # get time columns
-  ### test what happens if you have a year and month column
-  possible_time_names <- .get_time_names()
-  times <- .get_csv_dims(headers, data, possible_time_names)
-
-  vars <- list()
-  # get variable
-  if (!is.null(var)) {
-    if (any(headers %in% var)) {
-      # if var name exists in file
-      vars$col <- which(headers %in% var)
-    } else {
-      # if var name does not exist
-      stop(paste0("var name ", var, " not found"))
-    }
+  if (all(headers == c("V1", "station", "longitude", "latitude",
+                       "date", "hour", "tag", "value"))) {
+    data <- .load_csv_tolimavalle(data, var = var,
+                                  lat_selection = lat_selection,
+                                  lon_selection = lon_selection)
+    return(data)
   } else {
-    # if variable is not specified assume it is the last one
-    vars$col <- length(headers)
-    var <- headers[length(headers)]
+    data <- .load_csv_unknown(data, var = var,
+                              lat_selection = lat_selection,
+                              lon_selection = lon_selection)
+    return(data)
   }
-  vars$val <- data[, vars$col]
-
-  # run through possible time/date combinations
-  ### what about case YYYY and MM stored in separate columns?
-  print("Trying date formats")
-  sum_na <- length(times$val)
-  dates <- NA
-  for (f in list(lubridate::ymd, lubridate::dmy, lubridate::mdy,
-                 lubridate::ym, lubridate::my)) {
-    dates_tmp <- f(times$val)
-    if (sum(is.na(dates_tmp)) < sum_na) {
-      dates <- dates_all <- dates_tmp
-      sum_na <- sum(is.na(dates_tmp))
-      ## choose a date format that produces least NAs
-    }
-  }
-  if (!typeof(dates) == "logical") {
-    dates <- unique(dates)
-  }
-
-  # could be stored as "YYYY/MM/DD hh:mm:ss"
-  print("Trying YYYY/MM/DD hh:mm:ss date format")
-  dates_tmp <- tryCatch({
-    as.POSIXct(times$val, tz = "UTC")
-  },
-  error = function(x) {
-    return(NA)
-  },
-  warning = function(x) {
-    return(NA)
-  })
-
-  # if length of dates_tmp is longer then hourly data could be stored
-  if (length(unique(dates_tmp)) > length(dates)) {
-    dates <- dates_all <- dates_tmp
-  }
-
-  # final option could be year is stored as date
-  if (typeof(dates) == "logical") {
-    print("Trying YYYY date format")
-    dates <- tryCatch({
-      lubridate::year(times$val)
-    },
-    error = function(x) {
-      return(NA)
-    },
-    warning = function(x) {
-      return(NA)
-    })
-    dates_all <- dates
-  }
-  if (typeof(dates) == "logical") {
-    stop("Cannot parse dates. Stopping")
-  }
-
-  dates <- unique(dates)
-
-  # obtain metadata
-  lat <- c() # initialise
-  lon <- c() # initialise
-
-  if (!(is.null(lats$col)) && !(is.null(lons$col))) {
-    coords <- unique(paste0(lats$val, "; ", lons$val))
-    for (cc in seq_along(coords)){
-      lat <- c(lat, as.integer(strsplit(coords[cc], "; ")[[1]][1]))
-      lon <- c(lon, as.integer(strsplit(coords[cc], "; ")[[1]][2]))
-    }
-  } else {
-    lat <- startR::indices(1)
-    lon <- startR::indices(1)
-  }
-
-  # convert table to array of correct dimensions for s2dv_cube
-  data_array <- array(data[, vars$col],
-                      dim = c(dataset = 1, var = 1,
-                              time = length(dates),
-                              ensemble = 1,
-                              latitude = length(lat), longitude = length(lon)))
-
-  # reshape data and dates
-  for (tt in seq_along(dates)) {
-    ttx <- which(dates_all == dates[tt])
-    for (ln in seq_along(lon)) {
-      lnx <- which(lons$val == lon[ln])
-      for (ll in seq_along(lat)) {
-        llx <- which(lats$val == lat[ll])
-        idxs <- Reduce(intersect, list(lnx, llx, ttx))
-        if (!(length(idxs) == 0)) {
-          data_array[, , tt, , ll, ln] <- data[idxs, vars$col]
-        } else {
-          data_array[, , tt, , ll, ln] <- NA
-        }
-      }
-    }
-  }
-
-  # format to s2dv_cube
-  data_tmp <- CSTools::s2dv_cube(data = data_array,
-                                 coords = list(dataset = 1,
-                                               var = var,
-                                               time = dates,
-                                               ensemble = 1,
-                                               latitude = lat,
-                                               longitude = lon),
-                                 varName = var,
-                                 Dates = dates)
-
-  # subset to only the requested coordinates (lat_selection and lon_selection)
-  if (any(lat_selection == "all")) {
-    lat_select <- seq_along(lat)
-  } else {
-    lat_select <- which(lat >= lat_selection[1] & lat <= lat_selection[2])
-  }
-  if (any(lon_selection == "all")) {
-    lon_select <- seq_along(lon)
-  } else {
-    lon_select <- which(lon >= lon_selection[1] & lon <= lon_selection[2])
-  }
-  data <- CSTools::CST_Subset(data_tmp, along = c("latitude", "longitude"),
-                              indices = list(lat_select, lon_select),
-                              drop = "none")
-
-  if (!is.null(metadata)) {
-    data$attrs$Variable$metadata <- metadata
-  }
-  return(data)
 }
