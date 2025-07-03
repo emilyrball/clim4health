@@ -38,21 +38,21 @@ clim4health_plot <- function(data,
   data_plot <- data$data
   
   # Requirements: sdate
-  if(is.null(sdate) & dim(data_plot)["sdate"]>1){
+  if(is.null(sdate) & dims_data["sdate"]>1){
     stop("More than one 'sdate' is available, please select one.")
   }else if(!is.null(sdate) & length(sdate)>1){
     stop("Only one 'sdate' is possible for now.")
   }
   
   # Requirements: time
-  if(is.null(time) & dim(data_plot)["time"]>1){
+  if(is.null(time) & dims_data["time"]>1){
     stop("More than one 'time' is available, please select one.")
   }else if(!is.null(time) & length(time)>1){
     stop("Only one 'time' is possible for now.")
   }
   
   # Requirements: ensemble
-  if(dim(data_plot)["sdate"]>1){
+  if(!isTRUE(ensemble) & dims_data["ensemble"]>1){
     stop("Only one 'ensemble' is possible for now.")
   }
   
