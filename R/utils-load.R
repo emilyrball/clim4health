@@ -403,6 +403,7 @@ source(paste0("R/CST_BindDim.R"))
 }
 
 .load_csv_tolimavalle <- function(data, var = NULL,
+                                  dates = NULL,
                                   lat_selection = "all",
                                   lon_selection = "all") {
   # set keys
@@ -427,7 +428,9 @@ source(paste0("R/CST_BindDim.R"))
                  latitude >= min(lat_selection) &
                  latitude <= max(lat_selection) &
                  longitude >= min(lon_selection) &
-                 longitude <= max(lon_selection)]
+                 longitude <= max(lon_selection) &
+                 paste0(lubridate::year(date),
+                        sprintf("%02d", lubridate::month(date))) %in% dates]
 
   # get datetime object
   data[, time := as.POSIXct(paste(date, hour), tz = "COT")]
@@ -435,6 +438,14 @@ source(paste0("R/CST_BindDim.R"))
   lat_coord <- sort(unique(data$latitude), decreasing = TRUE)
   lon_coord <- sort(unique(data$longitude), decreasing = FALSE)
   time_coord <- sort(unique(data$time), decreasing = FALSE)
+  if (!is.null(dates) & is.null(dim(dates))) {
+    num_sdates <- 1
+    num_times <- length(time_coord)
+    dates <- matrix(time_coord, nrow = num_sdates, ncol = num_times)
+  } else {
+    num_sdates <- dim(dates)["sdate"]
+    num_times <- dim(dates)["time"]
+  }
 
   # Create index columns
   data[, `:=`(

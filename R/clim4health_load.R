@@ -50,20 +50,11 @@ clim4health_load <- function(path,
   }
 
   if (ext == "csv") { # Read .csv files
-    if (!(is.null(date))) {
-      full_path <- .paste_outer(paste0(path, "_"), date)
-    } else {
-      full_path <- paste0(path)
-    }
-
-    full_path <- .paste_outer(full_path, paste0(".", ext))
-
     if (!(data_type == "obs")) {
       stop("Cannot currently load forecast/hindcast data in csv format.")
     }
-    data <- .clim4health_load_csv(full_path, var = var,
+    data <- .clim4health_load_csv(path, var = var,
                                   date = date,
-                                  data_type = data_type,
                                   lat_selection = lat_selection,
                                   lon_selection = lon_selection)
   } else if (ext == "nc") { # Read .nc files
@@ -171,11 +162,22 @@ clim4health_load <- function(path,
 #' @param lon_selection TBC
 #'
 #' @returns TBC
-.clim4health_load_csv <- function(full_path, var = NULL, date = NULL,
-                                  data_type = NULL,
+.clim4health_load_csv <- function(path, var = NULL, date = NULL,
                                   lat_selection = "all",
                                   lon_selection = "all") {
   # read file
+  if (!(is.null(date))) {
+    if (file.exists(paste0(path, "_", date[1], ".csv"))) {
+      full_path <- .paste_outer(paste0(path, "_"), date)
+    } else {
+      full_path <- paste0(path)
+    }
+  } else {
+    full_path <- paste0(path)
+  }
+  print(full_path)
+  full_path <- .paste_outer(full_path, paste0(".csv"))
+
   data <- data.table::fread(full_path)
 
   # skip up to 10 lines of header
@@ -200,7 +202,7 @@ clim4health_load <- function(path,
 
   if (all(headers == c("V1", "station", "longitude", "latitude",
                        "date", "hour", "tag", "value"))) {
-    data <- .load_csv_tolimavalle(data, var = var,
+    data <- .load_csv_tolimavalle(data, var = var, dates = date,
                                   lat_selection = lat_selection,
                                   lon_selection = lon_selection)
     return(data)
