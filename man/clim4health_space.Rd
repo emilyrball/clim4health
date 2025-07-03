@@ -9,7 +9,8 @@ clim4health_space(
   boundaries,
   lat_dim_name = "latitude",
   lon_dim_name = "longitude",
-  agg_fun = "mean"
+  agg_fun = "mean",
+  region_id = NULL
 )
 }
 \arguments{
@@ -26,6 +27,8 @@ aggregation.}
 
 \item{agg_fun}{String. Method to perform the aggregation, defaults to "mean".
 Other possible options include "median" or "sum".}
+
+\item{region_id}{String. Name of the region identifier in the boundaries}
 }
 \value{
 A s2dv_cube object with the aggregated data.
@@ -35,21 +38,21 @@ Spatial aggregation of climate products into polygon geometries.
 }
 \examples{
 # library(sf)
-# 
+#
 # # Load forecast data
 # fcst_path <- system.file("extdata/forecast/", package = "clim4health")
 # fcst_path <- paste0(fcst_path, "/")
 # fcst <- clim4health_load(fcst_path, var = "t2m", data_type = "fcst",
 #                          sdates = "20240401", ext = 'nc')
 # dim(fcst$data)
-#                          
+#
 # # Read and plot polygon geometries (municipalities in Colombia)
 # poly_path <- system.file("extdata/shapefiles/", package = "clim4health")
 # poly_path <- paste0(poly_path, "/MGN_ANM_MPIOS.shp")
 # poly_sf <- read_sf(poly_path)
 # dim(poly_sf) # 1122 municipalities
 # plot(st_geometry(poly_sf))
-# 
+#
 # # Spatially aggregate the forecast
 # result_fcst <- clim4health_space(fcst, poly_sf)
 # dim(result_obs$data)

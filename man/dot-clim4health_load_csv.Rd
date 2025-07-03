@@ -5,26 +5,25 @@
 \title{.clim4health_load_csv}
 \usage{
 .clim4health_load_csv(
-  full_path,
+  path,
   var = NULL,
-  sdates = NULL,
-  data_type = NULL,
-  lat_selection = NULL,
-  lon_selection = NULL
+  date = NULL,
+  lat_selection = "all",
+  lon_selection = "all"
 )
 }
 \arguments{
-\item{full_path}{TBC}
-
 \item{var}{TBC}
 
-\item{sdates}{TBC}
-
-\item{data_type}{TBC}
+\item{date}{TBC}
 
 \item{lat_selection}{TBC}
 
 \item{lon_selection}{TBC}
+
+\item{full_path}{TBC}
+
+\item{data_type}{TBC}
 }
 \value{
 TBC

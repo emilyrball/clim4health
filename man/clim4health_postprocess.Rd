@@ -5,45 +5,36 @@
 \title{Postprocess climate data including calibration...}
 \usage{
 clim4health_postprocess(
-  ref,
-  hcst,
-  fcst = NULL,
-  ref_path = NULL,
+  exp,
+  obs,
+  ref = NULL,
   var = NULL,
-  method = "calibrate",
-  skill = TRUE,
-  cal_method = NULL,
-  eval_method = NULL,
-  wet_day = TRUE,
-  memb_dim = "ensemble",
+  lower = 0.1,
+  upper = 0.9,
+  cross_val = TRUE,
   sdate_dim = "sdate",
+  memb_dim = "ensemble",
   ncores = NULL
 )
 }
 \arguments{
+\item{exp}{TBD}
+
+\item{obs}{TBD}
+
 \item{ref}{TBD}
-
-\item{hcst}{TBD}
-
-\item{fcst}{TBD}
-
-\item{ref_path}{TBD}
 
 \item{var}{TBD}
 
-\item{method}{TBD}
+\item{lower}{TBD}
 
-\item{skill}{TBD}
+\item{upper}{TBD}
 
-\item{cal_method}{TBD}
-
-\item{eval_method}{TBD}
-
-\item{wet_day}{TBD}
-
-\item{memb_dim}{TBD}
+\item{cross_val}{TBD}
 
 \item{sdate_dim}{TBD}
+
+\item{memb_dim}{TBD}
 
 \item{ncores}{TBD}
 }

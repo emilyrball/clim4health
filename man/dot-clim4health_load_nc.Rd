@@ -10,7 +10,7 @@
   full_path,
   lat_selection,
   lon_selection,
-  sdates,
+  date,
   data_type
 )
 }
@@ -25,7 +25,7 @@
 
 \item{lon_selection}{TBC}
 
-\item{sdates}{TBC}
+\item{date}{TBC}
 
 \item{data_type}{TBC}
 }

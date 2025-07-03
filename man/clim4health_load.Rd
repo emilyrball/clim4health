@@ -7,7 +7,7 @@
 clim4health_load(
   path,
   var = NULL,
-  sdates = NULL,
+  date = NULL,
   data_type = "",
   ext = NULL,
   lat_selection = "all",
@@ -18,10 +18,8 @@ clim4health_load(
 \item{path}{String to the folder containing the files to be loaded.}
 
 \item{var}{String containing the name of the variable to be extracted from
-the files. It will be concatenated to path to identify the files to be loaded.}
-
-\item{sdates}{List or vector of strings identifying the start dates. It will
-be concatenated to path to identify the files to be loaded.}
+the files. It will be concatenated to path to identify the files to be
+loaded.}
 
 \item{data_type}{String indicating the type of data to be loaded. Options
 include forecast ("fcst"), hindcast ("hcst") or observational ("obs") data.}
@@ -30,25 +28,29 @@ include forecast ("fcst"), hindcast ("hcst") or observational ("obs") data.}
 
 \item{lat_selection}{Range of latitudes to subset the file and load the data.}
 
-\item{lon_selection}{Range of longitudes to subset the file and load the data.}
+\item{lon_selection}{Range of longitudes to subset the file and load the
+data.}
+
+\item{sdates}{List or vector of strings identifying the start dates. It will
+be concatenated to path to identify the files to be loaded.}
 }
 \value{
 An s2dv_cube object.
 }
 \description{
-Load forecast, hindcast, or observational climate data (reanalysis or stations)
-as an s2dv_cube object.
+Load forecast, hindcast, or observational climate data (reanalysis or
+stations) as an s2dv_cube object.
 }
 \examples{
-# Forecast data included in the package
-fcst_path <- system.file("extdata/forecast/", package = "clim4health")
-fcst_path <- paste0(fcst_path, "/")
-
-# Load the forecast data
-fcst <- clim4health_load(fcst_path, var = "t2m", data_type = "fcst",
-                         sdates = "20240401", ext = 'nc')
-class(fcst)
-dim(fcst$data)
-summary(fcst$data)
+# # Forecast data included in the package
+# fcst_path <- system.file("extdata/forecast/", package = "clim4health")
+# fcst_path <- paste0(fcst_path, "/")
+# 
+# # Load the forecast data
+# fcst <- clim4health_load(fcst_path, var = "t2m", data_type = "fcst",
+#                          sdates = "20240401", ext = 'nc')
+# class(fcst)
+# dim(fcst$data)
+# summary(fcst$data)
 
 }
