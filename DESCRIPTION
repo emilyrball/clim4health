@@ -10,15 +10,16 @@ Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Imports:
-    startR, 
-    lubridate,
-    easyNCDF,
+    abind,
     CSTools,
+    easyNCDF,
     ecmwfr,
-    sf,
     exactextractr,
+    lubridate,
     raster,
     s2dv,
+    sf,
+    startR, 
     terra
 Suggests: 
     testthat (>= 3.0.0),

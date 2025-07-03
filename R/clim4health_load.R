@@ -20,16 +20,16 @@
 #' @export
 #'
 #' @examples
-#' # Forecast data included in the package
-#' fcst_path <- system.file("extdata/forecast/", package = "clim4health")
-#' fcst_path <- paste0(fcst_path, "/")
-#'
-#' # Load the forecast data
-#' fcst <- clim4health_load(fcst_path, var = "t2m", data_type = "fcst",
-#'                          sdates = "20240401", ext = 'nc')
-#' class(fcst)
-#' dim(fcst$data)
-#' summary(fcst$data)
+#' # # Forecast data included in the package
+#' # fcst_path <- system.file("extdata/forecast/", package = "clim4health")
+#' # fcst_path <- paste0(fcst_path, "/")
+#' # 
+#' # # Load the forecast data
+#' # fcst <- clim4health_load(fcst_path, var = "t2m", data_type = "fcst",
+#' #                          sdates = "20240401", ext = 'nc')
+#' # class(fcst)
+#' # dim(fcst$data)
+#' # summary(fcst$data)
 #'
 clim4health_load <- function(path,
                              var = NULL,

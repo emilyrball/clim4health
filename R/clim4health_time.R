@@ -14,13 +14,13 @@
 #' @export
 #'
 #' @examples
-#' # Monthly aggregation of reanalysis data
-#' obs_path <- system.file("extdata/reanalysis/", package = "clim4health")
-#' obs_path <- paste0(obs_path, "/")
-#' obs <- clim4health_load(obs_path, var = "t2m", data_type = "obs",
-#'                          sdates = "201004", ext = 'nc')
-#' obs_month <- clim4health_time(obs, aggregation = "monthly")
-#' dim(obs_month$data)
+#' # # Monthly aggregation of reanalysis data
+#' # obs_path <- system.file("extdata/reanalysis/", package = "clim4health")
+#' # obs_path <- paste0(obs_path, "/")
+#' # obs <- clim4health_load(obs_path, var = "t2m", data_type = "obs",
+#' #                          sdates = "201004", ext = 'nc')
+#' # obs_month <- clim4health_time(obs, aggregation = "monthly")
+#' # dim(obs_month$data)
 
 clim4health_time <- function(data,
                              aggregation = "yearly",

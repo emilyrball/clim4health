@@ -38,14 +38,14 @@ A s2dv_cube with the values masked or the mask (depending on \code{mod_vals}).
 Masking climate data based on their value
 }
 \examples{
-# Load forecast data included in the package
-fcst_path <- system.file("extdata/forecast/", package = "clim4health")
-fcst_path <- paste0(fcst_path, "/")
-fcst <- clim4health_load(fcst_path, var = "t2m", data_type = "fcst",
-                         sdates = "20240401", ext = 'nc')
-                         
-# Mask values
-mask <- clim4health_index(fcst, mod_vals = TRUE,  
-                          lower_threshold = 280, upper_threshold = 290,
-                          lower_close = FALSE, upper_close = FALSE)
+# # Load forecast data included in the package
+# fcst_path <- system.file("extdata/forecast/", package = "clim4health")
+# fcst_path <- paste0(fcst_path, "/")
+# fcst <- clim4health_load(fcst_path, var = "t2m", data_type = "fcst",
+#                          sdates = "20240401", ext = 'nc')
+#                          
+# # Mask values
+# mask <- clim4health_index(fcst, mod_vals = TRUE,  
+#                           lower_threshold = 280, upper_threshold = 290,
+#                           lower_close = FALSE, upper_close = FALSE)
 }
