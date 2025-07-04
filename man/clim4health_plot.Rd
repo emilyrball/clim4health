@@ -10,24 +10,31 @@ clim4health_plot(
   time = NULL,
   ensemble = TRUE,
   ensemble_fun = mean,
-  save_path = NULL
+  save_path = NULL,
+  legend = NULL
 )
 }
 \arguments{
 \item{data}{\emph{s2dv_cube} object with the climate data to be plotted.}
 
-\item{sdate}{Numerical index of the forecast starting time to be plotted.}
+\item{sdate}{Numerical index of the forecast starting time to be plotted.
+Only required if more than one 'sdate' is available.}
 
-\item{time}{Numerical index of the time to be plotted.}
+\item{time}{Numerical index of the time to be plotted.
+Only required if more than one 'time' is available.}
 
 \item{ensemble}{Numerical index of the ensemble member to be plotted. If
-set to TRUE (default), it aggregates all the ensemble members}
+set to TRUE (default), it aggregates all the ensemble members.
+Only required if more than one 'ensemble' member is available.}
 
-\item{ensemble_fun}{Aggregation function when ensemble=TRUE. Defaults to the
-mean.}
+\item{ensemble_fun}{Aggregation function used when ensemble = TRUE.
+Defaults to the mean.}
 
 \item{save_path}{Optional path where the plot should be saved. Extensions
 allowed: eps/ps, jpeg, png, pdf, bmp and tiff.}
+
+\item{var}{Numerical index of the variable to be plotted.
+Only required if more than one variable is available.}
 }
 \value{
 A plot
@@ -44,4 +51,22 @@ fcst <- clim4health_load(fcst_path,
                          date = "20250101",
                          ext = 'nc')
 clim4health_plot(fcst, time = 1) 
+
+# Reanalysis
+rean_path <- paste0(getwd(), "/inst/extdata/reanalysis/")
+rean <- clim4health_load(rean_path,
+                         var = "t2m",
+                         data_type = "obs",
+                         date = c("201001", "201002", "201003"),
+                         ext = 'nc')
+clim4health_plot(rean, time = 1) 
+
+# Hindcast
+hind_path <- paste0(getwd(), "/inst/extdata/hindcast/")
+hind <- clim4health_load(hind_path,
+                         var = "t2m",
+                         data_type = "hcst",
+                         date = c("20100101", "20110101", "20120101"),
+                         ext = 'nc')
+clim4health_plot(rean, time = 1, sdate = 1) 
 }
