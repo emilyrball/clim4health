@@ -11,6 +11,10 @@ clim4health_plot(
   time = NULL,
   ensemble = TRUE,
   ensemble_fun = mean,
+  boundaries = "countries",
+  mask_boundaries = TRUE,
+  title = NULL,
+  legend = NULL,
   palette = "-RdBu"
 )
 }
@@ -33,6 +37,18 @@ Only required if more than one 'ensemble' member is available.}
 \item{ensemble_fun}{Aggregation function used when ensemble = TRUE.
 Defaults to the mean.}
 
+\item{boundaries}{Polygon boundaries to add to the map. Defaults to "countries"
+for country boundaries. Set to FALSE for no boundaries, otherwise supply
+a polygon \code{sf} object.}
+
+\item{mask_boundaries}{If TRUE (default), mask the data to the provided
+boundaries.}
+
+\item{title}{Optional plot title.}
+
+\item{legend}{Optional legend title. If NULL (default), it uses the variable
+names.}
+
 \item{palette}{GHR, RColorBrewer or colorspace palette. Use "-" before the
 palette name (e.g., "-Reds") to reverse it. Alternatively, a vector of
 hex codes to create a continuous interpolated palette.}
@@ -51,7 +67,7 @@ fcst <- clim4health_load(fcst_path,
                          data_type = "fcst",
                          date = "20250101",
                          ext = 'nc')
-clim4health_plot(fcst) 
+clim4health_plot(fcst, title = "Forecast") 
 
 # Reanalysis
 rean_path <- paste0(getwd(), "/inst/extdata/reanalysis/")
@@ -60,7 +76,7 @@ rean <- clim4health_load(rean_path,
                          data_type = "obs",
                          date = c("201001", "201002", "201003"),
                          ext = 'nc')
-clim4health_plot(rean) 
+clim4health_plot(rean, title = "Reanalysis") 
 
 # Hindcast
 hind_path <- paste0(getwd(), "/inst/extdata/hindcast/")
@@ -69,5 +85,5 @@ hind <- clim4health_load(hind_path,
                          data_type = "hcst",
                          date = c("20100101", "20110101", "20120101"),
                          ext = 'nc')
-clim4health_plot(hind) 
+clim4health_plot(hind, title = "Hindcast") 
 }

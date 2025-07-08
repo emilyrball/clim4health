@@ -12,8 +12,16 @@
 #' @param ensemble Numerical index of the ensemble member to be plotted. If
 #' set to TRUE (default), it aggregates all the ensemble members.
 #' Only required if more than one 'ensemble' member is available.
+#' @param boundaries Polygon boundaries to add to the map. Defaults to "countries"
+#' for country boundaries. Set to FALSE for no boundaries, otherwise supply
+#' a polygon `sf` object.
+#' @param mask_boundaries If TRUE (default), mask the data to the provided 
+#' boundaries.
 #' @param ensemble_fun Aggregation function used when ensemble = TRUE.
 #' Defaults to the mean.
+#' @param title Optional plot title.
+#' @param legend Optional legend title. If NULL (default), it uses the variable
+#' names.
 #' @param palette GHR, RColorBrewer or colorspace palette. Use "-" before the 
 #' palette name (e.g., "-Reds") to reverse it. Alternatively, a vector of
 #' hex codes to create a continuous interpolated palette.
@@ -28,7 +36,7 @@
 #'                          data_type = "fcst",
 #'                          date = "20250101",
 #'                          ext = 'nc')
-#' clim4health_plot(fcst) 
+#' clim4health_plot(fcst, title = "Forecast") 
 #' 
 #' # Reanalysis
 #' rean_path <- paste0(getwd(), "/inst/extdata/reanalysis/")
@@ -37,7 +45,7 @@
 #'                          data_type = "obs",
 #'                          date = c("201001", "201002", "201003"),
 #'                          ext = 'nc')
-#' clim4health_plot(rean) 
+#' clim4health_plot(rean, title = "Reanalysis") 
 #' 
 #' # Hindcast
 #' hind_path <- paste0(getwd(), "/inst/extdata/hindcast/")
@@ -46,13 +54,17 @@
 #'                          data_type = "hcst",
 #'                          date = c("20100101", "20110101", "20120101"),
 #'                          ext = 'nc')
-#' clim4health_plot(hind) 
+#' clim4health_plot(hind, title = "Hindcast") 
 clim4health_plot <- function(data,
                              var = NULL,
                              sdate = NULL,
                              time = NULL,
                              ensemble = TRUE,
                              ensemble_fun = mean,
+                             boundaries = "countries",
+                             mask_boundaries = TRUE,
+                             title = NULL,
+                             legend = NULL,
                              palette = "-RdBu"){
   
   # 1. Data checks ----
@@ -112,6 +124,14 @@ clim4health_plot <- function(data,
     f2 <- if (length(facet_vars) >= 2) facet_vars[2] else NULL
   }
   
+  # Requirements: boundaries 
+  if(!isTRUE(boundaries)){
+    if(boundaries != "countries" & !inherits(boundaries, "sf")){
+      stop("'boundaries' must be set to either 'countries' or be a polygon 'sf' object.")
+    }
+  }
+
+  
   
   # 2. Data preparation ----
 
@@ -139,6 +159,18 @@ clim4health_plot <- function(data,
     plot_data <- .subset_array_named(plot_data, ensemble = ensemble)
   }
   
+  # Select boundaries if needed
+  if(boundaries == "countries"){
+    data(world, package = "spData")
+    bound_sf <- world
+  }else if(inherits(boundaries, "sf")){
+    if(sf::st_crs(boundaries)$epsg != 4326){
+      message("Transforming 'boundaries' to CRS EPSG 4326")
+      bound_sf <- sf::st_transform(boundaries, crs = 4326)
+    } else{
+      bound_sf <- boundaries
+    }
+  }
   
   # 3. Conversion to stars ----
   spatial_dims <- c(which(names(dim(plot_data)) == "longitude"),
@@ -157,6 +189,13 @@ clim4health_plot <- function(data,
   plot_stars <- stars::st_set_dimensions(plot_stars, "ensemble",
                                          values = c(data$coords$ensemble)[ensemble])
   sf::st_crs(plot_stars) <- 4326
+  
+  # Mask if needed
+  if(isTRUE(mask_boundaries) & !isTRUE(boundaries)){
+    sf::sf_use_s2(FALSE) 
+    suppressMessages(plot_stars <- plot_stars[bound_sf])
+    sf::sf_use_s2(FALSE) 
+  }
   
   # 4. Plot ----
   
@@ -178,18 +217,56 @@ clim4health_plot <- function(data,
   
   # Palette
   my_palette <- GHRexplore::GHR_palette(palette)(n = 30)
-  p <- p + ggplot2::scale_fill_gradientn(colors = my_palette)
+  p <- p + ggplot2::scale_fill_gradientn(colors = my_palette, na.value = "grey70")  
+  
+  # Boundaries
+  if(!isTRUE(boundaries)){
+    p <- p +
+      ggplot2::geom_sf(data = bound_sf, alpha = 0, 
+                       col = "black", linewidth = 0.4) +
+      suppressMessages(ggplot2::coord_sf(
+        xlim = sf::st_bbox(plot_stars)[c("xmin", "xmax")],
+        ylim = sf::st_bbox(plot_stars)[c("ymin", "ymax")],
+        expand = FALSE))
+    
+  }
+  
+  # NA box
+  if(any(is.na(plot_stars[[1]]))){
+    
+    p <- p +
+      ggplot2::geom_point(data = data.frame(lab = "NA"), x = NA, y = NA,
+                          fill = NA, size = 7, shape = 15, na.rm = TRUE,
+                          ggplot2::aes(color = .data$lab), show.legend = TRUE) +
+      
+      ggplot2::scale_color_manual(values = c("NA" = "grey70"),
+                                  guide = ggplot2::guide_legend(
+                                    override.aes = list(fill = "grey70",
+                                                        color = "grey20"))) +
+      ggplot2::labs(color = "") +
+      ggplot2::guides(fill = ggplot2::guide_colorbar(order = 1),
+                      color = ggplot2::guide_legend(order = 2)) +
+      ggplot2::theme(legend.key = ggplot2::element_blank())
+  }
 
-  # Theme specs
+  # Theme
   p <- p +
-    ggplot2::coord_equal() +
     ggplot2::theme_void() +
     ggplot2::theme(
       plot.margin = ggplot2::theme_bw()$plot.margin,
       strip.text.y.left = ggplot2::element_text(angle = 90),
-      legend.key.height = ggplot2::unit(1, "cm")
-    )
+      legend.key.height = ggplot2::unit(1, "cm"),
+      plot.title = ggplot2::element_text(hjust = 0.5, 
+                                         margin = ggplot2::margin(b = 5)))
+  
+  # Labels
+  if(!is.null(title)){
+    p <- p + ggplot2::ggtitle(title)
+  }
+  if(!is.null(legend)){
+    p <- p + ggplot2::labs(fill = legend)
+  }
     
-  # 5. Return ----
+
   return(p)
 }
