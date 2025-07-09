@@ -15,11 +15,14 @@ Imports:
     easyNCDF,
     ecmwfr,
     exactextractr,
+    ggplot2,
+    GHRexplore,
     lubridate,
     raster,
     s2dv,
     sf,
     startR, 
+    stars,
     terra
 Suggests: 
     testthat (>= 3.0.0),
