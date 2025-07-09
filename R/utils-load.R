@@ -423,7 +423,7 @@ source(paste0("R/CST_BindDim.R"))
                        max(data$longitude))
   }
 
-  # Filter data
+  # filter data
   data <- data[tag %in% var &
                  latitude >= min(lat_selection) &
                  latitude <= max(lat_selection) &
@@ -434,58 +434,112 @@ source(paste0("R/CST_BindDim.R"))
 
   # get datetime object
   data[, time := as.POSIXct(paste(date, hour), tz = "COT")]
+  locs <- paste(data$latitude, data$longitude, sep = "; ")
+  locs <- unique(locs)
+  stations <- unique(data$station)
 
   lat_coord <- sort(unique(data$latitude), decreasing = TRUE)
   lon_coord <- sort(unique(data$longitude), decreasing = FALSE)
   time_coord <- sort(unique(data$time), decreasing = FALSE)
-  if (!is.null(dates) & is.null(dim(dates))) {
-    num_sdates <- 1
-    num_times <- length(time_coord)
-    dates <- matrix(time_coord, nrow = num_sdates, ncol = num_times)
-  } else {
-    num_sdates <- dim(dates)["sdate"]
-    num_times <- dim(dates)["time"]
+
+  # add sdate dimension
+  if (is.null(dates)) {
+    dates <- paste0(lubridate::year(data$date),
+                    sprintf("%02d", lubridate::month(data$date)))
+    dim(dates) <- c(sdate = 1, time = length(dates))
+  } else if (is.null(dim(dates))) {
+    dim(dates) <- c(sdate = 1, time = length(dates))
   }
 
-  # Create index columns
   data[, `:=`(
     var_idx = match(tag, var),
     lat_idx = match(latitude, lat_coord),
-    lon_idx = match(longitude, lon_coord),
-    time_idx = match(time, time_coord)
+    lon_idx = match(longitude, lon_coord)
   )]
 
-  data <- data[, .(var_idx, lat_idx, lon_idx, time_idx, value)]
+  dims <- names(dim(dates))
+  sdate_dim <- which(dims == "sdate")
+  times_tmp <- list()
+  dates_tmp <- list()
+  time_length <- 0
 
-  data_array <- array(NA,
-                      dim = c(dataset = 1,
-                              var = length(var),
-                              sdate = 1,
-                              time = length(time_coord),
-                              ensemble = 1,
-                              latitude = length(lat_coord),
-                              longitude = length(lon_coord)))
-
-  # Fill array
-  for (row in 1:nrow(data)) {
-    v <- data[row]
-    data_array[1, v$var_idx, 1, v$time_idx, 1, v$lat_idx, v$lon_idx] <- v$value
+  for (i in seq(dim(dates)[["sdate"]])) {
+    idx <- vector("list", length(dims))
+    idx[] <- TRUE
+    idx[[sdate_dim]] <- i
+    date_tmp <- do.call(`[`, c(list(dates), idx))
+    dates_tmp[[i]] <- date_tmp
+    times_tmp[[i]] <- data$time[paste0(lubridate::year(data$time),
+                                       sprintf("%02d",
+                                               lubridate::month(data$time)))
+                                %in% date_tmp]
+    times_tmp[[i]] <- sort(unique(times_tmp[[i]]), decreasing = FALSE)
+    time_length <- max(time_length, length(times_tmp[[i]]))
   }
-  dates <- time_coord
-  dim(dates) <- c(sdate = 1, time = length(dates))
 
-  # format to s2dv_cube
-  data_tmp <- CSTools::s2dv_cube(data = data_array,
-                                 coords = list(dataset = 1,
-                                               var = var,
-                                               sdate = time_coord[1],
-                                               time = time_coord,
-                                               ensemble = 1,
-                                               latitude = lat_coord,
-                                               longitude = lon_coord),
-                                 varName = var,
-                                 Dates = dates)
-  return(data_tmp)
+  for (i in seq(dim(dates)[["sdate"]])) {
+    data_array <- NULL
+    date_tmp <- dates_tmp[[i]]
+    data_tmp <- data[paste0(lubridate::year(time),
+                            sprintf("%02d", lubridate::month(time))) %in%
+                       date_tmp]
+    time_coord <- sort(unique(data_tmp$time), decreasing = FALSE)
+
+    data_tmp[, `:=`(
+      time_idx = match(time, time_coord)
+    )]
+
+    data_tmp <- data_tmp[, .(var_idx, lat_idx, lon_idx, time_idx, value)]
+
+    data_array <- array(NA,
+                        dim = c(dataset = 1,
+                                var = length(var),
+                                sdate = 1,
+                                time = time_length,
+                                ensemble = 1,
+                                latitude = length(lat_coord),
+                                longitude = length(lon_coord)))
+
+    # Fill array
+    for (row in 1:nrow(data_tmp)) {
+      v <- data_tmp[row]
+      data_array[1, v$var_idx, 1, v$time_idx, 1,
+                 v$lat_idx, v$lon_idx] <- v$value
+    }
+    time_coord <- c(time_coord, rep(NA, time_length - length(time_coord)))
+    dim(time_coord) <- c(sdate = 1, time = time_length)
+
+    # format to s2dv_cube
+    data_tmp <- CSTools::s2dv_cube(data = data_array,
+                                   coords = list(dataset = 1,
+                                                 var = var,
+                                                 sdate = i,
+                                                 time = seq(time_length),
+                                                 ensemble = 1,
+                                                 latitude = lat_coord,
+                                                 longitude = lon_coord),
+                                   varName = var,
+                                   Dates = time_coord,
+                                   metadata =
+                                     list(variable = var,
+                                          lat_selection = lat_selection,
+                                          lon_selection = lon_selection,
+                                          date = date_tmp,
+                                          station_locations = locs,
+                                          station = stations))
+
+
+    dim(data_tmp$attrs$Dates) <- c(sdate = 1,
+                                   time = time_length)
+    if (i == 1) {
+      data_out <- data_tmp
+    } else {
+      data_out <- CST_BindDim(x = list(data_out, data_tmp), along = "sdate",
+                              var_dim = "var", dat_dim = "dataset")
+    }
+  }
+  data_out$coords$sdate <- data_out$attrs$Dates[, 1]
+  return(data_out)
 }
 
 .load_csv_unknown <- function(full_path, var = NULL,

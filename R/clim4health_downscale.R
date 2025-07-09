@@ -37,7 +37,7 @@ clim4health_downscale <- function(downscale_function,
   target_grid = NULL,
   # additional inputs for Intbc
   bc_method = NULL, method_remap = NULL, points = NULL,
-  method_point_interp = NULL, loocv = FALSE,
+  method_point_interp = NULL, loocv = TRUE,
   # additional inputs for Intlr
   lr_method = NULL, predictors = NULL,
   large_scale_predictor_dimname = "vars",
