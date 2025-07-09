@@ -55,14 +55,17 @@ clim4health_time <- function(data,
         lubridate::year(time)
       } else if (aggregation == "monthly") {
         # Extract year-month as groups
-        years <- lubridate::year(time)
-        month <- lubridate::month(time)
-        dates_tmp <- paste(years, sprintf("%02d", month), "01", sep = "-")
-        paste(years, sprintf("%02d", month), sep = "-")
+        #years <- lubridate::year(time)
+        #month <- lubridate::month(time)
+        #dates <- paste(years, sprintf("%02d", month), "01", sep = "-")
+        #paste(years, sprintf("%02d", month), sep = "-")
+        dates <- unique(as.POSIXct(paste(format(time, "%Y-%m"),
+                                         "01", sep = "-")), tz = "UTC")
+        paste(format(time, "%Y-%m"), "01", sep = "-")
       } else if (aggregation == "daily") {
         # Extract daily as groups
-        dates_i <- unique(as.Date(time_i))
-        as.Date(time_i)
+        dates <- unique(as.Date(time))
+        as.Date(time)
       } else if (aggregation == "weekly") {
         if (week_start == "Sunday") {
           epiweeks <- lubridate::epiweek(time)
@@ -92,7 +95,9 @@ clim4health_time <- function(data,
       date_dim <- which(names(dims) == "time")
 
       aggregated_data <- apply(data_tmp, seq(dims)[-date_dim],
-                               function(x) tapply(x, time_groups, agg_fun))
+                               function(x) {
+                                            tapply(x, time_groups,
+                                                   agg_fun, na.rm = TRUE)})
 
       if (length(dims) == length(dim(aggregated_data))) {
         names(dim(aggregated_data)) <- c("time", names(dims)[-date_dim])
@@ -117,6 +122,8 @@ clim4health_time <- function(data,
       aggregated_data <- NULL
       for (i in seq(dim(time)["sdate"])) {
         time_i <- time[i, ]
+        na_idx <- is.na(time_i)
+        time_i <- time_i[!is.na(time_i)] # remove NAs
 
         # Parse time into appropriate groups
         time_groups <- if (aggregation == "yearly") {
@@ -125,10 +132,14 @@ clim4health_time <- function(data,
           lubridate::year(time_i)
         } else if (aggregation == "monthly") {
           # Extract year-month as groups
-          years <- lubridate::year(time_i)
-          month <- lubridate::month(time_i)
-          dates_tmp_i <- paste(years, sprintf("%02d", month), "01", sep = "-")
-          paste(years, sprintf("%02d", month), sep = "-")
+          #years <- lubridate::year(time_i)
+          #month <- lubridate::month(time_i)
+          #dates_i <- unique(paste(years, sprintf("%02d", month),
+          #                        "01", sep = "-"))
+          #paste(years, sprintf("%02d", month), sep = "-")
+          dates_i <- unique(as.POSIXct(paste(format(time_i, "%Y-%m"),
+                            "01", sep = "-")), tz = "UTC")
+          paste(format(time_i, "%Y-%m"), "01", sep = "-")
         } else if (aggregation == "daily") {
           # Extract daily as groups
           #dates_i <- paste(unique(as.Date(time_i)), "00:00:00")
@@ -167,11 +178,13 @@ clim4health_time <- function(data,
         index[[sdate_dim]] <- i
         dims_i <- dims
         dims_i[sdate_dim] <- 1
+        index[[date_dim]] <- which(!na_idx)
 
         data_tmp_i <- do.call(`[`, c(list(data_tmp), index, drop = FALSE))
 
         aggregated_data_i <- apply(data_tmp_i, seq(dims_i)[-date_dim],
-                                   function(x) tapply(x, time_groups, agg_fun))
+                                   function(x) {tapply(x, time_groups,
+                                                       agg_fun, na.rm = TRUE)})
 
         if (length(dims_i) == length(dim(aggregated_data_i))) {
           names(dim(aggregated_data_i)) <- c("time", names(dims_i)[-date_dim])
@@ -183,26 +196,33 @@ clim4health_time <- function(data,
                                                posdim = date_dim,
                                                lendim = 1, name = "time")
         }
-
-        dim(dates_i) <- c(sdate = 1, time = length(dates_i))
         aggregated_data_i <- list(data = aggregated_data_i,
                                   dims = dim(aggregated_data_i),
                                   coords = data$coords,
                                   attrs = data$attrs)
         #aggregated_data_i$coords$sdate <- i
         #aggregated_data_i$coords$time <- seq_along(dates_i)
-        aggregated_data_i$attrs$Dates <- as.Date(dates_i)
+        if (aggregation == "daily") {
+          aggregated_data_i$attrs$Dates <- as.Date(dates_i)
+        } else {
+          aggregated_data_i$attrs$Dates <- dates_i
+        }
+        dim(aggregated_data_i$attrs$Dates) <- c(sdate = 1,
+                                                time = length(dates_i))
         class(aggregated_data_i) <- "s2dv_cube"
         if (i == 1) {
           aggregated_data <- aggregated_data_i
+          dates <- aggregated_data_i$attrs$Dates
         } else {
           aggregated_data <- CST_BindDim(x = list(aggregated_data,
                                                   aggregated_data_i),
                                          along = "sdate",
                                          var_dim = "var", dat_dim = "dataset")
-          aggregated_data$attrs$Dates <-
-            as.POSIXct(aggregated_data$attrs$Dates,
-                       origin = "1970-01-01", tz = "UTC")
+          if (aggregation == "daily") {
+            aggregated_data$attrs$Dates <-
+              as.POSIXct(aggregated_data$attrs$Dates,
+                         origin = "1970-01-01", tz = "UTC")
+          }
         }
       }
 
@@ -219,7 +239,7 @@ clim4health_time <- function(data,
       data$coords$sdate <- data$attrs$Dates[, 1]
     }
   }
-
+  data$dims <- dim(data$data)
 
 
   return(data)

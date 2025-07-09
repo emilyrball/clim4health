@@ -175,7 +175,7 @@ clim4health_load <- function(path,
   } else {
     full_path <- paste0(path)
   }
-  print(full_path)
+
   full_path <- .paste_outer(full_path, paste0(".csv"))
 
   data <- data.table::fread(full_path)
