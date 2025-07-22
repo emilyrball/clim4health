@@ -20,36 +20,64 @@ clim4health_downscale(
   lr_method = NULL,
   predictors = NULL,
   large_scale_predictor_dimname = "vars",
+  grid_exp = NULL,
   obsL = NULL,
   nanalogs = 3,
   fun_analog = NULL,
   metric = "dist",
   return_indices = FALSE,
-  loocv_window = TRUE,
+  loocv_window = FALSE,
   ...
 )
 }
 \arguments{
+\item{downscale_function}{TBD}
+
 \item{exp}{TBD}
 
 \item{obs}{TBD}
 
+\item{exp_cor}{TBD}
+
+\item{region}{TBD}
+
 \item{ncores}{TBD}
 
-\item{fcst}{TBD}
+\item{target_grid}{TBD}
 
-\item{ref_path}{TBD}
+\item{bc_method}{TBD}
 
-\item{var}{TBD}
+\item{method_remap}{TBD}
 
-\item{method}{TBD}
+\item{points}{TBD}
+
+\item{method_point_interp}{TBD}
+
+\item{loocv}{TBD}
+
+\item{lr_method}{TBD}
+
+\item{predictors}{TBD}
+
+\item{large_scale_predictor_dimname}{TBD}
+
+\item{grid_exp}{TBD}
+
+\item{obsL}{TBD}
+
+\item{nanalogs}{TBD}
+
+\item{fun_analog}{TBD}
+
+\item{metric}{TBD}
+
+\item{return_indices}{TBD}
+
+\item{loocv_window}{TBD}
 }
 \value{
 TBD
 }
 \description{
 Downscale and calibrate climate data...
-}
-\examples{
-# TBD
 }

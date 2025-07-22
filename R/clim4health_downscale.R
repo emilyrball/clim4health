@@ -12,24 +12,36 @@ source(paste0("https://earth.bsc.es/gitlab/es/csdownscale/-/raw/",
 source(paste0("https://earth.bsc.es/gitlab/es/csdownscale/-/raw/",
               "master/R/Utils.R"))
 
-library(s2dv)
-library(CSTools)
-library(multiApply)
-
 #' Downscale and calibrate climate data...
 #'
-#' @param obs TBD
+#' @param downscale_function TBD
 #' @param exp TBD
-#' @param fcst TBD
-#' @param ref_path TBD
-#' @param method TBD
+#' @param obs TBD
+#' @param exp_cor TBD
+#' @param region TBD
 #' @param ncores TBD
+#' @param target_grid TBD
+#' @param bc_method TBD
+#' @param method_remap TBD
+#' @param points TBD
+#' @param method_point_interp TBD
+#' @param loocv TBD
+#' @param lr_method TBD
+#' @param predictors TBD
+#' @param large_scale_predictor_dimname TBD
+#' @param grid_exp TBD
+#' @param obsL TBD
+#' @param nanalogs TBD
+#' @param fun_analog TBD
+#' @param metric TBD
+#' @param return_indices TBD
+#' @param loocv_window TBD
 #'
-#' @returns TBD
+#' @return TBD
 #' @export
 #'
 #' @examples
-#' # TBD
+#'
 clim4health_downscale <- function(downscale_function,
   # overlapping inputs for all CSDownscale functions
   exp, obs = NULL, exp_cor = NULL, region = NULL, ncores = NULL,
