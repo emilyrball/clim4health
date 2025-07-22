@@ -81,3 +81,6 @@ TBD
 \description{
 Downscale and calibrate climate data...
 }
+\examples{
+TBD
+}

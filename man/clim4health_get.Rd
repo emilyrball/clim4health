@@ -17,7 +17,8 @@ clim4health_get(
   leadtime_month,
   originating_centre,
   system,
-  outname = paste0("cds_")
+  outname = paste0("cds_"),
+  outpath = getwd()
 )
 }
 \arguments{
@@ -45,14 +46,17 @@ Default is all hours.}
 
 \item{area}{A vector of coordinates. (in order: South, North, West, East).}
 
-\item{leadtime_month}{A vector of months for the forecast leadtime. e.g. c(1,2)
-for January and February. Default is all months.}
+\item{leadtime_month}{A vector of months for the forecast leadtime. e.g.
+c(1,2) for January and February. Default is all months.}
 
 \item{originating_centre}{DESCRIPTION PENDING!}
 
 \item{system}{DESCRIPTION PENDING!}
 
-\item{outname}{The name (and path) of the resultant netcdf file.}
+\item{outname}{The name stem of the resultant netcdf file.}
+
+\item{outpath}{The path where the resultant netcdf file should be saved.
+Default is the current working directory.}
 }
 \value{
 A netcdf file.

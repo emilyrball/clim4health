@@ -41,7 +41,7 @@ source(paste0("https://earth.bsc.es/gitlab/es/csdownscale/-/raw/",
 #' @export
 #'
 #' @examples
-#'
+#' TBD
 clim4health_downscale <- function(downscale_function,
   # overlapping inputs for all CSDownscale functions
   exp, obs = NULL, exp_cor = NULL, region = NULL, ncores = NULL,
