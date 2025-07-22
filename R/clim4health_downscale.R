@@ -41,7 +41,7 @@ clim4health_downscale <- function(downscale_function,
   lr_method = NULL, predictors = NULL,
   large_scale_predictor_dimname = "vars",
   # additional inputs for Analogs
-  obsL = NULL, nanalogs = 3, fun_analog = NULL,
+  grid_exp = NULL, obsL = NULL, nanalogs = 3, fun_analog = NULL,
   metric = "dist", return_indices = FALSE, loocv_window = FALSE, ...
 ) {
   # clim4health s2dv_cube objects will have the following dimensions
@@ -55,37 +55,42 @@ clim4health_downscale <- function(downscale_function,
   if (is.null(exp)) {
     stop("Parameter 'exp' must be specified. It must be an s2dv_cube",
          " object loaded and transformed using clim4health functions.")
-  } else if (is.null(downscale_function)) {
+  } else if (!downscale_function %in% c("Interpolation", "Intbc",
+                                        "Intlr", "Analogs")) {
     stop("Please specify a downscaling function with 'downscale_function'.",
          " Options are: 'Interpolation', 'Intbc', 'Analogs', 'Intlr'.")
-  }# else if (is.null(obs) && downscale_function != "Interpolation") {
-  #  stop(paste0("parameter 'obs' must be specified for 'downscale_function' =",
-  #              " '", downscale_function, "'"))
-  #}
+  }
 
   if (downscale_function %in% c("Interpolation", "Intbc", "Intlr")) {
     if (is.null(target_grid) && is.null(points)) {
-      stop("If using an interpolation method, either 'points' or 'target_grid'",
-           " must be specified. 'target_grid' can be either a path to another ",
-           "NetCDF file which to read the target grid from (a single",
-           " grid must be defined in such file) or a character vector ",
-           "indicating the coarse grid to be passed to CDO, and it must",
-           " be a grid recognised by CDO or a NetCDF file. 'points' must be a",
-           " a list of two elements containing the point latitudes and",
-           " longitudes of the locations to downscale the model data. The list",
-           " must contain the two elements named as indicated in the ",
-           "parameters 'lat_dim' and 'lon_dim'. If the downscaling is to a ",
-           "point location, only regular grids are allowed for exp and obs. ",
-           "Only needed if the downscaling is to a point location.")
-    } else if (is.null(method_remap) && is.null(method_point_interp)) {
-      stop("If using an interpolation method, either 'method_remap' or ",
-           "'method_point_interp' must be specified. 'method_remap' must be ",
-           "a character vector indicating the regridding method. Accepted ",
-           "methods are 'con', 'bil', 'bic', 'nn', 'con2'. ",
-           "'method_point_interp' must be a character vector indicating the ",
-           "interpolation method to interpolate model gridded data into the ",
-           "point locations. Accepted methods are 'nearest', 'bilinear', ",
-           "'9point', 'invdist4nn', 'NE', 'NW', 'SE', 'SW'.")
+      stop(paste0("If using '", downscale_function, "', either 'points' or ",
+                  "'target_grid' must be specified. 'target_grid' can be ",
+                  "either a path to another NetCDF file which to read the ",
+                  "target grid from (a single grid must be defined in such ",
+                  "file) or a character vector indicating the coarse grid to ",
+                  "be passed to CDO, and it must be a grid recognised by CDO ",
+                  "or a NetCDF file. 'points' must be a list of two elements ",
+                  "containing the point latitudes and longitudes of the ",
+                  "locations to downscale the model data. The list must ",
+                  "contain the two elements named as indicated in the ",
+                  "parameters 'lat_dim' and 'lon_dim'. If the downscaling is ",
+                  "to a point location, only regular grids are allowed for ",
+                  "exp and obs. ",
+                  "Only needed if the downscaling is to a point location."))
+    }
+    if (is.null(method_point_interp) && !is.null(points)) {
+      stop(paste0("If using '", downscale_function, "' and 'points', ",
+                  "'method_point_interp' must be specified.",
+                  " 'method_point_interp' must be a character vector ",
+                  "indicating the interpolation method to interpolate model ",
+                  "gridded data into the point locations. Accepted methods are",
+                  " 'nearest', 'bilinear', '9point', 'invdist4nn'."))
+    } else if (is.null(method_remap) && !is.null(target_grid)) {
+      stop(paste0("If using '", downscale_function, "' and 'target_grid', ",
+                  "'method_remap' must be specified. 'method_remap'",
+                  " must be a character vector indicating the regridding ",
+                  "method. Accepted methods are",
+                  " 'con', 'bil', 'bic', 'nn', 'con2'."))
     }
   }
 
@@ -96,33 +101,49 @@ clim4health_downscale <- function(downscale_function,
            "are: 'quantile_mapping', 'dynamical_bias', 'bias', 'evmos',",
            "'mse_min', 'crps_min', 'rpc-based'. Abbreviations 'dbc', ",
            "'qm' are also accepted.")
-      # print valid options
     }
   }
   if (downscale_function == "Intlr") {
     if (is.null(lr_method)) {
       stop("If using 'Intlr', 'lr_method' must be specified. Options ",
-           "are: ")
+           "are: 'basic', 'large-scale' and '9nn'.")
     }
   }
-  #if (is.null(target_grid) && is.null(method_point_interp)) {
-  #  stop(paste0("If using '", downscale_function, "', 'target_grid' must be ",
-  #              "specified. 'target_grid' can be either a path to another ",
-  #              "NetCDF file which to read the target grid from (a single",
-  #              " grid must be defined in such file) or a character vector ",
-  #              "indicating the coarse grid to be passed to CDO, and it must",
-  #              " be a grid recognised by CDO or a NetCDF file."))
-  #}
+
+  if (downscale_function %in% c("Intbc", "Intlr", "Analogs")) {
+    if (is.null(obs)) {
+      stop(paste0("If using '", downscale_function, "', 'obs' must be ",
+                  "specified. It must be an s2dv_cube object loaded and ",
+                  "transformed using clim4health functions."))
+    }
+  }
+
+  if (downscale_function == "Analogs") {
+    if (is.null(grid_exp)) {
+      stop("If using 'Analogs', 'grid_exp' must be specified. 'grid_exp'",
+           " can be either a path to another NetCDF file which to read the ",
+           "target grid from (a single grid must be defined in such file) or a",
+           " character vector indicating the coarse grid to be passed to CDO, ",
+           "and it must be a grid recognised by CDO or a NetCDF file.")
+    }
+  }
+
+  # cases of bugs in CSDownscale
   if (!is.null(points)) {
-    if (is.null(method_point_interp)) {
-      stop(paste0("If 'points' is not NULL, 'method_point_interp'",
-                  " must be specified. Options are: ",
-                  "'nearest', 'bilinear', '9point', 'invdist4nn'."))
+    if (is.null(region)) {
+      region <- c(min(exp$coords$longitude),
+                  max(exp$coords$longitude),
+                  min(exp$coords$latitude),
+                  max(exp$coords$latitude))
+    }
+    if (downscale_function == "Intlr" && is.null(method_remap)) {
+      method_remap <- "bil"
     }
   }
+
   spatial_type <- .determine_spatial_type(exp$data)
   if (spatial_type == "region") {
-    stop("Cannot downscale if data has been aggregated to regions")
+    stop("Cannot downscale if data has been aggregated to regions.")
   }
 
   if (is.null(ncores)) {
@@ -130,7 +151,7 @@ clim4health_downscale <- function(downscale_function,
     ncores <- max(floor(parallel::detectCores() / 3), 1)
   } else if (ncores > (parallel::detectCores() - 1)) {
     # if ncores is greater than the number of available cores, stop
-    stop("ncores cannot be equal to or greater than the available cores")
+    stop("ncores cannot be equal to or greater than the available cores.")
   }
 
   exp_dims <- names(dim(exp$data))
@@ -217,7 +238,7 @@ clim4health_downscale <- function(downscale_function,
     out$obs$dims <- dim(out$obs$data)
   } else if (downscale_function == "Analogs") {
     out <- CST_Analogs(exp = exp, obs = obs, obsL = obsL,
-                       grid_exp = target_grid, nanalogs = nanalogs,
+                       grid_exp = grid_exp, nanalogs = nanalogs,
                        fun_analog = fun_analog,
                        lat_dim = lat_dim, lon_dim = lon_dim,
                        sdate_dim = sdate_dim, time_dim = time_dim,
