@@ -356,22 +356,23 @@ clim4health_downscale <- function(downscale_function,
     out$obs$dims <- dim(out$obs$data)
   }
 
-  if (is.null(exp_cor)) {
-    if (out$exp$attrs$source_files[1] != source_file_exp) {
-      out$exp$attrs$source_files[1] <- source_file_exp
-      system(paste0("rm ", tmp_file_exp))
+  if (!is.null(points)) {
+    if (is.null(exp_cor)) {
+      if (out$exp$attrs$source_files[1] != source_file_exp) {
+        out$exp$attrs$source_files[1] <- source_file_exp
+        system(paste0("rm ", tmp_file_exp))
+      }
+    } else {
+      if (out$exp$attrs$source_files[1] != source_file_exp_cor) {
+        out$exp$attrs$source_files[1] <- source_file_exp_cor
+        system(paste0("rm ", tmp_file_exp))
+      }
     }
-  } else {
-    if (out$exp$attrs$source_files[1] != source_file_exp_cor) {
-      out$exp$attrs$source_files[1] <- source_file_exp_cor
-      system(paste0("rm ", tmp_file_exp))
+    if (!is.null(obs) && out$obs$attrs$source_files[1] != source_file_obs) {
+      out$obs$attrs$source_files[1] <- source_file_obs
+      system(paste0("rm ", tmp_file_obs))
     }
   }
-  if (!is.null(obs) && out$obs$attrs$source_files[1] != source_file_obs) {
-    out$obs$attrs$source_files[1] <- source_file_obs
-    system(paste0("rm ", tmp_file_obs))
-  }
-
   return(out)
 }
 
