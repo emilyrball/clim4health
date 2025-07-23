@@ -127,7 +127,7 @@ clim4health_postprocess <- function(exp, obs, metrics, ref = NULL,
   }
 
   time_dim <- "sdate"
-  memb_dim <- "member"
+  memb_dim <- "ensemble"
 
   if (is.null(ncores)) {
     # if ncores is not specified, use half of the available cores
@@ -159,7 +159,7 @@ clim4health_postprocess <- function(exp, obs, metrics, ref = NULL,
                    time_dim = time_dim, memb_dim = memb_dim, cat_dim = cat_dim,
                    dat_dim = dat_dim, prob_thresholds = threshold,
                    indices_for_clim = indices_for_clim, Fair = Fair,
-                   nmemb = nmemb, nmemb_ref = nmemb_ref,
+                   #nmemb = nmemb, nmemb_ref = nmemb_ref,
                    weights_exp = weights_exp, weights_ref = weights_ref,
                    cross.val = cross.val, na.rm = na.rm,
                    sig_method.type = sig_method_type_brier, alpha = alpha,
@@ -172,7 +172,7 @@ clim4health_postprocess <- function(exp, obs, metrics, ref = NULL,
                  memb_dim = memb_dim, cat_dim = cat_dim, dat_dim = dat_dim,
                  prob_thresholds = prob_thresholds,
                  indices_for_clim = indices_for_clim, Fair = Fair,
-                 nmemb = nmemb, nmemb_ref = nmemb_ref,
+                 #nmemb = nmemb, nmemb_ref = nmemb_ref,
                  weights_exp = weights_exp, weights_ref = weights_ref,
                  cross.val = cross.val, na.rm = na.rm,
                  sig_method.type = sig_method_type_brier,
