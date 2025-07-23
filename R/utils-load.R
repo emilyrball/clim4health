@@ -422,18 +422,22 @@ source(paste0("R/CST_BindDim.R"))
     lon_selection <- c(min(data$longitude),
                        max(data$longitude))
   }
+  date_selection <-
+    paste0(lubridate::year(data$date),
+           sprintf("%02d", lubridate::month(data$date))) %in% dates
 
   # filter data
   data <- data[tag %in% var &
-                 latitude >= min(lat_selection) &
-                 latitude <= max(lat_selection) &
-                 longitude >= min(lon_selection) &
-                 longitude <= max(lon_selection) &
-                 paste0(lubridate::year(date),
-                        sprintf("%02d", lubridate::month(date))) %in% dates]
+      latitude >= min(lat_selection) &
+      latitude <= max(lat_selection) &
+      longitude >= min(lon_selection) &
+      longitude <= max(lon_selection) &
+      date_selection
+  ]
 
   # get datetime object
   data[, time := as.POSIXct(paste(date, hour), tz = "COT")]
+  data <- data[, -c("date", "hour")]
   locs <- paste(data$latitude, data$longitude, sep = "; ")
   locs <- unique(locs)
   stations <- unique(data$station)

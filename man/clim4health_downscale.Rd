@@ -30,19 +30,111 @@ clim4health_downscale(
 )
 }
 \arguments{
-\item{exp}{TBD}
+\item{downscale_function}{The downscaling function to use. Options are:
+"Interpolation", "Intbc", "Intlr", "Analogs".}
 
-\item{obs}{TBD}
+\item{exp}{The experimental data to downscale. It must be an s2dv_cube.}
 
-\item{ncores}{TBD}
+\item{obs}{The observational data to downscale. It must be an s2dv_cube.}
 
-\item{fcst}{TBD}
+\item{exp_cor}{Optional data to downscale. It must be an s2dv_cube. If the
+provided, it will be downscaled using exp and obs; if not provided, the exp
+will be downscaled instead. The default value is NULL.}
 
-\item{ref_path}{TBD}
+\item{region}{a numeric vector indicating the borders of the region defined
+in obs. It consists of four elements in this order: lonmin, lonmax, latmin,
+latmax. lonmin refers to the left border, while lonmax refers to the right
+border. latmin indicates the lower border, whereas latmax indicates the
+upper border. If set to NULL (default), the function clim4health_downscale
+will take the minimum and maximum values of the latitudes and longitudes.}
 
-\item{var}{TBD}
+\item{ncores}{an integer indicating the number of cores to use in parallel
+computation. The default value is NULL.}
 
-\item{method}{TBD}
+\item{target_grid}{a character vector indicating the target grid (in the case
+of Interpolation techniques) or the coarse grid (in the case of Analogs) to
+be passed to CDO. It must be a grid recognised by CDO or a NetCDF file. The
+default value is NULL.}
+
+\item{bc_method}{a character vector indicating the bias adjustment method to
+be applied after an interpolation. Accepted methods are 'quantile_mapping',
+'dynamical_bias', 'bias', 'evmos', 'mse_min', 'crps_min', 'rpc-based'. The
+abbreviations 'dbc','qm' can also be used. The default value is NULL.}
+
+\item{method_remap}{a character vector indicating the regridding method to
+be passed to CDORemap. Accepted methods are "con", "bil", "bic", "nn",
+"con2". If "nn" method is to be used, CDO_1.9.8 or newer version is required.
+The default value is NULL.}
+
+\item{points}{a list of two elements containing the point latitudes and
+longitudes of the locations to downscale the model data. The list must
+contain the two elements named as 'latitude' and 'longitude'. If the
+downscaling is to a point location, only regular grids are allowed for exp
+and obs. Only needed if the downscaling is to a point location.}
+
+\item{method_point_interp}{a character vector indicating the interpolation
+method to interpolate model gridded data into the point locations. Accepted
+methods are "nearest", "bilinear", "9point", "invdist4nn". Only needed if the
+downscaling is to a point location.}
+
+\item{loocv}{a logical indicating whether to apply leave-one-out
+cross-validation when applying the bias correction. Default to FALSE.}
+
+\item{lr_method}{a character vector indicating the linear regression method
+to be applied. Accepted methods are 'basic', 'large-scale' and '9nn'. The
+'basic' method fits a linear regression using high resolution observations as
+predictands and the interpolated model data as predictor. Then, the
+regression equation is applied to the interpolated model data to correct the
+interpolated values. The 'large-scale' method fits a linear regression with
+large-scale predictors (e.g. teleconnection indices) as predictors and
+high-resolution observations as predictands. This equation is then applied
+to the interpolated model values. Finally, the '9nn' method uses a linear
+regression with the nine nearest neighbours as predictors and high-resolution
+observations as predictands. Instead of constructing a regression model using
+all nine predictors, principal component analysis is applied to the data of
+neighboring grids to reduce the dimension of the predictors. The linear
+regression model is then built using the principal components that explain
+95\% of the variance. The '9nn' method does not require a pre-interpolation
+process. The default value is NULL.}
+
+\item{predictors}{an array with large-scale data to be used in the
+'large-scale' method with 'Intlr'. Only needed if the linear regression
+method is set to 'large-scale'. It must have, at least the dimension start
+date and another dimension whose name has to be specified in the parameter
+'large_scale_predictor_dimname'. It should contain as many elements as the
+number of large-scale predictors. The default value is NULL.}
+
+\item{large_scale_predictor_dimname}{a character vector indicating the name
+of the dimension in 'predictors' that contain the predictor variables. See
+parameter 'predictors'.}
+
+\item{obsL}{an 's2dv_cube' object with named dimensions containing the
+observational field of the large-scale variable. The object must have, at
+least, the dimensions latitude, longitude and sdate. The object is expected
+to be already subset for the desired region.}
+
+\item{nanalogs}{an integer indicating the number of analogs to be searched.
+The default value is 3. It is only used if the downscaling function is set
+to "Analogs".}
+
+\item{fun_analog}{a function to be applied over the found analogs. Valid
+options: "mean", "wmean", "max", "min", "median" or NULL. If set to NULL
+(default), the function returns the found analogs.}
+
+\item{metric}{a character vector to select the analog specification method.
+Valid options: "dist" (i.e., Euclidian distance), "dcor" (i.e., distance
+correlation) or "cor" (i.e., Spearman's .correlation). The default metric
+is "dist". Only used if the downscaling function is set to "Analogs".}
+
+\item{return_indices}{a logical vector indicating whether to return the
+indices of the analogs together with the downscaled fields. Default to
+FALSE. Only used if the downscaling function is set to "Analogs".}
+
+\item{loocv_window}{a logical vector only to be used if 'obs' does not have
+the dimension 'window'. It indicates whether to apply leave-one-out
+cross-validation in the creation of the window. It is recommended to be set
+to TRUE. Default to TRUE. Only used if the downscaling function is set to
+"Analogs".}
 }
 \value{
 TBD
@@ -51,5 +143,5 @@ TBD
 Downscale and calibrate climate data...
 }
 \examples{
-# TBD
+TBD
 }
