@@ -1,18 +1,19 @@
 #' Title
 #'
-#' @param data TBD 
+#' @param data An s2dv_cube or an array containing the data to be processed.
 #'
-#' @returns TBD
+#' @returns The same array or the data from the s2dv_cube.
 #'
 #' @examples
 #' # TBD
 
 .get_array <- function(data) {
-  if (class(data) == "s2dv_cube") {
-    return(data$data)
-  } else if (class(data) == "array") {
-    return(data)
+  if (inherits(data, "s2dv_cube")) {
+    out <- data$data
+  } else if (inherits(data, "array")) {
+    out <- data
   } else {
     stop("data must be an s2dv_cube or an array")
   }
+  return(out)
 }
