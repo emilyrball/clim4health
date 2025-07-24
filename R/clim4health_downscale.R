@@ -220,12 +220,12 @@ clim4health_downscale <- function(downscale_function,
     # create temporary netCDF file with reduced dimensions if needed
     source_file_exp <- exp$attrs$source_files[1]
 
-    tmp_file_exp <- reduce_source_file(exp, source_file_exp)
+    tmp_file_exp <- .reduce_source_file(source_file_exp)
     exp$attrs$source_files[1] <- tmp_file_exp
 
     if (!is.null(obs)) {
       source_file_obs <- obs$attrs$source_files[1]
-      tmp_file_obs <- reduce_source_file(obs, source_file_obs)
+      tmp_file_obs <- .reduce_source_file(source_file_obs)
       obs$attrs$source_files[1] <- tmp_file_obs
     }
     if (!is.null(exp_cor)) {
@@ -388,24 +388,4 @@ drop_dim <- function(data, dim) {
 
   dim(data) <- dims[-dim]
   return(data)
-}
-
-reduce_source_file <- function(data, source_file) {
-  # replace the source file in the attributes of the s2dv_cube object
-  nc <- ncdf4::nc_open(source_file)
-  file_dims <- sapply(nc$dim, function(x) x$len)
-  ncdf4::nc_close(nc)
-
-  target_file <- source_file
-  if (length(file_dims) > 4) {
-    dims_to_reduce <- names(file_dims[!names(file_dims) %in%
-                                        c("latitude", "longitude")])
-    target_file <- paste0("tmp_", format(Sys.time(), "%Y%m%d%H%M"),
-                          ".nc")
-
-    system(paste0("ncwa -a ", paste(dims_to_reduce, collapse = ","), " ",
-                  source_file, " ", target_file))
-  }
-
-  return(target_file)
 }
