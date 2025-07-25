@@ -164,6 +164,8 @@ clim4health_get <- function(pat,
   # loop over each month to request data
   for (year_x in year) {
     for (month_x in month) {
+      print(paste0("Loading data to: ", outpath, outname, "_", year_x,
+                   sprintf("%02d", month_x), ".nc"))
       # set mandatory parameters
       request <- list(
         download_format = "unarchived",
