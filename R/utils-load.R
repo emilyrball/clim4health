@@ -422,6 +422,14 @@ source(paste0("R/CST_BindDim.R"))
     lon_selection <- c(min(data$longitude),
                        max(data$longitude))
   }
+  if (!is.null(dates)) {
+    # if dates is provided, filter data
+    date_selection <- paste0(lubridate::year(data$date),
+                             sprintf("%02d", lubridate::month(data$date))) %in%
+      dates
+  } else {
+    date_selection <- rep(TRUE, nrow(data))
+  }
   date_selection <-
     paste0(lubridate::year(data$date),
            sprintf("%02d", lubridate::month(data$date))) %in% dates
@@ -546,10 +554,155 @@ source(paste0("R/CST_BindDim.R"))
   return(data_out)
 }
 
+
+
+.load_csv_dr <- function(data, var = NULL,
+                         dates = NULL) {
+
+  # Clean data
+  # D.VIENTO is NA
+  data <- data[data[["variable"]] != "D.VIENTO", ]
+  data <- data[data[["variable"]] != "D. VIENTO", ]
+  # ensure variables have same name
+  data[["variable"]][data[["variable"]] %in%
+                       c("H. RELATIVA", "H.RELATIVA", "HUMEDAD RELATIVA",
+                         "HUMEDADA RELATIVA")] <- "H.RELATIVA"
+  data[["variable"]][data[["variable"]] %in%
+                       c("LA ROMANA PR. ", "PRECIPITATION")] <- "PRECIPITACION"
+  data[["variable"]][data[["variable"]] %in%
+                       c("T.MIN", "T. MIN", "TEMP MINIMA",
+                         "TEMP. MINIMA", "TEMPERATURA MINIMA")] <- "T.MIN"
+  data[["variable"]][data[["variable"]] %in%
+                       c("T.MAX", "T. MAX", "TEMP MAXIMA",
+                         "TEMP. MAXIMA", "TEMPERATURA MAXIMA")] <- "T.MAX"
+  data[["variable"]][data[["variable"]] %in%
+                       c("V. VIENTO", "VELOCIDAD VIENTO",
+                         "V.VIENTO")] <- "V.VIENTO"
+
+  data[["year"]][data[["year"]] == 22022] <- 2022
+  data[["year"]][data[["year"]] == 32023] <- 2023
+  data[["year"]][data[["year"]] == 32024] <- 2024
+
+  date_tmp <- paste(data[["year"]],
+                    sprintf("%02d", data[["month"]]),
+                    sprintf("%02d", data[["day"]]), sep = "-")
+
+  date_tmp[grep("-02-30", date_tmp)] <- NA
+  date_tmp[grep("-02-31", date_tmp)] <- NA
+  date_tmp[grep("-04-31", date_tmp)] <- NA
+  date_tmp[grep("-06-31", date_tmp)] <- NA
+  date_tmp[grep("-09-31", date_tmp)] <- NA
+  date_tmp[grep("-11-31", date_tmp)] <- NA
+
+  data[["date"]] <- date_tmp
+  data <- data[!is.na(data[["date"]]), ]
+  ## finish date cleaning
+
+  if (!is.null(dates)) {
+    date_selection <- paste0(data[["year"]],
+                             sprintf("%02d", data[["month"]])) %in% dates
+  } else {
+    date_selection <- !is.na(data[["date"]])
+  }
+
+  data[["date_sel"]] <- date_selection
+  # set keys
+  data.table::setkeyv(data,
+                      c("variable", "Estacion", "value", "date", "date_sel"))
+  # select all variables if not specified
+  if (is.null(var)) {
+    var <- unique(data[["variable"]])
+  }
+
+  # filter data
+  data <- data[data[["variable"]] %in% var & data[["date_sel"]] == TRUE, ]
+  data <- data[, -c("date_sel")]
+  # get datetime object
+  stations <- unique(data[["Estacion"]])
+
+  # add sdate dimension
+  if (is.null(dates)) {
+    dates <- paste(data[["year"]], sprintf("%02d", data[["month"]]), sep = "-")
+    dim(dates) <- c(sdate = 1, time = length(dates))
+  } else if (is.null(dim(dates))) {
+    dim(dates) <- c(sdate = 1, time = length(dates))
+  }
+
+  data[["var_idx"]]     <- match(data[["variable"]], var)
+  data[["station_idx"]] <- match(data[["Estacion"]], stations)
+
+  dims <- names(dim(dates))
+  sdate_dim <- which(dims == "sdate")
+  times_tmp <- list()
+  dates_tmp <- list()
+  time_length <- 0
+
+  for (i in seq(dim(dates)[["sdate"]])) {
+    idx <- vector("list", length(dims))
+    idx[] <- TRUE
+    idx[[sdate_dim]] <- i
+    date_tmp <- do.call(`[`, c(list(dates), idx))
+    dates_tmp[[i]] <- date_tmp
+    times_tmp[[i]] <- data[["date"]][paste0(data[["year"]],
+                                            sprintf("%02d", data[["month"]]))
+                                     %in% date_tmp]
+    times_tmp[[i]] <- sort(unique(times_tmp[[i]]), decreasing = FALSE)
+    time_length <- max(time_length, length(times_tmp[[i]]))
+  }
+
+  data_out <- array(NA, dim = c(1, length(var), dim(dates)[["sdate"]],
+                                time_length, 1, length(stations)))
+  attr_dates <- array(NA, dim = c(dim(dates)[["sdate"]], time_length))
+
+  for (i in seq(dim(dates)[["sdate"]])) {
+    for (j in seq_along(stations)) {
+      for (k in seq_along(var)) {
+        data_tmp <- data[data[["variable"]] == var[k] &
+                           data[["Estacion"]] == stations[j] &
+                           paste0(data[["year"]],
+                                  sprintf("%02d", data[["month"]])) %in%
+                             dates_tmp[[i]], ]
+        idx <- match(times_tmp[[i]], data_tmp[["date"]])
+        data_out[1, k, i, , 1, j] <- data_tmp[["value"]][idx]
+      }
+    }
+    attr_dates[i, seq_along(times_tmp[[i]])] <- times_tmp[[i]]
+  }
+  invalid_dates <- c("2014-02-29", "2015-02-29", "2017-02-29",
+                     "2018-02-29", "2019-02-29", "2021-02-29",
+                     "2022-02-29", "2023-02-29")
+  attr_dates[which(attr_dates %in% invalid_dates)] <- NA
+  attr_dates <- as.POSIXct(attr_dates, format = "%Y-%m-%d")
+
+  dim(attr_dates) <- c(sdate = dim(dates)[["sdate"]],
+                       time = time_length)
+
+  # format to s2dv_cube
+  names(dim(data_out)) <- c("dataset", "var", "sdate", "time",
+                            "ensemble", "location")
+  data_out <- CSTools::s2dv_cube(data = data_out,
+                                 coords =
+                                   list(dataset = 1,
+                                        var = var,
+                                        sdate = seq(dim(dates)[["sdate"]]),
+                                        time = seq(time_length),
+                                        ensemble = 1,
+                                        location = seq_along(stations)),
+                                 varName = var,
+                                 Dates = attr_dates,
+                                 metadata =
+                                   list(variable = var,
+                                        location = stations))
+
+  data_out$coords$sdate <- data_out$attrs$Dates[, 1]
+  return(data_out)
+}
+
+
 .load_csv_unknown <- function(full_path, var = NULL,
-                                  date = NULL, data_type = "unknown",
-                                  lat_selection = "all",
-                                  lon_selection = "all") {
+                              date = NULL, data_type = "unknown",
+                              lat_selection = "all",
+                              lon_selection = "all") {
   
   # get lats/lons
   lats <- .get_csv_dims(headers, data, c("y", "lat", "latitude"))
