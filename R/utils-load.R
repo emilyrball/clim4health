@@ -616,13 +616,14 @@ source(paste0("R/CST_BindDim.R"))
 
   # filter data
   data <- data[data[["variable"]] %in% var & data[["date_sel"]] == TRUE, ]
-  data <- data[, -c("date_sel")]
+
+  data <- data[, !names(data) %in% "date_sel"]
   # get datetime object
   stations <- unique(data[["Estacion"]])
 
   # add sdate dimension
   if (is.null(dates)) {
-    dates <- paste(data[["year"]], sprintf("%02d", data[["month"]]), sep = "-")
+    dates <- paste0(data[["year"]], sprintf("%02d", data[["month"]]))
     dim(dates) <- c(sdate = 1, time = length(dates))
   } else if (is.null(dim(dates))) {
     dim(dates) <- c(sdate = 1, time = length(dates))
@@ -636,6 +637,8 @@ source(paste0("R/CST_BindDim.R"))
   times_tmp <- list()
   dates_tmp <- list()
   time_length <- 0
+  ym <- paste0(data[["year"]], sprintf("%02d", data[["month"]]))
+  data[["ym"]] <- ym
 
   for (i in seq(dim(dates)[["sdate"]])) {
     idx <- vector("list", length(dims))
@@ -643,9 +646,7 @@ source(paste0("R/CST_BindDim.R"))
     idx[[sdate_dim]] <- i
     date_tmp <- do.call(`[`, c(list(dates), idx))
     dates_tmp[[i]] <- date_tmp
-    times_tmp[[i]] <- data[["date"]][paste0(data[["year"]],
-                                            sprintf("%02d", data[["month"]]))
-                                     %in% date_tmp]
+    times_tmp[[i]] <- data[["date"]][data[["ym"]] %in% date_tmp]
     times_tmp[[i]] <- sort(unique(times_tmp[[i]]), decreasing = FALSE)
     time_length <- max(time_length, length(times_tmp[[i]]))
   }
@@ -655,18 +656,19 @@ source(paste0("R/CST_BindDim.R"))
   attr_dates <- array(NA, dim = c(dim(dates)[["sdate"]], time_length))
 
   for (i in seq(dim(dates)[["sdate"]])) {
+    date_i <- dates_tmp[[i]]
+    times_i <- times_tmp[[i]]
     for (j in seq_along(stations)) {
+      station_j <- stations[j]
       for (k in seq_along(var)) {
         data_tmp <- data[data[["variable"]] == var[k] &
-                           data[["Estacion"]] == stations[j] &
-                           paste0(data[["year"]],
-                                  sprintf("%02d", data[["month"]])) %in%
-                             dates_tmp[[i]], ]
-        idx <- match(times_tmp[[i]], data_tmp[["date"]])
+                           data[["Estacion"]] == station_j &
+                           data[["ym"]] %in% date_i, ]
+        idx <- match(times_i, data_tmp[["date"]])
         data_out[1, k, i, , 1, j] <- data_tmp[["value"]][idx]
       }
     }
-    attr_dates[i, seq_along(times_tmp[[i]])] <- times_tmp[[i]]
+    attr_dates[i, seq_along(times_i)] <- times_i
   }
   invalid_dates <- c("2014-02-29", "2015-02-29", "2017-02-29",
                      "2018-02-29", "2019-02-29", "2021-02-29",
