@@ -224,9 +224,13 @@ clim4health_downscale <- function(downscale_function,
     exp$attrs$source_files[1] <- tmp_file_exp
 
     if (!is.null(obs)) {
-      source_file_obs <- obs$attrs$source_files[1]
-      tmp_file_obs <- .reduce_source_file(source_file_obs)
-      obs$attrs$source_files[1] <- tmp_file_obs
+      source_file_obs <- NULL
+      if (is.na(match("location", names(dim(obs$data))))) {
+        # case where obs is not a point location
+        source_file_obs <- obs$attrs$source_files[1]
+        tmp_file_obs <- .reduce_source_file(source_file_obs)
+        obs$attrs$source_files[1] <- tmp_file_obs
+      }
     }
     if (!is.null(exp_cor)) {
       source_file_exp_cor <- exp_cor$attrs$source_files[1]
@@ -256,8 +260,11 @@ clim4health_downscale <- function(downscale_function,
   if (!is.null(points)) {
     exp_dims <- c(exp_dims[!exp_dims %in% c("longitude", "latitude")],
                   "location")
-    obs_dims <- c(obs_dims[!obs_dims %in% c("longitude", "latitude")],
-                  "location")
+    if (is.na(match("location", names(dim(obs$data))))) {
+      # case of gridded obs data
+      obs_dims <- c(obs_dims[!obs_dims %in% c("longitude", "latitude")],
+                    "location")
+    }
   }
   if (downscale_function == "Interpolation") {
     out <- CST_Interpolation(exp = exp, points = points,
@@ -368,7 +375,7 @@ clim4health_downscale <- function(downscale_function,
         system(paste0("rm ", tmp_file_exp))
       }
     }
-    if (!is.null(obs) && out$obs$attrs$source_files[1] != source_file_obs) {
+    if (!is.null(obs) && !is.null(source_file_obs)) {
       out$obs$attrs$source_files[1] <- source_file_obs
       system(paste0("rm ", tmp_file_obs))
     }
