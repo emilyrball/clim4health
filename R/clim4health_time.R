@@ -85,6 +85,9 @@ clim4health_time <- function(data,
         dates_tmp <- paste(epiyears, sprintf("%02d", epiweeks), sep = "-")
         coords <- unique(dates_tmp)
         idx <- which(dates_tmp[-1] != dates_tmp[-length(dates_tmp)]) + 1
+        if (length(idx) == 0 || idx[1] != 1) {
+          idx <- c(1, idx)
+        }
         dates <- time[idx]
         paste(epiyears, sprintf("%02d", epiweeks), sep = "-")
       }
@@ -138,7 +141,7 @@ clim4health_time <- function(data,
           #                        "01", sep = "-"))
           #paste(years, sprintf("%02d", month), sep = "-")
           dates_i <- unique(as.POSIXct(paste(format(time_i, "%Y-%m"),
-                            "01", sep = "-")), tz = "UTC")
+                            "01", sep = "-"), tz = "UTC"))
           paste(format(time_i, "%Y-%m"), "01", sep = "-")
         } else if (aggregation == "daily") {
           # Extract daily as groups
@@ -183,8 +186,12 @@ clim4health_time <- function(data,
         data_tmp_i <- do.call(`[`, c(list(data_tmp), index, drop = FALSE))
 
         aggregated_data_i <- apply(data_tmp_i, seq(dims_i)[-date_dim],
-                                   function(x) {tapply(x, time_groups,
-                                                       agg_fun, na.rm = TRUE)})
+                                   function(x) {
+                                     tapply(x, time_groups,
+                                            function(y) {
+                                              if (all(is.na(y))) NA else agg_fun(y, na.rm = TRUE)
+                                            })
+                                   })
 
         if (length(dims_i) == length(dim(aggregated_data_i))) {
           names(dim(aggregated_data_i)) <- c("time", names(dims_i)[-date_dim])

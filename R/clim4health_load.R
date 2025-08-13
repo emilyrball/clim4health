@@ -200,12 +200,15 @@ clim4health_load <- function(path,
   # read headers
   headers <- colnames(data)
 
-  if (all(headers == c("V1", "station", "longitude", "latitude",
-                       "date", "hour", "tag", "value"))) {
+  if (all(headers %in% c("V1", "station", "longitude", "latitude",
+                         "date", "hour", "tag", "value"))) {
     data <- .load_csv_tolimavalle(data, var = var, dates = date,
                                   lat_selection = lat_selection,
                                   lon_selection = lon_selection)
     return(data)
+  } else if (all(headers %in% c("prov", "year", "month", "day", "value",
+                                "variable", "Estacion", "date"))) {
+    data <- .load_csv_dr(data, var = var, dates = date)
   } else {
     data <- .load_csv_unknown(data, var = var,
                               lat_selection = lat_selection,
