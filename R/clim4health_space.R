@@ -124,7 +124,7 @@ clim4health_space <- function(data,
     region_id <- "region"
     replacement_coords[["region"]] <- seq_len(nrow(poly))
   } else {
-    replacement_coords[["region"]] <- as.vector(poly[[region_id]])
+    replacement_coords[["region"]] <- as.vector(poly[[region_id]])[[1]]
     replacement_attrs[["region_id"]] <- region_id
   }
 
