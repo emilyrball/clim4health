@@ -124,9 +124,11 @@ clim4health_space <- function(data,
     region_id <- "region"
     replacement_coords[["region"]] <- seq_len(nrow(poly))
   } else {
-    replacement_coords[["region"]] <- poly[[region_id]]
+    replacement_coords[["region"]] <- as.vector(poly[[region_id]])
     replacement_attrs[["region_id"]] <- region_id
   }
+
+  replacement_attrs[["dtype"]] <- "polygon"
 
   # create final s2dv_cube object
   data <- list(data = result,
