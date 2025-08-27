@@ -1,6 +1,6 @@
 #source(paste0("https://earth.bsc.es/gitlab/external/cstools/-/blob/",
 #              "master/R/CST_BindDim.R"))
-source(paste0("R/CST_BindDim.R"))
+#source(paste0("R/CST_BindDim.R"))
 #' .paste_hours_minutes
 #'
 #' TBC
