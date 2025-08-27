@@ -129,6 +129,8 @@ clim4health_space <- function(data,
   }
 
   replacement_attrs[["dtype"]] <- "polygon"
+  replacement_attrs[["geometry"]] <- terra::geom(poly, wkt = TRUE)
+  replacement_attrs[["crs"]] <- ref
 
   # create final s2dv_cube object
   data <- list(data = result,
