@@ -54,8 +54,8 @@ clim4health_space <- function(data,
 
   # read metadata
   coords <- data$coords
-  lat <- coords$latitude
-  lon <- coords$longitude
+  lat <- coords[[lat_dim_name]]
+  lon <- coords[[lon_dim_name]]
 
   # transform array to raster stack
   out <- NULL
