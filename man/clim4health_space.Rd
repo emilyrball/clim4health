@@ -2,58 +2,58 @@
 % Please edit documentation in R/clim4health_space.R
 \name{clim4health_space}
 \alias{clim4health_space}
-\title{Spatial aggregation of climate products into polygon geometries.}
+\title{Spatial aggregation of climate products into areas.}
 \usage{
 clim4health_space(
   data,
-  boundaries,
-  lat_dim_name = "latitude",
-  lon_dim_name = "longitude",
-  agg_fun = "mean",
-  region_id = NULL
+  areas,
+  fun = "mean",
+  weighting = "none",
+  areas_id = NULL
 )
 }
 \arguments{
 \item{data}{s2dv_cube object with the climate data to be aggregates, usually
 read using \code{clim4health_load}.}
 
-\item{boundaries}{Vector da, either an sf object loaded into memory, or path
-to a vector file to be read. Contains the polygon geometries for the spatial
+\item{areas}{Vector data, either a sf or terra object loaded into memory, or path
+to a vector file to be read. Contains the areal polygon geometries for the spatial
 aggregation.}
 
-\item{lat_dim_name}{String. Name of the latitude dimension.}
+\item{fun}{String. Method to perform the aggregation, defaults to "mean".
+Other possible options include "median", "sum", "min" and "max".}
 
-\item{lon_dim_name}{String. Name of the longitude dimension.}
+\item{weighting}{String that indicates whether weighted means should be used
+when \code{fun = "mean"} at the cost of increased computation. Options are "none"
+(a simple mean is applied to cells with centroid within the polygon),
+"approx" (for an approximate and fast weighting) and "exact" (for an exact
+weighting). See \code{\link[terra]{extract}} for details.}
 
-\item{agg_fun}{String. Method to perform the aggregation, defaults to "mean".
-Other possible options include "median" or "sum".}
-
-\item{region_id}{String. Name of the region identifier in the boundaries}
+\item{areas_id}{String. Name of the area identifier in the \code{areas} object.}
 }
 \value{
 A s2dv_cube object with the aggregated data.
 }
 \description{
-Spatial aggregation of climate products into polygon geometries.
+Spatial aggregation of climate products into areas.
 }
 \examples{
-# library(sf)
-#
-# # Load forecast data
-# fcst_path <- system.file("extdata/forecast/", package = "clim4health")
-# fcst_path <- paste0(fcst_path, "/")
-# fcst <- clim4health_load(fcst_path, var = "t2m", data_type = "fcst",
-#                          sdates = "20240401", ext = 'nc')
-# dim(fcst$data)
-#
-# # Read and plot polygon geometries (municipalities in Colombia)
-# poly_path <- system.file("extdata/shapefiles/", package = "clim4health")
-# poly_path <- paste0(poly_path, "/MGN_ANM_MPIOS.shp")
-# poly_sf <- read_sf(poly_path)
-# dim(poly_sf) # 1122 municipalities
-# plot(st_geometry(poly_sf))
-#
-# # Spatially aggregate the forecast
-# result_fcst <- clim4health_space(fcst, poly_sf)
-# dim(result_obs$data)
+library(sf)
+
+# Load forecast data
+fcst_path <- system.file("extdata/forecast/", package = "clim4health")
+fcst_path <- paste0(fcst_path, "/")
+fcst <- clim4health_load(fcst_path, var = "t2m", data_type = "fcst",
+                         date = "20250101", ext = 'nc')
+dim(fcst$data)
+
+# Read and plot municipalities in Colombia
+municip_path <- system.file("extdata/shapefiles/", package = "clim4health")
+municip_path <- paste0(municip_path, "/MGN_ANM_MPIOS.shp")
+municip_sf <- read_sf(municip_path)
+
+# Create forecast means by municipality
+result_fcst <- clim4health_space(fcst, municip_sf, areas_id = "MPIO_CDPMP")
+dim(result_fcst$data)
+
 }

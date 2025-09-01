@@ -1,78 +1,80 @@
-#' Spatial aggregation of climate products into polygon geometries.
+#' Spatial aggregation of climate products into areas.
 #'
 #' @param data s2dv_cube object with the climate data to be aggregates, usually 
 #' read using `clim4health_load`.
-#' @param boundaries Vector da, either an sf object loaded into memory, or path 
-#' to a vector file to be read. Contains the polygon geometries for the spatial 
+#' @param areas Vector data, either a sf or terra object loaded into memory, or path 
+#' to a vector file to be read. Contains the areal polygon geometries for the spatial 
 #' aggregation.
-#' @param lat_dim_name String. Name of the latitude dimension.
-#' @param lon_dim_name String. Name of the longitude dimension.
-#' @param agg_fun String. Method to perform the aggregation, defaults to "mean".
-#' Other possible options include "median" or "sum".
-#' @param region_id String. Name of the region identifier in the boundaries
+#' @param fun String. Method to perform the aggregation, defaults to "mean".
+#' Other possible options include "median", "sum", "min" and "max".
+#' @param weighting String that indicates whether weighted means should be used
+#' when `fun = "mean"` at the cost of increased computation. Options are "none" 
+#' (a simple mean is applied to cells with centroid within the polygon), 
+#' "approx" (for an approximate and fast weighting) and "exact" (for an exact 
+#' weighting). See \code{\link[terra]{extract}} for details.
+#' @param areas_id String. Name of the area identifier in the `areas` object.
 #'
 #' @returns A s2dv_cube object with the aggregated data.
 #' @export
 #'
 #' @examples
-#' # library(sf)
-#' #
-#' # # Load forecast data
-#' # fcst_path <- system.file("extdata/forecast/", package = "clim4health")
-#' # fcst_path <- paste0(fcst_path, "/")
-#' # fcst <- clim4health_load(fcst_path, var = "t2m", data_type = "fcst",
-#' #                          sdates = "20240401", ext = 'nc')
-#' # dim(fcst$data)
-#' #
-#' # # Read and plot polygon geometries (municipalities in Colombia)
-#' # poly_path <- system.file("extdata/shapefiles/", package = "clim4health")
-#' # poly_path <- paste0(poly_path, "/MGN_ANM_MPIOS.shp")
-#' # poly_sf <- read_sf(poly_path)
-#' # dim(poly_sf) # 1122 municipalities
-#' # plot(st_geometry(poly_sf))
-#' #
-#' # # Spatially aggregate the forecast
-#' # result_fcst <- clim4health_space(fcst, poly_sf)
-#' # dim(result_obs$data)
-
+#' library(sf)
+#' 
+#' # Load forecast data
+#' fcst_path <- system.file("extdata/forecast/", package = "clim4health")
+#' fcst_path <- paste0(fcst_path, "/")
+#' fcst <- clim4health_load(fcst_path, var = "t2m", data_type = "fcst",
+#'                          date = "20250101", ext = 'nc')
+#' dim(fcst$data)
+#' 
+#' # Read and plot municipalities in Colombia
+#' municip_path <- system.file("extdata/shapefiles/", package = "clim4health")
+#' municip_path <- paste0(municip_path, "/MGN_ANM_MPIOS.shp")
+#' municip_sf <- read_sf(municip_path)
+#' 
+#' # Create forecast means by municipality
+#' result_fcst <- clim4health_space(fcst, municip_sf, areas_id = "MPIO_CDPMP")
+#' dim(result_fcst$data)
+#' 
 clim4health_space <- function(data,
-                              boundaries,
-                              lat_dim_name = "latitude",
-                              lon_dim_name = "longitude",
-                              agg_fun = "mean",
-                              region_id = NULL) {
-  # read boundaries from file:
-  if (any(class(boundaries) == "character")) {
-    poly <- terra::vect(boundaries)
+                              areas,
+                              fun = "mean",
+                              weighting = "none",
+                              areas_id = NULL) {
+  
+  # read areas from file or sf object
+  if (any(class(areas) == "character") | inherits(areas, "sf")) {
+    poly <- terra::vect(areas)
   } else {
-    poly <- boundaries
+    poly <- areas
   }
 
-  if (!is.null(region_id) && !(region_id %in% names(poly))) {
-    stop("region_id not found in the boundaries file.")
+  if (!is.null(areas_id) && !(areas_id %in% names(poly))) {
+    stop("'areas_id' not found in the 'areas' object.")
   }
 
   # read metadata
   coords <- data$coords
-  lat <- coords[[lat_dim_name]]
-  lon <- coords[[lon_dim_name]]
+  lat <- coords$latitude
+  lon <- coords$longitude
 
   # transform array to raster stack
   out <- NULL
   out_dt <- NULL
   columns_index <- c()
-
+  
+  # Manage CRS, we aggregate in WGS84
   poly <- terra::project(poly, "EPSG:4326")
   ref  <- terra::crs(poly, describe = TRUE)$code
-
+  
+  # Get dimensions and indices of data and coordinates
   dims <- dim(data$data)
   dim_names <- names(dims)
-
-  idx_lat <- which(dim_names == lat_dim_name)
-  idx_lon <- which(dim_names == lon_dim_name)
-
+  idx_lat <- which(dim_names == "latitude")
+  idx_lon <- which(dim_names == "longitude")
   spatial_dims <- c(idx_lat, idx_lon)
   non_spatial_dims <- seq_along(dims)[-spatial_dims]
+  names(non_spatial_dims) <- names(seq_along(dims)[-spatial_dims])
 
   # create a grid of indices for the non-spatial dimensions
   index_grid <- expand.grid(
@@ -98,32 +100,44 @@ clim4health_space <- function(data,
                                    ~ paste0(sprintf("%02d", c(...)),
                                             collapse = "_"))
 
-  # extract region data (for all regions in poly) with terra::extract
-  out_dt <- terra::extract(out, poly, fun = agg_fun)
-  vals <- as.matrix(out_dt[, -1, drop = FALSE])
+  # extract area data (for all areas in poly) with terra::extract
+  if(weighting == "none"| fun != "mean"){
+    out_dt <- terra::extract(out, poly, fun = fun, na.rm = TRUE)
+    
+  }else if(weighting == "approx"){
+    out_dt <- terra::extract(out, poly, fun = fun, na.rm = TRUE, weights = TRUE)
+    
+  }else if(weighting == "exact"){
+    out_dt <- terra::extract(out, poly, fun = fun, na.rm = TRUE, exact = TRUE)
+    
+  }
 
-  # reshape directly into array: (non-spatial dims..., region)
-  final_dims <- c(dims[non_spatial_dims], region = nrow(vals))
-  result <- array(t(vals), dim = final_dims)
+  # transform to array
+  final_dims <- c(dims[non_spatial_dims], areas = nrow(out_dt))
+  result <- array(NA, dim = final_dims)
+
+  index <- strsplit(columns_index, "_")
+  for (cc in seq_along(columns_index)) {
+    idx <- as.integer(index[[cc]])
+    result_idx <- c(idx, list(seq_len(nrow(out_dt))))
+    result[do.call(`[<-`, c(list(result), result_idx,
+                            list(value = out_dt[, cc])))]
+  }
 
   # format to s2dv_cube
   replacement_dims <- dim(result)
-  names(replacement_dims) <- c(non_spatial_dims, "region")
+  names(replacement_dims) <- c(dim_names[non_spatial_dims], "areas")
   replacement_attrs <- data$attrs
 
   replacement_coords <- coords[setdiff(names(coords),
                                        c("latitude", "longitude"))]
-  if (is.null(region_id)) {
-    region_id <- "region"
-    replacement_coords[["region"]] <- seq_len(nrow(poly))
+  if (is.null(areas_id)) {
+    areas_id <- "areas"
+    replacement_coords[["areas"]] <- seq_len(nrow(poly))
   } else {
-    replacement_coords[["region"]] <- as.vector(poly[[region_id]])[[1]]
-    replacement_attrs[["region_id"]] <- region_id
+    replacement_coords[["areas"]] <- poly[[areas_id]]
+    replacement_attrs[["areas_id"]] <- areas_id
   }
-
-  replacement_attrs[["dtype"]] <- "polygon"
-  replacement_attrs[["geometry"]] <- terra::geom(poly, wkt = TRUE)
-  replacement_attrs[["crs"]] <- paste0("EPSG:", ref)
 
   # create final s2dv_cube object
   data <- list(data = result,
@@ -133,4 +147,29 @@ clim4health_space <- function(data,
   attr(data, "class") <- "s2dv_cube"
 
   return(data)
+}
+
+
+#' .make_raster
+#'
+#' TBC
+#'
+#' @param index_list TBC
+#' @param data TBC
+#' @param lat TBC
+#' @param lon TBC
+#' @param n_spatial TBC
+#' @param crs_code TBC
+#'
+#' @returns A vector of concatenated hours and minutes.
+#' @noRd
+.make_raster <- function(index_list, data, lat, lon, n_spatial, crs_code) {
+  full_idx <- c(index_list, rep(list(quote(expr=)), n_spatial))
+  slice <- do.call(`[`, c(list(data), full_idx, drop = FALSE))
+  slice <- drop(slice)
+  
+  r <- terra::rast(slice)
+  terra::ext(r) <- terra::ext(c(min(lon), max(lon), min(lat), max(lat)))
+  terra::crs(r) <- paste0("EPSG:", crs_code)
+  return(r)
 }
