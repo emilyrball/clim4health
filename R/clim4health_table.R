@@ -19,16 +19,16 @@
 #'   Factor levels for each dimension are set based on the `coords` metadata.
 #' 
 #' @examples
-##' # Load forecast data included in the package
-#' fcst_path <- system.file("extdata/forecast/", package = "clim4health")
-#' fcst_path <- paste0(fcst_path, "/")
-#' fcst <- clim4health_load(fcst_path, var = "t2m", data_type = "fcst",
-#'                          sdates = "20240401", ext = 'nc')
-#' dim(fcst$data)
-#' 
-#' # Transform it into a table
-#' formatted.table <- clim4health_table(fcst)
-#' head(formatted.table)
+#' # # Load forecast data included in the package
+#' # fcst_path <- system.file("extdata/forecast/", package = "clim4health")
+#' # fcst_path <- paste0(fcst_path, "/")
+#' # fcst <- clim4health_load(fcst_path, var = "t2m", data_type = "fcst",
+#' #                          sdates = "20240401", ext = 'nc')
+#' # dim(fcst$data)
+#' # 
+#' # # Transform it into a table
+#' # formatted.table <- clim4health_table(fcst)
+#' # head(formatted.table)
 #' @export
 
 clim4health_table <- function(array) {

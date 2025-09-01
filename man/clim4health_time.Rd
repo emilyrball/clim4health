@@ -5,23 +5,25 @@
 \title{Temporal aggregation of climate products.}
 \usage{
 clim4health_time(
-  data_clim,
+  data,
   aggregation = "yearly",
   agg_fun = "mean",
   week_start = NULL
 )
 }
 \arguments{
-\item{data_clim}{s2dv_cube object with the climate data to be aggregated,
+\item{data}{s2dv_cube object with the climate data to be aggregated,
 usually read using \code{clim4health_load}.}
 
 \item{aggregation}{string indicating the type of temporal aggregations to be
-performed. Options are "monthly", "yearly", and "daily". Defaults to "yearly".}
+performed. Options are "monthly", "yearly", "weekly", and "daily". Defaults
+to "yearly".}
 
-\item{agg_fun}{string specifying the aggregation function. Defaults to "mean".}
+\item{agg_fun}{string specifying the aggregation function. Defaults to
+"mean".}
 
-\item{week_start}{for weekly aggregation, specify the starting weekday. Current
-options include "Sunday" and "Monday".}
+\item{week_start}{for weekly aggregation, specify the starting weekday.
+Current options include "Sunday" and "Monday".}
 }
 \value{
 2dv_cube object with the temporally aggregated climate data.
@@ -30,11 +32,11 @@ options include "Sunday" and "Monday".}
 Temporal aggregation of climate products.
 }
 \examples{
-# Monthly aggregation of reanalysis data
-obs_path <- system.file("extdata/reanalysis/", package = "clim4health")
-obs_path <- paste0(obs_path, "/")
-obs <- clim4health_load(obs_path, var = "t2m", data_type = "obs",
-                         sdates = "201004", ext = 'nc')
-obs_month <- clim4health_time(obs, aggregation = "monthly")
-dim(obs_month$data)
+# # Monthly aggregation of reanalysis data
+# obs_path <- system.file("extdata/reanalysis/", package = "clim4health")
+# obs_path <- paste0(obs_path, "/")
+# obs <- clim4health_load(obs_path, var = "t2m", data_type = "obs",
+#                          sdates = "201004", ext = 'nc')
+# obs_month <- clim4health_time(obs, aggregation = "monthly")
+# dim(obs_month$data)
 }

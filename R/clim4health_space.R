@@ -54,8 +54,8 @@ clim4health_space <- function(data,
 
   # read metadata
   coords <- data$coords
-  lat <- coords$latitude
-  lon <- coords$longitude
+  lat <- coords[[lat_dim_name]]
+  lon <- coords[[lon_dim_name]]
 
   # transform array to raster stack
   out <- NULL
@@ -100,18 +100,11 @@ clim4health_space <- function(data,
 
   # extract region data (for all regions in poly) with terra::extract
   out_dt <- terra::extract(out, poly, fun = agg_fun)
+  vals <- as.matrix(out_dt[, -1, drop = FALSE])
 
-  # transform to array
-  final_dims <- c(dims[non_spatial_dims], region = nrow(out_dt))
-  result <- array(NA, dim = final_dims)
-
-  index <- strsplit(columns_index, "_")
-  for (cc in seq_along(columns_index)) {
-    idx <- as.integer(index[[cc]])
-    result_idx <- c(idx, list(seq_len(nrow(out_dt))))
-    result[do.call(`[<-`, c(list(result), result_idx,
-                            list(value = out_dt[, cc])))]
-  }
+  # reshape directly into array: (non-spatial dims..., region)
+  final_dims <- c(dims[non_spatial_dims], region = nrow(vals))
+  result <- array(t(vals), dim = final_dims)
 
   # format to s2dv_cube
   replacement_dims <- dim(result)
@@ -124,9 +117,13 @@ clim4health_space <- function(data,
     region_id <- "region"
     replacement_coords[["region"]] <- seq_len(nrow(poly))
   } else {
-    replacement_coords[["region"]] <- poly[[region_id]]
+    replacement_coords[["region"]] <- as.vector(poly[[region_id]])[[1]]
     replacement_attrs[["region_id"]] <- region_id
   }
+
+  replacement_attrs[["dtype"]] <- "polygon"
+  replacement_attrs[["geometry"]] <- terra::geom(poly, wkt = TRUE)
+  replacement_attrs[["crs"]] <- paste0("EPSG:", ref)
 
   # create final s2dv_cube object
   data <- list(data = result,

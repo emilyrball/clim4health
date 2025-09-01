@@ -1,148 +1,51 @@
-#' Interpolation
+
+#' Determine spatial type
 #'
-#' @param ref_path TBD
-#' @param ref TBD
-#' @param exp TBD
-#' @param vars TBD
-#' @param ncores TBD
+#' @param data TBD
 #'
 #' @returns TBD
 #'
 #' @examples
 #' # TBD
 
-.clim4health_interpolate <- function(ref_path,
-                                     ref,
-                                     exp,
-                                     vars,
-                                     ncores) {
-  # regrid based on s2dv::CDORemap()
-  # for temperature related 'bilinear', for precipitation 'con2'
-  lons <- exp$coords$longitude
-  lats <- exp$coords$latitude
-
-  crop <- c(min(ref$coords$longitude), max(ref$coords$longitude),
-            min(ref$coords$latitude), max(ref$coords$latitude))
-
-  for (var in vars) {
-    if (var %in% c("tas", "t2m", "tmax", "tmin", "tasmax", "tasmin",
-                   "temperature", "temp")) {
-      method <- "bilinear"
-    } else if (var %in% c("pr", "precip", "rain", "prec", "rr", "tp",
-                          "precipitation", "prlr", "rainfall")) {
-      method <- "con2"
-    } else {
-      method <- "bilinear"
-      warning("var not recognized, using bilinear method")
-    }
-
-    output <- s2dv::CDORemap(
-      data_array = exp$data,
-      lons = lons,
-      lats = lats,
-      grid = ref_path,
-      method = method,
-      avoid_writes = TRUE,
-      crop = crop,
-      force_remap = FALSE,
-      print_sys_msg = TRUE,
-      ncores = ncores
-    )
+.determine_spatial_type <- function(data) {
+  if (any(names(dim(data)) == "latitude") &&
+        any(names(dim(data)) == "longitude")) {
+    output <- "grid"
+  } else if (any(names(dim(data)) == "region")) {
+    output <- "region"
+  } else {
+    stop("ref must have either latitude and longitude or region dimensions")
   }
   return(output)
 }
 
-#' IntBC
+
+#' Reduce netcdf file dimensions
 #'
-#' @param ref_path TBD
-#' @param ref TBD
-#' @param exp TBD
-#' @param vars TBD
-#' @param ncores TBD
+#' @param source_file String with the path to the source netCDF file.
 #'
-#' @returns TBD
+#' @return String with the path to the reduced temporary netCDF file.
+#' @export
 #'
 #' @examples
-#' # TBD
+#' TBD
+.reduce_source_file <- function(source_file) {
+  # replace the source file in the attributes of the s2dv_cube object
+  nc <- ncdf4::nc_open(source_file)
+  file_dims <- sapply(nc$dim, function(x) x$len)
+  ncdf4::nc_close(nc)
 
-.clim4health_Intbc <- function(ref_path,
-                               ref,
-                               exp,
-                               exp_cor = NULL,
-                               var = NULL,
-                               bc_method = NULL,
-                               ncores = 1) {
-  # calibrate
-  # currently supports bc_method = "bias" or "qm"
-  if (is.null(bc_method)) {
-    bc_method <- "bias"
-    warning(paste("bc_method not specified, using method 'bias'. Please",
-                  "ensure this method is appropriate for your data."))
-  }
+  target_file <- source_file
+  if (length(file_dims) > 4) {
+    dims_to_reduce <- names(file_dims[!names(file_dims) %in%
+                                        c("latitude", "longitude")])
+    target_file <- paste0("tmp_", format(Sys.time(), "%Y%m%d%H%M"),
+                          ".nc")
 
-  ref <- .get_array(ref)
-  hcst <- .get_array(hcst)
-  if (!is.null(fcst)) {
-    fcst <- .get_array(fcst)
+    system(paste0("ncwa -a ", paste(dims_to_reduce, collapse = ","), " ",
+                  source_file, " ", target_file))
   }
 
-  if (bc_method == "bias") {
-    # call CSTools::Calibration
-    if (is.null(cal_method)) {
-      cal_method <- "evmos"
-    }
-    if (is.null(eval_method)) {
-      eval_method <- "leave-one-out"
-    }
-    # calibration
-    hcstcal <- CSTools::Calibration(exp = hcst, obs = ref,
-                                    cal.method = cal_method,
-                                    eval.method = eval_method,
-                                    memb_dim = "member",
-                                    sdate_dim = "sdate",
-                                    ncores = ncores)
-    if (!is.null(fcst)) {
-      fcstcal <- CSTools::Calibration(exp = hcst, exp_cor = fcst, obs = ref,
-                                      cal.method = cal_method,
-                                      eval.method = eval_method,
-                                      memb_dim = "member",
-                                      sdate_dim = "sdate",
-                                      ncores = ncores)
-    } else {
-      fcstcal <- NULL
-    }
-  }
-  if (bc_method == "dbc" || bc_method == "dynamical_bias") {
-    # call CSTools::DynBiasCorrection
-  }
-  if (bc_method == "qm" || bc_method == "quantile_mapping") {
-    # call CSTools::QuantileMapping
-    if (is.null(cal_method)) {
-      cal_method <- "QUANT"
-    }
-    hcstcal <- CSTools::QuantileMapping(exp = hcst, obs = ref,
-                                        memb_dim = "member",
-                                        sdate_dim = "sdate",
-                                        method = cal_method,
-                                        wet.day = wet_day,
-                                        na.rm = TRUE,
-                                        ncores = ncores)
-    # because QuantileMapping returns the array in a different order
-    hcstcal <- aperm(hcstcal, match(names(dim(hcst)), names(dim(hcstcal))))
-
-    if (!is.null(fcst)) {
-      fcstcal <- CSTools::QuantileMapping(exp = hcst, exp_cor = fcst, obs = ref,
-                                          memb_dim = "member",
-                                          sdate_dim = "sdate",
-                                          method = cal_method,
-                                          wet.day = wet_day,
-                                          na.rm = TRUE,
-                                          ncores = ncores)
-      # because QuantileMapping returns the array in a different order
-      fcstcal <- aperm(fcstcal, match(names(dim(fcst)), names(dim(fcstcal))))
-    } else {
-      fcstcal <- NULL
-    }
-  }
-  return(list(hcstcal = hcstcal, fcstcal = fcstcal))
+  return(target_file)
 }
