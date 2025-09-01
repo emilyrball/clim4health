@@ -2,50 +2,55 @@
 % Please edit documentation in R/clim4health_index.R
 \name{clim4health_index}
 \alias{clim4health_index}
-\title{Masking climate data based on their value}
+\title{Apply a threshold-based mask to climate data}
 \usage{
 clim4health_index(
   data,
-  mod_vals = TRUE,
+  return_mask = FALSE,
   lower_threshold = NULL,
   upper_threshold = NULL,
-  lower_close = FALSE,
-  upper_close = FALSE
+  closed = TRUE
 )
 }
 \arguments{
 \item{data}{s2dv_cube object with the climate data to be masked, usually
 read using \code{clim4health_load}.}
 
-\item{mod_vals}{Boolean. If TRUE (default), return original values where the
+\item{return_mask}{Boolean. If TRUE (default), return original values where the
 condition is fulfilled and NA otherwise. If FALSE, return 1 where the
 condition is met and 0 otherwise.}
 
-\item{lower_threshold}{Numeric. Lower threshold of the mask.}
+\item{lower_threshold}{Numeric. Optional lower threshold of the mask. All
+cells below that value will be masked out.}
 
-\item{upper_threshold}{Numeric. Upper threshold of the mask.}
+\item{upper_threshold}{Numeric. Optional upper threshold of the mask. All
+cells above that value will be masked out.}
 
-\item{lower_close}{Boolean. If FALSE (default), open lower interval. If TRUE,
-it is closed.}
-
-\item{upper_close}{Boolean. If FALSE (default), open upper interval. If TRUE,
-it is closed.}
+\item{closed}{Boolean. If TRUE (default), closed intervals including
+the threshold values. If TRUE, itnervals are open.}
 }
 \value{
-A s2dv_cube with the values masked or the mask (depending on \code{mod_vals}).
+A s2dv_cube with the values masked or the mask (depending on \code{return_mask}).
 }
 \description{
-Masking climate data based on their value
+Apply a threshold-based mask to climate data
 }
 \examples{
-# # Load forecast data included in the package
-# fcst_path <- system.file("extdata/forecast/", package = "clim4health")
-# fcst_path <- paste0(fcst_path, "/")
-# fcst <- clim4health_load(fcst_path, var = "t2m", data_type = "fcst",
-#                          sdates = "20240401", ext = 'nc')
-#                          
-# # Mask values
-# mask <- clim4health_index(fcst, mod_vals = TRUE,  
-#                           lower_threshold = 280, upper_threshold = 290,
-#                           lower_close = FALSE, upper_close = FALSE)
+# Read reanalysis data
+obs_path <- system.file("extdata/reanalysis/", package = "clim4health")
+obs_path <- paste0(obs_path, "/")
+obs <- clim4health_load(obs_path,
+                        var = "t2m",
+                        date = "201001",
+                        data_type = "obs",
+                        ext = "nc")
+clim4health_plot(obs)
+
+# Compute index, temperature higher than 290K
+index <- clim4health_index(obs, lower_threshold = 290)
+clim4health_plot(index)
+
+# Return mask, temperature higher than 290K
+mask <- clim4health_index(obs, return_mask = TRUE, lower_threshold = 290)
+clim4health_plot(mask)
 }
