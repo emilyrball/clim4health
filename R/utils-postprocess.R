@@ -6,6 +6,7 @@
 #'
 #' @examples
 #' # TBD
+#' @noRd
 
 .get_array <- function(data) {
   if (inherits(data, "s2dv_cube")) {
