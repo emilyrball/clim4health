@@ -9,10 +9,10 @@ clim4health_plot(
   var = NULL,
   sdate = NULL,
   time = NULL,
-  ensemble = TRUE,
+  ensemble = NULL,
   ensemble_fun = mean,
-  boundaries = "countries",
-  mask_boundaries = TRUE,
+  boundaries = NULL,
+  mask_boundaries = FALSE,
   title = NULL,
   legend = NULL,
   palette = "-RdBu"
@@ -24,21 +24,21 @@ clim4health_plot(
 \item{var}{Numerical index of the variable to be plotted.
 Only required if more than one variable is available.}
 
-\item{sdate}{Numerical index of the forecast starting time to be plotted.
-Only required if more than one 'sdate' is available.}
+\item{sdate}{Numerical index of the forecast starting time to be plotted. Defaults
+to NULL (all starting dates).}
 
-\item{time}{Numerical index of the time to be plotted.
-Only required if more than one 'time' is available.}
+\item{time}{Numerical index of the time to be plotted. Defaults to NULL (all
+times).}
 
 \item{ensemble}{Numerical index of the ensemble member to be plotted. If
-set to TRUE (default), it aggregates all the ensemble members.
-Only required if more than one 'ensemble' member is available.}
+set to TRUE, it aggregates all the ensemble members. Defaults to NULL (all
+times).}
 
 \item{ensemble_fun}{Aggregation function used when ensemble = TRUE.
 Defaults to the mean.}
 
 \item{boundaries}{Polygon boundaries to add to the map. Defaults to "countries"
-for country boundaries. Set to FALSE for no boundaries, otherwise supply
+for country boundaries. Set to NULL for no boundaries, otherwise supply
 a polygon \code{sf} object.}
 
 \item{mask_boundaries}{If TRUE (default), mask the data to the provided
@@ -67,7 +67,7 @@ fcst <- clim4health_load(fcst_path,
                          data_type = "fcst",
                          date = "20250101",
                          ext = 'nc')
-clim4health_plot(fcst, title = "Forecast") 
+clim4health_plot(fcst, title = "Forecast", ensemble = TRUE) 
 
 # Reanalysis
 rean_path <- paste0(getwd(), "/inst/extdata/reanalysis/")
@@ -85,5 +85,5 @@ hind <- clim4health_load(hind_path,
                          data_type = "hcst",
                          date = c("20100101", "20110101", "20120101"),
                          ext = 'nc')
-clim4health_plot(hind, title = "Hindcast") 
+clim4health_plot(hind, title = "Hindcast", ensemble = TRUE) 
 }

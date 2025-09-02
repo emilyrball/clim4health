@@ -5,15 +5,15 @@
 #' @param data *s2dv_cube* object with the climate data to be plotted.
 #' @param var Numerical index of the variable to be plotted. 
 #' Only required if more than one variable is available.
-#' @param sdate Numerical index of the forecast starting time to be plotted. 
-#' Only required if more than one 'sdate' is available.
-#' @param time Numerical index of the time to be plotted.
-#' Only required if more than one 'time' is available.
+#' @param sdate Numerical index of the forecast starting time to be plotted. Defaults 
+#' to NULL (all starting dates).
+#' @param time Numerical index of the time to be plotted. Defaults to NULL (all 
+#' times).
 #' @param ensemble Numerical index of the ensemble member to be plotted. If
-#' set to TRUE (default), it aggregates all the ensemble members.
-#' Only required if more than one 'ensemble' member is available.
+#' set to TRUE, it aggregates all the ensemble members. Defaults to NULL (all 
+#' times).
 #' @param boundaries Polygon boundaries to add to the map. Defaults to "countries"
-#' for country boundaries. Set to FALSE for no boundaries, otherwise supply
+#' for country boundaries. Set to NULL for no boundaries, otherwise supply
 #' a polygon `sf` object.
 #' @param mask_boundaries If TRUE (default), mask the data to the provided 
 #' boundaries.
@@ -36,7 +36,7 @@
 #'                          data_type = "fcst",
 #'                          date = "20250101",
 #'                          ext = 'nc')
-#' clim4health_plot(fcst, title = "Forecast") 
+#' clim4health_plot(fcst, title = "Forecast", ensemble = TRUE) 
 #' 
 #' # Reanalysis
 #' rean_path <- paste0(getwd(), "/inst/extdata/reanalysis/")
@@ -54,15 +54,15 @@
 #'                          data_type = "hcst",
 #'                          date = c("20100101", "20110101", "20120101"),
 #'                          ext = 'nc')
-#' clim4health_plot(hind, title = "Hindcast") 
+#' clim4health_plot(hind, title = "Hindcast", ensemble = TRUE) 
 clim4health_plot <- function(data,
                              var = NULL,
                              sdate = NULL,
                              time = NULL,
-                             ensemble = TRUE,
+                             ensemble = NULL,
                              ensemble_fun = mean,
-                             boundaries = "countries",
-                             mask_boundaries = TRUE,
+                             boundaries = NULL,
+                             mask_boundaries = FALSE,
                              title = NULL,
                              legend = NULL,
                              palette = "-RdBu"){
@@ -107,7 +107,7 @@ clim4health_plot <- function(data,
   }else if(!is.null(ensemble) & !isTRUE(ensemble) & any(ensemble > dims_data["ensemble"])){
     stop(paste0("A wrong 'ensemble' has been selected (possible range: 1 - ",
                 dims_data["time"], ")."))
-  }else if(is.null(time)){
+  }else if(is.null(ensemble)){
     ensemble <- 1:dims_data["ensemble"]
   }
   
@@ -125,10 +125,16 @@ clim4health_plot <- function(data,
   }
   
   # Requirements: boundaries 
-  if(!isTRUE(boundaries)){
+  if(!is.null(boundaries)){
     if(boundaries != "countries" & !inherits(boundaries, "sf")){
       stop("'boundaries' must be set to either 'countries' or be a polygon 'sf' object.")
     }
+  }
+  
+  # Number of panels
+  if(length(time) * length(sdate) * length(ensemble) > 30){
+    warning(paste0("The number of panels is very large, consider selecting a smaller",
+                   "set of times/ensemble members/dates."))
   }
 
   
@@ -160,15 +166,17 @@ clim4health_plot <- function(data,
   }
   
   # Select boundaries if needed
-  if(boundaries == "countries"){
-    data(world, package = "spData")
-    bound_sf <- world
-  }else if(inherits(boundaries, "sf")){
-    if(sf::st_crs(boundaries)$epsg != 4326){
-      message("Transforming 'boundaries' to CRS EPSG 4326")
-      bound_sf <- sf::st_transform(boundaries, crs = 4326)
-    } else{
-      bound_sf <- boundaries
+  if(!is.null(boundaries)){
+    if(boundaries == "countries"){
+      data(world, package = "spData")
+      bound_sf <- world
+    }else if(inherits(boundaries, "sf")){
+      if(sf::st_crs(boundaries)$epsg != 4326){
+        message("Transforming 'boundaries' to CRS EPSG 4326")
+        bound_sf <- sf::st_transform(boundaries, crs = 4326)
+      } else{
+        bound_sf <- boundaries
+      }
     }
   }
   
@@ -191,7 +199,7 @@ clim4health_plot <- function(data,
   sf::st_crs(plot_stars) <- 4326
   
   # Mask if needed
-  if(isTRUE(mask_boundaries) & !isTRUE(boundaries)){
+  if(isTRUE(mask_boundaries) & !is.null(boundaries)){
     sf::sf_use_s2(FALSE) 
     suppressMessages(plot_stars <- plot_stars[bound_sf])
     sf::sf_use_s2(FALSE) 
@@ -220,7 +228,7 @@ clim4health_plot <- function(data,
   p <- p + ggplot2::scale_fill_gradientn(colors = my_palette, na.value = "grey70")  
   
   # Boundaries
-  if(!isTRUE(boundaries)){
+  if(!is.null(boundaries)){
     p <- p +
       ggplot2::geom_sf(data = bound_sf, alpha = 0, 
                        col = "black", linewidth = 0.4) +
