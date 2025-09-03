@@ -6,33 +6,41 @@
 \usage{
 clim4health_load(
   path,
-  var = NULL,
-  date = NULL,
-  data_type = "",
+  variable = NULL,
+  year = "all",
+  month = "all",
+  day = "all",
+  time = "all",
+  leadtime_month = "all",
+  data_type = NULL,
   ext = NULL,
-  lat_selection = "all",
-  lon_selection = "all"
+  bbox = NULL
 )
 }
 \arguments{
 \item{path}{String to the folder containing the files to be loaded.}
 
-\item{var}{String containing the name of the variable to be extracted from
-the files. It will be concatenated to path to identify the files to be
-loaded.}
+\item{variable}{The variable that you want to load.}
+
+\item{year}{A vector of years, starting in 1950.}
+
+\item{month}{A vector of months. e.g. c(1,2) for January and February.
+Default is all months.}
+
+\item{day}{A vector of days in the month. Default is all days.}
+
+\item{time}{A vector of hours (0-23). Only needed when datasets are hourly.
+Default is all hours.}
+
+\item{leadtime_month}{A vector of months for the forecast leadtime. e.g.
+c(1,2) for January and February. Default is all months.}
 
 \item{data_type}{String indicating the type of data to be loaded. Options
 include forecast ("fcst"), hindcast ("hcst") or observational ("obs") data.}
 
-\item{ext}{File extension. Options include ".nc" and ".csv".}
+\item{ext}{File extension. Options include "nc", ".nc", "csv", and ".csv".}
 
-\item{lat_selection}{Range of latitudes to subset the file and load the data.}
-
-\item{lon_selection}{Range of longitudes to subset the file and load the
-data.}
-
-\item{sdates}{List or vector of strings identifying the start dates. It will
-be concatenated to path to identify the files to be loaded.}
+\item{bbox}{A vector of coordinates. (in order: North, West, South, East).}
 }
 \value{
 An s2dv_cube object.
@@ -47,7 +55,7 @@ stations) as an s2dv_cube object.
 # fcst_path <- paste0(fcst_path, "/")
 # 
 # # Load the forecast data
-# fcst <- clim4health_load(fcst_path, var = "t2m", data_type = "fcst",
+# fcst <- clim4health_load(fcst_path, variable = "t2m", data_type = "fcst",
 #                          sdates = "20240401", ext = 'nc')
 # class(fcst)
 # dim(fcst$data)

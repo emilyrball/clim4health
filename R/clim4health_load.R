@@ -4,19 +4,22 @@
 #' stations) as an s2dv_cube object.
 #'
 #' @param path String to the folder containing the files to be loaded.
-#' @param var String containing the name of the variable to be extracted from 
-#' the files. It will be concatenated to path to identify the files to be
-#' loaded.
-#' @param sdates List or vector of strings identifying the start dates. It will 
-#' be concatenated to path to identify the files to be loaded.
+#' @param variable The variable that you want to load.
+#' @param year A vector of years, starting in 1950.
+#' @param month A vector of months. e.g. c(1,2) for January and February.
+#' Default is all months.
+#' @param day A vector of days in the month. Default is all days.
+#' @param time A vector of hours (0-23). Only needed when datasets are hourly.
+#' Default is all hours.
+#' @param leadtime_month A vector of months for the forecast leadtime. e.g.
+#' c(1,2) for January and February. Default is all months.
 #' @param data_type String indicating the type of data to be loaded. Options
 #' include forecast ("fcst"), hindcast ("hcst") or observational ("obs") data.
-#' @param ext File extension. Options include ".nc" and ".csv".
-#' @param lat_selection Range of latitudes to subset the file and load the data.
-#' @param lon_selection Range of longitudes to subset the file and load the
-#' data.
+#' @param ext File extension. Options include "nc", ".nc", "csv", and ".csv".
+#' @param bbox A vector of coordinates. (in order: North, West, South, East).
 #'
 #' @returns An s2dv_cube object.
+#' @import dplyr
 #' @export
 #'
 #' @examples
@@ -25,19 +28,22 @@
 #' # fcst_path <- paste0(fcst_path, "/")
 #' # 
 #' # # Load the forecast data
-#' # fcst <- clim4health_load(fcst_path, var = "t2m", data_type = "fcst",
+#' # fcst <- clim4health_load(fcst_path, variable = "t2m", data_type = "fcst",
 #' #                          sdates = "20240401", ext = 'nc')
 #' # class(fcst)
 #' # dim(fcst$data)
 #' # summary(fcst$data)
 #'
 clim4health_load <- function(path,
-                             var = NULL,
-                             date = NULL,
-                             data_type = "",
+                             variable = NULL,
+                             year = "all",
+                             month = "all",
+                             day = "all",
+                             time = "all",
+                             leadtime_month = "all",
+                             data_type = NULL,
                              ext = NULL,
-                             lat_selection = "all",
-                             lon_selection = "all") {
+                             bbox = NULL) {
 
   if (!(data_type %in% c("fcst", "hcst", "obs"))) {
     # user must select whether data is observation or forecast/hindcast
@@ -45,30 +51,76 @@ clim4health_load <- function(path,
          "are \"fcst\", \"hcst\", or \"obs\".")
   } else if (!(ext %in% c("nc", "csv"))) {
     # If the extension of the files is not "nc" or "csv", stop
-    stop("The type_file has to be csv or nc, no other type files",
-         "are allowed at the moment")
+    if (ext %in% c(".nc", ".csv")) {
+      ext <- gsub("^\\.", "", ext)
+    } else {
+      stop("The type_file has to be csv or nc, no other type files",
+           "are allowed at the moment")
+    }
+  }
+  if (ext == "nc" && is.null(variable)) {
+    stop("Please specify variable to load.")
+  }
+
+  if (is.null(bbox)) {
+    warning("'bbox' is not specified, loading all latitudes and longitudes.")
+    lat_selection <- "all"
+    lon_selection <- "all"
+  } else {
+    lat_selection <- c(bbox[3], bbox[1])
+    lon_selection <- c(bbox[2], bbox[4])
+  }
+
+  # obtain all files in <path>
+  file_list <- list.files(path = path, pattern = paste0("\\.", ext),
+                           full.names = TRUE, recursive = TRUE)
+  if (length(file_list) == 0) {
+    stop("No files found in the specified path.")
+  }
+  # if <variable> is specified and can be found in any file names, filter
+  find_variable <- unlist(lapply(variable, grepl, file_list))
+  if (!is.null(variable) & any(find_variable)) {
+    file_list <- rep(file_list, length(variable))[find_variable]
+  }
+
+  find_year <- unlist(lapply(year, grepl, file_list))
+  if (!(any(year== "all")) & any(find_year)) {
+    file_list <- rep(file_list, length(year))[find_year]
+  }
+
+  if (ext == "nc") {
+    data <- .clim4health_load_nc_stars(file_list = file_list,
+                                       variable = variable,
+                                       year = year,
+                                       month = month,
+                                       day = day,
+                                       time = time,
+                                       leadtime_month = leadtime_month,
+                                       lat_selection = lat_selection,
+                                       lon_selection = lon_selection,
+                                       data_type = data_type)
   }
 
   if (ext == "csv") { # Read .csv files
     if (!(data_type == "obs")) {
       stop("Cannot currently load forecast/hindcast data in csv format.")
     }
-    data <- .clim4health_load_csv(path, var = var,
+    data <- .clim4health_load_csv(path, var = variable,
                                   date = date,
                                   lat_selection = lat_selection,
                                   lon_selection = lon_selection)
   } else if (ext == "nc") { # Read .nc files
-    if (is.null(var)) {
-      stop("Please specify var")
-    } else if (is.null(date)) {
-      stop("Please specify date")
-    }
-    full_path <- paste0(path, var, "_", date[1], ".", ext)
-    data <- .clim4health_load_nc(var = var, path = path, full_path = full_path,
-                                 lat_selection = lat_selection,
-                                 lon_selection = lon_selection,
-                                 date = date, data_type = data_type)
-
+  #  if (is.null(variable)) {
+  #    stop("Please specify variable")
+  #  } else if (is.null(date)) {
+  #    stop("Please specify date")
+  #  }
+  #  #full_path <- paste0(path, variable, "_", date[1], ".", ext)
+  #  full_path <- file_list[1]
+  #  data <- .clim4health_load_nc(var = variable, path = path, full_path = full_path,
+  #                               lat_selection = lat_selection,
+  #                               lon_selection = lon_selection,
+  #                               date = date, data_type = data_type)
   }
   # return s2dv_cube from csv or nc
   return(data)

@@ -9,7 +9,7 @@ clim4health_downscale(
   exp,
   obs = NULL,
   exp_cor = NULL,
-  region = NULL,
+  bbox = NULL,
   ncores = NULL,
   target_grid = NULL,
   bc_method = NULL,
@@ -41,11 +41,9 @@ clim4health_downscale(
 provided, it will be downscaled using exp and obs; if not provided, the exp
 will be downscaled instead. The default value is NULL.}
 
-\item{region}{a numeric vector indicating the borders of the region defined
-in obs. It consists of four elements in this order: lonmin, lonmax, latmin,
-latmax. lonmin refers to the left border, while lonmax refers to the right
-border. latmin indicates the lower border, whereas latmax indicates the
-upper border. If set to NULL (default), the function clim4health_downscale
+\item{bbox}{a numeric vector indicating the borders of the region defined
+in obs. It consists of four elements in this order: North, West, South,
+East. If set to NULL (default), the function clim4health_downscale
 will take the minimum and maximum values of the latitudes and longitudes.}
 
 \item{ncores}{an integer indicating the number of cores to use in parallel
