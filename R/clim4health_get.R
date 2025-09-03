@@ -14,7 +14,7 @@
 #' @param day A vector of days in the month. Default is all days.
 #' @param time A vector of hours (0-23). Only needed when datasets are hourly.
 #' Default is all hours.
-#' @param area A vector of coordinates. (in order: South, North, West, East).
+#' @param bbox A vector of coordinates. (in order: North, West, South, East).
 #' @param leadtime_month A vector of months for the forecast leadtime. e.g.
 #' c(1,2) for January and February. Default is all months.
 #' @param originating_centre DESCRIPTION PENDING!
@@ -35,7 +35,7 @@
 #'                 variable = "2m_temperature",
 #'                 year = c(2010, 2011, 2012),
 #'                 month = c(4, 5),
-#'                 area = c(33, -93, -23, -17),
+#'                 bbox = c(33, -93, -23, -17),
 #'                 outname = "era5land")
 #' 
 #' clim4health_get(pat = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
@@ -47,7 +47,7 @@
 #'                 year = c("2010", "2011", "2012"),
 #'                 month = c("04"),
 #'                 leadtime_month = c("1", "2", "3"),
-#'                 area = c(33, -93, -23, -17),
+#'                 bbox = c(33, -93, -23, -17),
 #'                 outname = "hindcast")
 #' 
 #' clim4health_get(pat = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
@@ -59,7 +59,7 @@
 #'                 year = c("2024"),
 #'                 month = c("04"),
 #'                 leadtime_month = c("1", "2", "3"),
-#'                 area = c(33, -93, -23, -17),
+#'                 bbox = c(33, -93, -23, -17),
 #'                 outname = "forecast")
 #' }
 
@@ -77,6 +77,9 @@ clim4health_get <- function(pat,
                             system,
                             outname = paste0("cds_"),
                             outpath = getwd()) {
+  area <- bbox
+  rm(bbox)
+
   all_params <- c(as.list(environment()))
 
   # check the parameters of the function and give error messages

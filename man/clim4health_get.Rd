@@ -44,8 +44,6 @@ Default is all months.}
 \item{time}{A vector of hours (0-23). Only needed when datasets are hourly.
 Default is all hours.}
 
-\item{area}{A vector of coordinates. (in order: South, North, West, East).}
-
 \item{leadtime_month}{A vector of months for the forecast leadtime. e.g.
 c(1,2) for January and February. Default is all months.}
 
@@ -57,6 +55,8 @@ c(1,2) for January and February. Default is all months.}
 
 \item{outpath}{The path where the resultant netcdf file should be saved.
 Default is the current working directory.}
+
+\item{bbox}{A vector of coordinates. (in order: North, West, South, East).}
 }
 \value{
 A netcdf file.
@@ -72,7 +72,7 @@ clim4health_get(pat = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
                 variable = "2m_temperature",
                 year = c(2010, 2011, 2012),
                 month = c(4, 5),
-                area = c(33, -93, -23, -17),
+                bbox = c(33, -93, -23, -17),
                 outname = "era5land")
 
 clim4health_get(pat = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
@@ -84,7 +84,7 @@ clim4health_get(pat = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
                 year = c("2010", "2011", "2012"),
                 month = c("04"),
                 leadtime_month = c("1", "2", "3"),
-                area = c(33, -93, -23, -17),
+                bbox = c(33, -93, -23, -17),
                 outname = "hindcast")
 
 clim4health_get(pat = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
@@ -96,7 +96,7 @@ clim4health_get(pat = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
                 year = c("2024"),
                 month = c("04"),
                 leadtime_month = c("1", "2", "3"),
-                area = c(33, -93, -23, -17),
+                bbox = c(33, -93, -23, -17),
                 outname = "forecast")
 }
 }

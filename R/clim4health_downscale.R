@@ -21,11 +21,9 @@ source(paste0("https://earth.bsc.es/gitlab/es/csdownscale/-/raw/",
 #' @param exp_cor Optional data to downscale. It must be an s2dv_cube. If the
 #' provided, it will be downscaled using exp and obs; if not provided, the exp
 #' will be downscaled instead. The default value is NULL.
-#' @param region a numeric vector indicating the borders of the region defined
-#' in obs. It consists of four elements in this order: lonmin, lonmax, latmin,
-#' latmax. lonmin refers to the left border, while lonmax refers to the right
-#' border. latmin indicates the lower border, whereas latmax indicates the
-#' upper border. If set to NULL (default), the function clim4health_downscale
+#' @param bbox a numeric vector indicating the borders of the region defined
+#' in obs. It consists of four elements in this order: North, West, South,
+#' East. If set to NULL (default), the function clim4health_downscale
 #' will take the minimum and maximum values of the latitudes and longitudes.
 #' @param ncores an integer indicating the number of cores to use in parallel
 #' computation. The default value is NULL.
@@ -107,7 +105,7 @@ source(paste0("https://earth.bsc.es/gitlab/es/csdownscale/-/raw/",
 #' TBD
 clim4health_downscale <- function(downscale_function,
   # overlapping inputs for all CSDownscale functions
-  exp, obs = NULL, exp_cor = NULL, region = NULL, ncores = NULL,
+  exp, obs = NULL, exp_cor = NULL, bbox = NULL, ncores = NULL,
   target_grid = NULL,
   # additional inputs for Intbc
   bc_method = NULL, method_remap = NULL, points = NULL,
@@ -206,11 +204,23 @@ clim4health_downscale <- function(downscale_function,
 
   # cases of bugs in CSDownscale
   if (!is.null(points)) {
-    if (is.null(region)) {
+    if (is.null(bbox)) {
       region <- c(min(exp$coords$longitude),
                   max(exp$coords$longitude),
                   min(exp$coords$latitude),
                   max(exp$coords$latitude))
+    } else {
+      if (!(length(bbox) == 4 && is.numeric(bbox) &&
+            all(bbox[c(1, 3)] > -90) || all(bbox[c(1, 3)] < 90) &&
+            all(bbox[c(1, 3)] > -90) || all(bbox[c(1, 3)] < 90) &&
+            all(bbox[c(2, 4)] > -180) || all(bbox[c(1, 3)] < 180) &&
+            all(bbox[c(2, 4)] > -180) || all(bbox[c(1, 3)] < 180))) {
+        stop("'bbox' coordinates are out of bound. N,W,S,E coordinates,
+               latitudes from 90 to -90, longitudes -180 to 180")
+      }
+      # reorder bbox to work with CSDownscale functions
+      # lonmin, lonmax, latmin, latmax
+      region <- c(bbox[2], bbox[4], bbox[3], bbox[1])
     }
 
     if (downscale_function == "Intlr" && is.null(method_remap)) {
@@ -236,12 +246,6 @@ clim4health_downscale <- function(downscale_function,
       source_file_exp_cor <- exp_cor$attrs$source_files[1]
       exp_cor$attrs$source_files[1] <- tmp_file_exp
     }
-  }
-
-
-  spatial_type <- .determine_spatial_type(exp$data)
-  if (spatial_type == "region") {
-    stop("Cannot downscale if data has been aggregated to regions.")
   }
 
   if (is.null(ncores)) {
