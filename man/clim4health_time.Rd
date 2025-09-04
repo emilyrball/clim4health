@@ -6,8 +6,9 @@
 \usage{
 clim4health_time(
   data,
-  aggregation = "yearly",
-  agg_fun = "mean",
+  time_aggregation,
+  fun = "mean",
+  dim_aggregation = NULL,
   week_start = NULL
 )
 }
@@ -15,12 +16,14 @@ clim4health_time(
 \item{data}{s2dv_cube object with the climate data to be aggregated,
 usually read using \code{clim4health_load}.}
 
-\item{aggregation}{string indicating the type of temporal aggregations to be
-performed. Options are "monthly", "yearly", "weekly", and "daily". Defaults
-to "yearly".}
+\item{time_aggregation}{string indicating the type of temporal aggregations
+to be performed. Options are "monthly", "yearly", "weekly", and "daily".}
 
-\item{agg_fun}{string specifying the aggregation function. Defaults to
+\item{fun}{string specifying the aggregation function. Defaults to
 "mean".}
+
+\item{dim_aggregation}{string indicating the dimension along which the
+aggregation should be performed. Options are "sdate" and "time".}
 
 \item{week_start}{for weekly aggregation, specify the starting weekday.
 Current options include "Sunday" and "Monday".}
@@ -37,6 +40,6 @@ Temporal aggregation of climate products.
 # obs_path <- paste0(obs_path, "/")
 # obs <- clim4health_load(obs_path, var = "t2m", data_type = "obs",
 #                          sdates = "201004", ext = 'nc')
-# obs_month <- clim4health_time(obs, aggregation = "monthly")
+# obs_month <- clim4health_time(obs, time_aggregation = "monthly")
 # dim(obs_month$data)
 }
