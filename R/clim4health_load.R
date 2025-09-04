@@ -88,6 +88,8 @@ clim4health_load <- function(path,
     file_list <- rep(file_list, length(year))[find_year]
   }
 
+  file_list <- sort(unique(file_list))
+
   if (ext == "nc") {
     data <- .clim4health_load_nc_stars(file_list = file_list,
                                        variable = variable,
