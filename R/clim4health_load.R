@@ -59,7 +59,7 @@ clim4health_load <- function(path,
     }
   }
   if (ext == "nc" && is.null(variable)) {
-    stop("Please specify variable to load.")
+    stop("Please specify parameter 'variable' to load.")
   }
 
   if (is.null(bbox)) {
