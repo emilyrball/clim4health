@@ -865,7 +865,7 @@
                                        data_type = "") {
   x <- stars::read_stars(file_list[1], proxy = TRUE)
   dim_names <- names(stars::st_dimensions(x))
-  print(file_list)
+
   # classify by time
   if ("valid_time" %in% dim_names) {
     concat_dim <- "valid_time"
@@ -1126,12 +1126,11 @@
     start_dates <- .paste_outer(.paste_outer(year, sprintf("-%02d", month)),
                                 sprintf("-%02d", day))
     start_dates <- as.POSIXct(start_dates, tz = "UTC")
-    print(start_dates)
-    print(date_vals)
+
     if (!(all(date_vals %in% start_dates))) {
       date_vals <- stars::st_get_dimension_values(x, concat_dim)
       date_vals <- as.Date(date_vals, origin = "1970-01-01")
-      print(date_vals)
+
       x <- x %>% dplyr::filter(as.Date(forecast_reference_time, 
                                        origin = "1970-01-01") %in% start_dates)
     }
