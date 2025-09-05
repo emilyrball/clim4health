@@ -75,7 +75,7 @@ clim4health_space <- function(data,
   # Manage CRS, we aggregate in WGS84
   poly <- terra::project(poly, "EPSG:4326")
   ref  <- terra::crs(poly, describe = TRUE)$code
-  
+
   # Get dimensions and indices of data and coordinates
   dims <- dim(data$data)
   dim_names <- names(dims)
@@ -121,16 +121,20 @@ clim4health_space <- function(data,
     
   }
 
+  if ("ID" %in% names(out_dt)) {
+    out_dt <- out_dt[ , -which(names(out_dt) == "ID"), drop = FALSE]
+  }
+
   # transform to array
   final_dims <- c(dims[non_spatial_dims], areas = nrow(out_dt))
-  result <- array(NA, dim = final_dims)
+  result <- array(NA_real_, dim = final_dims)
 
   index <- strsplit(columns_index, "_")
   for (cc in seq_along(columns_index)) {
     idx <- as.integer(index[[cc]])
     result_idx <- c(idx, list(seq_len(nrow(out_dt))))
-    result[do.call(`[<-`, c(list(result), result_idx,
-                            list(value = out_dt[, cc])))]
+    result <- do.call(`[<-`, c(list(result), result_idx,
+                      list(value = out_dt[[cc]])))
   }
 
   # format to s2dv_cube
@@ -175,7 +179,6 @@ clim4health_space <- function(data,
 .make_raster <- function(index_list, data, lat, lon, n_spatial, crs_code) {
   dx <- abs(lon[2] - lon[1])
   dy <- abs(lat[2] - lat[1])
-  
 
   full_idx <- c(index_list, rep(list(quote(expr=)), n_spatial))
   slice <- do.call(`[`, c(list(data), full_idx, drop = FALSE))
