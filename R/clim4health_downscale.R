@@ -202,27 +202,27 @@ clim4health_downscale <- function(downscale_function,
     }
   }
 
+  if (is.null(bbox)) {
+    region <- c(min(exp$coords$longitude),
+                max(exp$coords$longitude),
+                min(exp$coords$latitude),
+                max(exp$coords$latitude))
+  } else {
+    if (!(length(bbox) == 4 && is.numeric(bbox) &&
+          all(bbox[c(1, 3)] > -90) || all(bbox[c(1, 3)] < 90) &&
+          all(bbox[c(1, 3)] > -90) || all(bbox[c(1, 3)] < 90) &&
+          all(bbox[c(2, 4)] > -180) || all(bbox[c(1, 3)] < 180) &&
+          all(bbox[c(2, 4)] > -180) || all(bbox[c(1, 3)] < 180))) {
+      stop("'bbox' coordinates are out of bound. N,W,S,E coordinates,
+             latitudes from 90 to -90, longitudes -180 to 180")
+    }
+    # reorder bbox to work with CSDownscale functions
+    # lonmin, lonmax, latmin, latmax
+    region <- c(bbox[2], bbox[4], bbox[3], bbox[1])
+  }
+
   # cases of bugs in CSDownscale
   if (!is.null(points)) {
-    if (is.null(bbox)) {
-      region <- c(min(exp$coords$longitude),
-                  max(exp$coords$longitude),
-                  min(exp$coords$latitude),
-                  max(exp$coords$latitude))
-    } else {
-      if (!(length(bbox) == 4 && is.numeric(bbox) &&
-            all(bbox[c(1, 3)] > -90) || all(bbox[c(1, 3)] < 90) &&
-            all(bbox[c(1, 3)] > -90) || all(bbox[c(1, 3)] < 90) &&
-            all(bbox[c(2, 4)] > -180) || all(bbox[c(1, 3)] < 180) &&
-            all(bbox[c(2, 4)] > -180) || all(bbox[c(1, 3)] < 180))) {
-        stop("'bbox' coordinates are out of bound. N,W,S,E coordinates,
-               latitudes from 90 to -90, longitudes -180 to 180")
-      }
-      # reorder bbox to work with CSDownscale functions
-      # lonmin, lonmax, latmin, latmax
-      region <- c(bbox[2], bbox[4], bbox[3], bbox[1])
-    }
-
     if (downscale_function == "Intlr" && is.null(method_remap)) {
       # assign default method_remap which is not used
       method_remap <- "bil"
