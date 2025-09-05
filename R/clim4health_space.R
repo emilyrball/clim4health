@@ -104,7 +104,7 @@ clim4health_space <- function(data,
   })
 
   out <- terra::rast(out_list)
-  print(out)
+
   columns_index <- purrr::pmap_chr(index_grid,
                                    ~ paste0(sprintf("%02d", c(...)),
                                             collapse = "_"))
