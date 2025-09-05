@@ -58,6 +58,15 @@ clim4health_space <- function(data,
   lat <- coords$latitude
   lon <- coords$longitude
 
+  if (lat[1] > lat[length(lat)]) {
+    # if latitude is stored north to south, reverse it
+    lat <- rev(lat)
+    lat_dim  <- which(names(dim(data$data)) == "latitude")
+    idx <- lapply(dim(data$data), seq_len)
+    idx[[lat_dim]] <- rev(idx[[lat_dim]])
+    data$data <- do.call(`[`, c(list(data$data), idx, drop = FALSE))
+  }
+
   # transform array to raster stack
   out <- NULL
   out_dt <- NULL
@@ -95,7 +104,7 @@ clim4health_space <- function(data,
   })
 
   out <- terra::rast(out_list)
-
+  print(out)
   columns_index <- purrr::pmap_chr(index_grid,
                                    ~ paste0(sprintf("%02d", c(...)),
                                             collapse = "_"))
@@ -164,12 +173,19 @@ clim4health_space <- function(data,
 #' @returns A vector of concatenated hours and minutes.
 #' @noRd
 .make_raster <- function(index_list, data, lat, lon, n_spatial, crs_code) {
+  dx <- abs(lon[2] - lon[1])
+  dy <- abs(lat[2] - lat[1])
+  
+
   full_idx <- c(index_list, rep(list(quote(expr=)), n_spatial))
   slice <- do.call(`[`, c(list(data), full_idx, drop = FALSE))
   slice <- drop(slice)
   
   r <- terra::rast(slice)
-  terra::ext(r) <- terra::ext(c(min(lon), max(lon), min(lat), max(lat)))
+  terra::ext(r) <- terra::ext(c(min(lon) - dx/2,
+                                max(lon) + dx/2,
+                                min(lat) - dy/2,
+                                max(lat) + dy/2))
   terra::crs(r) <- paste0("EPSG:", crs_code)
   return(r)
 }
