@@ -451,7 +451,7 @@
 
 
 .load_csv_unknown <- function(full_path, var = NULL,
-                              date = NULL, data_type = "unknown",
+                              date = NULL,
                               lat_selection = "all",
                               lon_selection = "all") {
   
@@ -615,8 +615,7 @@
                                        time = "all",
                                        leadtime_month = "all",
                                        lat_selection = "all",
-                                       lon_selection = "all",
-                                       data_type = "") {
+                                       lon_selection = "all") {
   x <- stars::read_stars(file_list[1], proxy = TRUE)
   dim_names <- names(stars::st_dimensions(x))
 
