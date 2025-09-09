@@ -156,252 +156,6 @@
   return(list(val = val, col = col))
 }
 
-.load_cds_obs_monthly <- function(var = NULL,
-                                  full_path = NULL,
-                                  path = NULL,
-                                  date = NULL,
-                                  lat_selection = "all",
-                                  lon_selection = "all") {
-  # dimensions 'valid_time', 'latitude', 'longitude'
-  if (length(var) == 1) {
-    dataset <- paste0(path, "$var$_$date$.nc")
-  } else {
-    # if more than one variable is provided, assume
-    # files are stored as path/var/var_date.nc
-    dataset <- paste0(path, "$var$/$var$_$date$.nc")
-  }
-  # if date does not have sdate dimension, add it
-  if (is.null(dim(date))) {
-    dim(date) <- c(sdate = 1, time = length(date))
-  } else if ((length(dim(date)) == 1) && names(dim(date)) == "time") {
-    # if date has only time dimension, add sdate dimension
-    dim(date) <- c(sdate = 1, time = length(date))
-  } else if ((length(dim(date)) == 1) && names(dim(date)) == "sdate") {
-    # if date has only sdate dimension, add time dimension
-    dim(date) <- c(sdate = length(date), time = 1)
-  }
-
-  start_parameters <- list(dataset = dataset,
-                           var = var,
-                           date = date,
-                           latitude = .spatial_select(lat_selection),
-                           latitude_var = "latitude",
-                           longitude = .spatial_select(lon_selection),
-                           longitude_var = "longitude",
-                           pattern_dims = "dataset",
-                           latitude_reorder = startR::Sort(decreasing = TRUE),
-                           longitude_reorder = startR::CircularSort(-180, 180),
-                           return_vars = list(latitude = "dataset",
-                                              longitude = "dataset",
-                                              time = "date"),
-                           synonims = list(time = c("time", "valid_time")),
-                           split_multiselected_dims = TRUE,
-                           largest_dims_length = TRUE,
-                           silent = TRUE,
-                           retrieve = TRUE)
-
-  data <- do.call(startR::Start, start_parameters)
-
-  # transform to sd2v_cube
-  data <- CSTools::as.s2dv_cube(data)
-  return(data)
-}
-
-.load_cds_obs_daily <- function(var = NULL,
-                                full_path = NULL,
-                                path = NULL,
-                                date = NULL,
-                                lat_selection = "all",
-                                lon_selection = "all") {
-  # dimensions 'valid_time', 'latitude', 'longitude'
-  if (length(var) == 1) {
-    dataset <- paste0(path, "$var$_$date$.nc")
-  } else {
-    # if more than one variable is provided, assume
-    # files are stored as path/var/var_date.nc
-    dataset <- paste0(path, "$var$/$var$_$date$.nc")
-  }
-
-  if (!("sdate" %in% names(dim(date)))) {
-    start_parameters <- list(dataset = dataset,
-                             var = var,
-                             date = date,
-                             time = "all",
-                             latitude = .spatial_select(lat_selection),
-                             latitude_var = "latitude",
-                             longitude = .spatial_select(lon_selection),
-                             longitude_var = "longitude",
-                             pattern_dims = "dataset",
-                             latitude_reorder =
-                               startR::Sort(decreasing = TRUE),
-                             longitude_reorder =
-                               startR::CircularSort(-180, 180),
-                             return_vars = list(latitude = "dataset",
-                                                longitude = "dataset",
-                                                time = "date"),
-                             synonims = list(time = c("time", "valid_time")),
-                             time_across = c("date"),
-                             merge_across_dims = TRUE,
-                             largest_dims_length = TRUE,
-                             silent = TRUE,
-                             retrieve = TRUE)
-
-    data <- do.call(startR::Start, start_parameters)
-    # transform to sd2v_cube
-    data <- CSTools::as.s2dv_cube(data)
-    data <- CSTools::CST_InsertDim(data, 3, 1, "sdate",
-                                   values = data$attrs$Dates[1])
-    dim(data$attrs$Dates) <- c(sdate = 1, time = length(data$attrs$Dates))
-  } else {
-    dims <- names(dim(date))
-    sdate_dim <- which(dims == "sdate")
-    data <- NULL
-    for (i in seq(dim(date)[["sdate"]])) {
-      idx <- vector("list", length(dims))
-      idx[] <- TRUE
-      idx[[sdate_dim]] <- i
-      date_tmp <- do.call(`[`, c(list(date), idx))
-      dim(date_tmp) <- c(sdate = 1, time = length(date_tmp))
-      start_parameters <- list(dataset = dataset,
-                               var = var,
-                               date = date_tmp,
-                               time = "all",
-                               latitude = .spatial_select(lat_selection),
-                               latitude_var = "latitude",
-                               longitude = .spatial_select(lon_selection),
-                               longitude_var = "longitude",
-                               pattern_dims = "dataset",
-                               latitude_reorder =
-                                 startR::Sort(decreasing = TRUE),
-                               longitude_reorder =
-                                 startR::CircularSort(-180, 180),
-                               return_vars = list(latitude = "dataset",
-                                                  longitude = "dataset",
-                                                  time = "date"),
-                               synonims = list(time = c("time", "valid_time")),
-                               time_across = c("date"),
-                               merge_across_dims = TRUE,
-                               largest_dims_length = TRUE,
-                               silent = TRUE,
-                               retrieve = TRUE)
-
-      data_tmp <- do.call(startR::Start, start_parameters)
-      # transform to sd2v_cube
-      data_tmp <- CSTools::as.s2dv_cube(data_tmp)
-      data_tmp <- CSTools::CST_InsertDim(data_tmp, 3, 1, "sdate",
-                                         values = data_tmp$attrs$Dates[1])
-      dim(data_tmp$attrs$Dates) <- c(sdate = 1,
-                                     time = length(data_tmp$attrs$Dates))
-      if (i == 1) {
-        data <- data_tmp
-      } else {
-        data <- CST_BindDim(x = list(data, data_tmp), along = "sdate",
-                            var_dim = "var", dat_dim = "dataset")
-      }
-    }
-    data$coords$sdate <- data$attrs$Dates[, 1]
-  }
-  return(data)
-}
-
-.load_cds_seasonal_monthly <- function(var = NULL,
-                                       full_path = NULL,
-                                       path = NULL,
-                                       date = NULL,
-                                       lat_selection = "all",
-                                       lon_selection = "all") {
-  # dimensions 'number', 'forecast_reference_time', 'forecastMonth',
-  # 'latitude', 'longitude'
-  if (length(var) == 1) {
-    dataset <- paste0(path, "$var$_$sdate$.nc")
-  } else {
-    # if more than one variable is provided, assume
-    # files are stored as path/var/var_date.nc
-    dataset <- paste0(path, "$var$/$var$_$sdate$.nc")
-  }
-
-  # in this case, date is corresponding to start date of the forecast
-  if (!is.null(dim(date))) {
-    dim(date) <- NULL
-  }
-
-  # first access the files to get the start dates
-  start_parameters <- list(dataset = dataset,
-                           var = var,
-                           sdate = date,
-                           time = "all",
-                           forecast_reference_time = "all",
-                           ensemble = "all",
-                           latitude = .spatial_select(lat_selection),
-                           latitude_var = "latitude",
-                           longitude = .spatial_select(lon_selection),
-                           longitude_var = "longitude",
-                           pattern_dims = "dataset",
-                           latitude_reorder = startR::Sort(decreasing = TRUE),
-                           longitude_reorder = startR::CircularSort(-180, 180),
-                           return_vars =
-                             list(latitude = "dataset",
-                                  longitude = "dataset",
-                                  time = "sdate",
-                                  forecast_reference_time = "sdate"),
-                           synonims =
-                             list(time = c("time", "forecastMonth"),
-                                  ensemble = c("ensemble", "number")),
-                           largest_dims_length = TRUE,
-                           silent = TRUE,
-                           retrieve = FALSE)
-
-  data <- do.call(startR::Start, start_parameters)
-
-  start_dates <- attr(data, "Variables")$common$forecast_reference_time
-  lead_times <- attr(data, "Variables")$common$time
-
-  metadata_dates <- lubridate::add_with_rollback(start_dates,
-                                                 months(lead_times - 1))
-  dim(metadata_dates) <- dim(lead_times)
-
-  start_parameters <- list(dataset = dataset,
-                           var = var,
-                           sdate = date,
-                           time = "all",
-                           ensemble = "all",
-                           latitude = .spatial_select(lat_selection),
-                           latitude_var = "latitude",
-                           longitude = .spatial_select(lon_selection),
-                           longitude_var = "longitude",
-                           pattern_dims = "dataset",
-                           latitude_reorder = startR::Sort(decreasing = TRUE),
-                           longitude_reorder = startR::CircularSort(-180, 180),
-                           return_vars =
-                             list(latitude = "dataset",
-                                  longitude = "dataset",
-                                  time = "sdate"),
-                           synonims =
-                             list(time = c("time", "forecastMonth"),
-                                  ensemble = c("ensemble", "number")),
-                           largest_dims_length = TRUE,
-                           silent = TRUE,
-                           retrieve = TRUE)
-
-  # transform to sd2v_cube
-  data <- do.call(startR::Start, start_parameters)
-  data <- CSTools::as.s2dv_cube(data)
-
-  # store dates
-  data$attrs$Dates <- metadata_dates
-
-  # store start dates
-  sdates <- metadata_dates[, 1]
-  data$coords$sdate <- sdates
-
-  return(data)
-}
-
-.load_cds_seasonal_daily <- function() {
-  # dimensions 'number', 'forecast_reference_time', 'forecast_period',
-  # 'latitude', 'longitude'
-}
-
 .load_csv_tolimavalle <- function(data, var = NULL,
                                   dates = NULL,
                                   lat_selection = "all",
@@ -1026,6 +780,20 @@
       coords <- coords[c("dataset", "var", "sdate", "time",
                              "ensemble", "latitude", "longitude")]
 
+      # case: leadtime_month = 1
+      if (length(leadtime_month) == 1 & any(leadtime_month == 1)) {
+        # rename sdate and time dimensions so time is stored in time dimension
+        # and sdate is always 1
+        data_array <- aperm(data_array, c(1, 2, 4, 3, 5, 6, 7))
+        names(dim(data_array)) <- c("dataset", "var", "sdate",
+                                    "time", "ensemble", "latitude",
+                                    "longitude")
+        dates <- t(dates)
+        names(dim(dates)) <- c("sdate", "time")
+        coords[["sdate"]] <- 1
+        coords[["time"]] <- seq_along(unique(grid_dates$sdate))
+      }
+
       data <- CSTools::s2dv_cube(data = data_array,
                                  coords =
                                    c(list(dataset = 1, var = 1), coords),
@@ -1107,6 +875,20 @@
 
       coords <- coords[c("dataset", "var", "sdate", "time",
                              "ensemble", "latitude", "longitude")]
+
+      # case: leadtime_month = 1
+      if (length(leadtime_month) == 1 & any(leadtime_month == 1)) {
+        # rename sdate and time dimensions so time is stored in time dimension
+        # and sdate is always 1
+        data_array <- aperm(data_array, c(1, 2, 4, 3, 5, 6, 7))
+        names(dim(data_array)) <- c("dataset", "var", "sdate",
+                                    "time", "ensemble", "latitude",
+                                    "longitude")
+        dates <- t(dates)
+        names(dim(dates)) <- c("sdate", "time")
+        coords[["sdate"]] <- 1
+        coords[["time"]] <- seq_along(unique(grid_dates$sdate))
+      }
 
       data <- CSTools::s2dv_cube(data = data_array,
                                  coords =
