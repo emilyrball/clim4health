@@ -49,7 +49,7 @@ clim4health_load <- function(path,
       ext <- gsub("^\\.", "", ext)
     } else {
       stop("The type_file has to be csv or nc, no other type files",
-           "are allowed at the moment")
+           "are allowed at the moment.")
     }
   }
   if (ext == "nc" && is.null(variable)) {
@@ -65,24 +65,29 @@ clim4health_load <- function(path,
     lon_selection <- c(bbox[2], bbox[4])
   }
 
-  # obtain all files in <path>
-  file_list <- list.files(path = path, pattern = paste0("\\.", ext),
-                           full.names = TRUE, recursive = TRUE)
-  if (length(file_list) == 0) {
-    stop("No files found in the specified path.")
-  }
-  # if <variable> is specified and can be found in any file names, filter
-  find_variable <- unlist(lapply(variable, grepl, file_list))
-  if (!is.null(variable) & any(find_variable)) {
-    file_list <- rep(file_list, length(variable))[find_variable]
-  }
+  if (!file.exists(path)) {
+    # obtain all files in <path>
+    file_list <- list.files(path = path, pattern = paste0("\\.", ext),
+                             full.names = TRUE, recursive = TRUE)
+    if (length(file_list) == 0) {
+      stop("No files found in the specified path.")
+    }
+    # if <variable> is specified and can be found in any file names, filter
+    find_variable <- unlist(lapply(variable, grepl, file_list))
+    if (!is.null(variable) & any(find_variable)) {
+      file_list <- rep(file_list, length(variable))[find_variable]
+    }
 
-  find_year <- unlist(lapply(year, grepl, file_list))
-  if (!(any(year== "all")) & any(find_year)) {
-    file_list <- rep(file_list, length(year))[find_year]
-  }
+    find_year <- unlist(lapply(year, grepl, file_list))
+    if (!(any(year== "all")) & any(find_year)) {
+      file_list <- rep(file_list, length(year))[find_year]
+    }
 
-  file_list <- sort(unique(file_list))
+    file_list <- sort(unique(file_list))
+  } else {
+    # case: path is a single file
+    file_list <- path
+  }
 
   if (ext == "nc") {
     data <- .clim4health_load_nc_stars(file_list = file_list,
@@ -97,8 +102,13 @@ clim4health_load <- function(path,
   }
 
   if (ext == "csv") { # Read .csv files
-    data <- .clim4health_load_csv(path, var = variable,
-                                  date = date,
+    data <- .clim4health_load_csv(file_list = file_list,
+                                  variable = variable,
+                                  year = year,
+                                  month = month,
+                                  day = day,
+                                  time = time,
+                                  leadtime_month = leadtime_month,
                                   lat_selection = lat_selection,
                                   lon_selection = lon_selection)
   }
@@ -117,36 +127,30 @@ clim4health_load <- function(path,
 #' @param lon_selection TBC
 #'
 #' @returns TBC
-.clim4health_load_csv <- function(path, var = NULL, date = NULL,
+.clim4health_load_csv <- function(file_list,
+                                  variable = NULL,
+                                  year = "all",
+                                  month = "all",
+                                  day = "all",
+                                  time = "all",
+                                  leadtime_month = "all",
                                   lat_selection = "all",
                                   lon_selection = "all") {
-  # read file
-  if (!(is.null(date))) {
-    if (file.exists(paste0(path, "_", date[1], ".csv"))) {
-      full_path <- .paste_outer(paste0(path, "_"), date)
-    } else {
-      full_path <- paste0(path)
-    }
-  } else {
-    full_path <- paste0(path)
-  }
 
-  full_path <- .paste_outer(full_path, paste0(".csv"))
-
-  data <- data.table::fread(full_path)
+  data <- data.table::fread(file_list)
 
   # skip up to 10 lines of header
   if (ncol(data) == 1) {
     for (i in 1:11) {
-      if (ncol(data.table::fread(full_path, skip = i)) > 1) {
+      if (ncol(data.table::fread(file_list, skip = i)) > 1) {
         break
       }
     }
     if (i == 11) {
       stop("Currently cannot handle >10 header lines in file.")
     } else {
-      data <- data.table::fread(full_path, skip = i)
-      metadata <- utils::head(data.table::fread(full_path), i - 1)
+      data <- data.table::fread(file_list, skip = i)
+      metadata <- utils::head(data.table::fread(file_list), i - 1)
     }
   } else {
     metadata <- NULL
@@ -157,17 +161,34 @@ clim4health_load <- function(path,
 
   if (all(headers %in% c("V1", "station", "longitude", "latitude",
                          "date", "hour", "tag", "value"))) {
-    data <- .load_csv_tolimavalle(data, var = var, dates = date,
+    data <- .load_csv_tolimavalle(data, headers,
+                                  variable = variable,
+                                  year = year,
+                                  month = month,
+                                  day = day,
+                                  time = time,
+                                  leadtime_month = leadtime_month,
                                   lat_selection = lat_selection,
                                   lon_selection = lon_selection)
-    return(data)
   } else if (all(headers %in% c("prov", "year", "month", "day", "value",
                                 "variable", "Estacion", "date"))) {
-    data <- .load_csv_dr(data, var = var, dates = date)
+    data <- .load_csv_dr(data, headers,
+                         variable = variable,
+                         year = year,
+                         month = month,
+                         day = day,
+                         time = time,
+                         leadtime_month = leadtime_month)
   } else {
-    data <- .load_csv_unknown(data, var = var,
+    data <- .load_csv_unknown(data, headers, metadata,
+                              variable = variable,
+                              year = year,
+                              month = month,
+                              day = day,
+                              time = time,
+                              leadtime_month = leadtime_month,
                               lat_selection = lat_selection,
                               lon_selection = lon_selection)
-    return(data)
   }
+  return(data)
 }

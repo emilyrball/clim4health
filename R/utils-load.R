@@ -156,8 +156,13 @@
   return(list(val = val, col = col))
 }
 
-.load_csv_tolimavalle <- function(data, var = NULL,
-                                  dates = NULL,
+.load_csv_tolimavalle <- function(data, headers,
+                                  variable = NULL,
+                                  year = "all",
+                                  month = "all",
+                                  day = "all",
+                                  time = "all",
+                                  leadtime_month = "all",
                                   lat_selection = "all",
                                   lon_selection = "all") {
 
@@ -305,8 +310,15 @@
 
 
 
-.load_csv_dr <- function(data, var = NULL,
-                         dates = NULL) {
+.load_csv_dr <- function(data, headers,
+                         variable = NULL,
+                         year = "all",
+                         month = "all",
+                         day = "all",
+                         time = "all",
+                         leadtime_month = "all",
+                         lat_selection = "all",
+                         lon_selection = "all") {
 
   # Clean data
   # D.VIENTO is NA
@@ -450,48 +462,75 @@
 }
 
 
-.load_csv_unknown <- function(full_path, var = NULL,
-                              date = NULL,
+.load_csv_unknown <- function(data, headers, metadata,
+                              variable = NULL,
+                              year = "all",
+                              month = "all",
+                              day = "all",
+                              time = "all",
+                              leadtime_month = "all",
                               lat_selection = "all",
                               lon_selection = "all") {
   
-  # get lats/lons
+  # latitude/longitude management
+  # get lats/lons and columns
   lats <- .get_csv_dims(headers, data, c("y", "lat", "latitude"))
   lons <- .get_csv_dims(headers, data, c("x", "lon", "longitude"))
 
+  # If lat_selection or lon_selection is "all", select all coordinates
+  if (lat_selection == "all") {
+    lat_selection <- c(min(lats$val), max(lats$val))
+  }
+  if (lon_selection == "all") {
+    lon_selection <- c(min(lons$val), max(lons$val))
+  }
+  # subset to only the requested coordinates (lat_selection and lon_selection)
+  if (!(is.null(lats$col)) && !(is.null(lons$col))) {
+    lat_lon_selection <- which(lats$val >= min(lat_selection) &
+                               lats$val <= max(lat_selection) &
+                               lons$val >= min(lon_selection) &
+                               lons$val <= max(lon_selection))
+    data <- data[lat_lon_selection, ]
+    lats$val <- lats$val[lat_lon_selection]
+    lons$val <- lons$val[lat_lon_selection]
+  }
+  # end latitude/longitude management
+
+  vars <- list()
+  # get variable
+  if (!is.null(variable)) {
+    if (any(headers %in% variable)) {
+      # if variable name exists in file
+      vars$col <- which(headers %in% variable)
+    } else {
+      # if variable name does not exist
+      stop(paste0("variable name ", variable, " not found"))
+    }
+  } else {
+    # if variable is not specified, print the list of possible columns
+    stop(paste0("Please specify the variable name. Possible names are: ",
+                paste(headers, collapse = ", ")))
+  }
+  vars$val <- data[, vars$col]
+
+  # datetime management
   # get time columns
   ### test what happens if you have a year and month column
   possible_time_names <- .get_time_names()
   times <- .get_csv_dims(headers, data, possible_time_names)
 
-  vars <- list()
-  # get variable
-  if (!is.null(var)) {
-    if (any(headers %in% var)) {
-      # if var name exists in file
-      vars$col <- which(headers %in% var)
-    } else {
-      # if var name does not exist
-      stop(paste0("var name ", var, " not found"))
-    }
-  } else {
-    # if variable is not specified assume it is the last one
-    vars$col <- length(headers)
-    var <- headers[length(headers)]
-  }
-  vars$val <- data[, vars$col]
-
   # run through possible time/date combinations
   ### what about case YYYY and MM stored in separate columns?
-  print("Trying date formats")
   sum_na <- length(times$val)
   dates <- NA
+  date_fun <- NULL
   for (f in list(lubridate::ymd, lubridate::dmy, lubridate::mdy,
                  lubridate::ym, lubridate::my)) {
     dates_tmp <- f(times$val)
     if (sum(is.na(dates_tmp)) < sum_na) {
       dates <- dates_all <- dates_tmp
       sum_na <- sum(is.na(dates_tmp))
+      date_fun <- f
       ## choose a date format that produces least NAs
     }
   }
@@ -500,7 +539,6 @@
   }
 
   # could be stored as "YYYY/MM/DD hh:mm:ss"
-  print("Trying YYYY/MM/DD hh:mm:ss date format")
   dates_tmp <- tryCatch({
     as.POSIXct(times$val, tz = "UTC")
   },
@@ -514,11 +552,11 @@
   # if length of dates_tmp is longer then hourly data could be stored
   if (length(unique(dates_tmp)) > length(dates)) {
     dates <- dates_all <- dates_tmp
+    date_fun <- as.POSIXct
   }
 
   # final option could be year is stored as date
   if (typeof(dates) == "logical") {
-    print("Trying YYYY date format")
     dates <- tryCatch({
       lubridate::year(times$val)
     },
@@ -529,22 +567,74 @@
       return(NA)
     })
     dates_all <- dates
+    date_fun <- lubridate::year
   }
   if (typeof(dates) == "logical") {
-    stop("Cannot parse dates. Stopping")
+    stop("Cannot parse dates. Stopping.")
   }
+  # filter dates if year, month, day or time are specified
+  if (any(year == "all")) {
+    year <- unique(lubridate::year(dates_all))
+  }
+  if (any(month == "all")) {
+    month <- 1:12
+  }
+  if (any(day == "all")) {
+    day <- 1:31
+  }
+  if (any(time == "all")) {
+    time <- 0:23
+  }
+  start_dates <- .paste_outer(.paste_outer(year, sprintf("-%02d", month)),
+                              sprintf("-%02d", day))
+  start_dates <- .paste_outer(start_dates,
+                              sprintf(" %02d:00:00", time))
+  start_dates <- as.POSIXct(start_dates, tz = "UTC",
+                            format = "%Y-%m-%d %H:%M:%S")
 
-  dates <- unique(dates)
+  start_dates_tmp <- date_fun(start_dates)
+  start_dates <- unique(start_dates[!is.na(start_dates_tmp)])
+
+  if (any(leadtime_month == "all")) {
+    leadtime_month <- 1
+  }
+  grid_dates <- expand.grid(sdate = as.POSIXct(start_dates,
+                                               tz = "UTC",
+                                               format = "%Y-%m-%d %H:%M:%S"),
+                            time = leadtime_month)
+
+  grid_dates$forecast_date <- lubridate::add_with_rollback(
+    grid_dates$sdate, months(grid_dates$time - 1)
+  )
+
+  # use forecast_date as this contains all possible dates
+  start_dates <- unique(sort(c(grid_dates$forecast_date)))
+
+  date_selection <- which(dates_all %in% date_fun(start_dates))
+  data <- data[date_selection, ]
+  dates_all <- dates_all[date_selection]
+  dates <- unique(dates_all)
+
+  dates <- matrix(as.POSIXct(grid_dates$forecast_date, 
+                             origin = "1970-01-01", tz = "UTC"),
+                  nrow = length(unique(grid_dates$sdate)),
+                  ncol = length(leadtime_month),
+                  byrow = FALSE)
+
+  dates <- as.POSIXct(dates, origin = "1970-01-01", tz = "UTC")
+
+  names(dim(dates)) <- c("sdate", "time")
+  # end datetime management
 
   # obtain metadata
   lat <- c() # initialise
   lon <- c() # initialise
 
   if (!(is.null(lats$col)) && !(is.null(lons$col))) {
-    coords <- unique(paste0(lats$val, "; ", lons$val))
-    for (cc in seq_along(coords)){
-      lat <- c(lat, as.integer(strsplit(coords[cc], "; ")[[1]][1]))
-      lon <- c(lon, as.integer(strsplit(coords[cc], "; ")[[1]][2]))
+    coordinates <- unique(paste0(lats$val, "; ", lons$val))
+    for (cc in seq_along(coordinates)) {
+      lat <- c(lat, as.numeric(strsplit(coordinates[cc], "; ")[[1]][1]))
+      lon <- c(lon, as.numeric(strsplit(coordinates[cc], "; ")[[1]][2]))
     }
   } else {
     lat <- startR::indices(1)
@@ -552,54 +642,60 @@
   }
 
   # convert table to array of correct dimensions for s2dv_cube
-  data_array <- array(data[, vars$col],
-                      dim = c(dataset = 1, var = 1,
-                              time = length(dates),
+  data_array <- array(NA_real_,
+                      dim = c(dataset = 1,
+                              var = length(vars$col),
+                              sdate = dim(dates)[["sdate"]],
+                              time  = dim(dates)[["time"]],
                               ensemble = 1,
-                              latitude = length(lat), longitude = length(lon)))
+                              location = length(coordinates)))
+  date_index <- match(date_fun(grid_dates$forecast_date), dates_all)
 
   # reshape data and dates
-  for (tt in seq_along(dates)) {
-    ttx <- which(dates_all == dates[tt])
-    for (ln in seq_along(lon)) {
-      lnx <- which(lons$val == lon[ln])
-      for (ll in seq_along(lat)) {
-        llx <- which(lats$val == lat[ll])
-        idxs <- Reduce(intersect, list(lnx, llx, ttx))
-        if (!(length(idxs) == 0)) {
-          data_array[, , tt, , ll, ln] <- data[idxs, vars$col]
-        } else {
-          data_array[, , tt, , ll, ln] <- NA
+  for (i in seq_len(nrow(grid_dates))) {
+    s <- which(dates[, 1] == grid_dates$sdate[i])
+    t <- grid_dates$time[i]
+    d <- date_index[i]  # index in arr_x valid_time
+
+    for (loc in seq_along(coordinates)) {
+      lnx <- which(lons$val == lon[loc])
+      llx <- which(lats$val == lat[loc])
+      idxs <- Reduce(intersect, list(lnx, llx, d))
+      if (!(length(idxs) == 0)) {
+        for (v in seq_along(vars$col)) {
+          data_array[, v, s, t, , loc] <- data[idxs, vars$col[v]]
         }
+      } else {
+        data_array[, , s, t, , loc] <- rep(NA, length(vars$col))
       }
     }
   }
 
-  # format to s2dv_cube
-  data_tmp <- CSTools::s2dv_cube(data = data_array,
-                                 coords = list(dataset = 1,
-                                               var = var,
-                                               time = dates,
-                                               ensemble = 1,
-                                               latitude = lat,
-                                               longitude = lon),
-                                 varName = var,
-                                 Dates = dates)
+  coords <- list(dataset = 1,
+                 var = variable,
+                 sdate = seq(dim(dates)[["sdate"]]),
+                 time = seq(dim(dates)[["time"]]),
+                 ensemble = 1,
+                 latitude = lat,
+                 longitude = lon)
+  # case: leadtime_month = 1
+  if (length(leadtime_month) == 1 & any(leadtime_month == 1)) {
+    # rename sdate and time dimensions so time is stored in time dimension
+    # and sdate is always 1
+    data_array <- aperm(data_array, c(1, 2, 4, 3, 5, 6))
+    names(dim(data_array)) <- c("dataset", "var", "sdate",
+                                "time", "ensemble", "location")
+    dates <- t(dates)
+    names(dim(dates)) <- c("sdate", "time")
+    coords[["sdate"]] <- 1
+    coords[["time"]] <- seq_along(unique(grid_dates$sdate))
+  }
 
-  # subset to only the requested coordinates (lat_selection and lon_selection)
-  if (any(lat_selection == "all")) {
-    lat_select <- seq_along(lat)
-  } else {
-    lat_select <- which(lat >= lat_selection[1] & lat <= lat_selection[2])
-  }
-  if (any(lon_selection == "all")) {
-    lon_select <- seq_along(lon)
-  } else {
-    lon_select <- which(lon >= lon_selection[1] & lon <= lon_selection[2])
-  }
-  data <- CSTools::CST_Subset(data_tmp, along = c("latitude", "longitude"),
-                              indices = list(lat_select, lon_select),
-                              drop = "none")
+  # format to s2dv_cube
+  data <- CSTools::s2dv_cube(data = data_array,
+                             coords = coords,
+                             varName = variable,
+                             Dates = dates)
 
   if (!is.null(metadata)) {
     data$attrs$Variable$metadata <- metadata
@@ -691,7 +787,7 @@
     day <- 1:31
   }
   if (any(time == "all")) {
-    time <- 0:24
+    time <- 0:23
   }
 
   if ("valid_time" %in% dim_names) {
