@@ -1,40 +1,3 @@
-#source(paste0("https://earth.bsc.es/gitlab/external/cstools/-/blob/",
-#              "master/R/CST_BindDim.R"))
-#source(paste0("R/CST_BindDim.R"))
-#' .paste_hours_minutes
-#'
-#' TBC
-#'
-#' @param hours Vector of hours.
-#' @param minutes Vector of minutes.
-#'
-#' @returns A vector of concatenated hours and minutes.
-#'
-.paste_hours_minutes <- function(hours, minutes) {
-  hours <- paste0(hours)
-  minutes <- paste0(minutes)
-  hours <- .paste_zeros(hours)
-  minutes <- .paste_zeros(minutes)
-  return(paste(hours, minutes, sep = ":"))
-}
-
-#' .paste_zeros
-#'
-#' TBC
-#'
-#' @param times vector of time strings.
-#'
-#' @returns The vector of time strings with a leading 0 if applicable.
-#'
-.paste_zeros <- function(times) {
-  for (i in seq_along(times)) {
-    if (nchar(times[i]) == 1) {
-      times[i] <- sprintf("%02d", times[i])
-    }
-  }
-  return(times)
-}
-
 #' .paste_outer
 #'
 #' TBC
@@ -50,58 +13,6 @@
   return(path)
 }
 
-#' .spatial_select
-#'
-#' TBC
-#'
-#' @param selection TBC
-#'
-#' @returns TBC
-.spatial_select <- function(selection) {
-  if (any(selection == "all")) {
-    select <- "all"
-  } else {
-    select <- startR::values(list(min(selection), max(selection)))
-  }
-  return(select)
-}
-
-#' .get_spatial_length
-#'
-#' TBC
-#'
-#' @param dim_index TBC
-#' @param file_dims TBC
-#'
-#' @returns TBC
-.get_spatial_length <- function(dim_index, file_dims) {
-  if (is.null(dim_index)) {
-    dim_length <- NULL
-  } else {
-    dim_length <- file_dims[[dim_index]]
-  }
-  return(dim_length)
-}
-
-#' .get_spatial_name
-#'
-#' TBC
-#'
-#' @param file_dim_names TBC
-#' @param possible_names TBC
-#'
-#' @returns TBC
-.get_spatial_name <- function(file_dim_names, possible_names) {
-  for (f in possible_names) {
-    # add f to time_dims if included in file_dims
-    if (any(grep(f, tolower(file_dim_names)))) {
-      dim_name <- file_dim_names[grep(f, tolower(file_dim_names))]
-      break
-    }
-  }
-  return(dim_name)
-}
-
 #' .get_time_names
 #'
 #' TBC
@@ -109,31 +20,6 @@
 #' @returns TBC
 .get_time_names <- function() {
   return(c("year", "month", "week", "day", "date", "time"))
-}
-
-#' .get_spatial_val
-#'
-#' TBC
-#'
-#' @param dim_length TBC
-#' @param full_path TBC
-#' @param dim_name TBC
-#' @param dim TBC
-#'
-#' @returns TBC
-.get_spatial_val <- function(dim_length, full_path, dim_name, dim) {
-  if (is.null(dim_length)) {
-    # if lat is not stored in file
-    spatial_val <- startR::indices(1)
-  } else if (dim_length > 1) {
-    spatial_val <- NULL
-  } else if (dim_length == 1) {
-    # in case startR drops value
-    spatial_val <- startR::NcVarReader(file_path = full_path,
-                                       var_name = dim,
-                                       synonims = list(dim = dim_name))[[1]]
-  }
-  return(spatial_val)
 }
 
 #' .get_csv_dims
