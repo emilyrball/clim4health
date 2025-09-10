@@ -15,7 +15,6 @@ clim4health_plot(
   mask_boundaries = FALSE,
   title = NULL,
   legend = NULL,
-  show_grid = TRUE,
   palette = "-RdBu"
 )
 }
@@ -50,9 +49,6 @@ boundaries.}
 \item{legend}{Optional legend title. If NULL (default), it uses the variable
 names.}
 
-\item{show_grid}{logical that indicates whether the coordinate grid should be included.
-Defaults to FALSE.}
-
 \item{palette}{GHR, RColorBrewer or colorspace palette. Use "-" before the
 palette name (e.g., "-Reds") to reverse it. Alternatively, a vector of
 hex codes to create a continuous interpolated palette.}
@@ -64,24 +60,31 @@ A plot
 ONLY WORKS WITH GRID DATA COMING FROM clim4health_load
 }
 \examples{
+# Region boundaries
+bound_path <- paste0(getwd(), "/inst/extdata/areas/munip_vallecauca.gpkg")
+bound <- read_sf(bound_path)
+
 # Forecast
 fcst_path <- paste0(getwd(), "/inst/extdata/forecast/")
 fcst <- clim4health_load(fcst_path,
                          variable = "t2m",
                          ext = 'nc')
-clim4health_plot(fcst, title = "Forecast", ensemble = TRUE) 
+clim4health_plot(fcst, title = "Forecast", 
+                 ensemble = TRUE, boundaries = bound) 
 
 # Reanalysis
 rean_path <- paste0(getwd(), "/inst/extdata/reanalysis/")
 rean <- clim4health_load(rean_path,
                          variable = "t2m",
                          ext = 'nc')
-clim4health_plot(rean, title = "Reanalysis") 
+clim4health_plot(rean, title = "Reanalysis",
+                 boundaries = bound) 
 
 # Hindcast
 hind_path <- paste0(getwd(), "/inst/extdata/hindcast/")
 hind <- clim4health_load(hind_path,
                          variable = "t2m",
                          ext = 'nc')
-clim4health_plot(hind, title = "Hindcast", ensemble = TRUE) 
+clim4health_plot(hind, title = "Hindcast", 
+                 ensemble = TRUE , boundaries = bound)  
 }

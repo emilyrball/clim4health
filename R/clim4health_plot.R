@@ -22,8 +22,6 @@
 #' @param title Optional plot title.
 #' @param legend Optional legend title. If NULL (default), it uses the variable
 #' names.
-#' @param show_grid logical that indicates whether the coordinate grid should be included.
-#' Defaults to FALSE.
 #' @param palette GHR, RColorBrewer or colorspace palette. Use "-" before the 
 #' palette name (e.g., "-Reds") to reverse it. Alternatively, a vector of
 #' hex codes to create a continuous interpolated palette.
@@ -31,26 +29,33 @@
 #' @export
 #'
 #' @examples 
+#' # Region boundaries
+#' bound_path <- paste0(getwd(), "/inst/extdata/areas/munip_vallecauca.gpkg")
+#' bound <- read_sf(bound_path)
+#' 
 #' # Forecast
 #' fcst_path <- paste0(getwd(), "/inst/extdata/forecast/")
 #' fcst <- clim4health_load(fcst_path,
 #'                          variable = "t2m",
 #'                          ext = 'nc')
-#' clim4health_plot(fcst, title = "Forecast", ensemble = TRUE) 
+#' clim4health_plot(fcst, title = "Forecast", 
+#'                  ensemble = TRUE, boundaries = bound) 
 #' 
 #' # Reanalysis
 #' rean_path <- paste0(getwd(), "/inst/extdata/reanalysis/")
 #' rean <- clim4health_load(rean_path,
 #'                          variable = "t2m",
 #'                          ext = 'nc')
-#' clim4health_plot(rean, title = "Reanalysis") 
+#' clim4health_plot(rean, title = "Reanalysis",
+#'                  boundaries = bound) 
 #' 
 #' # Hindcast
 #' hind_path <- paste0(getwd(), "/inst/extdata/hindcast/")
 #' hind <- clim4health_load(hind_path,
 #'                          variable = "t2m",
 #'                          ext = 'nc')
-#' clim4health_plot(hind, title = "Hindcast", ensemble = TRUE) 
+#' clim4health_plot(hind, title = "Hindcast", 
+#'                  ensemble = TRUE , boundaries = bound)  
 clim4health_plot <- function(data,
                              var = NULL,
                              sdate = NULL,
@@ -61,7 +66,6 @@ clim4health_plot <- function(data,
                              mask_boundaries = FALSE,
                              title = NULL,
                              legend = NULL,
-                             show_grid = TRUE,
                              palette = "-RdBu"){
   
   # 1. Data checks ----
@@ -69,7 +73,7 @@ clim4health_plot <- function(data,
   # Get array info
   dims_data <- data$dims
   plot_data <- data$data
-
+  
   # Requirements: var
   if(is.null(var) & dims_data["var"]>1){
     stop("More than one 'var' is available, please select one.")
@@ -122,8 +126,10 @@ clim4health_plot <- function(data,
   
   # Requirements: boundaries 
   if(!is.null(boundaries)){
-    if(boundaries != "countries" & !inherits(boundaries, "sf")){
-      stop("'boundaries' must be set to either 'countries' or be a polygon 'sf' object.")
+    if(!inherits(boundaries, "sf")){
+      if(boundaries != "countries"){
+        stop("'boundaries' must be set to either 'countries' or be a polygon 'sf' object.")
+      }
     }
   }
   
@@ -132,9 +138,9 @@ clim4health_plot <- function(data,
     warning(paste0("The number of panels is very large, consider selecting a ",
                    "smaller set of times/ensemble members/start dates."))
   }
-
+  
   # 2. Data preparation ----
-
+  
   # Select 'sdate' if needed
   if(all(sdate %in% 1:dims_data["sdate"])){
     plot_data <- .subset_array_named(plot_data, sdate = sdate)
@@ -144,7 +150,7 @@ clim4health_plot <- function(data,
   if(all(time %in% 1:dims_data["time"])){
     plot_data <- .subset_array_named(plot_data, time = time)
   }
-
+  
   # Aggregate ensemble members if needed
   if((dims_data["ensemble"] > 1) & isTRUE(ensemble)){
     message(paste0("Aggregating ensemble members with the function: ", 
@@ -161,16 +167,16 @@ clim4health_plot <- function(data,
   
   # Select boundaries if needed
   if(!is.null(boundaries)){
-    if(boundaries == "countries"){
-      data(world, package = "spData")
-      bound_sf <- world
-    }else if(inherits(boundaries, "sf")){
+    if(inherits(boundaries, "sf")){
       if(sf::st_crs(boundaries)$epsg != 4326){
         message("Transforming 'boundaries' to CRS EPSG 4326")
         bound_sf <- sf::st_transform(boundaries, crs = 4326)
       } else{
         bound_sf <- boundaries
       }
+    } else if(boundaries == "countries"){
+      data(world, package = "spData")
+      bound_sf <- world
     }
   }
   
@@ -245,22 +251,8 @@ clim4health_plot <- function(data,
   }
   
   # Theme
-  if (!isTRUE(show_grid)) {
-    p <- p + 
-      ggplot2::theme_void() 
-  } else {
-    p <- p + 
-      ggplot2::theme_minimal() + 
-      ggplot2::scale_y_continuous(position = "right") +
-      ggplot2::theme(panel.ontop = TRUE,
-                     panel.grid.major = ggplot2::element_line(color = "grey10",
-                                                              linewidth = 0.1),
-                     panel.grid.minor = ggplot2::element_blank(),
-                     panel.spacing = ggplot2::unit(0.4, "cm"),
-                     axis.text = ggplot2::element_text(size = 8),
-                     axis.title = ggplot2::element_text(size = 9))
-  }
-  p <- p +
+  p <- p + 
+    ggplot2::theme_void() +
     ggplot2::theme(
       plot.margin = ggplot2::theme_bw()$plot.margin,
       strip.text.y.left = ggplot2::element_text(angle = 90),
@@ -285,7 +277,7 @@ clim4health_plot <- function(data,
                       color = ggplot2::guide_legend(order = 2)) +
       ggplot2::theme(legend.key = ggplot2::element_blank())
   }
-
+  
   # Labels
   if(!is.null(title)){
     p <- p + ggplot2::ggtitle(title)
@@ -299,6 +291,6 @@ clim4health_plot <- function(data,
         "Start date: ",
         stars::st_get_dimension_values(plot_stars, "sdate")))
   }
-    
+  
   return(p)
 }
