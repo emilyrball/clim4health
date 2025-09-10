@@ -32,27 +32,21 @@
 #' # Forecast
 #' fcst_path <- paste0(getwd(), "/inst/extdata/forecast/")
 #' fcst <- clim4health_load(fcst_path,
-#'                          var = "t2m",
-#'                          data_type = "fcst",
-#'                          date = "20250101",
+#'                          variable = "t2m",
 #'                          ext = 'nc')
-#' clim4health_plot(fcst, title = "Forecast", ensemble = TRUE) 
+#' clim4health_plot(fcst, title = "Forecast") 
 #' 
 #' # Reanalysis
 #' rean_path <- paste0(getwd(), "/inst/extdata/reanalysis/")
 #' rean <- clim4health_load(rean_path,
-#'                          var = "t2m",
-#'                          data_type = "obs",
-#'                          date = c("201001", "201002", "201003"),
+#'                          variable = "t2m",
 #'                          ext = 'nc')
 #' clim4health_plot(rean, title = "Reanalysis") 
 #' 
 #' # Hindcast
 #' hind_path <- paste0(getwd(), "/inst/extdata/hindcast/")
 #' hind <- clim4health_load(hind_path,
-#'                          var = "t2m",
-#'                          data_type = "hcst",
-#'                          date = c("20100101", "20110101", "20120101"),
+#'                          variable = "t2m",
 #'                          ext = 'nc')
 #' clim4health_plot(hind, title = "Hindcast", ensemble = TRUE) 
 clim4health_plot <- function(data,
@@ -137,8 +131,6 @@ clim4health_plot <- function(data,
                    "set of times/ensemble members/dates."))
   }
 
-  
-  
   # 2. Data preparation ----
 
   # Select 'sdate' if needed
@@ -192,10 +184,10 @@ clim4health_plot <- function(data,
                                          values = c(data$coords$latitude))
   plot_stars <- stars::st_set_dimensions(plot_stars, "sdate",
                                          values = c(data$coords$sdate)[sdate])
-  plot_stars <- stars::st_set_dimensions(plot_stars, "time",
-                                         values = c(data$coords$time)[time])
   plot_stars <- stars::st_set_dimensions(plot_stars, "ensemble",
                                          values = c(data$coords$ensemble)[ensemble])
+  plot_stars <- stars::st_set_dimensions(plot_stars, "time",
+                                         values = c(data$coords$time)[time])
   sf::st_crs(plot_stars) <- 4326
   
   # Mask if needed
@@ -274,7 +266,12 @@ clim4health_plot <- function(data,
   if(!is.null(legend)){
     p <- p + ggplot2::labs(fill = legend)
   }
+  if((!"sdate" %in% c(f1, f2)) & ("time" %in% c(f1, f2))) {
+    p <- p + 
+      ggplot2::labs(subtitle =  paste0(
+        "Start date: ",
+        stars::st_get_dimension_values(plot_stars, "sdate")))
+  }
     
-
   return(p)
 }

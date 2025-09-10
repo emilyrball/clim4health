@@ -12,7 +12,6 @@ clim4health_load(
   day = "all",
   time = "all",
   leadtime_month = "all",
-  data_type = NULL,
   ext = NULL,
   bbox = NULL
 )
@@ -35,9 +34,6 @@ Default is all hours.}
 \item{leadtime_month}{A vector of months for the forecast leadtime. e.g.
 c(1,2) for January and February. Default is all months.}
 
-\item{data_type}{String indicating the type of data to be loaded. Options
-include forecast ("fcst"), hindcast ("hcst") or observational ("obs") data.}
-
 \item{ext}{File extension. Options include "nc", ".nc", "csv", and ".csv".}
 
 \item{bbox}{A vector of coordinates. (in order: North, West, South, East).}
@@ -55,7 +51,7 @@ stations) as an s2dv_cube object.
 # fcst_path <- paste0(fcst_path, "/")
 # 
 # # Load the forecast data
-# fcst <- clim4health_load(fcst_path, variable = "t2m", data_type = "fcst",
+# fcst <- clim4health_load(fcst_path, variable = "t2m",
 #                          sdates = "20240401", ext = 'nc')
 # class(fcst)
 # dim(fcst$data)

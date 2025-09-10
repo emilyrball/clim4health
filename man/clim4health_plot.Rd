@@ -63,9 +63,8 @@ ONLY WORKS WITH GRID DATA COMING FROM clim4health_load
 # Forecast
 fcst_path <- paste0(getwd(), "/inst/extdata/forecast/")
 fcst <- clim4health_load(fcst_path,
-                         var = "t2m",
+                         variable = "t2m",
                          data_type = "fcst",
-                         date = "20250101",
                          ext = 'nc')
 clim4health_plot(fcst, title = "Forecast", ensemble = TRUE) 
 
