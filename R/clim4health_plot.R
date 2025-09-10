@@ -39,7 +39,7 @@
 #'                          variable = "t2m",
 #'                          ext = 'nc')
 #' clim4health_plot(fcst, title = "Forecast", 
-#'                  ensemble = TRUE, boundaries = bound) 
+#'                  ensemble = TRUE) 
 #' 
 #' # Reanalysis
 #' rean_path <- paste0(getwd(), "/inst/extdata/reanalysis/")
@@ -55,7 +55,12 @@
 #'                          variable = "t2m",
 #'                          ext = 'nc')
 #' clim4health_plot(hind, title = "Hindcast", 
-#'                  ensemble = TRUE , boundaries = bound)  
+#'                  ensemble = TRUE)  
+#'                  
+#' # Stations
+#' stations_path <- paste0(getwd(), "/inst/extdata/stations/")
+#' stations <- clim4health_load(station_path, var = "temp_mean", ext = "csv")
+#' 
 clim4health_plot <- function(data,
                              var = NULL,
                              sdate = NULL,
@@ -187,15 +192,27 @@ clim4health_plot <- function(data,
   
   
   # 3. Conversion to stars ----
-  spatial_dims <- c(which(names(dim(plot_data)) == "longitude"),
-                    which(names(dim(plot_data)) == "latitude"))
-  plot_stars <- aperm(plot_data, c(spatial_dims, setdiff(1:length(dims_data), spatial_dims)))
-  plot_stars <- stars::st_as_stars(plot_stars)
-  names(plot_stars) <- data$attrs$Variable$varName
-  plot_stars <- stars::st_set_dimensions(plot_stars, "longitude",
-                                         values = c(data$coords$longitude))
-  plot_stars <- stars::st_set_dimensions(plot_stars, "latitude",
-                                         values = c(data$coords$latitude))
+  if ("longitude" %in% names(dims_data)) { # Gridded data
+    
+    spatial_dims <- c(which(names(dim(plot_data)) == "longitude"),
+                      which(names(dim(plot_data)) == "latitude"))
+    plot_stars <- aperm(plot_data, c(spatial_dims, setdiff(1:length(dims_data), spatial_dims)))
+    plot_stars <- stars::st_as_stars(plot_stars)
+    names(plot_stars) <- data$attrs$Variable$varName
+    plot_stars <- stars::st_set_dimensions(plot_stars, "longitude",
+                                           values = c(data$coords$longitude))
+    plot_stars <- stars::st_set_dimensions(plot_stars, "latitude",
+                                           values = c(data$coords$latitude))
+    
+  } else if ("location" %in% names(dims_data)) {
+    
+    spatial_dims <- c(which(names(dim(plot_data)) == "location"))
+    plot_stars <- aperm(plot_data, c(spatial_dims, setdiff(1:length(dims_data), spatial_dims)))
+    plot_stars <- stars::st_as_stars(plot_stars)
+    names(plot_stars) <- data$attrs$Variable$varName
+    plot_stars <- stars::st_set_dimensions(plot_stars, "location",
+                                           values = c(data$attrs$location))
+  }
   plot_stars <- stars::st_set_dimensions(plot_stars, "sdate",
                                          values = c(data$coords$sdate)[sdate])
   plot_stars <- stars::st_set_dimensions(plot_stars, "ensemble",

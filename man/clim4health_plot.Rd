@@ -70,7 +70,7 @@ fcst <- clim4health_load(fcst_path,
                          variable = "t2m",
                          ext = 'nc')
 clim4health_plot(fcst, title = "Forecast", 
-                 ensemble = TRUE, boundaries = bound) 
+                 ensemble = TRUE) 
 
 # Reanalysis
 rean_path <- paste0(getwd(), "/inst/extdata/reanalysis/")
@@ -86,5 +86,10 @@ hind <- clim4health_load(hind_path,
                          variable = "t2m",
                          ext = 'nc')
 clim4health_plot(hind, title = "Hindcast", 
-                 ensemble = TRUE , boundaries = bound)  
+                 ensemble = TRUE)  
+                 
+# Stations
+stations_path <- paste0(getwd(), "/inst/extdata/stations/")
+stations <- clim4health_load(station_path, var = "temp_mean", ext = "csv")
+
 }
