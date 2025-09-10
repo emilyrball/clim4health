@@ -65,7 +65,7 @@ clim4health_load <- function(path,
     lon_selection <- c(bbox[2], bbox[4])
   }
 
-  if (!file.exists(path) && !dir.exists(path)) {
+  if (dir.exists(path)) {
     # obtain all files in <path>
     file_list <- list.files(path = path, pattern = paste0("\\.", ext),
                              full.names = TRUE, recursive = TRUE)

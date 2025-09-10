@@ -888,7 +888,7 @@
     }
     start_dates <- .paste_outer(.paste_outer(year, sprintf("-%02d", month)),
                                 sprintf("-%02d", day))
-    start_dates <- as.POSIXct(start_dates, tz = "UTC")
+    start_dates <- as.POSIXct(start_dates, tz = "UTC", format = "%Y-%m-%d")
 
     if (!(all(date_vals %in% start_dates))) {
       date_vals <- stars::st_get_dimension_values(x, concat_dim)
