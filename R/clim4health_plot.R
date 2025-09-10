@@ -22,6 +22,8 @@
 #' @param title Optional plot title.
 #' @param legend Optional legend title. If NULL (default), it uses the variable
 #' names.
+#' @param show_grid logical that indicates whether the coordinate grid should be included.
+#' Defaults to FALSE.
 #' @param palette GHR, RColorBrewer or colorspace palette. Use "-" before the 
 #' palette name (e.g., "-Reds") to reverse it. Alternatively, a vector of
 #' hex codes to create a continuous interpolated palette.
@@ -34,7 +36,7 @@
 #' fcst <- clim4health_load(fcst_path,
 #'                          variable = "t2m",
 #'                          ext = 'nc')
-#' clim4health_plot(fcst, title = "Forecast") 
+#' clim4health_plot(fcst, title = "Forecast", ensemble = TRUE) 
 #' 
 #' # Reanalysis
 #' rean_path <- paste0(getwd(), "/inst/extdata/reanalysis/")
@@ -59,13 +61,13 @@ clim4health_plot <- function(data,
                              mask_boundaries = FALSE,
                              title = NULL,
                              legend = NULL,
+                             show_grid = TRUE,
                              palette = "-RdBu"){
   
   # 1. Data checks ----
   
   # Get array info
   dims_data <- data$dims
-  dates_data <- data$attrs$Dates
   plot_data <- data$data
 
   # Requirements: var
@@ -127,8 +129,8 @@ clim4health_plot <- function(data,
   
   # Number of panels
   if(length(time) * length(sdate) * length(ensemble) > 30){
-    warning(paste0("The number of panels is very large, consider selecting a smaller",
-                   "set of times/ensemble members/dates."))
+    warning(paste0("The number of panels is very large, consider selecting a ",
+                   "smaller set of times/ensemble members/start dates."))
   }
 
   # 2. Data preparation ----
@@ -172,6 +174,12 @@ clim4health_plot <- function(data,
     }
   }
   
+  # Identify reanalysis and transform 'time' dimension if needed
+  if(dims_data["sdate"] == 1 & is.numeric(data$coords$sdate)){
+    data$coords$time <- data$attrs$Dates
+  }
+  
+  
   # 3. Conversion to stars ----
   spatial_dims <- c(which(names(dim(plot_data)) == "longitude"),
                     which(names(dim(plot_data)) == "latitude"))
@@ -214,6 +222,7 @@ clim4health_plot <- function(data,
       ggplot2::facet_grid(as.formula(paste(f1, "~", f2)),
                           labeller = "label_both", switch = "y")
   }
+  p <- p + ggplot2::coord_equal(expand = FALSE)
   
   # Palette
   my_palette <- GHRexplore::GHR_palette(palette)(n = 30)
@@ -221,15 +230,43 @@ clim4health_plot <- function(data,
   
   # Boundaries
   if(!is.null(boundaries)){
-    p <- p +
-      ggplot2::geom_sf(data = bound_sf, alpha = 0, 
-                       col = "black", linewidth = 0.4) +
-      suppressMessages(ggplot2::coord_sf(
-        xlim = sf::st_bbox(plot_stars)[c("xmin", "xmax")],
-        ylim = sf::st_bbox(plot_stars)[c("ymin", "ymax")],
-        expand = FALSE))
-    
+    suppressMessages(
+      p <- p +
+        ggplot2::geom_sf(data = bound_sf, alpha = 0, 
+                         col = "grey10", linewidth = 0.3, inherit.aes = FALSE) +
+        ggplot2::coord_sf(
+          xlim = sf::st_bbox(plot_stars)[c("xmin", "xmax")],
+          ylim = sf::st_bbox(plot_stars)[c("ymin", "ymax")],
+          expand = FALSE) +
+        ggplot2::scale_x_continuous(labels = function(x) paste0(ifelse(x < 0, "-", "+"), abs(x), "°")) +
+        ggplot2::scale_y_continuous(labels = function(y) paste0(ifelse(y < 0, "-", "+"), abs(y), "°"))
+      
+    )
   }
+  
+  # Theme
+  if (!isTRUE(show_grid)) {
+    p <- p + 
+      ggplot2::theme_void() 
+  } else {
+    p <- p + 
+      ggplot2::theme_minimal() + 
+      ggplot2::scale_y_continuous(position = "right") +
+      ggplot2::theme(panel.ontop = TRUE,
+                     panel.grid.major = ggplot2::element_line(color = "grey10",
+                                                              linewidth = 0.1),
+                     panel.grid.minor = ggplot2::element_blank(),
+                     panel.spacing = ggplot2::unit(0.4, "cm"),
+                     axis.text = ggplot2::element_text(size = 8),
+                     axis.title = ggplot2::element_text(size = 9))
+  }
+  p <- p +
+    ggplot2::theme(
+      plot.margin = ggplot2::theme_bw()$plot.margin,
+      strip.text.y.left = ggplot2::element_text(angle = 90),
+      strip.text.x = ggplot2::element_text(margin = ggplot2::margin(b = 0)),
+      legend.key.height = ggplot2::unit(1, "cm"))
+  
   
   # NA box
   if(any(is.na(plot_stars[[1]]))){
@@ -249,16 +286,6 @@ clim4health_plot <- function(data,
       ggplot2::theme(legend.key = ggplot2::element_blank())
   }
 
-  # Theme
-  p <- p +
-    ggplot2::theme_void() +
-    ggplot2::theme(
-      plot.margin = ggplot2::theme_bw()$plot.margin,
-      strip.text.y.left = ggplot2::element_text(angle = 90),
-      legend.key.height = ggplot2::unit(1, "cm"),
-      plot.title = ggplot2::element_text(hjust = 0.5, 
-                                         margin = ggplot2::margin(b = 5)))
-  
   # Labels
   if(!is.null(title)){
     p <- p + ggplot2::ggtitle(title)
@@ -266,8 +293,8 @@ clim4health_plot <- function(data,
   if(!is.null(legend)){
     p <- p + ggplot2::labs(fill = legend)
   }
-  if((!"sdate" %in% c(f1, f2)) & ("time" %in% c(f1, f2))) {
-    p <- p + 
+  if((!"sdate" %in% c(f1, f2)) & ("time" %in% c(f1, f2)) & is.numeric(data$coords$time)) {
+    p <- p +
       ggplot2::labs(subtitle =  paste0(
         "Start date: ",
         stars::st_get_dimension_values(plot_stars, "sdate")))
