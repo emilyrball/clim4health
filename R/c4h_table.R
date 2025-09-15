@@ -22,16 +22,16 @@
 #' # # Load forecast data included in the package
 #' # fcst_path <- system.file("extdata/forecast/", package = "clim4health")
 #' # fcst_path <- paste0(fcst_path, "/")
-#' # fcst <- clim4health_load(fcst_path, var = "t2m", data_type = "fcst",
+#' # fcst <- c4h_load(fcst_path, var = "t2m", data_type = "fcst",
 #' #                          sdates = "20240401", ext = 'nc')
 #' # dim(fcst$data)
 #' # 
 #' # # Transform it into a table
-#' # formatted.table <- clim4health_table(fcst)
+#' # formatted.table <- c4h_table(fcst)
 #' # head(formatted.table)
 #' @export
 
-clim4health_table <- function(array) {
+c4h_table <- function(array) {
 
  # Check if input data is an s2dv_cube multidimensional array object
   if (!("s2dv_cube" %in% class(array))) {

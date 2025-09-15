@@ -1,7 +1,7 @@
 #' Temporal aggregation of climate products.
 #'
 #' @param data s2dv_cube object with the climate data to be aggregated,
-#' usually read using `clim4health_load`.
+#' usually read using `c4h_load`.
 #' @param time_aggregation string indicating the type of temporal aggregations
 #' to be performed. Options are "monthly", "yearly", "weekly", and "daily".
 #' @param fun string specifying the aggregation function. Defaults to
@@ -18,12 +18,12 @@
 #' # # Monthly aggregation of reanalysis data
 #' # obs_path <- system.file("extdata/reanalysis/", package = "clim4health")
 #' # obs_path <- paste0(obs_path, "/")
-#' # obs <- clim4health_load(obs_path, var = "t2m", data_type = "obs",
+#' # obs <- c4h_load(obs_path, var = "t2m", data_type = "obs",
 #' #                          sdates = "201004", ext = 'nc')
-#' # obs_month <- clim4health_time(obs, time_aggregation = "monthly")
+#' # obs_month <- c4h_time(obs, time_aggregation = "monthly")
 #' # dim(obs_month$data)
 
-clim4health_time <- function(data,
+c4h_time <- function(data,
                              time_aggregation,
                              fun = "mean",
                              dim_aggregation = NULL,

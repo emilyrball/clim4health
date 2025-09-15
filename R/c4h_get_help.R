@@ -1,6 +1,6 @@
 #' Display Available Climate Datasets, parameters and variables
 #'
-#' The `clim4health_get_help()` function displays a list of available climate
+#' The `c4h_get_help()` function displays a list of available climate
 #' datasets that can be usedfor health and climate research, specifically
 #' using ERA5 reanalysis datasets.
 #'
@@ -14,13 +14,13 @@
 #' parameters or options to the console.
 #'
 #' @examples
-#' clim4health_get_help()
-#' clim4health_get_help("reanalysis-era5-land")
-#' clim4health_get_help("reanalysis-era5-land", "product_type")
-#' clim4health_get_help("reanalysis-era5-land", "variable")
+#' c4h_get_help()
+#' c4h_get_help("reanalysis-era5-land")
+#' c4h_get_help("reanalysis-era5-land", "product_type")
+#' c4h_get_help("reanalysis-era5-land", "variable")
 #' @export
 
-clim4health_get_help <- function(dataset, parameter) {
+c4h_get_help <- function(dataset, parameter) {
   
   # Retrieve the long list with the catalogue
   datasets <- names(.datasets_info)

@@ -589,7 +589,7 @@
   return(data)
 }
 
-.clim4health_load_nc_stars <- function(file_list,
+.c4h_load_nc_stars <- function(file_list,
                                        variable = NULL,
                                        year = "all",
                                        month = "all",

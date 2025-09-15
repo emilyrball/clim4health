@@ -1,7 +1,7 @@
 #' Example datasets included in *clim4health*
 #'
 #' These datasets are stored in `inst/extdata/` and are accessed
-#' through functions such as [clim4health_load()] or via
+#' through functions such as [c4h_load()] or via
 #' `system.file("extdata", "file.csv", package = "clim4health")`.
 #'
 #' @section Station and administrative data:
@@ -21,6 +21,6 @@
 #' @section Climate reanalysis:
 #' - TBC
 #' 
-#' @seealso [clim4health_load()]
-#' @name clim4health_data
+#' @seealso [c4h_load()]
+#' @name c4h_data
 NULL

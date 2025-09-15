@@ -10,7 +10,7 @@
 #' @examples
 #' # Forecast
 #' fcst_path <- paste0(getwd(), "/inst/extdata/forecast/")
-#' fcst <- clim4health_load(fcst_path,
+#' fcst <- c4h_load(fcst_path,
 #'                          var = "t2m",
 #'                          data_type = "fcst",
 #'                          date = "20250101",
@@ -18,14 +18,14 @@
 #' fcst$dims
 #' 
 #' # Compute ensemble mean
-#' fcst_aggr <- clim4health_ensemble(fcst) 
+#' fcst_aggr <- c4h_ensemble(fcst) 
 #' fcst_aggr$dims
-clim4health_ensemble <- function(data,
-                                 fun = "mean"){
+c4h_ensemble <- function(data,
+                         fun = "mean"){
   
   # Check class type
   if(!inherits(data, "s2dv_cube")){
-    stop("'clim4health_ensemble' only accepts s2dv_cube objects.")
+    stop("'c4h_ensemble' only accepts s2dv_cube objects.")
   }
   
   # Check existing relevant ensemble dimension

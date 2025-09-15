@@ -3,11 +3,11 @@
 #' @param pat Your personal acces token (PAT). You can find your PAT in your CDS
 #' profile after logging in.
 #' @param dataset The name of the dataset you want to load. available datasets
-#' can be found via clim4health_get_datasets().
+#' can be found via c4h_get_datasets().
 #' @param product_type The product type that you want to load. Available
-#' variables can be found via clim4health_get_product_types().
+#' variables can be found via c4h_get_product_types().
 #' @param variable The variable that you want to load. Available variables can
-#' be found via clim4health_get_variables().
+#' be found via c4h_get_variables().
 #' @param year A vector of years, starting in 1950.
 #' @param month A vector of months. e.g. c(1,2) for January and February.
 #' Default is all months.
@@ -29,7 +29,7 @@
 #'
 #' @examples
 #' \dontrun{
-#' clim4health_get(pat = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+#' c4h_get(pat = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
 #'                 dataset = "reanalysis-era5-land-monthly-means",
 #'                 product_type = "monthly_averaged_reanalysis",
 #'                 variable = "2m_temperature",
@@ -38,7 +38,7 @@
 #'                 bbox = c(33, -93, -23, -17),
 #'                 outname = "era5land")
 #' 
-#' clim4health_get(pat = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+#' c4h_get(pat = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
 #'                 dataset = "seasonal-monthly-single-levels",
 #'                 originating_centre = c("ecmwf"),
 #'                 system = c("51"),
@@ -50,7 +50,7 @@
 #'                 bbox = c(33, -93, -23, -17),
 #'                 outname = "hindcast")
 #' 
-#' clim4health_get(pat = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+#' c4h_get(pat = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
 #'                 dataset = "seasonal-monthly-single-levels",
 #'                 originating_centre = c("ecmwf"),
 #'                 system = c("51"),
@@ -63,20 +63,20 @@
 #'                 outname = "forecast")
 #' }
 
-clim4health_get <- function(pat,
-                            dataset,
-                            product_type,
-                            variable,
-                            year,
-                            month = c(1:12),
-                            day = c(1:31),
-                            time = c(0),
-                            bbox,
-                            leadtime_month,
-                            originating_centre,
-                            system,
-                            outname = paste0("cds_"),
-                            outpath = getwd()) {
+c4h_get <- function(pat,
+                    dataset,
+                    product_type,
+                    variable,
+                    year,
+                    month = c(1:12),
+                    day = c(1:31),
+                    time = c(0),
+                    bbox,
+                    leadtime_month,
+                    originating_centre,
+                    system,
+                    outname = paste0("cds_"),
+                    outpath = getwd()) {
   area <- bbox
   rm(bbox)
 

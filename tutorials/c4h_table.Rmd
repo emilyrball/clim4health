@@ -11,7 +11,7 @@
 <br>
 
 
-# Tutorial to use clim4health_table function 
+# Tutorial to use c4h_table function 
 
 The *clim4health* package provides tools for working with climate data in the form of s2dv_cube objects.
 
@@ -21,7 +21,7 @@ The general workflow for the *clim4health* package is illustrated below:
 ![clim4health_structure_load](./figures/clim4health_table/clim4health_structure_table.jpg)
 
 
-*clim4health_table* allows the user to load data from an *s2dv_cube* object 
+*c4h_table* allows the user to load data from an *s2dv_cube* object 
 and output the data into a tidy dataframe. 
 
 An *s2dv_cube* is a multidimensional array object designed for climate data analysis.
@@ -34,19 +34,19 @@ It organizes one or more variables along key dimensions, such as latitude, longi
 ![s2dv_cube](./figures/general/s2dv_cube.png)
 
 
-*clim4health_table* transforms data from a multidimensional array into a tidy data frame.
+*c4h_table* transforms data from a multidimensional array into a tidy data frame.
  In this format, each row corresponds to a single data point, with columns representing
   the various dimensions (e.g., time, ensemble, latitude, longitude, etc.).
 
 
-## Example: Using *clim4health_table*
+## Example: Using *c4h_table*
 
 
 ### Load necessary *clim4health* functions and dependencies
 
 First obtain current path, which needs to be the path where the clim4health repository is cloned. 
-Next, source the *clim4health_load* function which will load climate data into 
-an *s2dv_cube* format, and the the *clim4health_table* function to transform the 
+Next, source the *c4h_load* function which will load climate data into 
+an *s2dv_cube* format, and the the *c4h_table* function to transform the 
 *s2dv_cube* into a dataframe.
 
 ```R
@@ -54,8 +54,8 @@ an *s2dv_cube* format, and the the *clim4health_table* function to transform the
 clim4health_path <- getwd()
 
 # Source the required functions to load and transform data.
-source(paste0(clim4health_path, '/functions/clim4health_load.R'))   
-source(paste0(clim4health_path, '/functions/clim4health_table.R'))   
+source(paste0(clim4health_path, '/functions/c4h_load.R'))   
+source(paste0(clim4health_path, '/functions/c4h_table.R'))   
 ```
 
 
@@ -80,7 +80,7 @@ library(CSTools)
 
 ### Load example climate dataset in *s2dv_cube* format
 
-The *clim4health_load* function loads a NetCDF file into an *s2dv_cube* object.
+The *c4h_load* function loads a NetCDF file into an *s2dv_cube* object.
 
 Here’s an example with a sample dataset:
 
@@ -88,7 +88,7 @@ Here’s an example with a sample dataset:
 
 fcst_path <- paste0(clim4health_path, '/sample_data/ecmwf51/forecast/')
 
-fcst <- clim4health_load(fcst_path, var = "t2m", data_type = "fcst",
+fcst <- c4h_load(fcst_path, var = "t2m", data_type = "fcst",
                          sdates = "20240401", ext = 'nc')
      
 
@@ -163,12 +163,12 @@ fcst$coords$longitude[1:length(fcst$coords$longitude)]
 
 ```
 
-### Convert the *s2dv_cube* object into a tidy data frame using *clim4health_table*
+### Convert the *s2dv_cube* object into a tidy data frame using *c4h_table*
 
 ```R
 
-# Transform the s2dv_cube into a tidy dataframe using clim4health_table.
-formatted.table <- clim4health_table(fcst)
+# Transform the s2dv_cube into a tidy dataframe using c4h_table.
+formatted.table <- c4h_table(fcst)
 
 # Display the first few rows of the tidy dataframe.
 knitr::kable(head(formatted.table), format = "markdown")

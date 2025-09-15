@@ -1,4 +1,4 @@
-# Tutorial: clim4health_get
+# Tutorial: c4h_get
 
 <img src='figures/general/logo_harmonize.png' align="left" height="50" /></a>
 <img src='figures/general/logo_bsc.png' align="left" height="50" /></a>
@@ -10,7 +10,7 @@
 
 
 
-The first step in the **clim4health** is to get the climate data. The goal of `clim4health_get` is to download climate data from the Copernicus Climate Data Store (CDS) to be used in all subsequent steps. Note that this step is optional if data from another source is already available.
+The first step in the **clim4health** is to get the climate data. The goal of `c4h_get` is to download climate data from the Copernicus Climate Data Store (CDS) to be used in all subsequent steps. Note that this step is optional if data from another source is already available.
 
 <br>
 
@@ -18,7 +18,7 @@ The first step in the **clim4health** is to get the climate data. The goal of `c
 <br> <br>
 
 
-The objective of this tutorial is to show how to use `clim4health_get` including autentification in CDS, the function dependencies and setup, and specifying the details of the dataset to be downloaded in the function call. To run it, please clone the repository and change directory to the root of the repo.
+The objective of this tutorial is to show how to use `c4h_get` including autentification in CDS, the function dependencies and setup, and specifying the details of the dataset to be downloaded in the function call. To run it, please clone the repository and change directory to the root of the repo.
 
 
 
@@ -48,12 +48,12 @@ Before loading the function, make sure that all the necessary dependencies are i
 if (!requireNamespace("ecmwfr", quietly = TRUE)) install.packages("ecmwfr")
 ```
 
-Next, obtain the current path, which need to be the path where the clim4health repository is cloned, and source the `clim4health_get` and `clim4health_get_help` functions.
+Next, obtain the current path, which need to be the path where the clim4health repository is cloned, and source the `c4h_get` and `c4h_get_help` functions.
 
 ```r
 path <- getwd()
-source(paste0(path, '/functions/clim4health_get.R'))   
-source(paste0(path, '/functions/clim4health_get_help.R'))        
+source(paste0(path, '/functions/c4h_get.R'))   
+source(paste0(path, '/functions/c4h_get_help.R'))        
 ```
 
 
@@ -62,11 +62,11 @@ source(paste0(path, '/functions/clim4health_get_help.R'))
 
 
 
-To know what datasets can be downloaded, you can use `clim4health_get_help()`. 
+To know what datasets can be downloaded, you can use `c4h_get_help()`. 
 If the function is run without any parameters, it will return the datasets that are currently available to download within **clim4health**. It will look like this:
 
 ``` r
-clim4health_get_help()
+c4h_get_help()
 # Available climate datasets:
 # - reanalysis-era5-land 
 # - reanalysis-era5-land-monthly-means 
@@ -75,10 +75,10 @@ clim4health_get_help()
 # - seasonal-monthly-single-levels 
 ```
 
-If you want to know about the types of climate data (forecast, hindcasts, reanalyses and observations) and their uses, please check the `clim4health_load` tutorial. Once you know what dataset you will be using, you can run the function with your selected dataset as a parameter to obtain the required parameters needed to download it:
+If you want to know about the types of climate data (forecast, hindcasts, reanalyses and observations) and their uses, please check the `c4h_load` tutorial. Once you know what dataset you will be using, you can run the function with your selected dataset as a parameter to obtain the required parameters needed to download it:
 
 ```r
-clim4health_get_help("reanalysis-era5-land")
+c4h_get_help("reanalysis-era5-land")
 # Required parameters:
 # - product_type
 # - variable
@@ -91,7 +91,7 @@ clim4health_get_help("reanalysis-era5-land")
 Each dataset can have a different set of required parameters. All require a time period and spatial extent, other may require additional information such as the variable type or the lead time. You can check the available variable types for a given dataset as follows:
 
 ```r
-clim4health_get_help("reanalysis-era5-land", "variable")
+c4h_get_help("reanalysis-era5-land", "variable")
 # Possible options for variables:
 # - 2m_dewpoint_temperature 
 # - 2m_temperature 
@@ -101,10 +101,10 @@ clim4health_get_help("reanalysis-era5-land", "variable")
 # ...
 ```
 
-Regarding the spatial extent, we can also use `clim4health_get_help` to see how the bounding box can be specified:
+Regarding the spatial extent, we can also use `c4h_get_help` to see how the bounding box can be specified:
 
 ```r
-clim4health_get_help("reanalysis-era5-land", "area")
+c4h_get_help("reanalysis-era5-land", "area")
 # Possible options for area:
 # - N,W,S,E coordinates, latitudes from 90 to -90, longitudes -180 to 180 
 ```
@@ -115,11 +115,11 @@ clim4health_get_help("reanalysis-era5-land", "area")
 
 
 
-Once you know your PAT, the dataset, and the required parameters, you can call `clim4health_get` like you can see below. In these 3 examples, we download reanalysis data from era5land, and the seasonal monthly forecasts, once as hindcast and once as forecast (see more details of the climate products in the `clim4health_load` tutorial).
+Once you know your PAT, the dataset, and the required parameters, you can call `c4h_get` like you can see below. In these 3 examples, we download reanalysis data from era5land, and the seasonal monthly forecasts, once as hindcast and once as forecast (see more details of the climate products in the `c4h_load` tutorial).
 
 ```r
 # Download reanalysis data
-clim4health_get(pat = pat_api,
+c4h_get(pat = pat_api,
                 dataset = "reanalysis-era5-land-monthly-means",
                 product_type = "monthly_averaged_reanalysis",
                 variable = "2m_temperature",
@@ -131,7 +131,7 @@ clim4health_get(pat = pat_api,
 
 ```r
 # Download hindcast data 
-clim4health_get(pat = pat_api,
+c4h_get(pat = pat_api,
                 dataset = "seasonal-monthly-single-levels",
                 originating_centre = c("ecmwf"),
                 system = c("51"),
@@ -146,7 +146,7 @@ clim4health_get(pat = pat_api,
 
 ```r
 # Download forecast data 
-clim4health_get(pat = pat_api,
+c4h_get(pat = pat_api,
                 dataset = "seasonal-monthly-single-levels",
                 originating_centre = c("ecmwf"),
                 system = c("51"),
