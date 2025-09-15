@@ -23,7 +23,7 @@ source(paste0("https://earth.bsc.es/gitlab/es/csdownscale/-/raw/",
 #' will be downscaled instead. The default value is NULL.
 #' @param bbox a numeric vector indicating the borders of the region defined
 #' in obs. It consists of four elements in this order: North, West, South,
-#' East. If set to NULL (default), the function clim4health_downscale
+#' East. If set to NULL (default), the function c4h_downscale
 #' will take the minimum and maximum values of the latitudes and longitudes.
 #' @param ncores an integer indicating the number of cores to use in parallel
 #' computation. The default value is NULL.
@@ -103,7 +103,7 @@ source(paste0("https://earth.bsc.es/gitlab/es/csdownscale/-/raw/",
 #'
 #' @examples
 #' TBD
-clim4health_downscale <- function(downscale_function,
+c4h_downscale <- function(downscale_function,
   # overlapping inputs for all CSDownscale functions
   exp, obs = NULL, exp_cor = NULL, bbox = NULL, ncores = NULL,
   target_grid = NULL,

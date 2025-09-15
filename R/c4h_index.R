@@ -1,7 +1,7 @@
 #' Apply a threshold-based mask to climate data
 #'
 #' @param data s2dv_cube object with the climate data to be masked, usually 
-#' read using `clim4health_load`.
+#' read using `c4h_load`.
 #' @param return_mask Boolean. If TRUE (default), return original values where the 
 #' condition is fulfilled and NA otherwise. If FALSE, return 1 where the 
 #' condition is met and 0 otherwise.
@@ -19,22 +19,22 @@
 #' # Read reanalysis data
 #' obs_path <- system.file("extdata/reanalysis/", package = "clim4health")
 #' obs_path <- paste0(obs_path, "/")
-#' obs <- clim4health_load(obs_path,
+#' obs <- c4h_load(obs_path,
 #'                         var = "t2m",
 #'                         date = "201001",
 #'                         data_type = "obs",
 #'                         ext = "nc")
-#' clim4health_plot(obs)
+#' c4h_plot(obs)
 #' 
 #' # Compute index, temperature higher than 290K
-#' index <- clim4health_index(obs, lower_threshold = 290)
-#' clim4health_plot(index)
+#' index <- c4h_index(obs, lower_threshold = 290)
+#' c4h_plot(index)
 #' 
 #' # Return mask, temperature higher than 290K
-#' mask <- clim4health_index(obs, return_mask = TRUE, lower_threshold = 290)
-#' clim4health_plot(mask)
+#' mask <- c4h_index(obs, return_mask = TRUE, lower_threshold = 290)
+#' c4h_plot(mask)
 
-clim4health_index <- function (data,
+c4h_index <- function (data,
                                return_mask = FALSE,  
                                lower_threshold = NULL, 
                                upper_threshold = NULL,

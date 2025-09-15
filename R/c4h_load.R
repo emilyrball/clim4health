@@ -1,4 +1,4 @@
-#' clim4health_load
+#' c4h_load
 #'
 #' Load forecast, hindcast, or observational climate data (reanalysis or
 #' stations) as an s2dv_cube object.
@@ -26,13 +26,13 @@
 #' # fcst_path <- paste0(fcst_path, "/")
 #' # 
 #' # # Load the forecast data
-#' # fcst <- clim4health_load(fcst_path, variable = "t2m",
+#' # fcst <- c4h_load(fcst_path, variable = "t2m",
 #' #                          sdates = "20240401", ext = 'nc')
 #' # class(fcst)
 #' # dim(fcst$data)
 #' # summary(fcst$data)
 #'
-clim4health_load <- function(path,
+c4h_load <- function(path,
                              variable = NULL,
                              year = "all",
                              month = "all",
@@ -90,7 +90,7 @@ clim4health_load <- function(path,
   }
 
   if (ext == "nc") {
-    data <- .clim4health_load_nc_stars(file_list = file_list,
+    data <- .c4h_load_nc_stars(file_list = file_list,
                                        variable = variable,
                                        year = year,
                                        month = month,
@@ -102,7 +102,7 @@ clim4health_load <- function(path,
   }
 
   if (ext == "csv") { # Read .csv files
-    data <- .clim4health_load_csv(file_list = file_list,
+    data <- .c4h_load_csv(file_list = file_list,
                                   variable = variable,
                                   year = year,
                                   month = month,
@@ -116,7 +116,7 @@ clim4health_load <- function(path,
   return(data)
 }
 
-#' .clim4health_load_csv
+#' .c4h_load_csv
 #'
 #' TBC
 #'
@@ -127,7 +127,7 @@ clim4health_load <- function(path,
 #' @param lon_selection TBC
 #'
 #' @returns TBC
-.clim4health_load_csv <- function(file_list,
+.c4h_load_csv <- function(file_list,
                                   variable = NULL,
                                   year = "all",
                                   month = "all",

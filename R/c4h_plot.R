@@ -1,6 +1,6 @@
 #' Plot *s2dv* climate data
 #' 
-#' @description ONLY WORKS WITH GRID DATA COMING FROM clim4health_load
+#' @description ONLY WORKS WITH GRID DATA COMING FROM c4h_load
 #'
 #' @param data *s2dv_cube* object with the climate data to be plotted.
 #' @param var Numerical index of the variable to be plotted. 
@@ -35,33 +35,33 @@
 #' 
 #' # Forecast
 #' fcst_path <- paste0(getwd(), "/inst/extdata/forecast/")
-#' fcst <- clim4health_load(fcst_path,
+#' fcst <- c4h_load(fcst_path,
 #'                          variable = "t2m",
 #'                          ext = 'nc')
-#' clim4health_plot(fcst, title = "Forecast", 
+#' c4h_plot(fcst, title = "Forecast", 
 #'                  ensemble = TRUE) 
 #' 
 #' # Reanalysis
 #' rean_path <- paste0(getwd(), "/inst/extdata/reanalysis/")
-#' rean <- clim4health_load(rean_path,
+#' rean <- c4h_load(rean_path,
 #'                          variable = "t2m",
 #'                          ext = 'nc')
-#' clim4health_plot(rean, title = "Reanalysis",
+#' c4h_plot(rean, title = "Reanalysis",
 #'                  boundaries = bound) 
 #' 
 #' # Hindcast
 #' hind_path <- paste0(getwd(), "/inst/extdata/hindcast/")
-#' hind <- clim4health_load(hind_path,
+#' hind <- c4h_load(hind_path,
 #'                          variable = "t2m",
 #'                          ext = 'nc')
-#' clim4health_plot(hind, title = "Hindcast", 
+#' c4h_plot(hind, title = "Hindcast", 
 #'                  ensemble = TRUE)  
 #'                  
 #' # Stations
 #' stations_path <- paste0(getwd(), "/inst/extdata/stations/")
-#' stations <- clim4health_load(station_path, var = "temp_mean", ext = "csv")
+#' stations <- c4h_load(station_path, var = "temp_mean", ext = "csv")
 #' 
-clim4health_plot <- function(data,
+c4h_plot <- function(data,
                              var = NULL,
                              sdate = NULL,
                              time = NULL,

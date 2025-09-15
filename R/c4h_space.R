@@ -1,7 +1,7 @@
 #' Spatial aggregation of climate products into areas.
 #'
 #' @param data s2dv_cube object with the climate data to be aggregates, usually 
-#' read using `clim4health_load`.
+#' read using `c4h_load`.
 #' @param areas Vector data, either a sf or terra object loaded into memory, or path 
 #' to a vector file to be read. Contains the areal polygon geometries for the spatial 
 #' aggregation.
@@ -23,7 +23,7 @@
 #' # Load forecast data
 #' fcst_path <- system.file("extdata/forecast/", package = "clim4health")
 #' fcst_path <- paste0(fcst_path, "/")
-#' fcst <- clim4health_load(fcst_path, var = "t2m", data_type = "fcst",
+#' fcst <- c4h_load(fcst_path, var = "t2m", data_type = "fcst",
 #'                          date = "20250101", ext = 'nc')
 #' dim(fcst$data)
 #' 
@@ -33,10 +33,10 @@
 #' municip_sf <- read_sf(municip_path)
 #' 
 #' # Create forecast means by municipality
-#' result_fcst <- clim4health_space(fcst, municip_sf, areas_id = "MPIO_CDPMP")
+#' result_fcst <- c4h_space(fcst, municip_sf, areas_id = "MPIO_CDPMP")
 #' dim(result_fcst$data)
 #' 
-clim4health_space <- function(data,
+c4h_space <- function(data,
                               areas,
                               fun = "mean",
                               weighting = "none",

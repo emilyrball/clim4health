@@ -7,7 +7,7 @@
     </div>
     <br></br>
     <br></br>
-    <h1>Tutorial: Using the <code>clim4health_index</code> Function</h1>
+    <h1>Tutorial: Using the <code>c4h_index</code> Function</h1>
     <img src="../tutorials/figures/general/logo_clim4health.svg" width="120" height="120" style="margin-left:-3px; margin-top: -100px;">
 
 
@@ -19,8 +19,8 @@
 
 
 ```R
-source('../functions/clim4health_load.R')
-source('../functions/clim4health_index.R')
+source('../functions/c4h_load.R')
+source('../functions/c4h_index.R')
 ```
 
     
@@ -76,11 +76,11 @@ source('../functions/clim4health_index.R')
     
 
 -------------------------------------------------------------------------------
-## 2. Load the dataset with the function clim4health_load
+## 2. Load the dataset with the function c4h_load
 
 
 ```R
-data <- clim4health_load('../sample_data/ecmwf51/forecast/',var = "t2m", 
+data <- c4h_load('../sample_data/ecmwf51/forecast/',var = "t2m", 
                          data_type = "fcst", sdates = "20240401", ext = 'nc')
 ```
 
@@ -175,7 +175,7 @@ data <- clim4health_load('../sample_data/ecmwf51/forecast/',var = "t2m",
     
 
 -----------------------------------------------------------------------------
-## 3. Create a mask with clim4health_index function
+## 3. Create a mask with c4h_index function
 - With values 0 and 1
 - With original values and NaNs
 
@@ -184,7 +184,7 @@ data <- clim4health_load('../sample_data/ecmwf51/forecast/',var = "t2m",
 
 
 ```R
-mask <- clim4health_index(data, mod_vals = TRUE,  lower_threshold = 280, upper_threshold = 290, lower_close = FALSE, upper_close = FALSE)
+mask <- c4h_index(data, mod_vals = TRUE,  lower_threshold = 280, upper_threshold = 290, lower_close = FALSE, upper_close = FALSE)
 
 PlotEquiMap(var = mask$data[1, 1, 1, 1, 1, 1, 1, , ],
             lat = mask$coords$latitude,
@@ -207,7 +207,7 @@ PlotEquiMap(var = mask$data[1, 1, 1, 1, 1, 1, 1, , ],
 
 
 ```R
-mask <- clim4health_index(data, mod_vals = FALSE,  lower_threshold = 280, upper_threshold = 290, lower_close = FALSE, upper_close = FALSE)
+mask <- c4h_index(data, mod_vals = FALSE,  lower_threshold = 280, upper_threshold = 290, lower_close = FALSE, upper_close = FALSE)
 
 PlotEquiMap(var = mask$data[1, 1, 1, 1, 1, 1, 1, , ],
             lat = mask$coords$latitude,

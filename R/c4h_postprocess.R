@@ -100,7 +100,7 @@
 #'
 #' @examples
 #' TBD
-clim4health_postprocess <- function(exp, obs, metrics, ref = NULL,
+c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
                                     brier_thresholds = c(0.1, 0.9),
                                     prob_thresholds = c(1 / 3, 2 / 3),
                                     alpha = 0.05, ncores = NULL, N.eff = NA,
