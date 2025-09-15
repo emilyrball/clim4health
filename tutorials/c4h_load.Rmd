@@ -1,0 +1,243 @@
+---
+title: "Load data [required]"
+author: ["Emily Ball", "..."]
+date: "2025-07-24"
+
+format:
+  html: default
+  pdf: default
+editor:
+  mode: visual
+  options:
+    chunk_output_type: console
+---
+
+Table of contents
+
+Here is what we will cover in this notebook:
+
+c4h_load input parameters
+
+Load forecast data
+
+Load hindcast data
+
+Load reanalysis
+
+Load station data
+
+⚠️ In case you skipped 01_download_data, run the following code blocks to load the clim4health package ⚠️
+
+{r loadclim4health}
+#| warning: false
+if(!"devtools" %in% installed.packages()) { install.packages("devtools") }
+library(devtools)
+if(!"renv" %in% installed.packages()) { install.packages("renv") }
+library(renv)
+#renv::init()
+
+package_path <- "/cloud/project/packages/"
+clim4health_path <- paste0(package_path, "clim4health/")
+
+################ temporary package installation ################
+if(!"PCICt" %in% installed.packages()) {
+  renv::install(paste0(package_path, "PCICt_0.5-4.4.tar.gz"))
+}
+if(!"ClimProjDiags" %in% installed.packages()) {
+  renv::install(paste0(package_path, "ClimProjDiags_0.3.3.tar.gz"))
+}
+if(!"s2dv" %in% installed.packages()) {
+  renv::install(paste0(package_path, "s2dv_2.1.0.tar.gz"))
+}
+if(!"startR" %in% installed.packages()) {
+  renv::install(paste0(package_path, "startR_2.4.0.tar.gz"))
+}
+if(!"CSTools" %in% installed.packages()) {
+  renv::install(paste0(package_path, "CSTools_5.2.0.tar.gz"))
+}
+
+{r}
+#| warning: false
+
+devtools::load_all(paste0(package_path, "csdownscale/"))
+################################################################
+
+#### finally, load clim4health ####
+devtools::load_all(clim4health_path)
+
+
+1. c4h_load input parameters
+
+c4h_load() takes the following input parameters:
+
+path: a string to the folder containing the files to be loaded.
+
+variable: a string containing the name of the variable to be extracted from the files.
+
+date: a list or vector of strings identifying the start dates. It will be concatenated to path to identify the files to be loaded.
+
+data_type: a string indicating the type of data to be loaded. Options are forecast ("fcst"), hindcast ("hcst"), or observational ("obs") data.
+
+ext: a string indicating the file extension. Options are ".nc" and ".csv".
+
+lat_selection: a vector containing the latitude range to subset the file and load the data.
+
+lon_selection: a vector containing the longitude range to subset the file and load the data.
+
+Note on path concatenation
+
+Suppose we want to load temperature data from a netCDF file. In this case, the variable temperature is stored within the file as "t2m" .
+
+2. Load forecast data
+
+First, let's set the path to our forecast data.
+
+{r}
+fcst_path <- paste0(clim4health_path, "/inst/extdata/forecast/")
+
+We can load the available file by specifying the corresponding parameters var, data_type, sdates, and ext.
+
+{r}
+#| include: false
+fcst <- clim4health::c4h_load(path = fcst_path,
+                                      var = "t2m",            # variable to load
+                                      data_type = "fcst",     # data type is forecast
+                                      date = c("20250101"), # forecast initialisation date
+                                      ext = "nc")             # file extension
+
+Exploring an s2dv_cube object
+
+Recall that we use s2dv_cube objects to handle climate data with clim4health. An overview is given in 00_introduction.
+
+To see how data is stored in our fcst s2dv_cube, try the following commands.
+
+{r}
+print("print fcst class")
+class(fcst)
+print("print dimensions of the stored data")
+dim(fcst$data)
+print("print the names of the list elements in fcst")
+names(fcst)
+print("print a summary of the data stored in fcst")
+summary(fcst$data)
+print("print extended information about the list elements in fcst")
+str(fcst)
+
+fcst is an s2dv_cube with several dimensions. These are generally consistent throughout clim4health. Dimensions sdate and time correspond to forecast start dates (or initialisation dates) and forecast lead time. ensemble refers to the ensemble members of the loaded model data (see 00_introduction for details).
+
+To better understand how dates are handled in clim4health, take a look at the attributes of the s2dv_cube. For example, all s2dv_cubes loaded via clim4health will contain a Dates attribute.
+
+{r}
+print(fcst$attrs$Dates)
+
+print(dim(fcst$attrs$Dates))
+
+print(fcst$attrs$Dates[, 1]) # to obtain the forecast start dates
+
+print(fcst$coords$sdate) # start dates are also stored as a coordinate
+
+It is common for climate model and reanalysis temperature data to be stored in units of Kelvin (K), but most epidemiological models will require temperature in Celsius (C).
+
+{r}
+print(fcst$attrs$Variable$metadata$t2m$units)
+
+⚠️ We explore how to convert units in 02_2_convert_units ⚠️
+
+The final dimensions of the s2dv_cube loaded by c4h_load() are the latitude and longitude dimensions. The coordinates of all the dimensions are stored in the list object fcst$coords. For example:
+
+{r}
+print("print all information stored in the latitude coordinate")
+print(fcst$coords$latitude)
+
+print("print the values of the latitude coordinate")
+print(fcst$coords$latitude[1:length(fcst$coords$latitude)])
+
+As positcloud has limited memory, let's remove the fcst object.
+
+{r}
+rm(fcst)
+
+3. Load hindcast data
+
+Now let's try loading hindcast data.
+
+{r}
+#| include: false
+hcst_path <- paste0(clim4health_path, "/inst/extdata/hindcast/")
+
+sdates <- c("20100101", "20110101", "20120101")
+
+hcst <- clim4health::c4h_load(hcst_path,
+                                      var = "t2m",
+                                      data_type = "hcst",
+                                      date = sdates,
+                                      ext = "nc")
+
+In reality, to use hindcast data to determine forecast skill, we would need to load many more years of data. However, take a look at the temporal coordinates of hcst by running:
+
+{r}
+print(hcst$attrs$Dates)
+
+print(dim(hcst$attrs$Dates))
+
+print(hcst$attrs$Dates[, 1])
+
+As we have loaded 3 start dates, each with 3 lead times, there are now 3x3 dates in the file.
+
+4. Load reanalysis
+
+We would now like to load an observational (reference) dataset from a netCDF file, e.g. a reanalysis dataset. To load the same dates as in the hindcast, we extract the dates using the hcst$coords$time object as above. We can also subset by latitude and longitude using the lat_selection and lon_selection parameters.
+
+{r}
+# extract lat/lon range from hcst object
+latitudes <- hcst$coords$latitude
+longitudes <- hcst$coords$longitude
+lats <- c(min(latitudes), max(latitudes))
+lons <- c(min(longitudes), max(longitudes))
+
+We can also extract dates from the hcst object to load the corresponding observations.
+
+{r}
+dates <- as.Date(hcst$attrs$Dates)
+
+sdates <- format(dates, "%Y%m")
+dim(sdates) <- dim(dates)               # making sure the dimensions will be the same
+names(dim(sdates)) <- names(dim(dates))
+
+Finally, load the observational data and remove the hcst object.
+
+{r}
+#| include: false
+rm(hcst)
+obs_path <- paste0(clim4health_path, '/inst/extdata/reanalysis/')
+
+obs <- c4h_load(obs_path,
+                        var = "t2m",
+                        date = sdates,
+                        data_type = "obs",
+                        lat_selection = lats,
+                        lon_selection = lons,
+                        ext = "nc")
+
+We can explore the data as before.
+
+{r}
+class(obs)
+dim(obs$data)
+summary(obs$data)
+obs$attrs$Dates
+
+⚠️ Note: our observational data obs has multiple sdates as well, even though it is not a forecast. The reason is because we would like it to have temporal dimensions corresponding to hcst, so that we may perform the postprocessing and quality assessments in later steps.
+
+5. Load station data
+
+We can also load observational data in csv format, e.g. weather station data. For example, try:
+
+{r}
+point_locs <- clim4health::c4h_load(paste0(clim4health_path, "/inst/extdata/weather_stations"),
+                                            data_type = "obs",
+                                            ext = "csv")
+
+dim(point_locs$data)
+summary(point_locs$data)
+
