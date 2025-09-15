@@ -71,7 +71,7 @@ clim4health_get <- function(pat,
                             month = c(1:12),
                             day = c(1:31),
                             time = c(0),
-                            area,
+                            bbox,
                             leadtime_month,
                             originating_centre,
                             system,
@@ -167,6 +167,10 @@ clim4health_get <- function(pat,
   # loop over each month to request data
   for (year_x in year) {
     for (month_x in month) {
+      if (lubridate::ymd(paste0(year_x, "-", sprintf("%02d", month_x),
+                                "-01")) > Sys.Date()) {
+        stop("Cannot download data for a future date.")
+      }
       print(paste0("Loading data to: ", outpath, outname, "_", year_x,
                    sprintf("%02d", month_x), ".nc"))
       # set mandatory parameters
