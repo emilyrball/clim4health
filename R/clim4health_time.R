@@ -157,6 +157,8 @@ clim4health_time <- function(data,
 
     if (time_aggregation == "daily") {
       aggregated_data_i$attrs$Dates <- as.POSIXct(dates_i, tz ="UTC")
+    } else if (time_aggregation == "weekly") {
+      aggregated_data_i$attrs$Dates <- as.Date(dates_i, format = "%Y-%m-%d")
     } else {
       aggregated_data_i$attrs$Dates <- dates_i
     }
