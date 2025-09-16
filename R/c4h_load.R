@@ -60,7 +60,7 @@ c4h_load <- function(path,
   }
 
   if (is.null(bbox)) {
-    warning("'bbox' is not specified, loading all latitudes and longitudes.")
+    message("Note: 'bbox' is not specified, loading all latitudes and longitudes.")
     lat_selection <- "all"
     lon_selection <- "all"
   } else {
@@ -74,6 +74,17 @@ c4h_load <- function(path,
                             full.names = TRUE, recursive = TRUE)
     if (length(file_list) == 0) {
       stop("No files found in the specified path.")
+    }
+
+    if (ext == "nc") {
+      file_vars <- lapply(file_list, sf::gdal_subdatasets)
+      file_vars <- unlist(file_vars)
+
+      all_vars <- unique(gsub(".*:", "", file_vars))
+      message(paste0("Variables found in 'path' are: '",
+                     paste(all_vars, collapse = "', '"), "'. Requested ",
+                     "variables are: '", paste(variable, collapse = "', '"),
+                     "'."))
     }
     # if <variable> is specified and can be found in any file names, filter
     find_variable <- unlist(lapply(variable, grepl, file_list))
@@ -116,97 +127,5 @@ c4h_load <- function(path,
                           lon_selection = lon_selection)
   }
   # return s2dv_cube from csv or nc
-  return(data)
-}
-
-#' .c4h_load_csv
-#'
-#' @param file_list list of files or path to directory containing files to be
-#' loaded.
-#' @param variable name of variable to be loaded. If NULL, all variables will be
-#' loaded.
-#' @param year year of the data to be loaded. If "all", all years will be
-#' loaded.
-#' @param month month of the data to be loaded. If "all", all months will be
-#' loaded.
-#' @param day day of the data to be loaded. If "all", all days will be
-#' loaded.
-#' @param time time of day of the data to be loaded. If "all", all times will be
-#' loaded.
-#' @param leadtime_month leadtime months to be loaded. If "all", all leadtime
-#' months will be loaded.
-#' @param lat_selection minimum and maximum latitudes to be loaded derived from
-#' the bounding box. If "all", all latitudes will be loaded.
-#' @param lon_selection minimum and maximum longitudes to be loaded derived from
-#' the bounding box. If "all", all longitudes will be loaded.
-#'
-#' @return an s2dv_cube object.
-#' @noRd
-#'
-#' @examples
-#' TBD
-.c4h_load_csv <- function(file_list,
-                          variable = NULL,
-                          year = "all",
-                          month = "all",
-                          day = "all",
-                          time = "all",
-                          leadtime_month = "all",
-                          lat_selection = "all",
-                          lon_selection = "all") {
-
-  data <- data.table::fread(file_list)
-
-  # skip up to 10 lines of header
-  if (ncol(data) == 1) {
-    for (i in 1:11) {
-      if (ncol(data.table::fread(file_list, skip = i)) > 1) {
-        break
-      }
-    }
-    if (i == 11) {
-      stop("Currently cannot handle >10 header lines in file.")
-    } else {
-      data <- data.table::fread(file_list, skip = i)
-      metadata <- utils::head(data.table::fread(file_list), i - 1)
-    }
-  } else {
-    metadata <- NULL
-  }
-
-  # read headers
-  headers <- colnames(data)
-
-  if (all(headers %in% c("V1", "station", "longitude", "latitude",
-                         "date", "hour", "tag", "value"))) {
-    data <- .load_csv_tolimavalle(data, headers,
-                                  variable = variable,
-                                  year = year,
-                                  month = month,
-                                  day = day,
-                                  time = time,
-                                  leadtime_month = leadtime_month,
-                                  lat_selection = lat_selection,
-                                  lon_selection = lon_selection)
-  } else if (all(headers %in% c("prov", "year", "month", "day", "value",
-                                "variable", "Estacion", "date"))) {
-    data <- .load_csv_dr(data, headers,
-                         variable = variable,
-                         year = year,
-                         month = month,
-                         day = day,
-                         time = time,
-                         leadtime_month = leadtime_month)
-  } else {
-    data <- .load_csv_unknown(data, headers, metadata,
-                              variable = variable,
-                              year = year,
-                              month = month,
-                              day = day,
-                              time = time,
-                              leadtime_month = leadtime_month,
-                              lat_selection = lat_selection,
-                              lon_selection = lon_selection)
-  }
   return(data)
 }
