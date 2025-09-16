@@ -34,20 +34,15 @@ Spatial aggregation of climate products into areas.
 \examples{
 library(sf)
 
-# Load forecast data
-fcst_path <- system.file("extdata/forecast/", package = "clim4health")
-fcst_path <- paste0(fcst_path, "/")
-fcst <- c4h_load(fcst_path, var = "t2m", data_type = "fcst",
-                         date = "20250101", ext = 'nc')
-dim(fcst$data)
+# Region municipalities
+munip_path <- paste0(getwd(), "/inst/extdata/areas/munip_vallecauca.gpkg")
+munip <- read_sf(munip_path)
 
-# Read and plot municipalities in Colombia
-municip_path <- system.file("extdata/shapefiles/", package = "clim4health")
-municip_path <- paste0(municip_path, "/MGN_ANM_MPIOS.shp")
-municip_sf <- read_sf(municip_path)
+# Forecast
+fcst_path <- paste0(getwd(), "/inst/extdata/forecast/")
+fcst <- c4h_load(fcst_path, variable = "t2m", ext = 'nc')
 
-# Create forecast means by municipality
-result_fcst <- c4h_space(fcst, municip_sf, areas_id = "MPIO_CDPMP")
-dim(result_fcst$data)
-
+# Spatial aggregation
+fcst_aggr <- c4h_space(fcst, munip)            
+                         
 }
