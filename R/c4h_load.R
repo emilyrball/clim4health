@@ -24,23 +24,26 @@
 #' # # Forecast data included in the package
 #' # fcst_path <- system.file("extdata/forecast/", package = "clim4health")
 #' # fcst_path <- paste0(fcst_path, "/")
-#' # 
+#' #
 #' # # Load the forecast data
-#' # fcst <- c4h_load(fcst_path, variable = "t2m",
-#' #                          sdates = "20240401", ext = 'nc')
+#' # fcst <- c4h_load(fcst_path,
+#'                    variable = "t2m",
+#'                    year = 2025,
+#'                    month = 1,
+#'                    ext = 'nc')
 #' # class(fcst)
 #' # dim(fcst$data)
 #' # summary(fcst$data)
 #'
 c4h_load <- function(path,
-                             variable = NULL,
-                             year = "all",
-                             month = "all",
-                             day = "all",
-                             time = "all",
-                             leadtime_month = "all",
-                             ext = NULL,
-                             bbox = NULL) {
+                     variable = NULL,
+                     year = "all",
+                     month = "all",
+                     day = "all",
+                     time = "all",
+                     leadtime_month = "all",
+                     ext = NULL,
+                     bbox = NULL) {
 
 
   if (!(ext %in% c("nc", "csv"))) {
@@ -68,18 +71,18 @@ c4h_load <- function(path,
   if (dir.exists(path)) {
     # obtain all files in <path>
     file_list <- list.files(path = path, pattern = paste0("\\.", ext),
-                             full.names = TRUE, recursive = TRUE)
+                            full.names = TRUE, recursive = TRUE)
     if (length(file_list) == 0) {
       stop("No files found in the specified path.")
     }
     # if <variable> is specified and can be found in any file names, filter
     find_variable <- unlist(lapply(variable, grepl, file_list))
-    if (!is.null(variable) & any(find_variable)) {
+    if (!is.null(variable) && any(find_variable)) {
       file_list <- rep(file_list, length(variable))[find_variable]
     }
 
     find_year <- unlist(lapply(year, grepl, file_list))
-    if (!(any(year== "all")) & any(find_year)) {
+    if (!(any(year == "all")) && any(find_year)) {
       file_list <- rep(file_list, length(year))[find_year]
     }
 
@@ -91,26 +94,26 @@ c4h_load <- function(path,
 
   if (ext == "nc") {
     data <- .c4h_load_nc_stars(file_list = file_list,
-                                       variable = variable,
-                                       year = year,
-                                       month = month,
-                                       day = day,
-                                       time = time,
-                                       leadtime_month = leadtime_month,
-                                       lat_selection = lat_selection,
-                                       lon_selection = lon_selection)
+                               variable = variable,
+                               year = year,
+                               month = month,
+                               day = day,
+                               time = time,
+                               leadtime_month = leadtime_month,
+                               lat_selection = lat_selection,
+                               lon_selection = lon_selection)
   }
 
   if (ext == "csv") { # Read .csv files
     data <- .c4h_load_csv(file_list = file_list,
-                                  variable = variable,
-                                  year = year,
-                                  month = month,
-                                  day = day,
-                                  time = time,
-                                  leadtime_month = leadtime_month,
-                                  lat_selection = lat_selection,
-                                  lon_selection = lon_selection)
+                          variable = variable,
+                          year = year,
+                          month = month,
+                          day = day,
+                          time = time,
+                          leadtime_month = leadtime_month,
+                          lat_selection = lat_selection,
+                          lon_selection = lon_selection)
   }
   # return s2dv_cube from csv or nc
   return(data)
@@ -118,24 +121,39 @@ c4h_load <- function(path,
 
 #' .c4h_load_csv
 #'
-#' TBC
+#' @param file_list list of files or path to directory containing files to be
+#' loaded.
+#' @param variable name of variable to be loaded. If NULL, all variables will be
+#' loaded.
+#' @param year year of the data to be loaded. If "all", all years will be
+#' loaded.
+#' @param month month of the data to be loaded. If "all", all months will be
+#' loaded.
+#' @param day day of the data to be loaded. If "all", all days will be
+#' loaded.
+#' @param time time of day of the data to be loaded. If "all", all times will be
+#' loaded.
+#' @param leadtime_month leadtime months to be loaded. If "all", all leadtime
+#' months will be loaded.
+#' @param lat_selection minimum and maximum latitudes to be loaded derived from
+#' the bounding box. If "all", all latitudes will be loaded.
+#' @param lon_selection minimum and maximum longitudes to be loaded derived from
+#' the bounding box. If "all", all longitudes will be loaded.
 #'
-#' @param full_path TBC
-#' @param var TBC
-#' @param date TBC
-#' @param lat_selection TBC
-#' @param lon_selection TBC
+#' @return an s2dv_cube object.
+#' @noRd
 #'
-#' @returns TBC
+#' @examples
+#' TBD
 .c4h_load_csv <- function(file_list,
-                                  variable = NULL,
-                                  year = "all",
-                                  month = "all",
-                                  day = "all",
-                                  time = "all",
-                                  leadtime_month = "all",
-                                  lat_selection = "all",
-                                  lon_selection = "all") {
+                          variable = NULL,
+                          year = "all",
+                          month = "all",
+                          day = "all",
+                          time = "all",
+                          leadtime_month = "all",
+                          lat_selection = "all",
+                          lon_selection = "all") {
 
   data <- data.table::fread(file_list)
 

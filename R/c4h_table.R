@@ -32,8 +32,7 @@
 #' @export
 
 c4h_table <- function(array) {
-
- # Check if input data is an s2dv_cube multidimensional array object
+  # Check if input data is an s2dv_cube multidimensional array object
   if (!("s2dv_cube" %in% class(array))) {
     stop("Input 'array' must be an object of class 's2dv_cube'.")
   }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/c4h_time.R
 \name{c4h_time}
 \alias{c4h_time}
-\title{Temporal aggregation of climate products.}
+\title{c4h_time}
 \usage{
 c4h_time(
   data,
@@ -19,8 +19,7 @@ usually read using \code{c4h_load}.}
 \item{time_aggregation}{string indicating the type of temporal aggregations
 to be performed. Options are "monthly", "yearly", "weekly", and "daily".}
 
-\item{fun}{string specifying the aggregation function. Defaults to
-"mean".}
+\item{fun}{string specifying the aggregation function. Defaults to "mean".}
 
 \item{dim_aggregation}{string indicating the dimension along which the
 aggregation should be performed. Options are "sdate" and "time".}
@@ -29,7 +28,7 @@ aggregation should be performed. Options are "sdate" and "time".}
 Current options include "Sunday" and "Monday".}
 }
 \value{
-2dv_cube object with the temporally aggregated climate data.
+an s2dv_cube object with the temporally aggregated climate data.
 }
 \description{
 Temporal aggregation of climate products.
@@ -38,8 +37,9 @@ Temporal aggregation of climate products.
 # # Monthly aggregation of reanalysis data
 # obs_path <- system.file("extdata/reanalysis/", package = "clim4health")
 # obs_path <- paste0(obs_path, "/")
-# obs <- c4h_load(obs_path, var = "t2m", data_type = "obs",
-#                          sdates = "201004", ext = 'nc')
-# obs_month <- c4h_time(obs, time_aggregation = "monthly")
+# obs <- c4h_load(obs_path, variable = "t2m",
+#                 year = 2010, month = 1, ext = "nc")
+# obs_month <- c4h_time(obs, time_aggregation = "monthly",
+                        dim_aggregation = "time")
 # dim(obs_month$data)
 }

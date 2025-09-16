@@ -37,10 +37,10 @@
 #' dim(result_fcst$data)
 #' 
 c4h_space <- function(data,
-                              areas,
-                              fun = "mean",
-                              weighting = "none",
-                              areas_id = NULL) {
+                      areas,
+                      fun = "mean",
+                      weighting = "none",
+                      areas_id = NULL) {
   
   # read areas from file or sf object
   if (any(class(areas) == "character") | inherits(areas, "sf")) {

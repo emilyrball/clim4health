@@ -1,33 +1,34 @@
+#' c4h_time
+#'
 #' Temporal aggregation of climate products.
 #'
 #' @param data s2dv_cube object with the climate data to be aggregated,
 #' usually read using `c4h_load`.
 #' @param time_aggregation string indicating the type of temporal aggregations
 #' to be performed. Options are "monthly", "yearly", "weekly", and "daily".
-#' @param fun string specifying the aggregation function. Defaults to
-#' "mean".
+#' @param fun string specifying the aggregation function. Defaults to "mean".
 #' @param dim_aggregation string indicating the dimension along which the
 #' aggregation should be performed. Options are "sdate" and "time".
 #' @param week_start for weekly aggregation, specify the starting weekday.
 #' Current options include "Sunday" and "Monday".
 #'
-#' @returns 2dv_cube object with the temporally aggregated climate data.
+#' @returns an s2dv_cube object with the temporally aggregated climate data.
 #' @export
 #'
 #' @examples
 #' # # Monthly aggregation of reanalysis data
 #' # obs_path <- system.file("extdata/reanalysis/", package = "clim4health")
 #' # obs_path <- paste0(obs_path, "/")
-#' # obs <- c4h_load(obs_path, var = "t2m", data_type = "obs",
-#' #                          sdates = "201004", ext = 'nc')
-#' # obs_month <- c4h_time(obs, time_aggregation = "monthly")
+#' # obs <- c4h_load(obs_path, variable = "t2m",
+#' #                 year = 2010, month = 1, ext = "nc")
+#' # obs_month <- c4h_time(obs, time_aggregation = "monthly",
+#'                         dim_aggregation = "time")
 #' # dim(obs_month$data)
-
 c4h_time <- function(data,
-                             time_aggregation,
-                             fun = "mean",
-                             dim_aggregation = NULL,
-                             week_start = NULL) {
+                     time_aggregation,
+                     fun = "mean",
+                     dim_aggregation = NULL,
+                     week_start = NULL) {
   # Check if aggregation type is valid
   if (!time_aggregation %in% c("monthly", "yearly", "weekly", "daily")) {
     stop("Aggregation must be 'daily', 'weekly', 'monthly' or 'yearly'")
@@ -76,7 +77,7 @@ c4h_time <- function(data,
     } else if (time_aggregation == "monthly") {
       # Extract year-month as groups
       dates_i <- unique(as.POSIXct(paste(format(time_i, "%Y-%m"),
-                        "01", sep = "-"), tz = "UTC"))
+                                         "01", sep = "-"), tz = "UTC"))
       paste(format(time_i, "%Y-%m"), "01", sep = "-")
     } else if (time_aggregation == "daily") {
       # Extract daily as groups
@@ -140,8 +141,8 @@ c4h_time <- function(data,
                                            posdim = agg_dim_idx,
                                            lendim = 1,
                                            name = dim_aggregation)
-    }        
-    
+    }
+
     if (time_aggregation == "daily") {
       tmp <- .pad_array(aggregated_data_i, dates_i,
                         dim_aggregation = dim_aggregation)
@@ -156,7 +157,7 @@ c4h_time <- function(data,
                               attrs = data$attrs)
 
     if (time_aggregation == "daily") {
-      aggregated_data_i$attrs$Dates <- as.POSIXct(dates_i, tz ="UTC")
+      aggregated_data_i$attrs$Dates <- as.POSIXct(dates_i, tz = "UTC")
     } else if (time_aggregation == "weekly") {
       aggregated_data_i$attrs$Dates <- as.Date(dates_i, format = "%Y-%m-%d")
     } else {
@@ -181,9 +182,9 @@ c4h_time <- function(data,
                                      along = dim_fix,
                                      var_dim = "var", dat_dim = "dataset")
       if (time_aggregation == "daily") {
-        aggregated_data$attrs$Dates <-
-          as.POSIXct(aggregated_data$attrs$Dates,
-                     origin = "1970-01-01", tz = "UTC")
+        aggregated_data$attrs$Dates <- as.POSIXct(aggregated_data$attrs$Dates,
+                                                  origin = "1970-01-01",
+                                                  tz = "UTC")
       }
     }
 
@@ -195,92 +196,4 @@ c4h_time <- function(data,
   data$dims <- dim(data$data)
 
   return(data)
-}
-
-.pad_dates <- function(dates_i) {
-  years  <- lubridate::year(dates_i)
-  months <- lubridate::month(dates_i)
-  
-  out <- list()
-  pos_map <- list()
-  
-  counter <- 0
-  for (y in unique(years)) {
-    for (m in unique(months)) {
-      block <- dates_i[years == y & months == m]
-      block_days <- as.integer(format(block, "%d"))
-      
-      target <- sprintf("%s-%02d-%02d UTC", y, m, 1:31)
-      
-      filled <- rep(NA_character_, 31)
-      filled[block_days] <- format(block, "%Y-%m-%d UTC")
-      
-      out[[paste(y, m, sep = "-")]] <- filled
-      
-      new_idx <- counter + block_days
-      old_idx <- seq_along(block_days)
-      pos_map[[paste(y, m, sep = "-")]] <- list(old = old_idx, new = new_idx)
-      
-      counter <- counter + 31
-    }
-  }
-  
-  list(dates_new = unlist(out, use.names = FALSE),
-       pos_map = pos_map)
-}
-
-.pad_array <- function(aggregated_data_i, dates_i, dim_aggregation = "time") {
-  dims     <- dim(aggregated_data_i)
-  dim_pos  <- which(names(dims) == dim_aggregation)
-
-  years  <- lubridate::year(dates_i)
-  months <- lubridate::month(dates_i)
-
-  combos <- unique(data.frame(year = years, month = months))
-  n_blocks <- nrow(combos)
-
-  new_len <- 31 * n_blocks
-  dims_new <- dims
-  dims_new[dim_pos] <- new_len
-
-  out <- array(NA_real_, dim = dims_new, dimnames = dimnames(aggregated_data_i))
-
-  dates_blocks <- vector("list", n_blocks)
-
-  for (k in seq_len(n_blocks)) {
-    y <- combos$year[k]
-    m <- combos$month[k]
-
-    old_idx <- which(years == y & months == m)
-
-    block_days <- as.integer(format(dates_i[old_idx], "%d"))
-
-    new_block_start <- (k - 1) * 31
-    new_idx <- new_block_start + block_days
-
-    idx_new <- rep(list(quote(expr = )), length(dims_new))
-    idx_old <- rep(list(quote(expr = )), length(dims))
-    idx_new[[dim_pos]] <- new_idx
-    idx_old[[dim_pos]] <- old_idx
-
-    out <- do.call(
-      `[<-`,
-      c(
-        list(out), idx_new,
-        list(do.call(`[`, c(list(aggregated_data_i), idx_old)))
-      )
-    )
-
-    padded_labels <- rep(NA_character_, 31)
-    padded_labels[block_days] <- format(dates_i[old_idx], "%Y-%m-%d UTC")
-    dates_blocks[[k]] <- padded_labels
-  }
-
-  dates_new <- unlist(dates_blocks, use.names = FALSE)
-
-  list(array = out, dates = dates_new)
-}
-
-.aggregate_temporally <- function(y, fun) {
-  return(if (sum(is.na(y))/length(y) > 0.7) NA else fun(y, na.rm = TRUE))
 }

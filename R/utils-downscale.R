@@ -1,32 +1,11 @@
-
-#' Determine spatial type
+#' .reduce_source_file
 #'
-#' @param data TBD
-#'
-#' @returns TBD
-#'
-#' @examples
-#' # TBD
-
-.determine_spatial_type <- function(data) {
-  if (any(names(dim(data)) == "latitude") &&
-        any(names(dim(data)) == "longitude")) {
-    output <- "grid"
-  } else if (any(names(dim(data)) == "region")) {
-    output <- "region"
-  } else {
-    stop("ref must have either latitude and longitude or region dimensions")
-  }
-  return(output)
-}
-
-
-#' Reduce netcdf file dimensions
+#' Create a temporary netcdf file with reduced dimensions
 #'
 #' @param source_file String with the path to the source netCDF file.
 #'
 #' @return String with the path to the reduced temporary netCDF file.
-#' @export
+#' @noRd
 #'
 #' @examples
 #' TBD
@@ -48,4 +27,27 @@
   }
 
   return(target_file)
+}
+
+#' .drop_dim
+#'
+#' @param data an array of data.
+#' @param dim the dimension to be dropped (integer). It must have length 1.
+#'
+#' @return an array with the specified dimension dropped.
+#' @noRd
+#'
+#' @examples
+#' TBD
+.drop_dim <- function(data, dim) {
+  dims <- dim(data)
+  if (dims[dim] != 1) stop("Cannot drop a dimension that has length > 1")
+
+  index_list <- lapply(dims, function(d) quote(expr = ))
+  index_list[[dim]] <- 1
+
+  data <- do.call(`[`, c(list(data), index_list, list(drop = FALSE)))
+
+  dim(data) <- dims[-dim]
+  return(data)
 }
