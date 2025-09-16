@@ -25,6 +25,8 @@
 #' @param palette GHR, RColorBrewer or colorspace palette. Use "-" before the 
 #' palette name (e.g., "-Reds") to reverse it. Alternatively, a vector of
 #' hex codes to create a continuous interpolated palette.
+#' @param ... Extra arguments indicating fixed aesthetics to be passed to 
+#'`stars::geom_stars`, including `lwd`, `alpha` and `colour`.
 #' @returns A plot
 #' @export
 #'
@@ -52,10 +54,11 @@
 #'                  
 #' # Stations
 #' stations_path <- paste0(getwd(), "/inst/extdata/stations/")
-#' stations <- c4h_load(station_path, var = "temp_mean", ext = "csv")
+#' stations <- c4h_load(stations_path, var = "temp_mean", ext = "csv")
 #' 
 #' # Spatially aggregated data
-#' rean_aggr <- c4h_space(rean, bound)
+#' fcst_aggr <- c4h_space(fcst, bound)
+#' c4h_plot(fcst_aggr, ensemble = 1:5)
 c4h_plot <- function(data,
                      var = NULL,
                      sdate = NULL,
@@ -66,7 +69,8 @@ c4h_plot <- function(data,
                      mask_boundaries = FALSE,
                      title = NULL,
                      legend = NULL,
-                     palette = "-RdBu") {
+                     palette = "-RdBu",
+                     ...) {
   
   # 1. Data checks ----
   
@@ -198,6 +202,7 @@ c4h_plot <- function(data,
                                            values = c(data$coords$longitude))
     plot_stars <- stars::st_set_dimensions(plot_stars, "latitude",
                                            values = c(data$coords$latitude))
+    sf::st_crs(plot_stars) <- 4326
     
   } else if ("location" %in% names(dims_data)) { # Point data
     
@@ -207,22 +212,27 @@ c4h_plot <- function(data,
     names(plot_stars) <- data$attrs$Variable$varName
     plot_stars <- stars::st_set_dimensions(plot_stars, "location",
                                            values = c(data$attrs$location))
+    plot_stars <- stars::st_set_dimensions(plot_stars, "sdate",
+                                           values = c(data$coords$sdate)[sdate])
+    plot_stars <- stars::st_set_dimensions(plot_stars, "ensemble",
+                                           values = c(data$coords$ensemble)[ensemble])
+    plot_stars <- stars::st_set_dimensions(plot_stars, "time",
+                                           values = c(data$coords$time)[time])
     
-  } else if ("areas" %in% names(dims_data)) { # Polygon data
+  } else if ("area" %in% names(dims_data)) { # Polygon data
     
-    # Pending
-    
+    plot_stars <- stars::st_as_stars(plot_data,
+                                     dimensions = stars::st_dimensions(
+                                       dataset = c(data$coord$dataset),
+                                       var = c(data$coord$var),
+                                       sdate = c(data$coords$sdate)[sdate],
+                                       time = c(data$coords$time)[time],
+                                       ensemble = c(data$coords$ensemble)[ensemble],
+                                       area = data$attrs$geom$geom
+                                     ))
+    names(plot_stars) <- data$attrs$Variable$varName
+
   }
-  
-  
-  plot_stars <- stars::st_set_dimensions(plot_stars, "sdate",
-                                         values = c(data$coords$sdate)[sdate])
-  plot_stars <- stars::st_set_dimensions(plot_stars, "ensemble",
-                                         values = c(data$coords$ensemble)[ensemble])
-  plot_stars <- stars::st_set_dimensions(plot_stars, "time",
-                                         values = c(data$coords$time)[time])
-  sf::st_crs(plot_stars) <- 4326
-  
   
   # Mask if needed
   if(isTRUE(mask_boundaries) & !is.null(boundaries)){
@@ -236,19 +246,23 @@ c4h_plot <- function(data,
   # Create base figure
   if(is.null(f1) & is.null(f2)){ # No faceting
     p <- ggplot2::ggplot() +
-      stars::geom_stars(data = plot_stars)
+      stars::geom_stars(data = plot_stars, ...)
   }else if(!is.null(f1) & is.null(f2)){ # Wrap
     p <- ggplot2::ggplot() +
-      stars::geom_stars(data = plot_stars) +
+      stars::geom_stars(data = plot_stars, ...) +
       ggplot2::facet_wrap(as.formula(paste("~", f1)),
                           labeller = "label_both")
   }else if(!is.null(f1) & !is.null(f2)){ # Wrap
     p <- ggplot2::ggplot() +
-      stars::geom_stars(data = plot_stars) +
+      stars::geom_stars(data = plot_stars, ...) +
       ggplot2::facet_grid(as.formula(paste(f1, "~", f2)),
                           labeller = "label_both", switch = "y")
   }
-  p <- p + ggplot2::coord_equal(expand = FALSE)
+  
+  # Equal cells if raster
+  if ("longitude" %in% names(dim(plot_stars))) {
+    p <- p + ggplot2::coord_equal(expand = FALSE)
+  }
   
   # Palette
   my_palette <- GHRexplore::GHR_palette(palette)(n = 30)

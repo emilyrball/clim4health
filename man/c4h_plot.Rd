@@ -60,6 +60,8 @@ A plot
 ONLY WORKS WITH GRID DATA COMING FROM c4h_load
 }
 \examples{
+library("sf")
+
 # Region boundaries
 bound_path <- paste0(getwd(), "/inst/extdata/areas/munip_vallecauca.gpkg")
 bound <- read_sf(bound_path)
@@ -81,5 +83,8 @@ c4h_plot(hind, title = "Hindcast", ensemble = TRUE)
                  
 # Stations
 stations_path <- paste0(getwd(), "/inst/extdata/stations/")
-stations <- c4h_load(station_path, var = "temp_mean", ext = "csv")
+stations <- c4h_load(stations_path, var = "temp_mean", ext = "csv")
+
+# Spatially aggregated data
+rean_aggr <- c4h_space(rean, bound)
 }
