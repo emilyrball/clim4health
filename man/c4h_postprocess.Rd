@@ -2,7 +2,7 @@
 % Please edit documentation in R/c4h_postprocess.R
 \name{c4h_postprocess}
 \alias{c4h_postprocess}
-\title{Quality assessment of climate forecasts}
+\title{c4h_postprocess}
 \usage{
 c4h_postprocess(
   exp,
@@ -157,7 +157,8 @@ options are "one-sided Fisher" (default) and "Random Walk". Only relevant if
 "MSSS" or "RMSSS" is in 'metrics'.}
 }
 \value{
-TBD
+a list with the calculated metrics and their significances as
+s2dv_cube objects.
 }
 \description{
 Quality assessment of climate forecasts

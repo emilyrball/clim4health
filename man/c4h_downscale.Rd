@@ -2,7 +2,7 @@
 % Please edit documentation in R/c4h_downscale.R
 \name{c4h_downscale}
 \alias{c4h_downscale}
-\title{Downscale and calibrate climate data...}
+\title{c4h_downscale}
 \usage{
 c4h_downscale(
   downscale_function,
@@ -138,7 +138,7 @@ to TRUE. Default to TRUE. Only used if the downscaling function is set to
 TBD
 }
 \description{
-Downscale and calibrate climate data...
+Downscale and calibrate climate data.
 }
 \examples{
 TBD

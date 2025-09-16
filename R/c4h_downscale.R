@@ -12,7 +12,9 @@ source(paste0("https://earth.bsc.es/gitlab/es/csdownscale/-/raw/",
 source(paste0("https://earth.bsc.es/gitlab/es/csdownscale/-/raw/",
               "master/R/Utils.R"))
 
-#' Downscale and calibrate climate data...
+#' c4h_downscale
+#'
+#' Downscale and calibrate climate data.
 #'
 #' @param downscale_function The downscaling function to use. Options are:
 #' "Interpolation", "Intbc", "Intlr", "Analogs".
@@ -209,10 +211,10 @@ c4h_downscale <- function(downscale_function,
                 max(exp$coords$latitude))
   } else {
     if (!(length(bbox) == 4 && is.numeric(bbox) &&
-          all(bbox[c(1, 3)] > -90) || all(bbox[c(1, 3)] < 90) &&
-          all(bbox[c(1, 3)] > -90) || all(bbox[c(1, 3)] < 90) &&
-          all(bbox[c(2, 4)] > -180) || all(bbox[c(1, 3)] < 180) &&
-          all(bbox[c(2, 4)] > -180) || all(bbox[c(1, 3)] < 180))) {
+            all(bbox[c(1, 3)] > -90) || all(bbox[c(1, 3)] < 90) &&
+            all(bbox[c(1, 3)] > -90) || all(bbox[c(1, 3)] < 90) &&
+            all(bbox[c(2, 4)] > -180) || all(bbox[c(1, 3)] < 180) &&
+            all(bbox[c(2, 4)] > -180) || all(bbox[c(1, 3)] < 180))) {
       stop("'bbox' coordinates are out of bound. N,W,S,E coordinates,
              latitudes from 90 to -90, longitudes -180 to 180")
     }
@@ -284,7 +286,7 @@ c4h_downscale <- function(downscale_function,
 
     if ("aux" %in% names(dim(out$exp$data))) {
       dim <- which(names(dim(out$exp$data)) == "aux")
-      out$exp$data <- drop_dim(out$exp$data, dim)
+      out$exp$data <- .drop_dim(out$exp$data, dim)
     }
     out$exp$data <- s2dv::Reorder(out$exp$data, order = exp_dims)
 
@@ -302,11 +304,11 @@ c4h_downscale <- function(downscale_function,
     # CST_Intbc returns list with reordered s2dv_cube objects
     if ("aux" %in% names(dim(out$exp$data))) {
       dim <- which(names(dim(out$exp$data)) == "aux")
-      out$exp$data <- drop_dim(out$exp$data, dim)
+      out$exp$data <- .drop_dim(out$exp$data, dim)
     }
     if ("aux" %in% names(dim(out$obs$data))) {
       dim <- which(names(dim(out$obs$data)) == "aux")
-      out$obs$data <- drop_dim(out$obs$data, dim)
+      out$obs$data <- .drop_dim(out$obs$data, dim)
     }
 
     out$exp$data <- s2dv::Reorder(out$exp$data, order = exp_dims)
@@ -328,11 +330,11 @@ c4h_downscale <- function(downscale_function,
                      ncores = ncores)
     if ("aux" %in% names(dim(out$exp$data))) {
       dim <- which(names(dim(out$exp$data)) == "aux")
-      out$exp$data <- drop_dim(out$exp$data, dim)
+      out$exp$data <- .drop_dim(out$exp$data, dim)
     }
     if ("aux" %in% names(dim(out$obs$data))) {
       dim <- which(names(dim(out$obs$data)) == "aux")
-      out$obs$data <- drop_dim(out$obs$data, dim)
+      out$obs$data <- .drop_dim(out$obs$data, dim)
     }
 
     # CST_Intlr returns list with reordered s2dv_cube objects
@@ -354,11 +356,11 @@ c4h_downscale <- function(downscale_function,
     # CST_Analogs returns list with reordered s2dv_cube objects
     if ("aux" %in% names(dim(out$exp$data))) {
       dim <- which(names(dim(out$exp$data)) == "aux")
-      out$exp$data <- drop_dim(out$exp$data, dim)
+      out$exp$data <- .drop_dim(out$exp$data, dim)
     }
     if ("aux" %in% names(dim(out$obs$data))) {
       dim <- which(names(dim(out$obs$data)) == "aux")
-      out$obs$data <- drop_dim(out$obs$data, dim)
+      out$obs$data <- .drop_dim(out$obs$data, dim)
     }
     out$exp$data <- s2dv::Reorder(out$exp$data, order = c(exp_dims, "analogs"))
     out$obs$data <- s2dv::Reorder(out$obs$data, order = obs_dims)
@@ -385,18 +387,4 @@ c4h_downscale <- function(downscale_function,
     }
   }
   return(out)
-}
-
-
-drop_dim <- function(data, dim) {
-  dims <- dim(data)
-  if (dims[dim] != 1) stop("Cannot drop a dimension that has length > 1")
-
-  index_list <- lapply(dims, function(d) quote(expr = ))
-  index_list[[dim]] <- 1
-
-  data <- do.call(`[`, c(list(data), index_list, list(drop = FALSE)))
-
-  dim(data) <- dims[-dim]
-  return(data)
 }

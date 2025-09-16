@@ -11,10 +11,10 @@
 #' # Forecast
 #' fcst_path <- paste0(getwd(), "/inst/extdata/forecast/")
 #' fcst <- c4h_load(fcst_path,
-#'                          var = "t2m",
-#'                          data_type = "fcst",
-#'                          date = "20250101",
-#'                          ext = 'nc')
+#'                  var = "t2m",
+#'                  year = 2025,
+#'                  month = 1,
+#'                  ext = 'nc')
 #' fcst$dims
 #' 
 #' # Compute ensemble mean

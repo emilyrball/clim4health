@@ -1,28 +1,42 @@
-
+#' c4h_convert_units
+#'
+#' @param data an s2dv_cube object containing the data to be converted.
+#' @param to a character string specifying the target units to convert to.
+#' @param variable a character string specifying the variable to convert.
+#' If NULL, the first variable will be used.
+#' @param from a character string specifying the current units of the variable.
+#' If NULL, the current units will be inferred from the data.
+#'
+#' @return an s2dv_cube object with the converted units.
+#' @export
+#'
+#' @examples
+#' TBD
 c4h_convert_units <- function(data,
                               to,
                               variable = NULL,
-                              from = NULL){
+                              from = NULL) {
 
   # Check class type
-  if(!inherits(data, "s2dv_cube")){
+  if (!inherits(data, "s2dv_cube")) {
     stop("'c4h_convert_units' only accepts s2dv_cube objects.")
   }
-  
+
   # Check existing relevant variable
-  if(!is.null(variable) & !is.null(data$attrs$Variable$varName) &
-    !(variable %in% data$attrs$Variable$varName)){
+  if (!is.null(variable) && !is.null(data$attrs$Variable$varName) &&
+        !(variable %in% data$attrs$Variable$varName)) {
     stop("'data' does not contain the specified variable. Variables are: ",
          paste(data$attrs$Variable$varName, collapse = ", "))
-  }else if(variable %in% data$attrs$Variable$varName){
+  } else if (variable %in% data$attrs$Variable$varName) {
     var_idx <- which(data$attrs$Variable$varName == variable)
   } else {
     var_idx <- 1
   }
-  
+
   # Check valid from
-  if(!is.null(from) & !is.null(data$attrs$Variable$metadata[[var_idx]]$units)){
-    if(!(from == data$attrs$Variable$metadata[[var_idx]]$units)){
+  if (!is.null(from) &&
+        !is.null(data$attrs$Variable$metadata[[var_idx]]$units)) {
+    if (!(from == data$attrs$Variable$metadata[[var_idx]]$units)) {
       stop(paste0("The units of 'from' (", from, ") do not match the variable",
                   " units in 'data' (",
                   data$attrs$Variable$metadata[[var_idx]]$units, ")."))
@@ -71,21 +85,22 @@ c4h_convert_units <- function(data,
   )
 
   # stop if not valid units
-  if(!(to %in% valid_units)){
+  if (!(to %in% valid_units)) {
     stop(paste0("The specified 'to' units (", to, ") are not valid. Valid",
                 " units are: ", paste(valid_units, collapse = ", "), "."))
-  } else if(!is.null(from) & !(from %in% valid_units)){
+  } else if (!is.null(from) && !(from %in% valid_units)) {
     stop(paste0("The specified 'from' units (", from, ") are not valid. Valid",
                 " units are: ", paste(valid_units, collapse = ", "), "."))
   }
 
+  from <- ifelse(is.null(from),
+                 data$attrs$Variable$metadata[[var_idx]]$units,
+                 from)
   # Convert units
   data_out <- measurements::conv_unit(x = data$data,
-                                      from = ifelse(is.null(from),
-                                                    data$attrs$Variable$metadata[[var_idx]]$units,
-                                                    from),
+                                      from = from,
                                       to = to)
-  
+
   # Update variable units
   data$attrs$Variable$metadata[[var_idx]]$units <- to
 
