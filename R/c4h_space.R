@@ -121,7 +121,7 @@ c4h_space <- function(data,
   }
   
   # transform to array
-  final_dims <- c(dims[non_spatial_dims], areas = nrow(out_dt))
+  final_dims <- c(dims[non_spatial_dims], area = nrow(out_dt))
   result <- array(NA_real_, dim = final_dims)
   
   index <- strsplit(columns_index, "_")
