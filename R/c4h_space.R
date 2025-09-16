@@ -134,17 +134,17 @@ c4h_space <- function(data,
   
   # format to s2dv_cube
   replacement_dims <- dim(result)
-  names(replacement_dims) <- c(dim_names[non_spatial_dims], "areas")
+  names(replacement_dims) <- c(dim_names[non_spatial_dims], "area")
   replacement_attrs <- data$attrs
   replacement_coords <- coords[setdiff(names(coords), c("latitude", "longitude"))]
   
   # Manage IDs
   if (is.null(areas_id)) {
-    areas_id <- "areas"
-    replacement_coords[["areas"]] <- seq_len(nrow(poly))
+    areas_id <- "area"
+    replacement_coords[["area"]] <- seq_len(nrow(poly))
   } else {
-    replacement_coords[["areas"]] <- poly[[areas_id]]
-    replacement_attrs[["areas_id"]] <- areas_id
+    replacement_coords[["area"]] <- poly[[areas_id]]
+    replacement_attrs[["area_id"]] <- areas_id
   }
   
   # Store geometries
