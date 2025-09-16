@@ -29,49 +29,44 @@
 #' @export
 #'
 #' @examples 
+#' library("sf")
+#' 
 #' # Region boundaries
 #' bound_path <- paste0(getwd(), "/inst/extdata/areas/munip_vallecauca.gpkg")
 #' bound <- read_sf(bound_path)
 #' 
 #' # Forecast
 #' fcst_path <- paste0(getwd(), "/inst/extdata/forecast/")
-#' fcst <- c4h_load(fcst_path,
-#'                          variable = "t2m",
-#'                          ext = 'nc')
-#' c4h_plot(fcst, title = "Forecast", 
-#'                  ensemble = TRUE) 
+#' fcst <- c4h_load(fcst_path, variable = "t2m", ext = 'nc')
+#' c4h_plot(fcst, title = "Forecast", ensemble = TRUE) 
 #' 
 #' # Reanalysis
 #' rean_path <- paste0(getwd(), "/inst/extdata/reanalysis/")
-#' rean <- c4h_load(rean_path,
-#'                          variable = "t2m",
-#'                          ext = 'nc')
-#' c4h_plot(rean, title = "Reanalysis",
-#'                  boundaries = bound) 
+#' rean <- c4h_load(rean_path, variable = "t2m", ext = 'nc')
+#' c4h_plot(rean, title = "Reanalysis", boundaries = bound) 
 #' 
 #' # Hindcast
 #' hind_path <- paste0(getwd(), "/inst/extdata/hindcast/")
-#' hind <- c4h_load(hind_path,
-#'                          variable = "t2m",
-#'                          ext = 'nc')
-#' c4h_plot(hind, title = "Hindcast", 
-#'                  ensemble = TRUE)  
+#' hind <- c4h_load(hind_path, variable = "t2m", ext = 'nc')
+#' c4h_plot(hind, title = "Hindcast", ensemble = TRUE)  
 #'                  
 #' # Stations
 #' stations_path <- paste0(getwd(), "/inst/extdata/stations/")
 #' stations <- c4h_load(station_path, var = "temp_mean", ext = "csv")
 #' 
+#' # Spatially aggregated data
+#' rean_aggr <- c4h_space(rean, bound)
 c4h_plot <- function(data,
-                             var = NULL,
-                             sdate = NULL,
-                             time = NULL,
-                             ensemble = NULL,
-                             ensemble_fun = mean,
-                             boundaries = NULL,
-                             mask_boundaries = FALSE,
-                             title = NULL,
-                             legend = NULL,
-                             palette = "-RdBu"){
+                     var = NULL,
+                     sdate = NULL,
+                     time = NULL,
+                     ensemble = NULL,
+                     ensemble_fun = mean,
+                     boundaries = NULL,
+                     mask_boundaries = FALSE,
+                     title = NULL,
+                     legend = NULL,
+                     palette = "-RdBu") {
   
   # 1. Data checks ----
   
@@ -204,7 +199,7 @@ c4h_plot <- function(data,
     plot_stars <- stars::st_set_dimensions(plot_stars, "latitude",
                                            values = c(data$coords$latitude))
     
-  } else if ("location" %in% names(dims_data)) {
+  } else if ("location" %in% names(dims_data)) { # Point data
     
     spatial_dims <- c(which(names(dim(plot_data)) == "location"))
     plot_stars <- aperm(plot_data, c(spatial_dims, setdiff(1:length(dims_data), spatial_dims)))
@@ -212,7 +207,14 @@ c4h_plot <- function(data,
     names(plot_stars) <- data$attrs$Variable$varName
     plot_stars <- stars::st_set_dimensions(plot_stars, "location",
                                            values = c(data$attrs$location))
+    
+  } else if ("areas" %in% names(dims_data)) { # Polygon data
+    
+    # Pending
+    
   }
+  
+  
   plot_stars <- stars::st_set_dimensions(plot_stars, "sdate",
                                          values = c(data$coords$sdate)[sdate])
   plot_stars <- stars::st_set_dimensions(plot_stars, "ensemble",
@@ -220,6 +222,7 @@ c4h_plot <- function(data,
   plot_stars <- stars::st_set_dimensions(plot_stars, "time",
                                          values = c(data$coords$time)[time])
   sf::st_crs(plot_stars) <- 4326
+  
   
   # Mask if needed
   if(isTRUE(mask_boundaries) & !is.null(boundaries)){
