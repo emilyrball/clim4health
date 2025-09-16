@@ -11,7 +11,7 @@
 #'     \item `dims`: A named list specifying the dimensions of the array.
 #'     \item `coords`: A named list of coordinate values for each dimension.
 #'   }
-#' @return A data frame where:
+#' @returns A data frame where:
 #'   \itemize{
 #'     \item Each dimension of the array is represented as a factor column.
 #'     \item The `values` column contains the corresponding array values.

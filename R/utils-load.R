@@ -58,11 +58,8 @@
 #' @param lon_selection minimum and maximum longitudes to be loaded derived from
 #' the bounding box. If "all", all longitudes will be loaded.
 #'
-#' @return an s2dv_cube object.
+#' @returns an s2dv_cube object.
 #' @noRd
-#'
-#' @examples
-#' TBD
 .c4h_load_csv <- function(file_list,
                           variable = NULL,
                           year = "all",
@@ -148,11 +145,8 @@
 #' @param lon_selection A numeric vector specifying the longitude selection
 #' derived from bbox.
 #'
-#' @return An s2dv_cube object containing the loaded data.
+#' @returns An s2dv_cube object containing the loaded data.
 #' @noRd
-#'
-#' @examples
-#' TBD
 .load_csv_tolimavalle <- function(data, headers,
                                   variable = NULL,
                                   year = "all",
@@ -320,11 +314,8 @@
 #' @param lon_selection A numeric vector specifying the longitude selection
 #' derived from bbox.
 #'
-#' @return An s2dv_cube object containing the loaded data.
+#' @returns An s2dv_cube object containing the loaded data.
 #' @noRd
-#'
-#' @examples
-#' TBD
 .load_csv_dr <- function(data, headers,
                          variable = NULL,
                          year = "all",
@@ -497,11 +488,8 @@
 #' @param lon_selection A numeric vector specifying the longitude selection
 #' derived from bbox.
 #'
-#' @return An s2dv_cube object containing the loaded data.
+#' @returns An s2dv_cube object containing the loaded data.
 #' @noRd
-#'
-#' @examples
-#' TBD
 .load_csv_unknown <- function(data, headers, metadata,
                               variable = NULL,
                               year = "all",
@@ -760,11 +748,8 @@
 #' @param lon_selection A numeric vector specifying the longitude selection
 #' derived from bbox.
 #'
-#' @return An s2dv_cube object containing the loaded data.
+#' @returns An s2dv_cube object containing the loaded data.
 #' @noRd
-#'
-#' @examples
-#' TBD
 .c4h_load_nc_stars <- function(file_list,
                                variable = NULL,
                                year = "all",

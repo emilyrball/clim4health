@@ -97,7 +97,7 @@
 #' options are "one-sided Fisher" (default) and "Random Walk". Only relevant if
 #' "MSSS" or "RMSSS" is in 'metrics'.
 #'
-#' @return a list with the calculated metrics and their significances as
+#' @returns a list with the calculated metrics and their significances as
 #' s2dv_cube objects.
 #' @export
 #'

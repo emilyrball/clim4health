@@ -4,7 +4,7 @@
 #' @param tdps an s2dv_cube object with the dew point temperature in degrees
 #' Celsius.
 #'
-#' @return an s2dv_cube object with the relative humidity as a percentage.
+#' @returns an s2dv_cube object with the relative humidity as a percentage.
 #' @export
 #'
 #' @examples
