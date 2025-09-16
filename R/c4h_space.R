@@ -20,27 +20,22 @@
 #' @examples
 #' library(sf)
 #' 
-#' # Load forecast data
-#' fcst_path <- system.file("extdata/forecast/", package = "clim4health")
-#' fcst_path <- paste0(fcst_path, "/")
-#' fcst <- c4h_load(fcst_path, var = "t2m", data_type = "fcst",
-#'                          date = "20250101", ext = 'nc')
-#' dim(fcst$data)
+#' # Region municipalities
+#' munip_path <- paste0(getwd(), "/inst/extdata/areas/munip_vallecauca.gpkg")
+#' munip <- read_sf(munip_path)
 #' 
-#' # Read and plot municipalities in Colombia
-#' municip_path <- system.file("extdata/shapefiles/", package = "clim4health")
-#' municip_path <- paste0(municip_path, "/MGN_ANM_MPIOS.shp")
-#' municip_sf <- read_sf(municip_path)
+#' # Forecast
+#' fcst_path <- paste0(getwd(), "/inst/extdata/forecast/")
+#' fcst <- c4h_load(fcst_path, variable = "t2m", ext = 'nc')
 #' 
-#' # Create forecast means by municipality
-#' result_fcst <- c4h_space(fcst, municip_sf, areas_id = "MPIO_CDPMP")
-#' dim(result_fcst$data)
-#' 
+#' # Spatial aggregation
+#' fcst_aggr <- c4h_space(fcst, munip)            
+#'                          
 c4h_space <- function(data,
-                              areas,
-                              fun = "mean",
-                              weighting = "none",
-                              areas_id = NULL) {
+                      areas,
+                      fun = "mean",
+                      weighting = "none",
+                      areas_id = NULL) {
   
   # read areas from file or sf object
   if (any(class(areas) == "character") | inherits(areas, "sf")) {
@@ -48,16 +43,16 @@ c4h_space <- function(data,
   } else {
     poly <- areas
   }
-
+  
   if (!is.null(areas_id) && !(areas_id %in% names(poly))) {
     stop("'areas_id' not found in the 'areas' object.")
   }
-
+  
   # read metadata
   coords <- data$coords
   lat <- coords$latitude
   lon <- coords$longitude
-
+  
   if (lat[1] > lat[length(lat)]) {
     # if latitude is stored north to south, reverse it
     lat <- rev(lat)
@@ -66,7 +61,7 @@ c4h_space <- function(data,
     idx[[lat_dim]] <- rev(idx[[lat_dim]])
     data$data <- do.call(`[`, c(list(data$data), idx, drop = FALSE))
   }
-
+  
   # transform array to raster stack
   out <- NULL
   out_dt <- NULL
@@ -75,7 +70,7 @@ c4h_space <- function(data,
   # Manage CRS, we aggregate in WGS84
   poly <- terra::project(poly, "EPSG:4326")
   ref  <- terra::crs(poly, describe = TRUE)$code
-
+  
   # Get dimensions and indices of data and coordinates
   dims <- dim(data$data)
   dim_names <- names(dims)
@@ -84,14 +79,14 @@ c4h_space <- function(data,
   spatial_dims <- c(idx_lat, idx_lon)
   non_spatial_dims <- seq_along(dims)[-spatial_dims]
   names(non_spatial_dims) <- names(seq_along(dims)[-spatial_dims])
-
+  
   # create a grid of indices for the non-spatial dimensions
   index_grid <- expand.grid(
     lapply(dims[non_spatial_dims], function(x) seq_len(x)),
     KEEP.OUT.ATTRS = FALSE,
     stringsAsFactors = FALSE
   )
-
+  
   out_list <- purrr::pmap(index_grid, function(...) {
     .make_raster(
       index_list = list(...),
@@ -102,13 +97,13 @@ c4h_space <- function(data,
       crs_code = ref
     )
   })
-
+  
   out <- terra::rast(out_list)
-
+  
   columns_index <- purrr::pmap_chr(index_grid,
                                    ~ paste0(sprintf("%02d", c(...)),
                                             collapse = "_"))
-
+  
   # extract area data (for all areas in poly) with terra::extract
   if(weighting == "none"| fun != "mean"){
     out_dt <- terra::extract(out, poly, fun = fun, na.rm = TRUE)
@@ -120,30 +115,30 @@ c4h_space <- function(data,
     out_dt <- terra::extract(out, poly, fun = fun, na.rm = TRUE, exact = TRUE)
     
   }
-
+  
   if ("ID" %in% names(out_dt)) {
     out_dt <- out_dt[ , -which(names(out_dt) == "ID"), drop = FALSE]
   }
-
+  
   # transform to array
   final_dims <- c(dims[non_spatial_dims], areas = nrow(out_dt))
   result <- array(NA_real_, dim = final_dims)
-
+  
   index <- strsplit(columns_index, "_")
   for (cc in seq_along(columns_index)) {
     idx <- as.integer(index[[cc]])
     result_idx <- c(idx, list(seq_len(nrow(out_dt))))
     result <- do.call(`[<-`, c(list(result), result_idx,
-                      list(value = out_dt[[cc]])))
+                               list(value = out_dt[[cc]])))
   }
-
+  
   # format to s2dv_cube
   replacement_dims <- dim(result)
   names(replacement_dims) <- c(dim_names[non_spatial_dims], "areas")
   replacement_attrs <- data$attrs
-
-  replacement_coords <- coords[setdiff(names(coords),
-                                       c("latitude", "longitude"))]
+  replacement_coords <- coords[setdiff(names(coords), c("latitude", "longitude"))]
+  
+  # Manage IDs
   if (is.null(areas_id)) {
     areas_id <- "areas"
     replacement_coords[["areas"]] <- seq_len(nrow(poly))
@@ -151,14 +146,17 @@ c4h_space <- function(data,
     replacement_coords[["areas"]] <- poly[[areas_id]]
     replacement_attrs[["areas_id"]] <- areas_id
   }
-
+  
+  # Store geometries
+  replacement_attrs[["geom"]] <- list(geom = sf::st_geometry(sf::st_as_sf(poly)))
+  
   # create final s2dv_cube object
   data <- list(data = result,
                coords = replacement_coords,
                dims = replacement_dims,
                attrs = replacement_attrs)
   attr(data, "class") <- "s2dv_cube"
-
+  
   return(data)
 }
 
@@ -179,7 +177,7 @@ c4h_space <- function(data,
 .make_raster <- function(index_list, data, lat, lon, n_spatial, crs_code) {
   dx <- abs(lon[2] - lon[1])
   dy <- abs(lat[2] - lat[1])
-
+  
   full_idx <- c(index_list, rep(list(quote(expr=)), n_spatial))
   slice <- do.call(`[`, c(list(data), full_idx, drop = FALSE))
   slice <- drop(slice)
