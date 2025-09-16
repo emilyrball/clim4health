@@ -703,8 +703,7 @@
                  sdate = seq(dim(dates)[["sdate"]]),
                  time = seq(dim(dates)[["time"]]),
                  ensemble = 1,
-                 latitude = lat,
-                 longitude = lon)
+                 location = seq_along(coordinates))
   # case 1: leadtime_month = 1
   if (length(leadtime_month) == 1 && any(leadtime_month == 1)) {
     # rename sdate and time dimensions so time is stored in time dimension
@@ -727,6 +726,9 @@
   if (!is.null(metadata)) {
     data$attrs$Variable$metadata <- metadata
   }
+
+  data$attrs$location <- list(longitude = lon,
+                              latitude = lat)
   return(data)
 }
 
