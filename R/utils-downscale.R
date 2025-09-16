@@ -4,11 +4,8 @@
 #'
 #' @param source_file String with the path to the source netCDF file.
 #'
-#' @return String with the path to the reduced temporary netCDF file.
+#' @returns String with the path to the reduced temporary netCDF file.
 #' @noRd
-#'
-#' @examples
-#' TBD
 .reduce_source_file <- function(source_file) {
   # replace the source file in the attributes of the s2dv_cube object
   nc <- ncdf4::nc_open(source_file)
@@ -34,11 +31,8 @@
 #' @param data an array of data.
 #' @param dim the dimension to be dropped (integer). It must have length 1.
 #'
-#' @return an array with the specified dimension dropped.
+#' @returns an array with the specified dimension dropped.
 #' @noRd
-#'
-#' @examples
-#' TBD
 .drop_dim <- function(data, dim) {
   dims <- dim(data)
   if (dims[dim] != 1) stop("Cannot drop a dimension that has length > 1")

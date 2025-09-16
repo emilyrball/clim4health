@@ -4,12 +4,9 @@
 #'
 #' @param dates_i vector of dates to be padded
 #'
-#' @return a list with the padded dates and a position map
+#' @returns a list with the padded dates and a position map
 #' indicating the mapping between original and padded dates.
 #' @noRd
-#'
-#' @examples
-#' TBD
 .pad_dates <- function(dates_i) {
   years  <- lubridate::year(dates_i)
   months <- lubridate::month(dates_i)
@@ -50,11 +47,8 @@
 #' @param dates_i vector of dates corresponding to the data
 #' @param dim_aggregation dimension along which to aggregate
 #'
-#' @return padded data array
+#' @returns padded data array
 #' @noRd
-#'
-#' @examples
-#' TBD
 .pad_array <- function(aggregated_data_i, dates_i, dim_aggregation = "time") {
   dims     <- dim(aggregated_data_i)
   dim_pos  <- which(names(dims) == dim_aggregation)
@@ -113,10 +107,8 @@
 #'
 #' @param y vector to be aggregated
 #' @param fun aggregation function
-#' @return aggregated value or NA if more than 70% of values are NA
+#' @returns aggregated value or NA if more than 70% of values are NA
 #' @noRd
-#' @examples
-#' TBD
 .aggregate_temporally <- function(y, fun) {
   return(if ((sum(is.na(y)) / length(y)) > 0.7) NA else fun(y, na.rm = TRUE))
 }
