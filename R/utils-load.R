@@ -769,6 +769,7 @@
   }
 
   data_out <- list()
+  units_out <- list()
 
   for (j in seq_along(variable)) {
     var <- variable[j]
@@ -841,6 +842,7 @@
     date_vals <- as.POSIXct(date_vals, origin = "1970-01-01", tz = "UTC")
 
     units <- sapply(x, function(y) attr(y, "units")$numerator[1])
+    names(units) <- NULL
 
     if (any(year == "all")) {
       year <- unique(lubridate::year(date_vals))
@@ -1130,6 +1132,7 @@
                                         source_files = file_list))
     }
     data_out[[length(data_out) + 1]] <- data
+    units_out[[length(units_out) + 1]] <- units
   }
 
   if (length(data_out) == 1) {
@@ -1142,5 +1145,7 @@
   }
   data_out$attrs$source_files <- unlist(file_list_var)
   names(data_out$attrs$source_files) <- NULL
+  data_out$attrs$Variable$metadata$units <- unlist(units_out)
+  names(data_out$attrs$Variable$metadata$units) <- data_out$coords$var
   return(data_out)
 }
