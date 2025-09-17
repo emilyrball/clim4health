@@ -3,7 +3,8 @@
 #' Load forecast, hindcast, or observational climate data (reanalysis or
 #' stations) as an s2dv_cube object.
 #'
-#' @param path String to the folder containing the files to be loaded.
+#' @param path String to the folder containing the files to be loaded, or a
+#' vector of specific file paths.
 #' @param variable The variable that you want to load.
 #' @param year A vector of years, starting in 1950.
 #' @param month A vector of months. e.g. c(1,2) for January and February.
@@ -44,23 +45,26 @@ c4h_load <- function(path,
                      leadtime_month = "all",
                      ext = NULL,
                      bbox = NULL) {
-
-
-  if (!(ext %in% c("nc", "csv"))) {
+  if (is.null(ext)) {
+    stop("Please specify the file extension using the 'ext' parameter.")
+  } else if (!(ext %in% c("nc", "csv"))) {
     # If the extension of the files is not "nc" or "csv", stop
     if (ext %in% c(".nc", ".csv")) {
       ext <- gsub("^\\.", "", ext)
     } else {
-      stop("The type_file has to be csv or nc, no other type files",
-           "are allowed at the moment.")
+      stop(paste0("Please specify a valid file extension using the 'ext'",
+                  " parameter. Valid options are 'nc', 'csv', '.nc', and ",
+                  "'.csv'."))
     }
   }
   if (ext == "nc" && is.null(variable)) {
     stop("Please specify parameter 'variable' to load.")
   }
 
+  # handle bbox parameter
   if (is.null(bbox)) {
-    message("Note: 'bbox' is not specified, loading all latitudes and longitudes.")
+    message(paste0("Note: parameter 'bbox' is not specified, loading all ",
+                   "latitudes and longitudes."))
     lat_selection <- "all"
     lon_selection <- "all"
   } else {
@@ -68,42 +72,59 @@ c4h_load <- function(path,
     lon_selection <- c(bbox[2], bbox[4])
   }
 
-  if (dir.exists(path)) {
-    # obtain all files in <path>
-    file_list <- list.files(path = path, pattern = paste0("\\.", ext),
-                            full.names = TRUE, recursive = TRUE)
-    if (length(file_list) == 0) {
-      stop("No files found in the specified path.")
-    }
+  # obtain files to load
+  if (length(path) == 1) {
+    # case: path is a single directory or file
+    if (dir.exists(path)) {
+      # obtain all files in <path> if path is a directory
+      file_list <- list.files(path = path, pattern = paste0("\\.", ext),
+                              full.names = TRUE)#, recursive = TRUE)
+      if (length(file_list) == 0) {
+        stop("No files found in the specified path.")
+      }
 
-    if (ext == "nc") {
-      file_vars <- lapply(file_list, sf::gdal_subdatasets)
-      file_vars <- unlist(file_vars)
+      # if ext is nc, check which variables are in the files
+      if (ext == "nc") {
+        file_vars <- lapply(file_list, sf::gdal_subdatasets)
+        file_vars <- unlist(file_vars)
 
-      all_vars <- unique(gsub(".*:", "", file_vars))
-      message(paste0("Variables found in 'path' are: '",
-                     paste(all_vars, collapse = "', '"), "'. Requested ",
-                     "variables are: '", paste(variable, collapse = "', '"),
-                     "'."))
-    }
-    # if <variable> is specified and can be found in any file names, filter
-    find_variable <- unlist(lapply(variable, grepl, file_list))
-    if (!is.null(variable) && any(find_variable)) {
-      file_list <- rep(file_list, length(variable))[find_variable]
-    }
+        all_vars <- unique(gsub(".*:", "", file_vars))
+        message(paste0("Variables found in 'path' are: '",
+                       paste(all_vars, collapse = "', '"), "'. Requested ",
+                       "variables are: '", paste(variable, collapse = "', '"),
+                       "'."))
+      }
+      # if <variable> is specified and can be found in any file names, filter
+      find_variable <- unlist(lapply(variable, grepl, file_list))
+      if (!is.null(variable) && any(find_variable)) {
+        file_list <- rep(file_list, length(variable))[find_variable]
+      }
 
-    find_year <- unlist(lapply(year, grepl, file_list))
-    if (!(any(year == "all")) && any(find_year)) {
-      file_list <- rep(file_list, length(year))[find_year]
-    }
+      # if <year> is specified and can be found in any file names, filter
+      find_year <- unlist(lapply(year, grepl, file_list))
+      if (!(any(year == "all")) && any(find_year)) {
+        file_list <- rep(file_list, length(year))[find_year]
+      }
 
-    file_list <- sort(unique(file_list))
-  } else {
-    # case: path is a single file
+      file_list <- sort(unique(file_list))
+    } else if (file.exists(path)) {
+      # case: path is a single file
+      file_list <- path
+    } else {
+      stop("The specified 'path' does not exist.")
+    }
+  } else if (length(path) > 1) {
+    # case: path is a vector of files
     file_list <- path
+    # check if files exist
+    file_exists <- file.exists(file_list)
+    if (!all(file_exists)) {
+      stop(paste0("The following files do not exist: ",
+                  paste(file_list[!file_exists], collapse = ", ")))
+    }
   }
 
-  if (ext == "nc") {
+  if (ext == "nc") { # read .nc files
     data <- .c4h_load_nc_stars(file_list = file_list,
                                variable = variable,
                                year = year,

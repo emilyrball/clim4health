@@ -767,7 +767,8 @@
 
   file_list_var <- list()
   for (var in variable) {
-    file_list_var[[var]] <- file_list[grep(var, file_vars)]
+    file_list_var[[var]] <- file_vars[grep(var, file_vars)]
+    names(file_list_var[[var]]) <- NULL
   }
 
   data_out <- list()
@@ -882,8 +883,15 @@
         )
 
         start_dates <- unique(sort(c(grid_dates$forecast_date)))
-
-        if (!(all(date_vals %in% start_dates))) {
+        if (!(any(as.POSIXct(date_vals, origin = "1970-01-01", tz = "UTC") %in%
+                    start_dates))) {
+          stop(paste0("No matching dates found for the specified year, month,",
+                      " day, and time. Dates found in data lie in the range: ",
+                      paste0(range(date_vals), collapse = " - "),
+                      ". Please adjust the date selection accordingly."))
+        }
+        if (!(all(as.POSIXct(date_vals, origin = "1970-01-01", tz = "UTC") %in%
+                    start_dates))) {
           x <- x %>% dplyr::filter(as.POSIXct(valid_time, origin = "1970-01-01",
                                               tz = "UTC") %in% start_dates)
         }
@@ -981,8 +989,13 @@
           grid_dates$sdate, months(grid_dates$time - 1)
         )
         start_dates <- unique(sort(c(grid_dates$forecast_date)))
-
-        if (!(all(date_vals %in% start_dates))) {
+        if (!(any(as.Date(date_vals) %in% start_dates))) {
+          stop(paste0("No matching dates found for the specified year, month,",
+                      " day, and time. Dates found in data lie in the range: ",
+                      paste0(range(as.Date(date_vals)), collapse = " - "),
+                      ". Please adjust the date selection accordingly."))
+        }
+        if (!(all(as.Date(date_vals) %in% start_dates))) {
           x <- x %>% dplyr::filter(as.Date(valid_time,
                                            origin = "1970-01-01") %in%
                                      start_dates)
@@ -1081,7 +1094,7 @@
 
         x <- x %>% dplyr::filter(as.Date(forecast_reference_time,
                                          origin = "1970-01-01") %in%
-                                           start_dates)
+                                   start_dates)
       }
       dims <- stars::st_dimensions(x)
 
