@@ -1159,6 +1159,10 @@
                             var_dim = "var", dat_dim = "dataset")
   }
   data_out$attrs$source_files <- unlist(file_list_var)
+  data_out$attrs$source_files <- gsub("NETCDF:\"(.*)\"", "\\1",
+                                      data_out$attrs$source_files)
+  data_out$attrs$source_files <- gsub(":(.*)", "\\1",
+                                      data_out$attrs$source_files)
   names(data_out$attrs$source_files) <- NULL
   data_out$attrs$Variable$metadata$units <- unlist(units_out)
   names(data_out$attrs$Variable$metadata$units) <- data_out$coords$var

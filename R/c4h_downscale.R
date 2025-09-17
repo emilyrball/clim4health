@@ -123,8 +123,8 @@ source(paste0("https://earth.bsc.es/gitlab/es/csdownscale/-/raw/",
 #' dwn <- c4h_downscale("Intbc", exp = hcst, obs = obs,
 #'                      bc_method = "evmos",
 #'                      method_remap = "bilinear",
-#'                      target_grid = paste0(getwd(), "/inst/extdata/reanalysis",
-#'                                           "/t2m_201001.nc"))
+#'                      target_grid = paste0(getwd(), "/inst/extdata/",
+#'                                           "reanalysis/t2m_201001.nc"))
 c4h_downscale <- function(downscale_function,
   # overlapping inputs for all CSDownscale functions
   exp, obs = NULL, exp_cor = NULL, bbox = NULL, ncores = NULL,
@@ -159,8 +159,8 @@ c4h_downscale <- function(downscale_function,
   if (downscale_function %in% c("Interpolation", "Intbc", "Intlr")) {
     if (is.null(target_grid) && is.null(points)) {
       stop(paste0("If using '", downscale_function, "', either 'points' or ",
-                  "'target_grid' must be specified. If downscaling to a grid: ",
-                  "'target_grid' can be either a path to another NetCDF file ",
+                  "'target_grid' must be specified.\nIf downscaling to a grid:",
+                  " 'target_grid' can be either a path to another NetCDF file ",
                   "which to read the target grid from (a single grid must be",
                   " defined in such file) or a character vector indicating the",
                   " coarse grid to be passed to CDO, and it must be a grid ",
@@ -169,7 +169,8 @@ c4h_downscale <- function(downscale_function,
                   "containing the point latitudes and longitudes of the ",
                   "locations to downscale the model data. The list must ",
                   "contain the two elements with names 'longitude' and ",
-                  "'latitude'."))
+                  "'latitude'.\nNote that specifying 'points' supercedes ",
+                  "'target_grid'."))
     }
     if (is.null(method_point_interp) && !is.null(points)) {
       stop(paste0("If using '", downscale_function, "' and 'points', ",
@@ -185,6 +186,11 @@ c4h_downscale <- function(downscale_function,
                   "method. Accepted methods are",
                   " 'con', 'bil', 'bic', 'nn', 'con2'."))
     }
+  }
+
+  if (length(method_remap) > 1) {
+    stop("'method_remap' must be a single character string. Accepted values",
+         " are 'con', 'bil', 'bic', 'nn', 'con2'.")
   }
 
   # catch missing arguments for each downscaling function
