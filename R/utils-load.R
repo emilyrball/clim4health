@@ -596,6 +596,7 @@
     dates_all <- dates
     date_fun <- lubridate::year
   }
+
   if (typeof(dates) == "logical") {
     stop("Cannot parse dates. Stopping.")
   }
@@ -620,7 +621,7 @@
                             format = "%Y-%m-%d %H:%M:%S")
 
   start_dates_tmp <- date_fun(start_dates)
-  start_dates <- unique(start_dates[!is.na(start_dates_tmp)])
+  start_dates <- unique(start_dates_tmp[!is.na(start_dates_tmp)])
 
   if (any(leadtime_month == "all")) {
     leadtime_month <- 1
@@ -676,13 +677,12 @@
                               time  = dim(dates)[["time"]],
                               ensemble = 1,
                               location = length(coordinates)))
-  date_index <- match(date_fun(grid_dates$forecast_date), dates_all)
 
   # reshape data and dates
   for (i in seq_len(nrow(grid_dates))) {
     s <- which(dates[, 1] == grid_dates$sdate[i])
-    t <- grid_dates$time[i]
-    d <- date_index[i]  # index in arr_x valid_time
+    t <- as.integer(grid_dates$time[i])
+    d <- which(dates_all == date_fun(grid_dates$forecast_date[i]))
 
     for (loc in seq_along(coordinates)) {
       lnx <- which(lons$val == lon[loc])
