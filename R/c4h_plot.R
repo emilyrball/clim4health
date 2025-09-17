@@ -39,6 +39,7 @@
 #' 
 #' # Forecast
 #' fcst_path <- paste0(getwd(), "/inst/extdata/forecast/")
+<<<<<<< HEAD
 #' fcst <- c4h_load(fcst_path, variable = "t2m", ext = 'nc')
 #' c4h_plot(fcst, title = "Forecast", ensemble = TRUE) 
 #' 
@@ -51,6 +52,29 @@
 #' hind_path <- paste0(getwd(), "/inst/extdata/hindcast/")
 #' hind <- c4h_load(hind_path, variable = "t2m", ext = 'nc')
 #' c4h_plot(hind, title = "Hindcast", ensemble = TRUE)  
+=======
+#' fcst <- c4h_load(fcst_path,
+#'                  variable = "t2m",
+#'                  ext = 'nc')
+#' c4h_plot(fcst, title = "Forecast", 
+#'                  ensemble = TRUE) 
+#' 
+#' # Reanalysis
+#' rean_path <- paste0(getwd(), "/inst/extdata/reanalysis/")
+#' rean <- c4h_load(rean_path,
+#'                  variable = "t2m",
+#'                  ext = 'nc')
+#' c4h_plot(rean, title = "Reanalysis",
+#'          boundaries = bound) 
+#' 
+#' # Hindcast
+#' hind_path <- paste0(getwd(), "/inst/extdata/hindcast/")
+#' hind <- c4h_load(hind_path,
+#'                  variable = "t2m",
+#'                  ext = 'nc')
+#' c4h_plot(hind, title = "Hindcast", 
+#'          ensemble = TRUE)  
+>>>>>>> main
 #'                  
 #' # Stations
 #' stations_path <- paste0(getwd(), "/inst/extdata/stations/")
@@ -69,8 +93,12 @@ c4h_plot <- function(data,
                      mask_boundaries = FALSE,
                      title = NULL,
                      legend = NULL,
+<<<<<<< HEAD
                      palette = "-RdBu",
                      ...) {
+=======
+                     palette = "-RdBu"){
+>>>>>>> main
   
   # 1. Data checks ----
   

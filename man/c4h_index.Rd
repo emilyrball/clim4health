@@ -16,8 +16,8 @@ c4h_index(
 \item{data}{s2dv_cube object with the climate data to be masked, usually
 read using \code{c4h_load}.}
 
-\item{return_mask}{Boolean. If TRUE (default), return original values where the
-condition is fulfilled and NA otherwise. If FALSE, return 1 where the
+\item{return_mask}{Boolean. If TRUE (default), return original values where
+the condition is fulfilled and NA otherwise. If FALSE, return 1 where the
 condition is met and 0 otherwise.}
 
 \item{lower_threshold}{Numeric. Optional lower threshold of the mask. All
@@ -30,7 +30,8 @@ cells above that value will be masked out.}
 the threshold values. If TRUE, itnervals are open.}
 }
 \value{
-A s2dv_cube with the values masked or the mask (depending on \code{return_mask}).
+A s2dv_cube with the values masked or the mask (depending on
+\code{return_mask}).
 }
 \description{
 Apply a threshold-based mask to climate data
@@ -40,10 +41,10 @@ Apply a threshold-based mask to climate data
 obs_path <- system.file("extdata/reanalysis/", package = "clim4health")
 obs_path <- paste0(obs_path, "/")
 obs <- c4h_load(obs_path,
-                        var = "t2m",
-                        date = "201001",
-                        data_type = "obs",
-                        ext = "nc")
+                variable = "t2m",
+                year = 2010,
+                month = 1,
+                ext = "nc")
 c4h_plot(obs)
 
 # Compute index, temperature higher than 290K

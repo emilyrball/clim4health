@@ -12,7 +12,9 @@ source(paste0("https://earth.bsc.es/gitlab/es/csdownscale/-/raw/",
 source(paste0("https://earth.bsc.es/gitlab/es/csdownscale/-/raw/",
               "master/R/Utils.R"))
 
-#' Downscale and calibrate climate data...
+#' c4h_downscale
+#'
+#' Downscale and calibrate climate data.
 #'
 #' @param downscale_function The downscaling function to use. Options are:
 #' "Interpolation", "Intbc", "Intlr", "Analogs".
@@ -98,11 +100,31 @@ source(paste0("https://earth.bsc.es/gitlab/es/csdownscale/-/raw/",
 #' to TRUE. Default to TRUE. Only used if the downscaling function is set to
 #' "Analogs".
 #'
-#' @return TBD
+#' @returns A list of statistically downscaled data as s2dv_cube objects.
 #' @export
 #'
 #' @examples
-#' TBD
+#' hcst <- c4h_load(paste0(getwd(), "/inst/extdata/hindcast/"),
+#'                  variable = "t2m",
+#'                  year = 2010:2012,
+#'                  month = 1,
+#'                  leadtime_month = 1:3,
+#'                  ext = "nc")
+#' lats <- hcst$coords$latitude
+#' lons <- hcst$coords$longitude
+#' obs <- c4h_load(paste0(getwd(), "/inst/extdata/reanalysis/"),
+#'                 variable = "t2m",
+#'                 year = 2010:2012,
+#'                 month = 1,
+#'                 leadtime_month = 1:3,
+#'                 bbox = c(max(lats), min(lons),
+#'                          min(lats), max(lons)),
+#'                 ext = "nc")
+#' dwn <- c4h_downscale("Intbc", exp = hcst, obs = obs,
+#'                      bc_method = "evmos",
+#'                      method_remap = "bilinear",
+#'                      target_grid = paste0(getwd(), "/inst/extdata/reanalysis",
+#'                                           "/t2m_201001.nc"))
 c4h_downscale <- function(downscale_function,
   # overlapping inputs for all CSDownscale functions
   exp, obs = NULL, exp_cor = NULL, bbox = NULL, ncores = NULL,
@@ -137,19 +159,17 @@ c4h_downscale <- function(downscale_function,
   if (downscale_function %in% c("Interpolation", "Intbc", "Intlr")) {
     if (is.null(target_grid) && is.null(points)) {
       stop(paste0("If using '", downscale_function, "', either 'points' or ",
-                  "'target_grid' must be specified. 'target_grid' can be ",
-                  "either a path to another NetCDF file which to read the ",
-                  "target grid from (a single grid must be defined in such ",
-                  "file) or a character vector indicating the coarse grid to ",
-                  "be passed to CDO, and it must be a grid recognised by CDO ",
-                  "or a NetCDF file. 'points' must be a list of two elements ",
+                  "'target_grid' must be specified. If downscaling to a grid: ",
+                  "'target_grid' can be either a path to another NetCDF file ",
+                  "which to read the target grid from (a single grid must be",
+                  " defined in such file) or a character vector indicating the",
+                  " coarse grid to be passed to CDO, and it must be a grid ",
+                  "recognised by CDO or a NetCDF file.\nIf downscaling to ",
+                  "point locations: 'points' must be a list of two elements ",
                   "containing the point latitudes and longitudes of the ",
                   "locations to downscale the model data. The list must ",
-                  "contain the two elements named as indicated in the ",
-                  "parameters 'lat_dim' and 'lon_dim'. If the downscaling is ",
-                  "to a point location, only regular grids are allowed for ",
-                  "exp and obs. ",
-                  "Only needed if the downscaling is to a point location."))
+                  "contain the two elements with names 'longitude' and ",
+                  "'latitude'."))
     }
     if (is.null(method_point_interp) && !is.null(points)) {
       stop(paste0("If using '", downscale_function, "' and 'points', ",
@@ -209,10 +229,10 @@ c4h_downscale <- function(downscale_function,
                 max(exp$coords$latitude))
   } else {
     if (!(length(bbox) == 4 && is.numeric(bbox) &&
-          all(bbox[c(1, 3)] > -90) || all(bbox[c(1, 3)] < 90) &&
-          all(bbox[c(1, 3)] > -90) || all(bbox[c(1, 3)] < 90) &&
-          all(bbox[c(2, 4)] > -180) || all(bbox[c(1, 3)] < 180) &&
-          all(bbox[c(2, 4)] > -180) || all(bbox[c(1, 3)] < 180))) {
+            all(bbox[c(1, 3)] > -90) || all(bbox[c(1, 3)] < 90) &&
+            all(bbox[c(1, 3)] > -90) || all(bbox[c(1, 3)] < 90) &&
+            all(bbox[c(2, 4)] > -180) || all(bbox[c(1, 3)] < 180) &&
+            all(bbox[c(2, 4)] > -180) || all(bbox[c(1, 3)] < 180))) {
       stop("'bbox' coordinates are out of bound. N,W,S,E coordinates,
              latitudes from 90 to -90, longitudes -180 to 180")
     }
@@ -284,7 +304,7 @@ c4h_downscale <- function(downscale_function,
 
     if ("aux" %in% names(dim(out$exp$data))) {
       dim <- which(names(dim(out$exp$data)) == "aux")
-      out$exp$data <- drop_dim(out$exp$data, dim)
+      out$exp$data <- .drop_dim(out$exp$data, dim)
     }
     out$exp$data <- s2dv::Reorder(out$exp$data, order = exp_dims)
 
@@ -302,11 +322,11 @@ c4h_downscale <- function(downscale_function,
     # CST_Intbc returns list with reordered s2dv_cube objects
     if ("aux" %in% names(dim(out$exp$data))) {
       dim <- which(names(dim(out$exp$data)) == "aux")
-      out$exp$data <- drop_dim(out$exp$data, dim)
+      out$exp$data <- .drop_dim(out$exp$data, dim)
     }
     if ("aux" %in% names(dim(out$obs$data))) {
       dim <- which(names(dim(out$obs$data)) == "aux")
-      out$obs$data <- drop_dim(out$obs$data, dim)
+      out$obs$data <- .drop_dim(out$obs$data, dim)
     }
 
     out$exp$data <- s2dv::Reorder(out$exp$data, order = exp_dims)
@@ -328,11 +348,11 @@ c4h_downscale <- function(downscale_function,
                      ncores = ncores)
     if ("aux" %in% names(dim(out$exp$data))) {
       dim <- which(names(dim(out$exp$data)) == "aux")
-      out$exp$data <- drop_dim(out$exp$data, dim)
+      out$exp$data <- .drop_dim(out$exp$data, dim)
     }
     if ("aux" %in% names(dim(out$obs$data))) {
       dim <- which(names(dim(out$obs$data)) == "aux")
-      out$obs$data <- drop_dim(out$obs$data, dim)
+      out$obs$data <- .drop_dim(out$obs$data, dim)
     }
 
     # CST_Intlr returns list with reordered s2dv_cube objects
@@ -354,11 +374,11 @@ c4h_downscale <- function(downscale_function,
     # CST_Analogs returns list with reordered s2dv_cube objects
     if ("aux" %in% names(dim(out$exp$data))) {
       dim <- which(names(dim(out$exp$data)) == "aux")
-      out$exp$data <- drop_dim(out$exp$data, dim)
+      out$exp$data <- .drop_dim(out$exp$data, dim)
     }
     if ("aux" %in% names(dim(out$obs$data))) {
       dim <- which(names(dim(out$obs$data)) == "aux")
-      out$obs$data <- drop_dim(out$obs$data, dim)
+      out$obs$data <- .drop_dim(out$obs$data, dim)
     }
     out$exp$data <- s2dv::Reorder(out$exp$data, order = c(exp_dims, "analogs"))
     out$obs$data <- s2dv::Reorder(out$obs$data, order = obs_dims)
@@ -385,18 +405,4 @@ c4h_downscale <- function(downscale_function,
     }
   }
   return(out)
-}
-
-
-drop_dim <- function(data, dim) {
-  dims <- dim(data)
-  if (dims[dim] != 1) stop("Cannot drop a dimension that has length > 1")
-
-  index_list <- lapply(dims, function(d) quote(expr = ))
-  index_list[[dim]] <- 1
-
-  data <- do.call(`[`, c(list(data), index_list, list(drop = FALSE)))
-
-  dim(data) <- dims[-dim]
-  return(data)
 }

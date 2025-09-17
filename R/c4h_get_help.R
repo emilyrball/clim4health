@@ -10,7 +10,7 @@
 #' @param parameter If parameter is provided, a list with all possible options
 #' for that parameter is returned. If no parameter is provided then then the
 #' list of required parameters for the given dataset will be returned
-#' @return Prints a list of either available climate datasets, required
+#' @returns Prints a list of either available climate datasets, required
 #' parameters or options to the console.
 #'
 #' @examples

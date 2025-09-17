@@ -11,7 +11,7 @@
 #'     \item `dims`: A named list specifying the dimensions of the array.
 #'     \item `coords`: A named list of coordinate values for each dimension.
 #'   }
-#' @return A data frame where:
+#' @returns A data frame where:
 #'   \itemize{
 #'     \item Each dimension of the array is represented as a factor column.
 #'     \item The `values` column contains the corresponding array values.
@@ -32,8 +32,7 @@
 #' @export
 
 c4h_table <- function(array) {
-
- # Check if input data is an s2dv_cube multidimensional array object
+  # Check if input data is an s2dv_cube multidimensional array object
   if (!("s2dv_cube" %in% class(array))) {
     stop("Input 'array' must be an object of class 's2dv_cube'.")
   }

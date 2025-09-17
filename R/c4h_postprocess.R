@@ -1,3 +1,5 @@
+#' c4h_postprocess
+#'
 #' Quality assessment of climate forecasts
 #'
 #' @param exp An s2dv_cube object of forecast data with at least the 'sdate'
@@ -95,24 +97,53 @@
 #' options are "one-sided Fisher" (default) and "Random Walk". Only relevant if
 #' "MSSS" or "RMSSS" is in 'metrics'.
 #'
-#' @return TBD
+#' @returns a list with the calculated metrics and their significances as
+#' s2dv_cube objects.
 #' @export
 #'
 #' @examples
-#' TBD
+#' hcst <- c4h_load(paste0(getwd(), "/inst/extdata/hindcast/"),
+#'                  variable = "t2m",
+#'                  year = 2010:2012,
+#'                  month = 1,
+#'                  leadtime_month = 1:3,
+#'                  ext = "nc")
+#' lats <- hcst$coords$latitude
+#' lons <- hcst$coords$longitude
+#' obs <- c4h_load(paste0(getwd(), "/inst/extdata/reanalysis/"),
+#'                 variable = "t2m",
+#'                 year = 2010:2012,
+#'                 month = 1,
+#'                 leadtime_month = 1:3,
+#'                 bbox = c(max(lats), min(lons),
+#'                          min(lats), max(lons)),
+#'                 ext = "nc")
+#' shp_path <- paste0(getwd(), "/inst/extdata/areas/munip_vallecauca.gpkg")
+#' obs <- c4h_space(obs,
+#'                  areas = shp_path,
+#'                  fun = "mean",
+#'                  areas_id = "munip_code")
+#' hcst <- c4h_space(hcst,
+#'                   areas = shp_path,
+#'                   fun = "mean",
+#'                   areas_id = "munip_code")
+#' skill <- c4h_postprocess(exp = hcst,
+#'                          obs = obs,
+#'                          metrics = c("BSS", "CRPSS"),
+#'                          brier_thresholds = c(0.1, 0.9))
 c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
-                                    brier_thresholds = c(0.1, 0.9),
-                                    prob_thresholds = c(1 / 3, 2 / 3),
-                                    alpha = 0.05, ncores = NULL, N.eff = NA,
-                                    Fair = FALSE, indices_for_clim = NULL,
-                                    cross.val = FALSE, cat_dim = NULL,
-                                    clim.cross.val = TRUE, nmemb = NULL,
-                                    nmemb_ref = NULL, weights_exp = NULL,
-                                    weights_ref = NULL, comp_dim = NULL,
-                                    limits = NULL, conf = TRUE, dat_dim = NULL,
-                                    na.rm = FALSE, sig_method.type = NULL,
-                                    sign = FALSE, pval = TRUE,
-                                    sig_method = "one-sided Fisher") {
+                            brier_thresholds = c(0.1, 0.9),
+                            prob_thresholds = c(1 / 3, 2 / 3),
+                            alpha = 0.05, ncores = NULL, N.eff = NA,
+                            Fair = FALSE, indices_for_clim = NULL,
+                            cross.val = FALSE, cat_dim = NULL,
+                            clim.cross.val = TRUE, nmemb = NULL,
+                            nmemb_ref = NULL, weights_exp = NULL,
+                            weights_ref = NULL, comp_dim = NULL,
+                            limits = NULL, conf = TRUE, dat_dim = NULL,
+                            na.rm = FALSE, sig_method.type = NULL,
+                            sign = FALSE, pval = TRUE,
+                            sig_method = "one-sided Fisher") {
   if (is.null(exp) || is.null(obs)) {
     stop("Parameters 'exp' and 'obs' must be specified. They should be",
          "s2dv_cube objects that have been loaded and transformed using",

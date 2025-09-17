@@ -68,6 +68,7 @@ bound <- read_sf(bound_path)
 
 # Forecast
 fcst_path <- paste0(getwd(), "/inst/extdata/forecast/")
+<<<<<<< HEAD
 fcst <- c4h_load(fcst_path, variable = "t2m", ext = 'nc')
 c4h_plot(fcst, title = "Forecast", ensemble = TRUE) 
 
@@ -80,6 +81,29 @@ c4h_plot(rean, title = "Reanalysis", boundaries = bound)
 hind_path <- paste0(getwd(), "/inst/extdata/hindcast/")
 hind <- c4h_load(hind_path, variable = "t2m", ext = 'nc')
 c4h_plot(hind, title = "Hindcast", ensemble = TRUE)  
+=======
+fcst <- c4h_load(fcst_path,
+                 variable = "t2m",
+                 ext = 'nc')
+c4h_plot(fcst, title = "Forecast", 
+                 ensemble = TRUE) 
+
+# Reanalysis
+rean_path <- paste0(getwd(), "/inst/extdata/reanalysis/")
+rean <- c4h_load(rean_path,
+                 variable = "t2m",
+                 ext = 'nc')
+c4h_plot(rean, title = "Reanalysis",
+         boundaries = bound) 
+
+# Hindcast
+hind_path <- paste0(getwd(), "/inst/extdata/hindcast/")
+hind <- c4h_load(hind_path,
+                 variable = "t2m",
+                 ext = 'nc')
+c4h_plot(hind, title = "Hindcast", 
+         ensemble = TRUE)  
+>>>>>>> main
                  
 # Stations
 stations_path <- paste0(getwd(), "/inst/extdata/stations/")
