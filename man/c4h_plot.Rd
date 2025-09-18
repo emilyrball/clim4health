@@ -16,6 +16,7 @@ c4h_plot(
   title = NULL,
   legend = NULL,
   palette = "-RdBu",
+  coordgrid = FALSE,
   ...
 )
 }
@@ -54,6 +55,8 @@ names.}
 palette name (e.g., "-Reds") to reverse it. Alternatively, a vector of
 hex codes to create a continuous interpolated palette.}
 
+\item{coordgrid}{If TRUE, display coordinate grids on the map.}
+
 \item{...}{Extra arguments indicating fixed aesthetics to be passed to
 \code{stars::geom_stars}, including \code{lwd}, \code{alpha} and \code{colour}.}
 }
@@ -79,19 +82,22 @@ c4h_plot(fcst, title = "Forecast", ensemble = TRUE)
 # Reanalysis
 rean_path <- paste0(getwd(), "/inst/extdata/reanalysis/")
 rean <- c4h_load(rean_path, variable = "t2m", ext = 'nc')
-c4h_plot(rean, title = "Reanalysis", boundaries = mun, mask_boundaries = TRUE) 
+c4h_plot(rean, title = "Reanalysis", boundaries = mun, 
+         mask_boundaries = TRUE, coordgrid = TRUE) 
 
 # Hindcast
 hind_path <- paste0(getwd(), "/inst/extdata/hindcast/")
 hind <- c4h_load(hind_path, variable = "t2m", ext = 'nc')
-c4h_plot(hind, title = "Hindcast", ensemble = TRUE)  
+c4h_plot(hind, title = "Hindcast", ensemble = TRUE)   
                  
 # Stations
 stations_path <- paste0(getwd(), "/inst/extdata/stations/")
 stations <- c4h_load(stations_path, var = "temp_mean", ext = "csv")
-c4h_plot(stations, title = "Stations", time = 1:2, boundaries = mun)
+c4h_plot(stations, title = "Stations", time = 1:2, 
+         boundaries = mun, coordgrid = TRUE) 
 
 # Spatially aggregated data
 fcst_aggr <- c4h_space(fcst, mun)
-c4h_plot(fcst_aggr, ensemble = 1:5, lwd = 0.1, boundaries = "country")
+c4h_plot(fcst_aggr, ensemble = 1:5, lwd = 0.1, 
+         title = "Temp. by municipality", coordgrid = TRUE) 
 }

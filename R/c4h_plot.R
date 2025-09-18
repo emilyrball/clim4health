@@ -26,6 +26,7 @@
 #' @param palette GHR, RColorBrewer or colorspace palette. Use "-" before the 
 #' palette name (e.g., "-Reds") to reverse it. Alternatively, a vector of
 #' hex codes to create a continuous interpolated palette.
+#' @param coordgrid If TRUE, display coordinate grids on the map.
 #' @param ... Extra arguments indicating fixed aesthetics to be passed to 
 #'`stars::geom_stars`, including `lwd`, `alpha` and `colour`.
 #' @returns A plot
@@ -46,21 +47,24 @@
 #' # Reanalysis
 #' rean_path <- paste0(getwd(), "/inst/extdata/reanalysis/")
 #' rean <- c4h_load(rean_path, variable = "t2m", ext = 'nc')
-#' c4h_plot(rean, title = "Reanalysis", boundaries = mun, mask_boundaries = TRUE) 
+#' c4h_plot(rean, title = "Reanalysis", boundaries = mun, 
+#'          mask_boundaries = TRUE, coordgrid = TRUE) 
 #' 
 #' # Hindcast
 #' hind_path <- paste0(getwd(), "/inst/extdata/hindcast/")
 #' hind <- c4h_load(hind_path, variable = "t2m", ext = 'nc')
-#' c4h_plot(hind, title = "Hindcast", ensemble = TRUE)  
+#' c4h_plot(hind, title = "Hindcast", ensemble = TRUE)   
 #'                  
 #' # Stations
 #' stations_path <- paste0(getwd(), "/inst/extdata/stations/")
 #' stations <- c4h_load(stations_path, var = "temp_mean", ext = "csv")
-#' c4h_plot(stations, title = "Stations", time = 1:2, boundaries = mun)
+#' c4h_plot(stations, title = "Stations", time = 1:2, 
+#'          boundaries = mun, coordgrid = TRUE) 
 #' 
 #' # Spatially aggregated data
 #' fcst_aggr <- c4h_space(fcst, mun)
-#' c4h_plot(fcst_aggr, ensemble = 1:5, lwd = 0.1, title = "Temp. by municipality")
+#' c4h_plot(fcst_aggr, ensemble = 1:5, lwd = 0.1, 
+#'          title = "Temp. by municipality", coordgrid = TRUE) 
 c4h_plot <- function(data,
                      var = NULL,
                      sdate = NULL,
@@ -72,6 +76,7 @@ c4h_plot <- function(data,
                      title = NULL,
                      legend = NULL,
                      palette = "-RdBu",
+                     coordgrid = FALSE,
                      ...) {
   
   # 1. Data checks ----
@@ -266,11 +271,14 @@ c4h_plot <- function(data,
       p <- ggplot2::ggplot() +
         ggplot2::geom_sf(data = bound_sf, alpha = 0, 
                          col = "grey10", linewidth = 0.1, inherit.aes = FALSE) +
-        ggplot2::geom_sf(data = plot_data, ggplot2::aes(colour = .data[[varname]], ...))
-      
+        ggplot2::geom_sf(data = plot_data, ggplot2::aes(colour = .data[[varname]], ...))  +
+        ggplot2::scale_x_continuous(labels = function(x) paste0(ifelse(x < 0, "-", ""), abs(x))) +
+        ggplot2::scale_y_continuous(labels = function(y) paste0(ifelse(y < 0, "-", ""), abs(y)))
     } else {
       p <- ggplot2::ggplot() +
-        ggplot2::geom_sf(data = plot_data, ggplot2::aes(colour = .data[[varname]], ...))
+        ggplot2::geom_sf(data = plot_data, ggplot2::aes(colour = .data[[varname]], ...))  +
+        ggplot2::scale_x_continuous(labels = function(x) paste0(ifelse(x < 0, "-", ""), abs(x))) +
+        ggplot2::scale_y_continuous(labels = function(y) paste0(ifelse(y < 0, "-", ""), abs(y)))
     }
     
   } else if ("area" %in% names(dims_data)) { # Polygon data
@@ -283,11 +291,15 @@ c4h_plot <- function(data,
         ggplot2::coord_sf(
           xlim = sf::st_bbox(plot_data)[c("xmin", "xmax")],
           ylim = sf::st_bbox(plot_data)[c("ymin", "ymax")],
-          expand = TRUE) 
+          expand = TRUE)   +
+        ggplot2::scale_x_continuous(labels = function(x) paste0(ifelse(x < 0, "-", ""), abs(x))) +
+        ggplot2::scale_y_continuous(labels = function(y) paste0(ifelse(y < 0, "-", ""), abs(y)))
     } else {
       p <- ggplot2::ggplot() +
         ggplot2::geom_sf(data = plot_data, ggplot2::aes(fill = .data[[varname]]),
-                         ...)
+                         ...)   +
+        ggplot2::scale_x_continuous(labels = function(x) paste0(ifelse(x < 0, "-", ""), abs(x))) +
+        ggplot2::scale_y_continuous(labels = function(y) paste0(ifelse(y < 0, "-", ""), abs(y)))
     }
   }
   
@@ -297,9 +309,16 @@ c4h_plot <- function(data,
       ggplot2::facet_wrap(as.formula(paste("~", f1)),
                           labeller = "label_both")
   }else if(!is.null(f1) & !is.null(f2)){ # Grid
-    p <- p +
-      ggplot2::facet_grid(as.formula(paste(f1, "~", f2)),
-                          labeller = "label_both", switch = "y")
+    
+    if(!isTRUE(coordgrid)) {
+      p <- p +
+        ggplot2::facet_grid(as.formula(paste(f1, "~", f2)),
+                            labeller = "label_both", switch = "y")
+    } else{
+      p <- p +
+        ggplot2::facet_grid(as.formula(paste(f1, "~", f2)), labeller = "label_both")      
+    }
+
   }
   
   # Palette
@@ -311,7 +330,7 @@ c4h_plot <- function(data,
     p <- p + ggplot2::scale_fill_gradientn(colors = my_palette, na.value = "grey70")  
     
   }else {
-    p <- p + ggplot2::scale_fill_gradientn(colors = my_palette, na.value = "white")  
+    p <- p + ggplot2::scale_fill_gradientn(colors = my_palette, na.value = "#00000000")  
   }
   
   # Boundaries on top, only for grid
@@ -323,19 +342,43 @@ c4h_plot <- function(data,
         ggplot2::coord_sf(
           xlim = sf::st_bbox(plot_data)[c("xmin", "xmax")],
           ylim = sf::st_bbox(plot_data)[c("ymin", "ymax")],
-          expand = TRUE)
+          expand = TRUE) +
+        ggplot2::scale_x_continuous(labels = function(x) paste0(ifelse(x < 0, "-", ""), abs(x))) +
+        ggplot2::scale_y_continuous(labels = function(y) paste0(ifelse(y < 0, "-", ""), abs(y)))
     )
   }
   
   # Theme
-  p <- p + 
-    ggplot2::theme_void() +
-    ggplot2::theme(
-      plot.margin = ggplot2::theme_bw()$plot.margin,
-      strip.text.y.left = ggplot2::element_text(angle = 90),
-      strip.text.x = ggplot2::element_text(margin = ggplot2::margin(b = 0)),
-      legend.key.height = ggplot2::unit(1, "cm"))
-  
+  if(isTRUE(coordgrid)) {
+
+    p <- p +
+      ggplot2::theme_minimal() +
+      ggplot2::theme(
+        plot.margin = ggplot2::theme_bw()$plot.margin,
+        panel.background =  ggplot2::element_rect(fill = NA, color = "grey10", linewidth = 0.2),
+        panel.grid.minor = ggplot2::element_blank(),
+        axis.ticks = ggplot2::element_line(linewidth = 0.3, color = "grey50"),
+        axis.text = ggplot2::element_text(size = 7, color = "grey30"),
+        axis.text.x = ggplot2::element_text(angle = -45, hjust = 0),
+        strip.text.y = ggplot2::element_text(margin = ggplot2::margin(b = 0)),
+        strip.text.x = ggplot2::element_text(margin = ggplot2::margin(b = 0)),
+        legend.key.height = ggplot2::unit(1, "cm")) +
+      ggplot2::xlab("") + ggplot2::ylab("")
+    
+    if(!isTRUE(coordgrid)){
+      p <- p +
+        ggplot2::theme(strip.text.y = ggplot2::element_text(angle = 90))
+    }
+  } else {
+    p <- p + 
+      ggplot2::theme_void() +
+      ggplot2::theme(
+        plot.margin = ggplot2::theme_bw()$plot.margin,
+        strip.text.y = ggplot2::element_text(angle = 90, margin = ggplot2::margin(b = 0)),
+        strip.text.x = ggplot2::element_text(margin = ggplot2::margin(b = 0)),
+        legend.key.height = ggplot2::unit(1, "cm"))
+  }
+
   # Labels
   if(!is.null(title)){
     p <- p + ggplot2::ggtitle(title)
