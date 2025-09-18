@@ -13,9 +13,9 @@
 #' @param ensemble Numerical index of the ensemble member to be plotted. If
 #' set to TRUE, it aggregates all the ensemble members. Defaults to NULL (all 
 #' times).
-#' @param boundaries Polygon boundaries to add to the map. Defaults to "countries"
-#' for country boundaries. Set to NULL for no boundaries, otherwise supply
-#' a polygon `sf` object.
+#' @param boundaries Polygon boundaries to add to the map.  Set to NULL for no 
+#' boundaries (default), otherwise supply a polygon `sf` object or set to 
+#' "countries" for coarse country boundaries.
 #' @param mask_boundaries If TRUE (default), mask the data to the provided 
 #' boundaries.
 #' @param ensemble_fun Aggregation function used when ensemble = TRUE.
@@ -34,9 +34,9 @@
 #' @examples 
 #' library("sf")
 #' 
-#' # Region boundaries
-#' bound_path <- paste0(getwd(), "/inst/extdata/areas/munip_vallecauca.gpkg")
-#' bound <- read_sf(bound_path)
+#' # Region municipalities
+#' mun_path <- paste0(getwd(), "/inst/extdata/areas/munip_vallecauca.gpkg")
+#' mun <- read_sf(mun_path)
 #' 
 #' # Forecast
 #' fcst_path <- paste0(getwd(), "/inst/extdata/forecast/")
@@ -46,19 +46,7 @@
 #' # Reanalysis
 #' rean_path <- paste0(getwd(), "/inst/extdata/reanalysis/")
 #' rean <- c4h_load(rean_path, variable = "t2m", ext = 'nc')
-#' c4h_plot(rean, title = "Reanalysis", boundaries = bound) 
-#' 
-#' # Hindcast
-#' hind_path <- paste0(getwd(), "/inst/extdata/hindcast/")
-#' hind <- c4h_load(hind_path, variable = "t2m", ext = 'nc')
-#' c4h_plot(hind, title = "Hindcast", ensemble = TRUE)  
-#' fcst <- c4h_load(fcst_path, variable = "t2m", ext = 'nc')
-#' c4h_plot(fcst, title = "Forecast", ensemble = TRUE) 
-#' 
-#' # Reanalysis
-#' rean_path <- paste0(getwd(), "/inst/extdata/reanalysis/")
-#' rean <- c4h_load(rean_path, variable = "t2m", ext = 'nc')
-#' c4h_plot(rean, title = "Reanalysis", boundaries = bound) 
+#' c4h_plot(rean, title = "Reanalysis", boundaries = mun, mask_boundaries = TRUE) 
 #' 
 #' # Hindcast
 #' hind_path <- paste0(getwd(), "/inst/extdata/hindcast/")
@@ -68,11 +56,11 @@
 #' # Stations
 #' stations_path <- paste0(getwd(), "/inst/extdata/stations/")
 #' stations <- c4h_load(stations_path, var = "temp_mean", ext = "csv")
-#' c4h_plot(stations, title = "Stations", ensemble = TRUE, time = 1:9)
+#' c4h_plot(stations, title = "Stations", time = 1:2, boundaries = mun)
 #' 
 #' # Spatially aggregated data
-#' fcst_aggr <- c4h_space(fcst, bound)
-#' c4h_plot(fcst_aggr, ensemble = 1:5)
+#' fcst_aggr <- c4h_space(fcst, mun)
+#' c4h_plot(fcst_aggr, ensemble = 1:5, lwd = 0.1, title = "Temp. by municipality")
 c4h_plot <- function(data,
                      var = NULL,
                      sdate = NULL,
@@ -85,7 +73,7 @@ c4h_plot <- function(data,
                      legend = NULL,
                      palette = "-RdBu",
                      ...) {
-
+  
   # 1. Data checks ----
   
   # Get array info
@@ -97,6 +85,8 @@ c4h_plot <- function(data,
     stop("More than one 'var' is available, please select one.")
   }else if(!is.null(var) & length(var)>1){
     stop("Only one 'var' is possible.")
+  }else if(!is.null(var)){
+    .subset_array_named(plot_data, var = var)
   }
   
   # Requirements: sdate
@@ -209,19 +199,19 @@ c4h_plot <- function(data,
     
     spatial_dims <- c(which(names(dim(plot_data)) == "longitude"),
                       which(names(dim(plot_data)) == "latitude"))
-    plot_stars <- aperm(plot_data, c(spatial_dims, setdiff(1:length(dims_data), spatial_dims)))
-    plot_stars <- stars::st_as_stars(plot_stars)
-    names(plot_stars) <- data$attrs$Variable$varName
-    plot_stars <- stars::st_set_dimensions(plot_stars, "longitude",
-                                           values = c(data$coords$longitude))
-    plot_stars <- stars::st_set_dimensions(plot_stars, "latitude",
-                                           values = c(data$coords$latitude))
-    sf::st_crs(plot_stars) <- 4326
+    plot_data <- aperm(plot_data, c(spatial_dims, setdiff(1:length(dims_data), spatial_dims)))
+    plot_data <- stars::st_as_stars(plot_data)
+    names(plot_data) <- data$attrs$Variable$varName
+    plot_data <- stars::st_set_dimensions(plot_data, "longitude",
+                                          values = c(data$coords$longitude))
+    plot_data <- stars::st_set_dimensions(plot_data, "latitude",
+                                          values = c(data$coords$latitude))
+    sf::st_crs(plot_data) <- 4326
     
     # Mask if needed
     if(isTRUE(mask_boundaries) & !is.null(boundaries)){
       sf::sf_use_s2(FALSE) 
-      suppressMessages(plot_stars <- plot_stars[bound_sf])
+      suppressMessages(plot_data <- plot_data[bound_sf])
       sf::sf_use_s2(FALSE) 
     }
     
@@ -232,73 +222,108 @@ c4h_plot <- function(data,
     point_geom <- sf::st_sfc(lapply(seq_along(lon),
                                     function(i) sf::st_point(c(lon[i], lat[i]))),
                              crs = 4326) 
-    plot_stars <- stars::st_as_stars(plot_data,
-                                     dimensions = stars::st_dimensions(
-                                       dataset = c(data$coord$dataset),
-                                       var = c(data$coord$var),
-                                       sdate = c(data$coords$sdate)[sdate],
-                                       time = c(data$coords$time)[time],
-                                       ensemble = c(data$coords$ensemble)[ensemble],
-                                       location = point_geom
-                                     ))
-    names(plot_stars) <- data$attrs$Variable$varName
+    plot_data <- stars::st_as_stars(plot_data,
+                                    dimensions = stars::st_dimensions(
+                                      dataset = c(data$coord$dataset),
+                                      var = c(data$coord$var),
+                                      sdate = c(data$coords$sdate)[sdate],
+                                      time = c(data$coords$time)[time],
+                                      ensemble = c(data$coords$ensemble)[ensemble],
+                                      location = point_geom
+                                    ))
+    varname <- data$attrs$Variable$varName
+    names(plot_data) <- varname
+    plot_data <- st_as_sf(plot_data, long = TRUE)
+    # plot_data <- plot_data[!is.na(sf::st_drop_geometry(plot_data)[,varname]),] # drop missing?
     
   } else if ("area" %in% names(dims_data)) { # Polygon data
     
-    plot_stars <- stars::st_as_stars(plot_data,
-                                     dimensions = stars::st_dimensions(
-                                       dataset = c(data$coord$dataset),
-                                       var = c(data$coord$var),
-                                       sdate = c(data$coords$sdate)[sdate],
-                                       time = c(data$coords$time)[time],
-                                       ensemble = c(data$coords$ensemble)[ensemble],
-                                       area = data$attrs$geom$geom
-                                     ))
-    names(plot_stars) <- data$attrs$Variable$varName
-
+    plot_data <- stars::st_as_stars(plot_data,
+                                    dimensions = stars::st_dimensions(
+                                      dataset = c(data$coord$dataset),
+                                      var = c(data$coord$var),
+                                      sdate = c(data$coords$sdate)[sdate],
+                                      time = c(data$coords$time)[time],
+                                      ensemble = c(data$coords$ensemble)[ensemble],
+                                      area = data$attrs$area$geom
+                                    ))
+    varname <- data$attrs$Variable$varName
+    names(plot_data) <- varname
+    plot_data <- st_as_sf(plot_data, long = TRUE)
+    
   }
-  
   
   # 4. Plot ----
   
-  # Create base figure
-  if(is.null(f1) & is.null(f2)){ # No faceting
+  # Base plot
+  if ("longitude" %in% names(dims_data)) { # Gridded data
     p <- ggplot2::ggplot() +
-      stars::geom_stars(data = plot_stars, ...)
-  }else if(!is.null(f1) & is.null(f2)){ # Wrap
-    p <- ggplot2::ggplot() +
-      stars::geom_stars(data = plot_stars, ...) +
+      stars::geom_stars(data = plot_data, ...) +
+      ggplot2::coord_equal(expand = FALSE)
+    
+  } else if ("location" %in% names(dims_data)) { # Point data
+    if(!is.null(boundaries)) {
+      p <- ggplot2::ggplot() +
+        ggplot2::geom_sf(data = bound_sf, alpha = 0, 
+                         col = "grey10", linewidth = 0.1, inherit.aes = FALSE) +
+        ggplot2::geom_sf(data = plot_data, ggplot2::aes(colour = .data[[varname]], ...))
+      
+    } else {
+      p <- ggplot2::ggplot() +
+        ggplot2::geom_sf(data = plot_data, ggplot2::aes(colour = .data[[varname]], ...))
+    }
+    
+  } else if ("area" %in% names(dims_data)) { # Polygon data
+    if(!is.null(boundaries)) {
+      p <- ggplot2::ggplot() +
+        ggplot2::geom_sf(data = bound_sf, alpha = 0, 
+                         col = "grey10", linewidth = 0.1, inherit.aes = FALSE) +
+        ggplot2::geom_sf(data = plot_data, ggplot2::aes(fill = .data[[varname]]), 
+                         ..., inherit.aes = FALSE) +
+        ggplot2::coord_sf(
+          xlim = sf::st_bbox(plot_data)[c("xmin", "xmax")],
+          ylim = sf::st_bbox(plot_data)[c("ymin", "ymax")],
+          expand = TRUE) 
+    } else {
+      p <- ggplot2::ggplot() +
+        ggplot2::geom_sf(data = plot_data, ggplot2::aes(fill = .data[[varname]]),
+                         ...)
+    }
+  }
+  
+  # Faceting
+  if(!is.null(f1) & is.null(f2)){ # Wrap
+    p <- p +
       ggplot2::facet_wrap(as.formula(paste("~", f1)),
                           labeller = "label_both")
-  }else if(!is.null(f1) & !is.null(f2)){ # Wrap
-    p <- ggplot2::ggplot() +
-      stars::geom_stars(data = plot_stars, ...) +
+  }else if(!is.null(f1) & !is.null(f2)){ # Grid
+    p <- p +
       ggplot2::facet_grid(as.formula(paste(f1, "~", f2)),
                           labeller = "label_both", switch = "y")
   }
   
-  # Equal cells if raster
-  if ("longitude" %in% names(dim(plot_stars))) {
-    p <- p + ggplot2::coord_equal(expand = FALSE)
-  }
-  
   # Palette
   my_palette <- GHRexplore::GHR_palette(palette)(n = 30)
-  p <- p + ggplot2::scale_fill_gradientn(colors = my_palette, na.value = "grey70")  
+  if ("location" %in% names(dims_data)){
+    p <- p + ggplot2::scale_colour_gradientn(colors = my_palette, na.value = "grey70")  
+    
+  }else if ("area" %in% names(dims_data)){
+    p <- p + ggplot2::scale_fill_gradientn(colors = my_palette, na.value = "grey70")  
+    
+  }else {
+    p <- p + ggplot2::scale_fill_gradientn(colors = my_palette, na.value = "white")  
+  }
   
-  # Boundaries
-  if(!is.null(boundaries)){
+  # Boundaries on top, only for grid
+  if(!is.null(boundaries) & "longitude" %in% names(dims_data)){
     suppressMessages(
       p <- p +
         ggplot2::geom_sf(data = bound_sf, alpha = 0, 
-                         col = "grey10", linewidth = 0.3, inherit.aes = FALSE) +
+                         col = "grey10", linewidth = 0.1, inherit.aes = FALSE) +
         ggplot2::coord_sf(
-          xlim = sf::st_bbox(plot_stars)[c("xmin", "xmax")],
-          ylim = sf::st_bbox(plot_stars)[c("ymin", "ymax")],
-          expand = FALSE) +
-        ggplot2::scale_x_continuous(labels = function(x) paste0(ifelse(x < 0, "-", "+"), abs(x), "°")) +
-        ggplot2::scale_y_continuous(labels = function(y) paste0(ifelse(y < 0, "-", "+"), abs(y), "°"))
-      
+          xlim = sf::st_bbox(plot_data)[c("xmin", "xmax")],
+          ylim = sf::st_bbox(plot_data)[c("ymin", "ymax")],
+          expand = TRUE)
     )
   }
   
@@ -311,33 +336,25 @@ c4h_plot <- function(data,
       strip.text.x = ggplot2::element_text(margin = ggplot2::margin(b = 0)),
       legend.key.height = ggplot2::unit(1, "cm"))
   
-  
-  # NA box
-  if(any(is.na(plot_stars[[1]]))){
-    
-    p <- p +
-      ggplot2::geom_point(data = data.frame(lab = "NA"), x = NA, y = NA,
-                          fill = NA, size = 7, shape = 15, na.rm = TRUE,
-                          ggplot2::aes(color = .data$lab), show.legend = TRUE) +
-      
-      ggplot2::scale_color_manual(values = c("NA" = "grey70"),
-                                  guide = ggplot2::guide_legend(
-                                    override.aes = list(fill = "grey70",
-                                                        color = "grey20"))) +
-      ggplot2::labs(color = "") +
-      ggplot2::guides(fill = ggplot2::guide_colorbar(order = 1),
-                      color = ggplot2::guide_legend(order = 2)) +
-      ggplot2::theme(legend.key = ggplot2::element_blank())
-  }
-  
   # Labels
   if(!is.null(title)){
     p <- p + ggplot2::ggtitle(title)
   }
   if(!is.null(legend)){
-    p <- p + ggplot2::labs(fill = legend)
+    if(!"location" %in% names(dims_data)) {
+      p <- p + ggplot2::labs(fill = legend)
+    } else {
+      p <- p + ggplot2::labs(col = legend)
+    }
   }
   if((!"sdate" %in% c(f1, f2)) & ("time" %in% c(f1, f2)) & is.numeric(data$coords$time)) {
+    
+    if("longitude" %in% names(dims_data)){
+      subtitle <- paste0("Start date: ", 
+                         stars::st_get_dimension_values(plot_stars, "sdate"))
+    } else {
+      subtitle <- paste0("Start date: ", plot_stars$sdate[1])
+    }
     p <- p +
       ggplot2::labs(subtitle =  paste0(
         "Start date: ",
