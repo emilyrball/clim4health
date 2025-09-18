@@ -164,5 +164,33 @@ s2dv_cube objects.
 Quality assessment of climate forecasts
 }
 \examples{
-TBD
+hcst <- c4h_load(paste0(getwd(), "/inst/extdata/hindcast/"),
+                 variable = "t2m",
+                 year = 2010:2012,
+                 month = 1,
+                 leadtime_month = 1:3,
+                 ext = "nc")
+lats <- hcst$coords$latitude
+lons <- hcst$coords$longitude
+obs <- c4h_load(paste0(getwd(), "/inst/extdata/reanalysis/"),
+                variable = "t2m",
+                year = 2010:2012,
+                month = 1,
+                leadtime_month = 1:3,
+                bbox = c(max(lats), min(lons),
+                         min(lats), max(lons)),
+                ext = "nc")
+shp_path <- paste0(getwd(), "/inst/extdata/areas/munip_vallecauca.gpkg")
+obs <- c4h_space(obs,
+                 areas = shp_path,
+                 fun = "mean",
+                 areas_id = "munip_code")
+hcst <- c4h_space(hcst,
+                  areas = shp_path,
+                  fun = "mean",
+                  areas_id = "munip_code")
+skill <- c4h_postprocess(exp = hcst,
+                         obs = obs,
+                         metrics = c("BSS", "CRPSS"),
+                         brier_thresholds = c(0.1, 0.9))
 }
