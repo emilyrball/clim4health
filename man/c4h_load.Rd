@@ -17,7 +17,8 @@ c4h_load(
 )
 }
 \arguments{
-\item{path}{String to the folder containing the files to be loaded.}
+\item{path}{String to the folder containing the files to be loaded, or a
+vector of specific file paths.}
 
 \item{variable}{The variable that you want to load.}
 

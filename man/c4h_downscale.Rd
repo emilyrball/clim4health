@@ -135,11 +135,31 @@ to TRUE. Default to TRUE. Only used if the downscaling function is set to
 "Analogs".}
 }
 \value{
-TBD
+A list of statistically downscaled data as s2dv_cube objects.
 }
 \description{
 Downscale and calibrate climate data.
 }
 \examples{
-TBD
+hcst <- c4h_load(paste0(getwd(), "/inst/extdata/hindcast/"),
+                 variable = "t2m",
+                 year = 2010:2012,
+                 month = 1,
+                 leadtime_month = 1:3,
+                 ext = "nc")
+lats <- hcst$coords$latitude
+lons <- hcst$coords$longitude
+obs <- c4h_load(paste0(getwd(), "/inst/extdata/reanalysis/"),
+                variable = "t2m",
+                year = 2010:2012,
+                month = 1,
+                leadtime_month = 1:3,
+                bbox = c(max(lats), min(lons),
+                         min(lats), max(lons)),
+                ext = "nc")
+dwn <- c4h_downscale("Intbc", exp = hcst, obs = obs,
+                     bc_method = "evmos",
+                     method_remap = "bilinear",
+                     target_grid = paste0(getwd(), "/inst/extdata/reanalysis",
+                                          "/t2m_201001.nc"))
 }

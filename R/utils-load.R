@@ -762,12 +762,14 @@
                                lat_selection = "all",
                                lon_selection = "all") {
   # get variable names in files
-  file_vars <- lapply(file_list, sf::gdal_subdatasets)
+  file_vars <- lapply(file_list, function(x) {
+    names(sf::gdal_read_mdim(x, proxy = TRUE)[[1]])
+  })
   file_vars <- unlist(file_vars)
 
   file_list_var <- list()
   for (var in variable) {
-    file_list_var[[var]] <- file_vars[grep(var, file_vars)]
+    file_list_var[[var]] <- file_list[grep(var, file_vars)]
     names(file_list_var[[var]]) <- NULL
   }
 
