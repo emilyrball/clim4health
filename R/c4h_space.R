@@ -148,7 +148,7 @@ c4h_space <- function(data,
   }
   
   # Store geometries
-  replacement_attrs[["geom"]] <- list(geom = sf::st_geometry(sf::st_as_sf(poly)))
+  replacement_attrs[["area"]] <- list(geom = sf::st_geometry(sf::st_as_sf(poly)))
   
   # create final s2dv_cube object
   data <- list(data = result,

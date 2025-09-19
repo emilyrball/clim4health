@@ -45,6 +45,7 @@ c4h_load <- function(path,
                      leadtime_month = "all",
                      ext = NULL,
                      bbox = NULL) {
+  
   if (is.null(ext)) {
     stop("Please specify the file extension using the 'ext' parameter.")
   } else if (!(ext %in% c("nc", "csv"))) {
@@ -85,7 +86,9 @@ c4h_load <- function(path,
 
       # if ext is nc, check which variables are in the files
       if (ext == "nc") {
-        file_vars <- lapply(file_list, sf::gdal_subdatasets)
+        file_vars <- lapply(file_list, function(x) {
+          names(sf::gdal_read_mdim(x, proxy = TRUE)[[1]])
+        })
         file_vars <- unlist(file_vars)
 
         all_vars <- unique(gsub(".*:", "", file_vars))
