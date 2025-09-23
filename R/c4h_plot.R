@@ -154,6 +154,13 @@ c4h_plot <- function(data,
   
   # 2. Data preparation ----
   
+  # Identify reanalysis/stations/areas and transform 'time' dimension if needed
+  if(dims_data["sdate"] == 1){
+    data$coords$time <- data$attrs$Dates
+  } else {
+    data$coords$sdate <- data$attrs$Dates[, 1]
+  }
+  
   # Select 'sdate' if needed
   if(all(sdate %in% 1:dims_data["sdate"])){
     plot_data <- .subset_array_named(plot_data, sdate = sdate)
@@ -191,11 +198,6 @@ c4h_plot <- function(data,
       data(world, package = "spData")
       bound_sf <- world
     }
-  }
-  
-  # Identify reanalysis and transform 'time' dimension if needed
-  if(dims_data["sdate"] == 1 & is.numeric(data$coords$sdate)){
-    data$coords$time <- data$attrs$Dates
   }
   
   
