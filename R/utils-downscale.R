@@ -26,6 +26,14 @@
   return(target_file)
 }
 
+#' .manage_dims
+#'
+#' @param data an array of data.
+#' @param req_dims the ordered names of the required dimensions
+#' (character vector).
+#'
+#' @returns an array with the specified dimensions.
+#' @noRd
 .manage_dims <- function(data, req_dims) {
   # CST_Interpolation returns list with reordered s2dv_cube objects
   if ("aux" %in% names(dim(data$data))) {
@@ -39,6 +47,13 @@
   return(data)
 }
 
+#' .add_dim
+#'
+#' @param data an array of data.
+#' @param dim the dimension to be added (integer). It will have length 1.
+#'
+#' @returns an array with the specified dimension added.
+#' @noRd
 .add_dim <- function(data, exp_dims) {
   for (dim in exp_dims) {
     if (!dim %in% names(dim(data$data))) {
