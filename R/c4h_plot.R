@@ -211,6 +211,12 @@ c4h_plot <- function(data,
                                           values = c(data$coords$longitude))
     plot_data <- stars::st_set_dimensions(plot_data, "latitude",
                                           values = c(data$coords$latitude))
+    plot_data <- stars::st_set_dimensions(plot_data, "sdate",
+                                          values = c(data$coords$sdate)[sdate])
+    plot_data <- stars::st_set_dimensions(plot_data, "ensemble",
+                                          values = c(data$coords$ensemble)[ensemble])
+    plot_data <- stars::st_set_dimensions(plot_data, "time",
+                                          values = c(data$coords$time)[time]) 
     sf::st_crs(plot_data) <- 4326
     
     # Mask if needed
@@ -318,7 +324,7 @@ c4h_plot <- function(data,
       p <- p +
         ggplot2::facet_grid(as.formula(paste(f1, "~", f2)), labeller = "label_both")      
     }
-
+    
   }
   
   # Palette
@@ -350,7 +356,7 @@ c4h_plot <- function(data,
   
   # Theme
   if(isTRUE(coordgrid)) {
-
+    
     p <- p +
       ggplot2::theme_minimal() +
       ggplot2::theme(
@@ -378,7 +384,7 @@ c4h_plot <- function(data,
         strip.text.x = ggplot2::element_text(margin = ggplot2::margin(b = 0)),
         legend.key.height = ggplot2::unit(1, "cm"))
   }
-
+  
   # Labels
   if(!is.null(title)){
     p <- p + ggplot2::ggtitle(title)
@@ -390,6 +396,7 @@ c4h_plot <- function(data,
       p <- p + ggplot2::labs(col = legend)
     }
   }
+
   if((!"sdate" %in% c(f1, f2)) & ("time" %in% c(f1, f2)) & is.numeric(data$coords$time)) {
     
     if("longitude" %in% names(dims_data)){
