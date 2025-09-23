@@ -157,8 +157,8 @@ options are "one-sided Fisher" (default) and "Random Walk". Only relevant if
 "MSSS" or "RMSSS" is in 'metrics'.}
 }
 \value{
-a list with the calculated metrics and their significances as
-s2dv_cube objects.
+a list of lists with the calculated metrics and their significances
+as s2dv_cube objects.
 }
 \description{
 Quality assessment of climate forecasts
