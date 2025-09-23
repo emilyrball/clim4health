@@ -26,6 +26,29 @@
   return(target_file)
 }
 
+.manage_dims <- function(data, req_dims) {
+  # CST_Interpolation returns list with reordered s2dv_cube objects
+  if ("aux" %in% names(dim(data$data))) {
+    dim <- which(names(dim(data$data)) == "aux")
+    data$data <- .drop_dim(data$data, dim)
+  }
+
+  data <- .add_dim(data, req_dims)
+  data$data <- s2dv::Reorder(data$data, order = req_dims)
+  data$dims <- dim(data$data)
+  return(data)
+}
+
+.add_dim <- function(data, exp_dims) {
+  for (dim in exp_dims) {
+    if (!dim %in% names(dim(data$data))) {
+      data$data <- s2dv::InsertDim(data$data, posdim = 1, lendim = 1,
+                                   name = dim)
+    }
+  }
+  return(data)
+}
+
 #' .drop_dim
 #'
 #' @param data an array of data.
