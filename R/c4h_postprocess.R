@@ -97,8 +97,8 @@
 #' options are "one-sided Fisher" (default) and "Random Walk". Only relevant if
 #' "MSSS" or "RMSSS" is in 'metrics'.
 #'
-#' @returns a list with the calculated metrics and their significances as
-#' s2dv_cube objects.
+#' @returns a list of lists with the calculated metrics and their significances
+#' as s2dv_cube objects.
 #' @export
 #'
 #' @examples
@@ -160,10 +160,7 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
   time_dim <- "sdate"
   memb_dim <- "ensemble"
 
-  if (is.null(ncores)) {
-    # if ncores is not specified, use half of the available cores
-    ncores <- max(floor(parallel::detectCores() / 3), 1)
-  } else if (ncores > (parallel::detectCores() - 1)) {
+  if (ncores > (parallel::detectCores() - 1)) {
     # if ncores is greater than the number of available cores, stop
     stop("ncores cannot be equal to or greater than the available cores")
   }
