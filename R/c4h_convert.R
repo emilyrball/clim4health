@@ -119,3 +119,125 @@
   df <- cbind(data.frame(lon = obj$lon, lat = obj$lat, check.names = FALSE), obj$data)
   .norm_cols_lonlat(df)
 }
+
+c4h_point_to_sf <- function(input_file, output_file) {
+  df <- .read_point_rds(input_file)
+  sfo <- .sf_from_df(df)
+  .write_sf(sfo, output_file)
+}
+
+c4h_point_to_terra <- function(input_file, output_file) {
+  df <- .read_point_rds(input_file)
+  v <- .terra_from_df(df)
+  .write_terra_vect(v, output_file)
+}
+
+c4h_point_to_csv <- function(input_file, output_file) {
+  df <- .read_point_rds(input_file)
+  .write_csv_df(df, output_file)
+}
+
+c4h_point_to_s2dv <- function(input_file, output_file) {
+  df <- .read_point_rds(input_file)
+  .s2dv_write(df, output_file)
+}
+
+c4h_sf_to_terra <- function(input_file, output_file) {
+  sfo <- .read_sf(input_file)
+
+  if (!inherits(sf::st_geometry(sfo), "sfc_POINT")) stop("Solo se soportan geometrías POINT en 'sf'.", call. = FALSE)
+  df <- .df_from_sf(sfo)
+  v <- .terra_from_df(df)
+  .write_terra_vect(v, output_file)
+}
+
+c4h_sf_to_csv <- function(input_file, output_file) {
+  sfo <- .read_sf(input_file)
+  if (!inherits(sf::st_geometry(sfo), "sfc_POINT")) stop("Solo se soportan geometrías POINT en 'sf'.", call. = FALSE)
+  df <- .df_from_sf(sfo)
+  .write_csv_df(df, output_file)
+}
+
+c4h_sf_to_s2dv <- function(input_file, output_file) {
+  sfo <- .read_sf(input_file)
+  if (!inherits(sf::st_geometry(sfo), "sfc_POINT")) stop("Solo se soportan geometrías POINT en 'sf'.", call. = FALSE)
+  df <- .df_from_sf(sfo)
+  .s2dv_write(df, output_file)
+}
+
+c4h_sf_to_point <- function(input_file, output_file) {
+  sfo <- .read_sf(input_file)
+  if (!inherits(sf::st_geometry(sfo), "sfc_POINT")) stop("Solo se soportan geometrías POINT en 'sf'.", call. = FALSE)
+  df <- .df_from_sf(sfo)
+  .write_point_rds(df, output_file)
+}
+
+c4h_terra_to_csv <- function(input_file, output_file) {
+  v <- .read_terra_vect(input_file)
+  df <- .df_from_terra(v)
+  .write_csv_df(df, output_file)
+}
+
+c4h_terra_to_s2dv <- function(input_file, output_file) {
+  v <- .read_terra_vect(input_file)
+  df <- .df_from_terra(v)
+  .s2dv_write(df, output_file)
+}
+
+c4h_terra_to_point <- function(input_file, output_file) {
+  v <- .read_terra_vect(input_file)
+  df <- .df_from_terra(v)
+  .write_point_rds(df, output_file)
+}
+
+c4h_terra_to_sf <- function(input_file, output_file) {
+  v <- .read_terra_vect(input_file)
+  df <- .df_from_terra(v)
+  sfo <- .sf_from_df(df)
+  .write_sf(sfo, output_file)
+}
+
+
+c4h_csv_to_s2dv <- function(input_file, output_file) {
+  df <- .read_csv_df(input_file)
+  .s2dv_write(df, output_file)
+}
+
+c4h_csv_to_point <- function(input_file, output_file) {
+  df <- .read_csv_df(input_file)
+  .write_point_rds(df, output_file)
+}
+
+c4h_csv_to_sf <- function(input_file, output_file) {
+  df <- .read_csv_df(input_file)
+  sfo <- .sf_from_df(df)
+  .write_sf(sfo, output_file)
+}
+
+c4h_csv_to_terra <- function(input_file, output_file) {
+  df <- .read_csv_df(input_file)
+  v <- .terra_from_df(df)
+  .write_terra_vect(v, output_file)
+}
+
+c4h_s2dv_to_point <- function(input_file, output_file) {
+  df <- .s2dv_read_to_df(input_file)
+  .write_point_rds(df, output_file)
+}
+
+c4h_s2dv_to_sf <- function(input_file, output_file) {
+  df <- .s2dv_read_to_df(input_file)
+  sfo <- .sf_from_df(df)
+  .write_sf(sfo, output_file)
+}
+
+c4h_s2dv_to_terra <- function(input_file, output_file) {
+  df <- .s2dv_read_to_df(input_file)
+  v <- .terra_from_df(df)
+  .write_terra_vect(v, output_file)
+}
+
+c4h_s2dv_to_csv <- function(input_file, output_file) {
+  df <- .s2dv_read_to_df(input_file)
+  .write_csv_df(df, output_file)
+}
