@@ -16,16 +16,8 @@ c4h_downscale(
   method_remap = NULL,
   points = NULL,
   method_point_interp = NULL,
-  loocv = FALSE,
   lr_method = NULL,
-  predictors = NULL,
-  large_scale_predictor_dimname = "vars",
-  obsL = NULL,
-  nanalogs = 3,
-  fun_analog = NULL,
-  metric = "dist",
-  return_indices = FALSE,
-  loocv_window = TRUE,
+  loocv = FALSE,
   ...
 )
 }
@@ -75,9 +67,6 @@ method to interpolate model gridded data into the point locations. Accepted
 methods are "nearest", "bilinear", "9point", "invdist4nn". Only needed if the
 downscaling is to a point location.}
 
-\item{loocv}{a logical indicating whether to apply leave-one-out
-cross-validation when applying the bias correction. Default to FALSE.}
-
 \item{lr_method}{a character vector indicating the linear regression method
 to be applied. Accepted methods are 'basic', 'large-scale' and '9nn'. The
 'basic' method fits a linear regression using high resolution observations as
@@ -95,44 +84,8 @@ regression model is then built using the principal components that explain
 95\% of the variance. The '9nn' method does not require a pre-interpolation
 process. The default value is NULL.}
 
-\item{predictors}{an array with large-scale data to be used in the
-'large-scale' method with 'Intlr'. Only needed if the linear regression
-method is set to 'large-scale'. It must have, at least the dimension start
-date and another dimension whose name has to be specified in the parameter
-'large_scale_predictor_dimname'. It should contain as many elements as the
-number of large-scale predictors. The default value is NULL.}
-
-\item{large_scale_predictor_dimname}{a character vector indicating the name
-of the dimension in 'predictors' that contain the predictor variables. See
-parameter 'predictors'.}
-
-\item{obsL}{an 's2dv_cube' object with named dimensions containing the
-observational field of the large-scale variable. The object must have, at
-least, the dimensions latitude, longitude and sdate. The object is expected
-to be already subset for the desired region.}
-
-\item{nanalogs}{an integer indicating the number of analogs to be searched.
-The default value is 3. It is only used if the downscaling function is set
-to "Analogs".}
-
-\item{fun_analog}{a function to be applied over the found analogs. Valid
-options: "mean", "wmean", "max", "min", "median" or NULL. If set to NULL
-(default), the function returns the found analogs.}
-
-\item{metric}{a character vector to select the analog specification method.
-Valid options: "dist" (i.e., Euclidian distance), "dcor" (i.e., distance
-correlation) or "cor" (i.e., Spearman's .correlation). The default metric
-is "dist". Only used if the downscaling function is set to "Analogs".}
-
-\item{return_indices}{a logical vector indicating whether to return the
-indices of the analogs together with the downscaled fields. Default to
-FALSE. Only used if the downscaling function is set to "Analogs".}
-
-\item{loocv_window}{a logical vector only to be used if 'obs' does not have
-the dimension 'window'. It indicates whether to apply leave-one-out
-cross-validation in the creation of the window. It is recommended to be set
-to TRUE. Default to TRUE. Only used if the downscaling function is set to
-"Analogs".}
+\item{loocv}{a logical indicating whether to apply leave-one-out
+cross-validation when applying the bias correction. Default to FALSE.}
 }
 \value{
 A list of statistically downscaled data as s2dv_cube objects.
@@ -160,6 +113,6 @@ obs <- c4h_load(paste0(getwd(), "/inst/extdata/reanalysis/"),
 dwn <- c4h_downscale("Intbc", exp = hcst, obs = obs,
                      bc_method = "evmos",
                      method_remap = "bilinear",
-                     target_grid = paste0(getwd(), "/inst/extdata/reanalysis",
-                                          "/t2m_201001.nc"))
+                     target_grid = paste0(getwd(), "/inst/extdata/",
+                                          "reanalysis/t2m_201001.nc"))
 }
