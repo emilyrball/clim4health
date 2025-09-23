@@ -113,6 +113,8 @@ c4h_downscale <- function(downscale_function,
   lat_dim <- "latitude"
   lon_dim <- "longitude"
 
+  .cdo_check()
+
   if (!downscale_function %in% c("Interpolation", "Intbc",
                                  "Intlr", "Analogs")) {
     stop("Please specify a downscaling function with 'downscale_function'.",
@@ -218,9 +220,15 @@ c4h_downscale <- function(downscale_function,
     if (is.null(target_grid)) {
       # case: 'Analogs' downscaling to a grid requires 'target_grid'
       message(paste0("Note: using method '", downscale_function, "' and ",
-                     "'target_grid' has not been specified. Downscaling will",
-                     " be done to the grid of 'obs'."))
-      target_grid <- obs$attrs$source_files[1]
+                     "'target_grid' has not been specified. c4h_downscale ",
+                     "will use the grid of 'exp' as the coarse grid."))
+
+      # create temporary netCDF file with reduced dimensions if needed
+      source_file_exp <- exp$attrs$source_files[1]
+
+      tmp_file_exp <- .reduce_source_file(source_file_exp)
+      exp$attrs$source_files[1] <- tmp_file_exp
+      target_grid <- exp$attrs$source_files[1]
     }
   }
 
@@ -277,6 +285,7 @@ c4h_downscale <- function(downscale_function,
     }
   }
 
+  # get required dimensions for exp and obs and exp_cor
   exp_dims <- names(dim(exp$data))
   obs_dims <- names(dim(obs$data))
   if (!is.null(exp_cor)) {
@@ -300,8 +309,8 @@ c4h_downscale <- function(downscale_function,
                              region = region,
                              method_point_interp = method_point_interp,
                              ncores = ncores)
-
     out$exp <- .manage_dims(out$exp, exp_dims)
+
   } else if (downscale_function == "Intbc") {
     out <- CST_Intbc(exp = exp, obs = obs, exp_cor = exp_cor,
                      target_grid = target_grid, bc_method = bc_method,
@@ -311,9 +320,9 @@ c4h_downscale <- function(downscale_function,
                      sdate_dim = sdate_dim, member_dim = member_dim,
                      time_dim = time_dim, region = region,
                      ncores = ncores, loocv = loocv)
-
     out$exp <- .manage_dims(out$exp, exp_dims)
     out$obs <- .manage_dims(out$obs, obs_dims)
+
   } else if (downscale_function == "Intlr") {
     out <- CST_Intlr(exp = exp, obs = obs, exp_cor = exp_cor,
                      lr_method = lr_method, target_grid = target_grid,
@@ -327,6 +336,7 @@ c4h_downscale <- function(downscale_function,
                      ...)
     out$exp <- .manage_dims(out$exp, exp_dims)
     out$obs <- .manage_dims(out$obs, obs_dims)
+
   } else if (downscale_function == "Analogs") {
     out <- CST_Analogs(exp = exp, obs = obs,
                        grid_exp = target_grid,
@@ -341,6 +351,7 @@ c4h_downscale <- function(downscale_function,
     out$obs <- .manage_dims(out$obs, obs_dims)
   }
 
+  # remove temporary files if created
   if (!is.null(points)) {
     if (is.null(exp_cor)) {
       if (out$exp$attrs$source_files[1] != source_file_exp) {
@@ -358,6 +369,11 @@ c4h_downscale <- function(downscale_function,
       if (tmp_file_obs != source_file_obs) {
         system(paste0("rm ", tmp_file_obs))
       }
+    }
+  }
+  if (downscale_function == "Analogs") {
+    if (file.exists(tmp_file_exp)) {
+      system(paste0("rm ", tmp_file_exp))
     }
   }
   return(out)
