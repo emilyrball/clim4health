@@ -83,3 +83,18 @@
   dim(data) <- dims[-dim]
   return(data)
 }
+
+#' .cdo_check
+#' 
+#' Check if CDO command line operators are installed
+#'
+#' @returns NULL
+#' @noRd
+.cdo_check <- function() {
+  cdo_path <- Sys.which("cdo")
+  if (cdo_path == "") {
+    stop(paste0("CDO command line operators not found. ",
+                "Please install CDO to use this function. Instructions can be ",
+                "found in the clim4health installation tutorials."))
+  }
+}
