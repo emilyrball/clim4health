@@ -279,12 +279,12 @@ c4h_plot <- function(data,
       p <- ggplot2::ggplot() +
         ggplot2::geom_sf(data = bound_sf, alpha = 0, 
                          col = "grey10", linewidth = 0.1, inherit.aes = FALSE) +
-        ggplot2::geom_sf(data = plot_data, ggplot2::aes(colour = .data[[varname]], ...))  +
+        ggplot2::geom_sf(data = plot_data, ggplot2::aes(colour = .data[[varname]]), ...)  +
         ggplot2::scale_x_continuous(labels = function(x) paste0(ifelse(x < 0, "-", ""), abs(x))) +
         ggplot2::scale_y_continuous(labels = function(y) paste0(ifelse(y < 0, "-", ""), abs(y)))
     } else {
       p <- ggplot2::ggplot() +
-        ggplot2::geom_sf(data = plot_data, ggplot2::aes(colour = .data[[varname]], ...))  +
+        ggplot2::geom_sf(data = plot_data, ggplot2::aes(colour = .data[[varname]]), ...)  +
         ggplot2::scale_x_continuous(labels = function(x) paste0(ifelse(x < 0, "-", ""), abs(x))) +
         ggplot2::scale_y_continuous(labels = function(y) paste0(ifelse(y < 0, "-", ""), abs(y)))
     }
