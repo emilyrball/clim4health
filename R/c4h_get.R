@@ -78,7 +78,6 @@ c4h_get <- function(pat,
                     outname = paste0("cds_"),
                     outpath = getwd()) {
   area <- bbox
-  rm(bbox)
 
   all_params <- c(as.list(environment()))
 
