@@ -55,7 +55,7 @@
     month = c(1:12),
     day = c(1:31),
     time = c(0:23),#paste0(sprintf("%02d", 0:23), ":00")
-    bbox = "N,W,S,E coordinates, latitudes from 90 to -90, longitudes -180 to 180"
+    area = "N,W,S,E coordinates, latitudes from 90 to -90, longitudes -180 to 180"
   ),
   "reanalysis-era5-land-monthly-means" = list(
     product_type = c("monthly_averaged_reanalysis",
@@ -386,7 +386,7 @@
     month = c(1:12),
     day= 1:31,
     time = 0:23,
-    bbox = "N,W,S,E coordinates, latitudes from 90 to -90, longitudes -180 to 180"
+    area = "N,W,S,E coordinates, latitudes from 90 to -90, longitudes -180 to 180"
   ),
   "reanalysis-era5-single-levels-monthly-means" = list(
     product_type = c("monthly_averaged_reanalysis",
@@ -656,7 +656,7 @@
     year = c(1940:format(Sys.Date(), "%Y")),
     month = c(1:12),
     time = 0:23,
-    bbox = "N,W,S,E coordinates, latitudes from 90 to -90, longitudes -180 to 180"
+    area = "N,W,S,E coordinates, latitudes from 90 to -90, longitudes -180 to 180"
   ),
   "seasonal-monthly-single-levels" = list(
     originating_centre = c("ecmwf","ukmo","meteo_france",
@@ -708,6 +708,6 @@
     year = c(1981:format(Sys.Date(), "%Y")),
     month = c(1:12),
     leadtime_month = c(1:6),
-    bbox = "N,W,S,E coordinates, latitudes from 90 to -90, longitudes -180 to 180"
+    area = "N,W,S,E coordinates, latitudes from 90 to -90, longitudes -180 to 180"
   )
 )
