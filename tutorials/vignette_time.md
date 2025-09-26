@@ -7,7 +7,7 @@
     </div>
     <br></br>
     <br></br>
-    <h1>Tutorial: Using the <code>clim4health_time</code> Function</h1>
+    <h1>Tutorial: Using the <code>c4h_time</code> Function</h1>
     <img src="../tutorials/figures/general/logo_clim4health.svg" width="120" height="120" style="margin-left:-3px; margin-top: -100px;">
 
 
@@ -18,8 +18,8 @@
 
 
 ```R
-source('../functions/clim4health_load.R')
-source('../functions/clim4health_time.R')
+source('../functions/c4h_load.R')
+source('../functions/c4h_time.R')
 
 library(lubridate)
 library(dplyr)
@@ -97,11 +97,11 @@ library(dplyr)
     
 
 -------------------------------------------------------------------------------
-## 2. Load the dataset with the function clim4health_load
+## 2. Load the dataset with the function c4h_load
 
 
 ```R
-data_clim <- clim4health_load('../sample_data/ecmwf51/forecast/',var = "t2m", 
+data_clim <- c4h_load('../sample_data/ecmwf51/forecast/',var = "t2m", 
                          data_type = "fcst", sdates = "20240401", ext = 'nc')
 ```
 
@@ -209,7 +209,7 @@ data_clim <- clim4health_load('../sample_data/ecmwf51/forecast/',var = "t2m",
 
 ```R
 # Perform Daily Aggregation
-daily_data <- clim4health_time(data_clim, aggregation = "daily")
+daily_data <- c4h_time(data_clim, aggregation = "daily")
 ```
 
 
@@ -238,7 +238,7 @@ PlotEquiMap(var = daily_data$data[1, 1, 1, 1, 1, , ],
 
 ```R
 # Perform Monthly Aggregation
-monthly_data <- clim4health_time(data_clim, aggregation = "monthly")
+monthly_data <- c4h_time(data_clim, aggregation = "monthly")
 ```
 
 
@@ -267,7 +267,7 @@ PlotEquiMap(var = monthly_data$data[1, 1, 1, 1, , ],
 
 ```R
 # Perform Yearly Aggregation
-yearly_data <- clim4health_time(data_clim, aggregation = "yearly")
+yearly_data <- c4h_time(data_clim, aggregation = "yearly")
 ```
 
 
