@@ -1,28 +1,74 @@
-# harmonize-clim4health
+# clim4health  <img src='man/figures/logo_harmonize.png' align="right" width="12%" /> <span> <span> <img src='man/figures/logo_BSC.png' align="right" width="16%" /> 
 
-This is a private repo for the development of the functions, the public repo is here: https://github.com/harmonize-tools/clim4health
+<!-- badges: start -->
+[![License](https://img.shields.io/badge/License-AGPL_v3-brightgreen.svg?style=flat)](https://www.gnu.org/licenses/agpl-3.0.html)
+<!-- badges: end -->
 
-## clim4health current public README
+<img src='man/figures/clim4health.jpg' align="right" width="14%" />
 
-clim4health is a tool developed within the HARMONIZE project with the aim of post-processing climate data harmonized to the spatiotemporal aggregation of health data. The tool consists in an R-package and its documentation including examples on how to use the tool and recommendations of parameter selection in some case studies.
+## Overview
 
-The functions that are part of the tool allow for:
+**clim4health** is an R package designed to obtain, transform and export climate 
+data for their use in epidemiological analyses and other types of applications. 
+The package contains a series of functions structured in three sequential blocks: 
+input, transformation, and output. 
 
-- calibration and quality assessment of climate forecasts
-- harmonization of the spatial resolution of the climate data with techniques of statistical spatial downscaling or aggregation to shapefiles
-- harmonization of the temporal resolution of the climate data with aggregation to epidemiological week or coarser aggregations
-- index calculation (e.g. threshold based index)
-- visualization of results
-- output as .csv file harmonized to the requested format
+In the input block, **clim4health** provides functions to download several types of 
+climate data including reanalyses, forecasts, hindcasts, and weather stations 
+and load them into memory for their processing. The transformation block includes 
+functions to postprocess and downscale climate data, perform spatiotemporal
+aggregations, as well as compute threshold-based suitability indicators. Finally, 
+in the output block, functions to visualize and export the transformed data are 
+provided.
 
-## Functions to develop
+<br>
+<center><img src='man/figures/package_structure.jpg' width="80%" /></center>
+<br>
 
-- GET: (optional use) download from Copernicus and save file -> Daniela
-- LOAD: load data into R object (startR) from netcdf or from csv (weather stations) -> Alba
-- SPATIAL: spatial harmonization (exactextractR) -> Alba
-- POSTPROCESS: calibration/downscaling and quality assessment -> Alba
-- INDEX: calculation of simple indices (threshold based) to return NA vs original values or 0 vs 1 -> Raúl
-- TIME: temporal harmonization from subdaily to daily, daily to weekly, daily to monthly, and monthly to annual -> Raúl
-- TABLE: from array to table -> Alba
-- PLOT: visualization (save plot png) -> (to do later)
-- SAVE: transform array to table and save as csv or save grid -> (to do later)
+**clim4health** is one of the packages developed by the
+[Global Health Resilience](https://www.bsc.es/discover-bsc/organisation/research-departments/global-health-resilience) (GHR)
+team at the [Barcelona Supercomputing Center](https://www.bsc.es/) (BSC) within 
+the [HARMONIZE](https://www.harmonize-tools.org/) project, which comprises 
+different R and Python libraries tailored for health, climate, environmental, 
+and socioeconomic data acquisition, harmonisation, and visualization.
+
+The package is currently under development and its expected release date 
+is **February 2026**.
+
+## Developers
+
+**[Emily Ball, PhD](https://www.bsc.es/ball-emily)**
+<a href="https://orcid.org/0000-0002-3002-4068" style="margin-left: 15px;"><img src="https://orcid.org/sites/default/files/images/orcid_16x16.png" alt="ORCID" style="width: 16px; height: 16px;" /></a>\
+Barcelona Supercomputing Center\
+Climate Services
+
+**[Alba Llabrés, PhD](https://www.bsc.es/llabres-alba)**
+<a href="https://orcid.org/0000-0003-2144-675X" style="margin-left: 15px;"><img src="https://orcid.org/sites/default/files/images/orcid_16x16.png" alt="ORCID" style="width: 16px; height: 16px;" /></a>\
+Barcelona Supercomputing Center\
+Climate Services
+
+**[Carles Milà, PhD](https://www.bsc.es/mila-garcia-carles)**
+<a href="https://orcid.org/0000-0003-0470-0760" style="margin-left: 15px;"><img src="https://orcid.org/sites/default/files/images/orcid_16x16.png" alt="ORCID" style="width: 16px; height: 16px;" /></a>\
+Barcelona Supercomputing Center\
+Global Health Resilience
+
+**[Raul Capellan Fernandez, MSc](https://www.bsc.es/capellan-fernandez-raul)** \
+Barcelona Supercomputing Center\
+Earth Data and Diagnostics
+
+**[Daniela Lührsen, MSc](https://www.bsc.es/luhrsen-daniela-sofie)**
+<a href="https://orcid.org/0009-0002-6340-5964" style="margin-left: 15px;"><img src="https://orcid.org/sites/default/files/images/orcid_16x16.png" alt="ORCID" style="width: 16px; height: 16px;" /></a>\
+Barcelona Supercomputing Center\
+Global Health Resilience
+
+**[Anna B. Kawiecki, PhD](https://www.bsc.es/kawiecki-peralta-ania)**
+<a href="https://orcid.org/0000-0002-0499-2612" style="margin-left: 15px;"><img src="https://orcid.org/sites/default/files/images/orcid_16x16.png" alt="ORCID" style="width: 16px; height: 16px;" /></a>\
+Barcelona Supercomputing Center\
+Global Health Resilience
+
+**[Rachel Lowe, PhD](https://www.bsc.es/lowe-rachel)**
+<a href="https://orcid.org/0000-0003-3939-7343" style="margin-left: 15px;"><img src="https://orcid.org/sites/default/files/images/orcid_16x16.png" alt="ORCID" style="width: 16px; height: 16px;" /></a>\
+Barcelona Supercomputing Center\
+Global Health Resilience (Group leader)
+
+
