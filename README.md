@@ -1,4 +1,4 @@
-# clim4health  <img src='man/figures/logo_harmonize.png' align="right" width="12%" /> <span> <span> <img src='man/figures/logo_BSC.png' align="right" width="16%" /> 
+# clim4health  <img src='man/figures/logo_harmonize.png' align="right" width="9%" /> <span> <span> <img src='man/figures/logo_BSC.png' align="right" width="16%" /> 
 
 <!-- badges: start -->
 [![License](https://img.shields.io/badge/License-AGPL_v3-brightgreen.svg?style=flat)](https://www.gnu.org/licenses/agpl-3.0.html)
