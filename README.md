@@ -22,8 +22,10 @@ in the output block, functions to visualize and export the transformed data are
 provided.
 
 <br>
-<center><img src='man/figures/package_structure.jpg' width="80%" /></center>
-<br>
+<div align="center">
+<img src='man/figures/package_structure.jpg' width="80%" /></center>
+</div>
+<br> \
 
 **clim4health** is one of the packages developed by the
 [Global Health Resilience](https://www.bsc.es/discover-bsc/organisation/research-departments/global-health-resilience) (GHR)
