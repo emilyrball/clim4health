@@ -160,9 +160,12 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
   time_dim <- "sdate"
   memb_dim <- "ensemble"
 
-  if (ncores > (parallel::detectCores() - 1)) {
-    # if ncores is greater than the number of available cores, stop
-    stop("ncores cannot be equal to or greater than the available cores")
+  
+  if (!is.null(ncores)) {
+    if (ncores > (parallel::detectCores() - 1)) {
+      # if ncores is greater than the number of available cores, stop
+      stop("'ncores' cannot be equal to or greater than the available cores.")
+    }
   }
 
   obs <- .get_array(obs)
