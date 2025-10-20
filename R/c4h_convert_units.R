@@ -27,7 +27,8 @@ c4h_convert_units <- function(data,
         !(variable %in% data$attrs$Variable$varName)) {
     stop("'data' does not contain the specified variable. Variables are: ",
          paste(data$attrs$Variable$varName, collapse = ", "))
-  } else if (variable %in% data$attrs$Variable$varName) {
+  } else if (!is.null(variable) && !is.null(data$attrs$Variable$varName) &&
+               variable %in% data$attrs$Variable$varName) {
     var_idx <- which(data$attrs$Variable$varName == variable)
   } else {
     var_idx <- 1
@@ -35,11 +36,11 @@ c4h_convert_units <- function(data,
 
   # Check valid from
   if (!is.null(from) &&
-        !is.null(data$attrs$Variable$metadata[[var_idx]]$units)) {
-    if (!(from == data$attrs$Variable$metadata[[var_idx]]$units)) {
+        !is.null(data$attrs$Variable$metadata$units[[var_idx]])) {
+    if (!(from == data$attrs$Variable$metadata$units[[var_idx]])) {
       stop(paste0("The units of 'from' (", from, ") do not match the variable",
                   " units in 'data' (",
-                  data$attrs$Variable$metadata[[var_idx]]$units, ")."))
+                  data$attrs$Variable$metadata$units[[var_idx]], ")."))
     }
   } else {
     warning("The units of 'from' were not checked because the variable",
@@ -94,7 +95,7 @@ c4h_convert_units <- function(data,
   }
 
   from <- ifelse(is.null(from),
-                 data$attrs$Variable$metadata[[var_idx]]$units,
+                 data$attrs$Variable$metadata$units[[var_idx]],
                  from)
   # Convert units
   data_out <- measurements::conv_unit(x = data$data,
@@ -102,7 +103,7 @@ c4h_convert_units <- function(data,
                                       to = to)
 
   # Update variable units
-  data$attrs$Variable$metadata[[var_idx]]$units <- to
+  data$attrs$Variable$metadata$units[[var_idx]] <- to
 
   # Replace data
   data$data <- data_out
