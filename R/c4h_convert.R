@@ -1,243 +1,53 @@
-.norm_cols_lonlat <- function(df) {
-  nms <- names(df)
-  if ("x" %in% nms && !("lon" %in% nms)) names(df)[names(df) == "x"] <- "lon"
-  if ("y" %in% nms && !("lat" %in% nms)) names(df)[names(df) == "y"] <- "lat"
-  if (!all(c("lon", "lat") %in% names(df))) {
-    stop("Required columns 'lon' y 'lat'.", call. = FALSE)
-  }
-  df
+# if(!"devtools" %in% installed.packages()) { 
+#   install.packages("pkgdown") 
+#   install.packages("devtools") 
+# }
+
+
+install.packages(c('renv','rstudioapi'), repos='https://cloud.r-project.org')
+install.packages("devtools", dependencies = TRUE)
+options(repos = c(CRAN = "https://cloud.r-project.org"))
+install.packages(c("exactextractr", "sf", "stars", "s2"))
+
+library(devtools)
+if(!"renv" %in% installed.packages()) { install.packages("renv") }
+library(renv)
+renv::init()
+
+package_path <- "./"
+clim4health_path <- paste0(package_path)
+
+################ temporary package installation ################
+if(!"ecmwfr" %in% installed.packages()) {
+  renv::install('./build/ecmwfr-master.zip')
 }
 
-.read_point_rds <- function(path) {
-  df <- readRDS(path)
-  if (!is.data.frame(df)) stop("Not valid.", call. = FALSE)
-  .norm_cols_lonlat(df)
+if(!"PCICt" %in% installed.packages()) {
+  renv::install('./build/PCICt-master.zip')
 }
-.write_point_rds <- function(df, path) {
-  df <- .norm_cols_lonlat(df)
-  saveRDS(df, path); invisible(path)
+if(!"ClimProjDiags" %in% installed.packages()) {
+  renv::install('./build/ClimProjDiags.tar.gz')
 }
-
-.read_csv_df <- function(path) {
-  df <- utils::read.csv(path, stringsAsFactors = FALSE, check.names = FALSE)
-  .norm_cols_lonlat(df)
+if(!"s2dv" %in% installed.packages()) {
+  renv::install('./build/s2dv.tar.gz')
 }
-.write_csv_df <- function(df, path) {
-  df <- .norm_cols_lonlat(df)
-  utils::write.csv(df, path, row.names = FALSE); invisible(path)
+if(!"startR" %in% installed.packages()) {
+  renv::install('./build/startR.tar.gz')
 }
-
-.read_sf <- function(path) {
-  sf::st_read(path, quiet = TRUE)
-}
-.write_sf <- function(obj, path) {
-  if (file.exists(path)) try(unlink(path, recursive = TRUE, force = TRUE), silent = TRUE)
-  suppressWarnings(sf::st_write(obj, path, quiet = TRUE)); invisible(path)
-}
-
-.read_terra <- function(path) {
-  v <- try(terra::vect(path), silent = TRUE)
-  if (!inherits(v, "try-error")) return(v)
-  r <- try(terra::rast(path), silent = TRUE)
-  if (!inherits(r, "try-error")) return(r)
-  stop("Canot read this file", call. = FALSE)
-}
-.write_terra_vect <- function(v, path) {
-  if (file.exists(path)) try(unlink(path, recursive = TRUE, force = TRUE), silent = TRUE)
-  terra::writeVector(v, path, overwrite = TRUE); invisible(path)
-}
-
-.sf_to_wgs84 <- function(sfo) {
-  crs <- sf::st_crs(sfo)
-  if (!is.na(crs)) sfo <- sf::st_transform(sfo, 4326)
-  sfo
-}
-.terra_vect_to_wgs84 <- function(v) {
-  crs <- terra::crs(v, proj = TRUE)
-  if (!is.na(crs) && nzchar(crs)) v <- terra::project(v, "EPSG:4326")
-  v
-}
-.terra_rast_to_wgs84 <- function(r) {
-  crs <- terra::crs(r, proj = TRUE)
-  if (!is.na(crs) && nzchar(crs) && !grepl("4326|WGS84", crs, ignore.case = TRUE)) {
-    r <- terra::project(r, "EPSG:4326")
-  }
-  r
-}
-
-.sf_to_point_df <- function(sfo) {
-  sfo <- .sf_to_wgs84(sfo)
-  geom <- sf::st_geometry(sfo)
-
-  if (!inherits(geom, "sfc_POINT")) {
-    sfo <- sf::st_point_on_surface(sfo)
-  }
-  coords <- sf::st_coordinates(sfo)
-  df <- sf::st_drop_geometry(sfo)
-  df$lon <- coords[, 1]; df$lat <- coords[, 2]
-  df[, c("lon", "lat", setdiff(names(df), c("lon", "lat"))), drop = FALSE]
-}
-
-.terra_vect_to_point_df <- function(v) {
-  v <- .terra_vect_to_wgs84(v)
-
-  if (terra::geomtype(v) != "points") v <- terra::centroids(v)
-  xy <- terra::geom(v)[, c("x", "y"), drop = FALSE]
-  at <- terra::as.data.frame(v, geom = FALSE)
-  data.frame(lon = xy[, "x"], lat = xy[, "y"], at, check.names = FALSE)
-}
-
-.rast_to_point_df <- function(r) {
-  r <- .terra_rast_to_wgs84(r)
-
-  df <- terra::as.data.frame(r, xy = TRUE, na.rm = TRUE)
-  names(df)[names(df) == "x"] <- "lon"
-  names(df)[names(df) == "y"] <- "lat"
-  df
-}
-
-.sf_from_df <- function(df) {
-  df <- .norm_cols_lonlat(df)
-  sf::st_as_sf(df, coords = c("lon", "lat"), crs = 4326, remove = TRUE)
-}
-.terra_from_df <- function(df) {
-  df <- .norm_cols_lonlat(df)
-  terra::vect(df, geom = c("lon", "lat"), crs = "EPSG:4326")
-}
-
-.s2dv_write <- function(df, path) {
-  df <- .norm_cols_lonlat(df)
-  out <- list(lon = df$lon, lat = df$lat, data = df[, setdiff(names(df), c("lon", "lat")), drop = FALSE])
-  saveRDS(out, path); invisible(path)
-}
-.s2dv_read_to_df <- function(path) {
-  obj <- readRDS(path)
-  if (!is.list(obj) || !all(c("lon", "lat", "data") %in% names(obj))) {
-    stop("Not valid.", call. = FALSE)
-  }
-  if (!is.data.frame(obj$data)) obj$data <- as.data.frame(obj$data, stringsAsFactors = FALSE)
-  df <- cbind(data.frame(lon = obj$lon, lat = obj$lat, check.names = FALSE), obj$data)
-  .norm_cols_lonlat(df)
-}
-
-c4h_point_to_sf <- function(input_file, output_file) {
-  df <- .read_point_rds(input_file)
-  sfo <- .sf_from_df(df)
-  .write_sf(sfo, output_file)
-}
-
-c4h_point_to_terra <- function(input_file, output_file) {
-  df <- .read_point_rds(input_file)
-  v <- .terra_from_df(df)
-  .write_terra_vect(v, output_file)
-}
-
-c4h_point_to_csv <- function(input_file, output_file) {
-  df <- .read_point_rds(input_file)
-  .write_csv_df(df, output_file)
-}
-
-c4h_point_to_s2dv <- function(input_file, output_file) {
-  df <- .read_point_rds(input_file)
-  .s2dv_write(df, output_file)
-}
-
-c4h_sf_to_terra <- function(input_file, output_file) {
-  sfo <- .read_sf(input_file)
-
-  if (!inherits(sf::st_geometry(sfo), "sfc_POINT")) stop("Solo se soportan geometrías POINT en 'sf'.", call. = FALSE)
-  df <- .df_from_sf(sfo)
-  v <- .terra_from_df(df)
-  .write_terra_vect(v, output_file)
-}
-
-c4h_sf_to_csv <- function(input_file, output_file) {
-  sfo <- .read_sf(input_file)
-  if (!inherits(sf::st_geometry(sfo), "sfc_POINT")) stop("Solo se soportan geometrías POINT en 'sf'.", call. = FALSE)
-  df <- .df_from_sf(sfo)
-  .write_csv_df(df, output_file)
-}
-
-c4h_sf_to_s2dv <- function(input_file, output_file) {
-  sfo <- .read_sf(input_file)
-  if (!inherits(sf::st_geometry(sfo), "sfc_POINT")) stop("Solo se soportan geometrías POINT en 'sf'.", call. = FALSE)
-  df <- .df_from_sf(sfo)
-  .s2dv_write(df, output_file)
-}
-
-c4h_sf_to_point <- function(input_file, output_file) {
-  sfo <- .read_sf(input_file)
-  if (!inherits(sf::st_geometry(sfo), "sfc_POINT")) stop("Solo se soportan geometrías POINT en 'sf'.", call. = FALSE)
-  df <- .df_from_sf(sfo)
-  .write_point_rds(df, output_file)
-}
-
-c4h_terra_to_csv <- function(input_file, output_file) {
-  v <- .read_terra_vect(input_file)
-  df <- .df_from_terra(v)
-  .write_csv_df(df, output_file)
-}
-
-c4h_terra_to_s2dv <- function(input_file, output_file) {
-  v <- .read_terra_vect(input_file)
-  df <- .df_from_terra(v)
-  .s2dv_write(df, output_file)
-}
-
-c4h_terra_to_point <- function(input_file, output_file) {
-  v <- .read_terra_vect(input_file)
-  df <- .df_from_terra(v)
-  .write_point_rds(df, output_file)
-}
-
-c4h_terra_to_sf <- function(input_file, output_file) {
-  v <- .read_terra_vect(input_file)
-  df <- .df_from_terra(v)
-  sfo <- .sf_from_df(df)
-  .write_sf(sfo, output_file)
+if(!"CSTools" %in% installed.packages()) {
+  renv::install('./build/CStools.tar.gz')
 }
 
 
-c4h_csv_to_s2dv <- function(input_file, output_file) {
-  df <- .read_csv_df(input_file)
-  .s2dv_write(df, output_file)
-}
+# devtools::load_all(paste0(package_path, "csdownscale/"))
+devtools::load_all(clim4health_path)
 
-c4h_csv_to_point <- function(input_file, output_file) {
-  df <- .read_csv_df(input_file)
-  .write_point_rds(df, output_file)
-}
+##########################################################################
+##########################################################################
+fcst_path <- paste0("./inst/extdata/forecast/")
 
-c4h_csv_to_sf <- function(input_file, output_file) {
-  df <- .read_csv_df(input_file)
-  sfo <- .sf_from_df(df)
-  .write_sf(sfo, output_file)
-}
-
-c4h_csv_to_terra <- function(input_file, output_file) {
-  df <- .read_csv_df(input_file)
-  v <- .terra_from_df(df)
-  .write_terra_vect(v, output_file)
-}
-
-c4h_s2dv_to_point <- function(input_file, output_file) {
-  df <- .s2dv_read_to_df(input_file)
-  .write_point_rds(df, output_file)
-}
-
-c4h_s2dv_to_sf <- function(input_file, output_file) {
-  df <- .s2dv_read_to_df(input_file)
-  sfo <- .sf_from_df(df)
-  .write_sf(sfo, output_file)
-}
-
-c4h_s2dv_to_terra <- function(input_file, output_file) {
-  df <- .s2dv_read_to_df(input_file)
-  v <- .terra_from_df(df)
-  .write_terra_vect(v, output_file)
-}
-
-c4h_s2dv_to_csv <- function(input_file, output_file) {
-  df <- .s2dv_read_to_df(input_file)
-  .write_csv_df(df, output_file)
-}
+fcst <- clim4health::c4h_load(path = fcst_path,
+                                      var = "t2m",            # variable to load
+                                      data_type = "fcst",     # data type is forecast
+                                      date = c("20250101"), # forecast initialisation date
+                                      ext = "nc")             # file extension
