@@ -77,10 +77,10 @@ c4h_get <- function(pat,
                     system,
                     outname = paste0("cds_"),
                     outpath = getwd()) {
-  area <- bbox
-  rm(bbox)
 
   all_params <- c(as.list(environment()))
+  names(all_params)[which(names(all_params) == "bbox")] <- "area"
+  area <- bbox
 
   # check the parameters of the function and give error messages
   datasets <- names(.datasets_info)
@@ -106,13 +106,14 @@ c4h_get <- function(pat,
   for (p in required_params) {
     if (!all(all_params[[p]] %in% .datasets_info[[dataset]][[p]])) {
       if (p == "area") {
-        if (!(length(area) == 4 && is.numeric(area) &&
-                all(area[c(1, 3)] > -90) || all(area[c(1, 3)] < 90) &&
-                all(area[c(1, 3)] > -90) || all(area[c(1, 3)] < 90) &&
-                all(area[c(2, 4)] > -180) || all(area[c(1, 3)] < 180) &&
-                all(area[c(2, 4)] > -180) || all(area[c(1, 3)] < 180))) {
+        if (!(length(bbox) == 4 && is.numeric(bbox) &&
+                all(bbox[c(1, 3)] > -90) || all(bbox[c(1, 3)] < 90) &&
+                all(bbox[c(1, 3)] > -90) || all(bbox[c(1, 3)] < 90) &&
+                all(bbox[c(2, 4)] > -180) || all(bbox[c(1, 3)] < 180) &&
+                all(bbox[c(2, 4)] > -180) || all(bbox[c(1, 3)] < 180))) {
           stop("Coordinates are out of bound. N,W,S,E coordinates, 
-               latitudes from 90 to -90, longitudes -180 to 180")
+               latitudes from 90 to -90, longitudes -180 to 180. Please adjust
+                'bbox' parameter.")
         }
       } else {
         cat(paste0("Your value for ", p,
