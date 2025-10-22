@@ -18,19 +18,6 @@
 #'
 #' @examples
 #' # # Forecast data included in the package
-#' # fcst_path <- system.file("extdata/forecast/", package = "clim4health")
-#' # fcst_path <- paste0(fcst_path, "/")
-#' #
-#' # # Load the forecast data
-#' # fcst <- c4h_load(fcst_path,
-#'                    variable = "t2m",
-#'                    year = 2025,
-#'                    month = 1,
-#'                    ext = 'nc')
-#' # class(fcst)
-#' # dim(fcst$data)
-#' # summary(fcst$data)
-
 #'# fcst_path <- "inst/extdata/forecast/"
 #'# fcst_path <- paste0(fcst_path)
 #'
@@ -82,17 +69,15 @@ c4h_convert <- function (data_object,
     
   } else if (input_format == 'csv') {
     if (output_format == 's2dv'){
-      return (.csv_to_s2dv(data_object, 
-                           varName = var_name))
+      return (.csv_to_s2dv(data_object))
     }
     
   } else if (input_format == 'polygons')  {
     if(output_format == 's2dv') {
-      return (.polygons_to_s2dv(
-        data_object,
-        dates = as.Date(dates),
-        ensemble_vals = aux_vals
-      ))
+      return (.polygons_to_s2dv(data_object,
+                                dates = as.Date(dates),
+                                ensemble_vals = aux_vals
+                              ))
     }
   }
 }
@@ -229,65 +214,76 @@ c4h_convert <- function (data_object,
 }
 
 # Transform csv into s2dv
-.csv_to_s2dv <- function(df, dates_col = "date", ensemble_col = "ensemble_value",
-                        varName = "t2m", dataset = 1, sdate = 1) {
-  
-  required <- c("dataset","var","sdate","time","ensemble","latitude","longitude","value")
-  if (!all(required %in% names(df))) {
-    stop("El CSV debe tener columnas: ", paste(required, collapse = ", "))   ## PROBLEMATIC AQUI
+.csv_to_s2dv <- function(df, value_cols = "value", var_names = NULL) {
+  # Validate basic columns
+  needed <- c("latitude", "longitude")
+  if (!all(needed %in% names(df))) {
+    stop("El CSV debe tener columnas: ", paste(needed, collapse = ", "))
+  }
+  if (!all(value_cols %in% names(df))) {
+    stop("No value columns were found: ", paste(value_cols, collapse = ", "))
   }
   
-  # unique ordered vectors
+  # Create available dimensions
   lat <- sort(unique(df$latitude), decreasing = TRUE)
   lon <- sort(unique(df$longitude))
-  nt  <- length(unique(df$time))
-  nm  <- length(unique(df$ensemble))
   
-  # opcionals
-  dates <- if (dates_col %in% names(df)) as.Date(sort(unique(df[[dates_col]]))) else NULL
-  ensv  <- if (ensemble_col %in% names(df)) sort(unique(df[[ensemble_col]])) else NULL
+  # optional dimensions (if none exist, use 1)
+  time <- if ("time" %in% names(df)) sort(unique(df$time)) else 1
+  ensemble <- if ("ensemble" %in% names(df)) sort(unique(df$ensemble)) else 1
   
-  # create array
-  nlat <- length(lat); nlon <- length(lon)
-  arr <- array(NA_real_, dim = c(dataset, 1, sdate, nt, nm, nlat, nlon))
+  if (is.null(var_names)) var_names <- value_cols
+  nvar <- length(value_cols)
   
-  # Fullfill por (t, m)
-  for (t in seq_len(nt)) {
-    for (m in seq_len(nm)) {
-      sub <- df[df$time == t & df$ensemble == m, c("latitude","longitude","value")]
-      # Order by lon, then lat asc to vectorize / then reverse if necessary
-      sub <- sub[order(sub$longitude, sub$latitude), ]
-      mat_inc <- matrix(sub$value, nrow = length(sort(unique(df$latitude))), ncol = length(lon), byrow = FALSE)
-      # if ‘lat’ is decreasing, we reverse rows
-      if (identical(lat, sort(lat, decreasing = TRUE))) {
-        mat <- mat_inc[nrow(mat_inc):1, , drop = FALSE]
-      } else mat <- mat_inc
-      arr[1, 1, 1, t, m, , ] <- mat
+  dims <- c(
+    dataset = 1,
+    var = nvar,
+    sdate = 1,
+    time = length(time),
+    ensemble = length(ensemble),
+    latitude = length(lat),
+    longitude = length(lon)
+  )
+  
+  arr <- array(NA_real_, dim = dims)
+  
+  # Fullfill the array
+  for (v in seq_along(value_cols)) {
+    for (t in seq_along(time)) {
+      for (e in seq_along(ensemble)) {
+        sub <- df
+        if ("time" %in% names(df)) sub <- sub[sub$time == time[t], ]
+        if ("ensemble" %in% names(df)) sub <- sub[sub$ensemble == ensemble[e], ]
+        
+        mat <- matrix(NA, nrow = length(lat), ncol = length(lon))
+        for (i in seq_along(lat)) {
+          for (j in seq_along(lon)) {
+            val <- sub[sub$latitude == lat[i] & sub$longitude == lon[j], value_cols[v]]
+            if (length(val) == 1) mat[i, j] <- val
+          }
+        }
+        arr[1, v, 1, t, e, , ] <- mat
+      }
     }
   }
   
+  # Create s2dv object
   cube <- list(
-    data  = arr,
-    dims  = c(dataset = dataset, var = 1, sdate = sdate,
-              time = nt, ensemble = nm, latitude = nlat, longitude = nlon),
+    data = arr,
+    dims = dims,
     coords = list(
-      dataset   = seq_len(dataset),
-      var       = varName,
-      sdate     = seq_len(sdate),
-      time      = seq_len(nt),
-      ensemble  = if (!is.null(ensv)) ensv else seq_len(nm),
-      latitude  = lat,
+      dataset = 1,
+      var = var_names,
+      sdate = 1,
+      time = time,
+      ensemble = ensemble,
+      latitude = lat,
       longitude = lon
     ),
-    attrs = list(
-      Dates    = dates,
-      varName  = varName,
-      metadata = NULL,
-      source_files = NULL
-    )
+    attrs = list(varName = var_names)
   )
   class(cube) <- "s2dv_cube"
-  cube
+  return(cube)
 }
 
 # Transform polygons into s2dv

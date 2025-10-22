@@ -24,7 +24,7 @@
 #' save_s2dv(fcst, 's2dv', 'out.nc')
 
 
-c4h_download <- function (data, format, path) {
+c4h_save <- function (data, format, path) {
   if (format == 's2dv') {
     .save_s2dv(data, path)
   } else if (format == 'terra') {
