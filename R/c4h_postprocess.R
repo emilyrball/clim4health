@@ -150,7 +150,9 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
          "clim4health functions.")
   }
 
-  if (is.null(metrics)) {
+  if (is.null(metrics) || !(all(metrics %in% c("BSS", "RPSS", "CRPSS",
+                                               "AbsBiasSS", "MSE",
+                                               "MSSS", "RMSSS", "ROCSS")))) {
     stop("Parameter 'metrics' must be specified. This should be a character",
          "vector of the verification metrics to be calculated. Valid options",
          "are:  Valid options are: \"bss\", \"rpss\", \"crpss\", \"AbsBiasSS\"",
@@ -160,13 +162,15 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
   time_dim <- "sdate"
   memb_dim <- "ensemble"
 
-  
   if (!is.null(ncores)) {
     if (ncores > (parallel::detectCores() - 1)) {
       # if ncores is greater than the number of available cores, stop
       stop("'ncores' cannot be equal to or greater than the available cores.")
     }
   }
+
+  out_dims <- names(exp$dims)[-c(which(names(exp$dims) %in%
+                                         c(time_dim, memb_dim)))]
 
   obs <- .get_array(obs)
   exp <- .get_array(exp)
@@ -198,7 +202,7 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
     }
   }
   if ("RPSS" %in% metrics) {
-    data[["RPSS"]] <-
+    temp <-
       s2dv::RPSS(exp, obs, ref = ref, time_dim = time_dim,
                  memb_dim = memb_dim, cat_dim = cat_dim, dat_dim = dat_dim,
                  prob_thresholds = prob_thresholds,
@@ -208,56 +212,91 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
                  cross.val = cross.val, na.rm = na.rm,
                  sig_method.type = sig_method_type_brier,
                  alpha = alpha, N.eff = N.eff, ncores = ncores)
+    temp$rpss <- CSTools::as.s2dv_cube(temp$rpss, dims = out_dims,
+                                       coords = exp$coords[out_dims])
+    temp$sign <- CSTools::as.s2dv_cube(temp$sign, dims = out_dims,
+                                       coords = exp$coords[out_dims])
+    data[["RPSS"]] <- temp
   }
   if ("CRPSS" %in% metrics) {
-    data[["CRPSS"]] <- s2dv::CRPSS(exp, obs, ref = ref, time_dim = time_dim,
-                                   memb_dim = memb_dim, dat_dim = dat_dim,
-                                   Fair = Fair, clim.cross.val = clim.cross.val,
-                                   sig_method.type = sig_method_type_brier,
-                                   alpha = alpha, N.eff = N.eff,
-                                   ncores = ncores)
+    temp <- s2dv::CRPSS(exp, obs, ref = ref, time_dim = time_dim,
+                        memb_dim = memb_dim, dat_dim = dat_dim,
+                        Fair = Fair, clim.cross.val = clim.cross.val,
+                        sig_method.type = sig_method_type_brier,
+                        alpha = alpha, N.eff = N.eff,
+                        ncores = ncores)
+    temp$rpss <- CSTools::as.s2dv_cube(temp$rpss, dims = out_dims,
+                                       coords = exp$coords[out_dims])
+    temp$sign <- CSTools::as.s2dv_cube(temp$sign, dims = out_dims,
+                                       coords = exp$coords[out_dims])
+    data[["CRPSS"]] <- temp
   }
   if ("AbsBiasSS" %in% metrics) {
-    data[["AbsBiasSS"]] <- s2dv::AbsBiasSS(exp, obs, ref = ref,
-                                           time_dim = time_dim,
-                                           memb_dim = memb_dim,
-                                           dat_dim = dat_dim, na.rm = na.rm,
-                                           sig_method.type =
-                                             sig_method_type_brier,
-                                           alpha = alpha, ncores = ncores)
+    temp <- s2dv::AbsBiasSS(exp, obs, ref = ref,
+                            time_dim = time_dim,
+                            memb_dim = memb_dim,
+                            dat_dim = dat_dim, na.rm = na.rm,
+                            sig_method.type =
+                            sig_method_type_brier,
+                            alpha = alpha, ncores = ncores)
+    temp$rpss <- CSTools::as.s2dv_cube(temp$rpss, dims = out_dims,
+                                       coords = exp$coords[out_dims])
+    temp$sign <- CSTools::as.s2dv_cube(temp$sign, dims = out_dims,
+                                       coords = exp$coords[out_dims])
+    data[["AbsBiasSS"]] <- temp
   }
   if ("MSE" %in% metrics) {
-    data[["MSE"]] <- s2dv::MSE(exp, obs, time_dim = time_dim,
-                               dat_dim = dat_dim, memb_dim = memb_dim,
-                               comp_dim = comp_dim, limits = limits,
-                               conf = conf, alpha = alpha, ncores = ncores)
+    temp <- s2dv::MSE(exp, obs, time_dim = time_dim,
+                      dat_dim = dat_dim, memb_dim = memb_dim,
+                      comp_dim = comp_dim, limits = limits,
+                      conf = conf, alpha = alpha, ncores = ncores)
+    temp$rpss <- CSTools::as.s2dv_cube(temp$rpss, dims = out_dims,
+                                       coords = exp$coords[out_dims])
+    temp$sign <- CSTools::as.s2dv_cube(temp$sign, dims = out_dims,
+                                       coords = exp$coords[out_dims])
+    data[["MSE"]] <- temp
   }
   if ("MSSS" %in% metrics) {
-    data[["MSSS"]] <- s2dv::MSSS(exp, obs, ref = ref,
-                                 time_dim = time_dim, dat_dim = dat_dim,
-                                 memb_dim = memb_dim, pval = pval, sign = sign,
-                                 alpha = alpha, N.eff = N.eff,
-                                 sig_method = sig_method,
-                                 sig_method.type = sig_method.type,
-                                 ncores = ncores)
+    temp <- s2dv::MSSS(exp, obs, ref = ref,
+                       time_dim = time_dim, dat_dim = dat_dim,
+                       memb_dim = memb_dim, pval = pval, sign = sign,
+                       alpha = alpha, N.eff = N.eff,
+                       sig_method = sig_method,
+                       sig_method.type = sig_method.type,
+                       ncores = ncores)
+    temp$rpss <- CSTools::as.s2dv_cube(temp$rpss, dims = out_dims,
+                                       coords = exp$coords[out_dims])
+    temp$sign <- CSTools::as.s2dv_cube(temp$sign, dims = out_dims,
+                                       coords = exp$coords[out_dims])
+    data[["MSSS"]] <- temp
   }
   if ("RMSSS" %in% metrics) {
-    data[["RMSSS"]] <- s2dv::RMSSS(exp, obs, ref = ref,
-                                   time_dim = time_dim, dat_dim = dat_dim,
-                                   memb_dim = memb_dim, pval = pval,
-                                   sign = sign, alpha = alpha, N.eff = N.eff,
-                                   sig_method = sig_method,
-                                   sig_method.type = sig_method.type,
-                                   ncores = ncores)
+    temp <- s2dv::RMSSS(exp, obs, ref = ref,
+                        time_dim = time_dim, dat_dim = dat_dim,
+                        memb_dim = memb_dim, pval = pval,
+                        sign = sign, alpha = alpha, N.eff = N.eff,
+                        sig_method = sig_method,
+                        sig_method.type = sig_method.type,
+                        ncores = ncores)
+    temp$rpss <- CSTools::as.s2dv_cube(temp$rpss, dims = out_dims,
+                                       coords = exp$coords[out_dims])
+    temp$sign <- CSTools::as.s2dv_cube(temp$sign, dims = out_dims,
+                                       coords = exp$coords[out_dims])
+    data[["RMSSS"]] <- temp
   }
   if ("ROCSS" %in% metrics) {
-    data[["ROCSS"]] <- s2dv::ROCSS(exp, obs,
-                                   ref = ref, time_dim = time_dim,
-                                   memb_dim = memb_dim, cat_dim = cat_dim,
-                                   dat_dim = dat_dim,
-                                   prob_thresholds = prob_thresholds,
-                                   indices_for_clim = indices_for_clim,
-                                   cross.val = cross.val, ncores = ncores)
+    temp <- s2dv::ROCSS(exp, obs,
+                        ref = ref, time_dim = time_dim,
+                        memb_dim = memb_dim, cat_dim = cat_dim,
+                        dat_dim = dat_dim,
+                        prob_thresholds = prob_thresholds,
+                        indices_for_clim = indices_for_clim,
+                        cross.val = cross.val, ncores = ncores)
+    temp$rpss <- CSTools::as.s2dv_cube(temp$rpss, dims = out_dims,
+                                       coords = exp$coords[out_dims])
+    temp$sign <- CSTools::as.s2dv_cube(temp$sign, dims = out_dims,
+                                       coords = exp$coords[out_dims])
+    data[["ROCSS"]] <- temp
   }
   return(data)
 }
