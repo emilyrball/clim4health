@@ -289,7 +289,7 @@ c4h_downscale <- function(downscale_function,
   exp_dims <- names(dim(exp$data))
   obs_dims <- names(dim(obs$data))
   if (!is.null(exp_cor)) {
-    exp_dims <- dim(exp_cor$data)
+    exp_dims <- names(dim(exp_cor$data))
   }
   if (!is.null(points)) {
     exp_dims <- c(exp_dims[!exp_dims %in% c("longitude", "latitude")],
