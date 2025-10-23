@@ -145,7 +145,7 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
                             sign = FALSE, pval = TRUE,
                             sig_method = "one-sided Fisher") {
   if (is.null(exp) || is.null(obs)) {
-    stop("Parameters 'exp' and 'obs' must be specified. They should be",
+    stop("Parameters 'exp' and 'obs' must be specified. They should be ",
          "s2dv_cube objects that have been loaded and transformed using",
          "clim4health functions.")
   }
@@ -153,9 +153,9 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
   if (is.null(metrics) || !(all(metrics %in% c("BSS", "RPSS", "CRPSS",
                                                "AbsBiasSS", "MSE",
                                                "MSSS", "RMSSS", "ROCSS")))) {
-    stop("Parameter 'metrics' must be specified. This should be a character",
-         "vector of the verification metrics to be calculated. Valid options",
-         "are:  Valid options are: \"bss\", \"rpss\", \"crpss\", \"AbsBiasSS\"",
+    stop("Parameter 'metrics' must be specified. This should be a character ",
+         "vector of the verification metrics to be calculated. Valid options ",
+         "are: \"BSS\", \"RPSS\", \"CRPSS\", \"AbsBiasSS\"",
          ", \"MSE\", \"MSSS\", \"RMSSS\", \"ROCSS\".")
   }
 
@@ -169,8 +169,16 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
     }
   }
 
-  out_dims <- names(exp$dims)[-c(which(names(exp$dims) %in%
-                                         c(time_dim, memb_dim)))]
+  out_dims <- exp$dims
+  out_dims[["sdate"]] <- 1
+  out_dims[["ensemble"]] <- 1
+
+  out_coords <- exp$coords
+  out_coords[["sdate"]] <- out_coords[["sdate"]][1]
+  out_coords[["ensemble"]] <- out_coords[["ensemble"]][1]
+
+  out_attrs <- exp$attrs
+  out_attrs$Dates <- out_attrs$Dates[1, , drop = FALSE]
 
   obs <- .get_array(obs)
   exp <- .get_array(exp)
@@ -189,7 +197,7 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
   # skill
   if ("BSS" %in% metrics) {
     for (threshold in brier_thresholds) {
-      data[[paste0("BSS", threshold)]] <-
+      temp <-
         s2dv::RPSS(exp, obs, ref = ref,
                    time_dim = time_dim, memb_dim = memb_dim, cat_dim = cat_dim,
                    dat_dim = dat_dim, prob_thresholds = threshold,
@@ -199,6 +207,12 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
                    cross.val = cross.val, na.rm = na.rm,
                    sig_method.type = sig_method_type_brier, alpha = alpha,
                    N.eff = N.eff, ncores = ncores)
+      rpss <- .format_output(data = temp$rpss, out_dims = out_dims,
+                             out_coords = out_coords, out_attrs = out_attrs)
+      sign <- .format_output(data = temp$sign, out_dims = out_dims,
+                             out_coords = out_coords, out_attrs = out_attrs)
+      temp <- list(rpss = rpss, sign = sign)
+      data[[paste0("BSS", 100 * threshold)]] <- temp
     }
   }
   if ("RPSS" %in% metrics) {
@@ -212,11 +226,12 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
                  cross.val = cross.val, na.rm = na.rm,
                  sig_method.type = sig_method_type_brier,
                  alpha = alpha, N.eff = N.eff, ncores = ncores)
-    temp$rpss <- CSTools::as.s2dv_cube(temp$rpss, dims = out_dims,
-                                       coords = exp$coords[out_dims])
-    temp$sign <- CSTools::as.s2dv_cube(temp$sign, dims = out_dims,
-                                       coords = exp$coords[out_dims])
-    data[["RPSS"]] <- temp
+    rpss <- .format_output(data = temp$rpss, out_dims = out_dims,
+                           out_coords = out_coords, out_attrs = out_attrs)
+    sign <- .format_output(data = temp$sign, out_dims = out_dims,
+                           out_coords = out_coords, out_attrs = out_attrs)
+    temp <- list(rpss = rpss, sign = sign)
+    data[[paste0("RPSS")]] <- temp
   }
   if ("CRPSS" %in% metrics) {
     temp <- s2dv::CRPSS(exp, obs, ref = ref, time_dim = time_dim,
@@ -225,11 +240,12 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
                         sig_method.type = sig_method_type_brier,
                         alpha = alpha, N.eff = N.eff,
                         ncores = ncores)
-    temp$rpss <- CSTools::as.s2dv_cube(temp$rpss, dims = out_dims,
-                                       coords = exp$coords[out_dims])
-    temp$sign <- CSTools::as.s2dv_cube(temp$sign, dims = out_dims,
-                                       coords = exp$coords[out_dims])
-    data[["CRPSS"]] <- temp
+    crpss <- .format_output(data = temp$crpss, out_dims = out_dims,
+                            out_coords = out_coords, out_attrs = out_attrs)
+    sign <- .format_output(data = temp$sign, out_dims = out_dims,
+                           out_coords = out_coords, out_attrs = out_attrs)
+    temp <- list(crpss = crpss, sign = sign)
+    data[[paste0("CRPSS")]] <- temp
   }
   if ("AbsBiasSS" %in% metrics) {
     temp <- s2dv::AbsBiasSS(exp, obs, ref = ref,
@@ -237,12 +253,13 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
                             memb_dim = memb_dim,
                             dat_dim = dat_dim, na.rm = na.rm,
                             sig_method.type =
-                            sig_method_type_brier,
+                              sig_method_type_brier,
                             alpha = alpha, ncores = ncores)
-    temp$rpss <- CSTools::as.s2dv_cube(temp$rpss, dims = out_dims,
-                                       coords = exp$coords[out_dims])
-    temp$sign <- CSTools::as.s2dv_cube(temp$sign, dims = out_dims,
-                                       coords = exp$coords[out_dims])
+    biasss <- .format_output(data = temp$biasSS, out_dims = out_dims,
+                             out_coords = out_coords, out_attrs = out_attrs)
+    sign <- .format_output(data = temp$sign, out_dims = out_dims,
+                           out_coords = out_coords, out_attrs = out_attrs)
+    temp <- list(biasSS = biasss, sign = sign)
     data[["AbsBiasSS"]] <- temp
   }
   if ("MSE" %in% metrics) {
@@ -250,10 +267,14 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
                       dat_dim = dat_dim, memb_dim = memb_dim,
                       comp_dim = comp_dim, limits = limits,
                       conf = conf, alpha = alpha, ncores = ncores)
-    temp$rpss <- CSTools::as.s2dv_cube(temp$rpss, dims = out_dims,
-                                       coords = exp$coords[out_dims])
-    temp$sign <- CSTools::as.s2dv_cube(temp$sign, dims = out_dims,
-                                       coords = exp$coords[out_dims])
+    mse <- .format_output(data = temp$mse, out_dims = out_dims,
+                          out_coords = out_coords, out_attrs = out_attrs)
+    conf_lower <- .format_output(data = temp$conf.lower, out_dims = out_dims,
+                                 out_coords = out_coords, out_attrs = out_attrs)
+    conf_upper <- .format_output(data = temp$conf.upper, out_dims = out_dims,
+                                 out_coords = out_coords, out_attrs = out_attrs)
+    temp <- list(mse = mse, conf.lower = conf_lower,
+                 conf.upper = conf_upper)
     data[["MSE"]] <- temp
   }
   if ("MSSS" %in% metrics) {
@@ -264,10 +285,11 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
                        sig_method = sig_method,
                        sig_method.type = sig_method.type,
                        ncores = ncores)
-    temp$rpss <- CSTools::as.s2dv_cube(temp$rpss, dims = out_dims,
-                                       coords = exp$coords[out_dims])
-    temp$sign <- CSTools::as.s2dv_cube(temp$sign, dims = out_dims,
-                                       coords = exp$coords[out_dims])
+    msss <- .format_output(data = temp$msss, out_dims = out_dims,
+                           out_coords = out_coords, out_attrs = out_attrs)
+    pval <- .format_output(data = temp$p.val, out_dims = out_dims,
+                           out_coords = out_coords, out_attrs = out_attrs)
+    temp <- list(msss = msss, p.val = pval)
     data[["MSSS"]] <- temp
   }
   if ("RMSSS" %in% metrics) {
@@ -278,10 +300,11 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
                         sig_method = sig_method,
                         sig_method.type = sig_method.type,
                         ncores = ncores)
-    temp$rpss <- CSTools::as.s2dv_cube(temp$rpss, dims = out_dims,
-                                       coords = exp$coords[out_dims])
-    temp$sign <- CSTools::as.s2dv_cube(temp$sign, dims = out_dims,
-                                       coords = exp$coords[out_dims])
+    rmsss <- .format_output(data = temp$rmsss, out_dims = out_dims,
+                            out_coords = out_coords, out_attrs = out_attrs)
+    pval <- .format_output(data = temp$p.val, out_dims = out_dims,
+                           out_coords = out_coords, out_attrs = out_attrs)
+    temp <- list(rmsss = rmsss, p.val = pval)
     data[["RMSSS"]] <- temp
   }
   if ("ROCSS" %in% metrics) {
@@ -292,10 +315,11 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
                         prob_thresholds = prob_thresholds,
                         indices_for_clim = indices_for_clim,
                         cross.val = cross.val, ncores = ncores)
-    temp$rpss <- CSTools::as.s2dv_cube(temp$rpss, dims = out_dims,
-                                       coords = exp$coords[out_dims])
-    temp$sign <- CSTools::as.s2dv_cube(temp$sign, dims = out_dims,
-                                       coords = exp$coords[out_dims])
+    rpss <- .format_output(data = temp$rpss, out_dims = out_dims,
+                           out_coords = out_coords, out_attrs = out_attrs)
+    sign <- .format_output(data = temp$sign, out_dims = out_dims,
+                           out_coords = out_coords, out_attrs = out_attrs)
+    temp <- list(rpss = rpss, sign = sign)
     data[["ROCSS"]] <- temp
   }
   return(data)
