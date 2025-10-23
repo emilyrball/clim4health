@@ -246,7 +246,7 @@ c4h_plot <- function(data,
                                     ))
     varname <- data$attrs$Variable$varName
     names(plot_data) <- varname
-    plot_data <- sf::st_as_sf(plot_data, long = TRUE)
+    plot_data <- st_as_sf(plot_data, long = TRUE)
     # plot_data <- plot_data[!is.na(sf::st_drop_geometry(plot_data)[,varname]),] # drop missing?
     
   } else if ("area" %in% names(dims_data)) { # Polygon data
@@ -262,7 +262,7 @@ c4h_plot <- function(data,
                                     ))
     varname <- data$attrs$Variable$varName
     names(plot_data) <- varname
-    plot_data <- sf::st_as_sf(plot_data, long = TRUE)
+    plot_data <- st_as_sf(plot_data, long = TRUE)
     
   }
   
@@ -398,19 +398,20 @@ c4h_plot <- function(data,
       p <- p + ggplot2::labs(col = legend)
     }
   }
-
+  
+  # Fix labels when time is numeric
   if((!"sdate" %in% c(f1, f2)) & ("time" %in% c(f1, f2)) & is.numeric(data$coords$time)) {
     
     if("longitude" %in% names(dims_data)){
       subtitle <- paste0("Start date: ", 
-                         stars::st_get_dimension_values(plot_stars, "sdate"))
+                         stars::st_get_dimension_values(plot_data, "sdate"))
     } else {
-      subtitle <- paste0("Start date: ", plot_stars$sdate[1])
+      subtitle <- paste0("Start date: ", plot_data$sdate[1])
     }
     p <- p +
       ggplot2::labs(subtitle =  paste0(
         "Start date: ",
-        stars::st_get_dimension_values(plot_stars, "sdate")))
+        stars::st_get_dimension_values(plot_data, "sdate")))
   }
   
   return(p)
