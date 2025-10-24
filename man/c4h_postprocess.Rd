@@ -43,7 +43,7 @@ and 'member' dimensions.}
 
 \item{metrics}{A character vector of the verification metrics to be
 calculated. Valid options are: "bss", "rpss", "crpss", "AbsBiasSS", "MSE",
-"MSSS", "RMSSS", "ROCSS".}
+"MSSS", "RMSE", "RMSSS", "ROCSS".}
 
 \item{ref}{An optional s2dv_cube object of reference data with at least the
 'sdate' and 'member' dimensions. The dimensions must be the same as 'exp'
@@ -121,15 +121,15 @@ Only relevant if "BSS" or "RPSS" is in 'metrics'.}
 
 \item{comp_dim}{A character string indicating the name of dimension along
 which obs is taken into account only if it is complete. The default value
-is NULL. Only relevant if "MSE" is in 'metrics'.}
+is NULL. Only relevant if "MSE" or "RMSE" is in 'metrics'.}
 
 \item{limits}{A vector of two integers indicating the range along comp_dim
 to be completed. The default value is c(1, length(comp_dim dimension)). Only
-relevant if "MSE" is in 'metrics'.}
+relevant if "MSE" or "RMSE" is in 'metrics'.}
 
 \item{conf}{A logical value indicating whether to retrieve the confidence
-intervals or not. The default value is TRUE. Only relevant if "MSE" is in
-'metrics'.}
+intervals or not. The default value is TRUE. Only relevant if "MSE" or "RMSE"
+is in 'metrics'.}
 
 \item{dat_dim}{A character string indicating the name of dataset dimension.
 The length of this dimension can be different between 'exp' and 'obs'.
