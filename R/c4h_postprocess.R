@@ -8,7 +8,7 @@
 #' and 'member' dimensions.
 #' @param metrics A character vector of the verification metrics to be
 #' calculated. Valid options are: "bss", "rpss", "crpss", "AbsBiasSS", "MSE",
-#' "MSSS", "RMSSS", "ROCSS".
+#' "MSSS", "RMSE", "RMSSS", "ROCSS".
 #' @param ref An optional s2dv_cube object of reference data with at least the
 #' 'sdate' and 'member' dimensions. The dimensions must be the same as 'exp'
 #' except 'memb_dim' and 'dat_dim'. If 'ref' is NULL, the climatological
@@ -70,13 +70,13 @@
 #' @param weights_ref Same as 'weights_exp' but for the reference forecast.
 #' @param comp_dim A character string indicating the name of dimension along
 #' which obs is taken into account only if it is complete. The default value
-#' is NULL. Only relevant if "MSE" is in 'metrics'.
+#' is NULL. Only relevant if "MSE" or "RMSE" is in 'metrics'.
 #' @param limits A vector of two integers indicating the range along comp_dim
 #' to be completed. The default value is c(1, length(comp_dim dimension)). Only
-#' relevant if "MSE" is in 'metrics'.
+#' relevant if "MSE" or "RMSE" is in 'metrics'.
 #' @param conf A logical value indicating whether to retrieve the confidence
-#' intervals or not. The default value is TRUE. Only relevant if "MSE" is in
-#' 'metrics'.
+#' intervals or not. The default value is TRUE. Only relevant if "MSE" or "RMSE"
+#' is in 'metrics'.
 #' @param dat_dim A character string indicating the name of dataset dimension.
 #' The length of this dimension can be different between 'exp' and 'obs'.
 #' The default value is NULL.
@@ -152,11 +152,12 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
 
   if (is.null(metrics) || !(all(metrics %in% c("BSS", "RPSS", "CRPSS",
                                                "AbsBiasSS", "MSE",
-                                               "MSSS", "RMSSS", "ROCSS")))) {
+                                               "MSSS", "RMSE", "RMSSS",
+                                               "ROCSS")))) {
     stop("Parameter 'metrics' must be specified. This should be a character ",
          "vector of the verification metrics to be calculated. Valid options ",
          "are: \"BSS\", \"RPSS\", \"CRPSS\", \"AbsBiasSS\"",
-         ", \"MSE\", \"MSSS\", \"RMSSS\", \"ROCSS\".")
+         ", \"MSE\", \"MSSS\", \"RMSE\", \"RMSSS\", \"ROCSS\".")
   }
 
   time_dim <- "sdate"
@@ -291,6 +292,21 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
                            out_coords = out_coords, out_attrs = out_attrs)
     temp <- list(msss = msss, p.val = pval)
     data[["MSSS"]] <- temp
+  }
+  if ("RMSE" %in% metrics) {
+    temp <- s2dv::RMS(exp, obs, time_dim = time_dim,
+                      dat_dim = dat_dim, memb_dim = memb_dim,
+                      comp_dim = comp_dim, limits = limits,
+                      conf = conf, alpha = alpha, ncores = ncores)
+    rmse <- .format_output(data = temp$rms, out_dims = out_dims,
+                           out_coords = out_coords, out_attrs = out_attrs)
+    conf_lower <- .format_output(data = temp$conf.lower, out_dims = out_dims,
+                                 out_coords = out_coords, out_attrs = out_attrs)
+    conf_upper <- .format_output(data = temp$conf.upper, out_dims = out_dims,
+                                 out_coords = out_coords, out_attrs = out_attrs)
+    temp <- list(rmse = rmse, conf.lower = conf_lower,
+                 conf.upper = conf_upper)
+    data[["RMSE"]] <- temp
   }
   if ("RMSSS" %in% metrics) {
     temp <- s2dv::RMSSS(exp, obs, ref = ref,
