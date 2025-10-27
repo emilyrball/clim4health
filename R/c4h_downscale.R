@@ -113,15 +113,63 @@ c4h_downscale <- function(downscale_function,
   lat_dim <- "latitude"
   lon_dim <- "longitude"
 
+  if (!inherits(exp, "s2dv_cube")) {
+    stop("Parameter 'exp' must be an s2dv_cube object loaded and",
+         " transformed using clim4health functions.")
+  }
+
+  # check spatial format
+  if (!all(c("latitude", "longitude") %in% names(exp$dims))) {
+    if (!("area" %in% names(exp$dims))) {
+      stop("The 'exp' s2dv_cube object must have 'latitude' and 'longitude'",
+           "or 'area' dimensions.")
+    } else {
+      # case where data has been aggregated to regions
+      message("The 'exp' s2dv_cube object has been aggregated to regions ",
+              "and has an 'area' dimension. Only bias adjustment or ",
+              "calibration will be applied, no spatial downscaling.")
+      if (downscale_function != "Intbc") {
+        stop("The 'exp' s2dv_cube object has been aggregated to regions ",
+             "and has an 'area' dimension. Method '",
+             downscale_function, "' is not valid for this type of data.")
+      } else {
+        if (bc_method %in% c("quantile_mapping", "qm")) {
+          out <- list()
+          out$obs <- obs
+          out$exp <-
+            CSTools::CST_QuantileMapping(exp = exp,
+                                         obs = obs,
+                                         exp_cor = exp_cor,
+                                         memb_dim = member_dim,
+                                         sdate_dim = sdate_dim,
+                                         method = "QUANT",
+                                         wet.day = TRUE,
+                                         na.rm = TRUE,
+                                         ncores = ncores)
+        } else {
+          out <- list()
+          out$obs <- obs
+          out$exp <-
+            CSTools::CST_Calibration(exp = exp,
+                                     obs = obs,
+                                     exp_cor = exp_cor,
+                                     memb_dim = member_dim,
+                                     sdate_dim = sdate_dim,
+                                     cal.method = bc_method,
+                                     eval.method = "leave-one-out",
+                                     ncores = ncores)
+        }
+      }
+      return(out)
+    }
+  }
+
   .cdo_check()
 
   if (!downscale_function %in% c("Interpolation", "Intbc",
                                  "Intlr", "Analogs")) {
     stop("Please specify a downscaling function with 'downscale_function'.",
          " Options are: 'Interpolation', 'Intbc', 'Analogs', 'Intlr'.")
-  } else if (!inherits(exp, "s2dv_cube")) {
-    stop("Parameter 'exp' must be an s2dv_cube object loaded and",
-         " transformed using clim4health functions.")
   }
 
   if (downscale_function %in% c("Interpolation", "Intbc", "Intlr")) {
