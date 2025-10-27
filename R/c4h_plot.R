@@ -237,8 +237,8 @@ c4h_plot <- function(data,
                              crs = 4326) 
     plot_data <- stars::st_as_stars(plot_data,
                                     dimensions = stars::st_dimensions(
-                                      dataset = c(data$coord$dataset),
-                                      var = c(data$coord$var),
+                                      dataset = c(data$coords$dataset),
+                                      var = c(data$coords$var),
                                       sdate = c(data$coords$sdate)[sdate],
                                       time = c(data$coords$time)[time],
                                       ensemble = c(data$coords$ensemble)[ensemble],
@@ -246,15 +246,15 @@ c4h_plot <- function(data,
                                     ))
     varname <- data$attrs$Variable$varName
     names(plot_data) <- varname
-    plot_data <- st_as_sf(plot_data, long = TRUE)
+    plot_data <- sf::st_as_sf(plot_data, long = TRUE)
     # plot_data <- plot_data[!is.na(sf::st_drop_geometry(plot_data)[,varname]),] # drop missing?
     
   } else if ("area" %in% names(dims_data)) { # Polygon data
     
     plot_data <- stars::st_as_stars(plot_data,
                                     dimensions = stars::st_dimensions(
-                                      dataset = c(data$coord$dataset),
-                                      var = c(data$coord$var),
+                                      dataset = c(data$coords$dataset),
+                                      var = c(data$coords$var),
                                       sdate = c(data$coords$sdate)[sdate],
                                       time = c(data$coords$time)[time],
                                       ensemble = c(data$coords$ensemble)[ensemble],
@@ -262,7 +262,7 @@ c4h_plot <- function(data,
                                     ))
     varname <- data$attrs$Variable$varName
     names(plot_data) <- varname
-    plot_data <- st_as_sf(plot_data, long = TRUE)
+    plot_data <- sf::st_as_sf(plot_data, long = TRUE)
     
   }
   
