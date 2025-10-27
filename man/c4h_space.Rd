@@ -43,6 +43,6 @@ fcst_path <- paste0(getwd(), "/inst/extdata/forecast/")
 fcst <- c4h_load(fcst_path, variable = "t2m", ext = 'nc')
 
 # Spatial aggregation
-fcst_aggr <- c4h_space(fcst, munip)            
-                         
+fcst_aggr <- c4h_space(fcst, munip)
+
 }
