@@ -133,6 +133,12 @@ c4h_downscale <- function(downscale_function,
              "and has an 'area' dimension. Method '",
              downscale_function, "' is not valid for this type of data.")
       } else {
+        if (is.null(bc_method)) {
+          stop("If using 'Intbc', 'bc_method' must be specified. Options ",
+               "are: 'quantile_mapping', 'dynamical_bias', 'bias', 'evmos',",
+               "'mse_min', 'crps_min', 'rpc-based'. Abbreviations 'dbc', ",
+               "'qm' are also accepted.")
+        }
         if (bc_method %in% c("quantile_mapping", "qm")) {
           out <- list()
           out$obs <- obs
