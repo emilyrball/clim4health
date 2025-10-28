@@ -26,4 +26,5 @@ Imports:
     terra
 Suggests: 
     testthat (>= 3.0.0),
+    spData
 Config/testthat/edition: 3

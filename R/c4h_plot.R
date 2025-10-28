@@ -178,6 +178,7 @@ c4h_plot <- function(data,
     keep_margins <- which(names(dims_data) != "ensemble")
     plot_data <- apply(plot_data, MARGIN = keep_margins, FUN = ensemble_fun)
     dim(plot_data) <- c(dim(plot_data), "ensemble"=1)
+    plot_data <- aperm(plot_data, perm = match(names(dim(plot_data)), names(dims_data)))
     ensemble <- 1
     
     # Select ensemble member
@@ -195,8 +196,7 @@ c4h_plot <- function(data,
         bound_sf <- boundaries
       }
     } else if(boundaries == "countries"){
-      data(world, package = "spData")
-      bound_sf <- world
+      bound_sf <- spData::world
     }
   }
   
@@ -367,7 +367,6 @@ c4h_plot <- function(data,
         panel.grid.minor = ggplot2::element_blank(),
         axis.ticks = ggplot2::element_line(linewidth = 0.3, color = "grey50"),
         axis.text = ggplot2::element_text(size = 7, color = "grey30"),
-        axis.text.x = ggplot2::element_text(angle = -45, hjust = 0),
         strip.text.y = ggplot2::element_text(margin = ggplot2::margin(b = 0)),
         strip.text.x = ggplot2::element_text(margin = ggplot2::margin(b = 0)),
         legend.key.height = ggplot2::unit(1, "cm")) +
@@ -409,9 +408,7 @@ c4h_plot <- function(data,
       subtitle <- paste0("Start date: ", plot_data$sdate[1])
     }
     p <- p +
-      ggplot2::labs(subtitle =  paste0(
-        "Start date: ",
-        stars::st_get_dimension_values(plot_data, "sdate")))
+      ggplot2::labs(subtitle = subtitle)
   }
   
   return(p)
