@@ -45,7 +45,7 @@ c4h_load <- function(path,
                      leadtime_month = "all",
                      ext = NULL,
                      bbox = NULL) {
-  
+
   if (is.null(ext)) {
     stop("Please specify the file extension using the 'ext' parameter.")
   } else if (!(ext %in% c("nc", "csv"))) {
