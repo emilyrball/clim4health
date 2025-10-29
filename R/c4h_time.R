@@ -6,7 +6,8 @@
 #' usually read using `c4h_load`.
 #' @param time_aggregation string indicating the type of temporal aggregations
 #' to be performed. Options are "monthly", "yearly", "weekly", and "daily".
-#' @param fun string specifying the aggregation function. Defaults to "mean".
+#' @param fun string specifying the aggregation function. Options are
+#' "mean", "sum", "max", "min". Defaults to "mean".
 #' @param dim_aggregation string indicating the dimension along which the
 #' aggregation should be performed. Options are "sdate" and "time".
 #' @param week_start for weekly aggregation, specify the starting weekday.
