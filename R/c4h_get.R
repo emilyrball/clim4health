@@ -79,8 +79,6 @@ c4h_get <- function(pat,
                     outpath = getwd()) {
 
   all_params <- c(as.list(environment()))
-  names(all_params)[which(names(all_params) == "bbox")] <- "area"
-  area <- bbox
 
   # check the parameters of the function and give error messages
   datasets <- names(.datasets_info)
@@ -105,7 +103,7 @@ c4h_get <- function(pat,
   # check if all required params have correct values
   for (p in required_params) {
     if (!all(all_params[[p]] %in% .datasets_info[[dataset]][[p]])) {
-      if (p == "area") {
+      if (p == "bbox") {
         if (!(length(bbox) == 4 && is.numeric(bbox) &&
                 all(bbox[c(1, 3)] > -90) || all(bbox[c(1, 3)] < 90) &&
                 all(bbox[c(1, 3)] > -90) || all(bbox[c(1, 3)] < 90) &&
@@ -124,6 +122,9 @@ c4h_get <- function(pat,
     }
   }
 
+  if ("bbox" %in% names(required_params)) {
+    names(required_params)[which(names(required_params) == "bbox")] <- "area"
+  }
 
   if (!(is.numeric(year)) || any(year > format(Sys.Date(), "%Y")) ||
         any(year < 1950)) {
@@ -185,7 +186,11 @@ c4h_get <- function(pat,
       )
       # add additional parameters
       for (i in required_params[!required_params %in% c("year", "month")]) {
-        request[[i]] <- get(i)
+        if (i == "bbox") {
+          request[["area"]] <- get("bbox")
+        } else {
+          request[[i]] <- get(i)
+        }
       }
       # load data and print time it took
       t1 <- Sys.time()
