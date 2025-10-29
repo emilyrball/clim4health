@@ -19,7 +19,8 @@ usually read using \code{c4h_load}.}
 \item{time_aggregation}{string indicating the type of temporal aggregations
 to be performed. Options are "monthly", "yearly", "weekly", and "daily".}
 
-\item{fun}{string specifying the aggregation function. Defaults to "mean".}
+\item{fun}{string specifying the aggregation function. Options are
+"mean", "sum", "max", "min". Defaults to "mean".}
 
 \item{dim_aggregation}{string indicating the dimension along which the
 aggregation should be performed. Options are "sdate" and "time".}
