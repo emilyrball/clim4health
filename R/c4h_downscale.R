@@ -407,6 +407,7 @@ c4h_downscale <- function(downscale_function,
 
   # remove temporary files if created
   if (!is.null(points)) {
+    out$exp$attrs$location <- points
     if (is.null(exp_cor)) {
       if (out$exp$attrs$source_files[1] != source_file_exp) {
         out$exp$attrs$source_files[1] <- source_file_exp
@@ -418,10 +419,13 @@ c4h_downscale <- function(downscale_function,
         system(paste0("rm ", tmp_file_exp))
       }
     }
-    if (!is.null(obs) && !is.null(source_file_obs)) {
-      out$obs$attrs$source_files[1] <- source_file_obs
-      if (tmp_file_obs != source_file_obs) {
-        system(paste0("rm ", tmp_file_obs))
+    if (!is.null(obs)) {
+      out$obs$attrs$location <- points
+      if (!is.null(source_file_obs)) {
+        out$obs$attrs$source_files[1] <- source_file_obs
+        if (tmp_file_obs != source_file_obs) {
+          system(paste0("rm ", tmp_file_obs))
+        }
       }
     }
   }
