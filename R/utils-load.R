@@ -546,60 +546,6 @@
   possible_time_names <- c("year", "month", "week", "day", "date", "time")
   times <- .get_csv_dims(headers, data, possible_time_names)
 
-  # run through possible time/date combinations
-  ### what about case YYYY and MM stored in separate columns?
-  #sum_na <- length(times$val)
-  #dates <- NA
-  #date_fun <- NULL
-  #for (f in list(lubridate::ymd, lubridate::dmy, lubridate::mdy,
-  #               lubridate::ym, lubridate::my)) {
-  #  dates_tmp <- f(times$val)
-  #  if (sum(is.na(dates_tmp)) < sum_na) {
-  #    dates <- dates_all <- dates_tmp
-  #    sum_na <- sum(is.na(dates_tmp))
-  #    date_fun <- f
-  #    ## choose a date format that produces least NAs
-  #  }
-  #}
-  #if (!typeof(dates) == "logical") {
-  #  dates <- unique(dates)
-  #}
-#
-  ## could be stored as "YYYY/MM/DD hh:mm:ss"
-  #dates_tmp <- tryCatch({
-  #  as.POSIXct(times$val, tz = "UTC")
-  #},
-  #error = function(x) {
-  #  return(NA)
-  #},
-  #warning = function(x) {
-  #  return(NA)
-  #})
-#
-  ## if length of dates_tmp is longer then hourly data could be stored
-  #if (length(unique(dates_tmp)) > length(dates)) {
-  #  dates <- dates_all <- dates_tmp
-  #  date_fun <- as.POSIXct
-  #}
-#
-  ## final option could be year is stored as date
-  #if (typeof(dates) == "logical") {
-  #  dates <- tryCatch({
-  #    lubridate::year(times$val)
-  #  },
-  #  error = function(x) {
-  #    return(NA)
-  #  },
-  #  warning = function(x) {
-  #    return(NA)
-  #  })
-  #  dates_all <- dates
-  #  date_fun <- lubridate::year
-  #}
-#
-  #if (typeof(dates) == "logical") {
-  #  stop("Cannot parse dates. Stopping.")
-  #}
   dates_all <- lubridate::parse_date_time(
     times$val,
     orders = c("Ymd HMS", "Ymd", "dmY HMS", "dmY", "mdY HMS", "mdY",
@@ -627,10 +573,7 @@
     start_dates <- .paste_outer(start_dates,
                                 sprintf(" %02d:00:00", time))
   }
-  #start_dates <- as.POSIXct(start_dates, tz = "UTC",
-  #                          format = "%Y-%m-%d %H:%M:%S")
 
-  #start_dates_tmp <- date_fun(start_dates)
   start_dates_tmp <-
     lubridate::parse_date_time(start_dates, orders =
                                c("Ymd HMS", "Ymd"), tz = "UTC")
@@ -650,13 +593,6 @@
 
   # use forecast_date as this contains all possible dates
   start_dates <- unique(sort(c(grid_dates$forecast_date)))
-
-  #dates_all <- lubridate::parse_date_time(
-  #  times$val,
-  #  orders = c("Ymd HMS", "Ymd", "dmY HMS", "dmY", "mdY HMS", "mdY",
-  #             "Ym", "mY"),
-  #  tz = "UTC"
-  #)
 
   date_selection <- which(as.Date(dates_all) %in% as.Date(start_dates))
   data <- data[date_selection, ]
