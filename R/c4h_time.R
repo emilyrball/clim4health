@@ -38,10 +38,12 @@ c4h_time <- function(data,
                     "Friday", "Saturday", "Sunday")
   if (!time_aggregation %in% c("daily", "weekly", "monthly", "yearly")) {
     stop("Aggregation must be 'daily', 'weekly', 'monthly' or 'yearly'")
-  } else if ((time_aggregation == "weekly") && (is.null(week_start))) {
-    stop("'week_start' is required when 'time_aggregation' is weekly.")
-  } else if (time_aggregation == "weekly" & !week_start %in% weekdays_eng) {
-    stop("Invalid 'week_start', please check documentation.")
+  } else if (time_aggregation == "weekly"){
+    if (is.null(week_start)) {
+      stop("'week_start' is required when 'time_aggregation' is weekly.")
+    } else if (!week_start %in% weekdays_eng) {
+      stop("Invalid 'week_start', please check documentation.")
+    }
   }
   
   # Sum or Mean
@@ -131,7 +133,7 @@ c4h_time <- function(data,
 
     # Compute aggregation ---- 
     
-    # Construct full aggregation array: assign loop i to the fixed time dimension
+    # Construct full aggregation array: assign loop index to the fixed time dimension
     # And compute across dim_aggregation
     dims <- dim(data_tmp)
     agg_dim_idx <- which(names(dims) == dim_aggregation)
