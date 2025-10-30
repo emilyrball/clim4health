@@ -96,7 +96,7 @@ c4h_time <- function(data,
     # time_groups: same dimension as time_i, used for the aggregation
     # dates_i: resulting time stamps to be used after aggregation
     time_groups <- if (time_aggregation == "yearly") {
-      dates_i <- unique(lubridate::year(time_i))
+      dates_i <- as.POSIXct(paste0(unique(lubridate::year(time_i)), "-01-01"), tz = "UTC")
       lubridate::year(time_i)
       
     } else if (time_aggregation == "monthly") {
@@ -215,10 +215,10 @@ c4h_time <- function(data,
       aggregated_data <- aggregated_data_i
       dates <- aggregated_data_i$attrs$Dates
     } else {
-      aggregated_data <- CST_BindDim(x = list(aggregated_data,
-                                              aggregated_data_i),
-                                     along = dim_fix,
-                                     var_dim = "var", dat_dim = "dataset")
+      aggregated_data <- CSTools::CST_BindDim(x = list(aggregated_data,
+                                                       aggregated_data_i),
+                                              along = dim_fix,
+                                              var_dim = "var", dat_dim = "dataset")
       if (time_aggregation == "daily") {
         aggregated_data$attrs$Dates <- as.POSIXct(aggregated_data$attrs$Dates,
                                                   origin = "1970-01-01",
