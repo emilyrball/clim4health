@@ -25,8 +25,8 @@ aggregation should be performed. Options are "sdate" and "time".}
 \item{fun}{string specifying the aggregation function. Options are
 "mean", "sum", "max", "min". Defaults to "mean".}
 
-\item{week_start}{for weekly aggregation, specify the starting weekday.
-Current options include "Sunday" and "Monday".}
+\item{week_start}{for weekly aggregation, specify the starting weekday from
+"Monday" to "Sunday".}
 }
 \value{
 an s2dv_cube object with the temporally aggregated climate data.

@@ -10,8 +10,8 @@
 #' aggregation should be performed. Options are "sdate" and "time".
 #' @param fun string specifying the aggregation function. Options are
 #' "mean", "sum", "max", "min". Defaults to "mean".
-#' @param week_start for weekly aggregation, specify the starting weekday.
-#' Current options include "Sunday" and "Monday".
+#' @param week_start for weekly aggregation, specify the starting weekday from 
+#' "Monday" to "Sunday".  
 #'
 #' @returns an s2dv_cube object with the temporally aggregated climate data.
 #' @export
@@ -34,21 +34,25 @@ c4h_time <- function(data,
   # Input checks ----
   
   # Check if aggregation type is valid
+  weekdays_eng <- c("Monday", "Tuesday", "Wednesday", "Thursday",
+                    "Friday", "Saturday", "Sunday")
   if (!time_aggregation %in% c("daily", "weekly", "monthly", "yearly")) {
     stop("Aggregation must be 'daily', 'weekly', 'monthly' or 'yearly'")
   } else if ((time_aggregation == "weekly") && (is.null(week_start))) {
-    stop(paste0("If aggregating to weekly, please provide 'week_start'",
-                "parameter, the day on which your epiweek starts. Valid ",
-                "options are 'Sunday' or 'Monday'."))
+    stop("'week_start' is required when 'time_aggregation' is weekly.")
+  } else if (time_aggregation == "weekly" & !week_start %in% weekdays_eng) {
+    stop("Invalid 'week_start', please check documentation.")
   }
+  
   # Sum or Mean
   if (fun %in% c("mean", "sum", "max", "min")) {
     fun <- get(fun)
   } else {
-    stop(paste0("Invalid choice of parameter 'fun'. ",
-                "Please select 'mean', 'sum', 'max' or 'min' to aggregate."))
+    stop("Invalid choice of parameter 'fun':  ",
+         "Please select 'mean', 'sum', 'max' or 'min'.")
   }
 
+  # Aggregation variable
   if (!dim_aggregation %in% c("sdate", "time")) {
     stop("Invalid choice of parameter 'dim_aggregation'. Please select",
          " 'sdate' or 'time'.")
@@ -105,32 +109,23 @@ c4h_time <- function(data,
       as.POSIXct(format(time_i, "%Y-%m-%d"), tz = "UTC")
       
     } else if (time_aggregation == "weekly") {
-      # Epidemiological weeks
-      if (week_start == "Sunday") {
-        epiweeks <- lubridate::epiweek(time_i)
-      } else if (week_start == "Monday") {
-        epiweeks <- lubridate::isoweek(time_i)
-      } else {
-        stop(paste0("Please check 'week_start' parameter. Valid options",
-                    " are 'Sunday' and 'Monday'."))
-      }
-      epiyears <- lubridate::year(time_i)
-      # assign previous year to first days of January if necessary
-      epiyears[lubridate::month(time_i) == 1 & epiweeks > 50] <-
-        epiyears[lubridate::month(time_i) == 1 & epiweeks > 50] - 1
-      # assign next year to last days of December if necessary
-      epiyears[lubridate::month(time_i) == 12 & epiweeks < 3] <-
-        epiyears[lubridate::month(time_i) == 12 & epiweeks < 3] + 1
+      
+      # Epidemiological weeks and years
+      wnum <- switch(week_start,
+                     Monday = 1,
+                     Tuesday   = 2,
+                     Wednesday = 3,
+                     Thursday  = 4,
+                     Friday    = 5,
+                     Saturday  = 6,
+                     Sunday = 7)
+      epiweeks <- lubridate:::.other_week(time_i, wnum)
+      epiyears <- lubridate:::.other_year(time_i, wnum)
+
+      # Create time groups and resulting dates
       dates_tmp_i <- paste(epiyears, sprintf("%02d", epiweeks), sep = "-")
-      coords_i <- unique(dates_tmp_i)
-      if (dim_aggregation == "time") {
-        dim(coords_i) <- c(sdate = 1, time = length(coords_i))
-      } else {
-        dim(coords_i) <- c(sdate = length(coords_i), time = 1)
-      }
-      idx <- which(dates_tmp_i[-1] !=
-                     dates_tmp_i[-length(dates_tmp_i)]) + 1
-      dates_i <- time_i[idx]
+      idx <- which(dates_tmp_i[-1] != dates_tmp_i[-length(dates_tmp_i)]) + 1
+      dates_i <- time_i[idx] # The first day for each epiweek
       paste(epiyears, sprintf("%02d", epiweeks), sep = "-")
     }
 
