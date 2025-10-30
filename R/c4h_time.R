@@ -6,10 +6,10 @@
 #' usually read using `c4h_load`.
 #' @param time_aggregation string indicating the type of temporal aggregations
 #' to be performed. Options are "monthly", "yearly", "weekly", and "daily".
-#' @param fun string specifying the aggregation function. Options are
-#' "mean", "sum", "max", "min". Defaults to "mean".
 #' @param dim_aggregation string indicating the dimension along which the
 #' aggregation should be performed. Options are "sdate" and "time".
+#' @param fun string specifying the aggregation function. Options are
+#' "mean", "sum", "max", "min". Defaults to "mean".
 #' @param week_start for weekly aggregation, specify the starting weekday.
 #' Current options include "Sunday" and "Monday".
 #'
@@ -27,8 +27,8 @@
 #' # dim(obs_month$data)
 c4h_time <- function(data,
                      time_aggregation,
+                     dim_aggregation,
                      fun = "mean",
-                     dim_aggregation = NULL,
                      week_start = NULL) {
   
   # Input checks ----
@@ -49,13 +49,12 @@ c4h_time <- function(data,
                 "Please select 'mean', 'sum', 'max' or 'min' to aggregate."))
   }
 
-  if (is.null(dim_aggregation) || !(dim_aggregation %in% c("sdate", "time"))) {
+  if (!dim_aggregation %in% c("sdate", "time")) {
     stop("Invalid choice of parameter 'dim_aggregation'. Please select",
          " 'sdate' or 'time'.")
   }
   
-  
-  # Aux objects  ----
+  # Auxiliary objects  ----
   
   # Data
   data_tmp <- data$data
@@ -73,7 +72,7 @@ c4h_time <- function(data,
   
   # Temporal aggregation ----
   
-  # loop through the fixed time dimension
+  # Loop through the fixed time dimension
   for (i in seq(dim(time)[dim_fix])) {
     
     ## Get time groupings ---- 
@@ -213,7 +212,7 @@ c4h_time <- function(data,
     # Set class
     class(aggregated_data_i) <- "s2dv_cube"
 
-    # Bind within the loop----
+    # Bind within the loop ----
     # Across the fixed dimension
     if (i == 1) {
       aggregated_data <- aggregated_data_i
