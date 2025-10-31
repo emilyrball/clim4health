@@ -7,8 +7,8 @@
 c4h_time(
   data,
   time_aggregation,
+  dim_aggregation,
   fun = "mean",
-  dim_aggregation = NULL,
   week_start = NULL
 )
 }
@@ -19,14 +19,14 @@ usually read using \code{c4h_load}.}
 \item{time_aggregation}{string indicating the type of temporal aggregations
 to be performed. Options are "monthly", "yearly", "weekly", and "daily".}
 
-\item{fun}{string specifying the aggregation function. Options are
-"mean", "sum", "max", "min". Defaults to "mean".}
-
 \item{dim_aggregation}{string indicating the dimension along which the
 aggregation should be performed. Options are "sdate" and "time".}
 
-\item{week_start}{for weekly aggregation, specify the starting weekday.
-Current options include "Sunday" and "Monday".}
+\item{fun}{string specifying the aggregation function. Options are
+"mean", "sum", "max", "min". Defaults to "mean".}
+
+\item{week_start}{for weekly aggregation, specify the starting weekday from
+"Monday" to "Sunday".}
 }
 \value{
 an s2dv_cube object with the temporally aggregated climate data.
