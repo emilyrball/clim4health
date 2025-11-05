@@ -42,7 +42,7 @@ and 'member' dimensions.}
 and 'member' dimensions.}
 
 \item{metrics}{A character vector of the verification metrics to be
-calculated. Valid options are: "bss", "rpss", "crpss", "AbsBiasSS", "MSE",
+calculated. Valid options are: "BSS", "RPSS", "CRPSS", "AbsBiasSS", "MSE",
 "MSSS", "RMSE", "RMSSS", "ROCSS".}
 
 \item{ref}{An optional s2dv_cube object of reference data with at least the
@@ -55,7 +55,7 @@ Brier Skill Score (BSS) calculation. The default is c(0.1, 0.9). Only
 applicable if "bss" is in 'metrics'.}
 
 \item{prob_thresholds}{Optional numeric vector of thresholds for the
-Relative Probability Skill Score (RPSS) calculation. The default is c(1/3,
+Ranked Probability Skill Score (RPSS) calculation. The default is c(1/3,
 2/3). Only applicable if "rpss" is in 'metrics'.}
 
 \item{alpha}{A numeric of the significance level to be used in the
