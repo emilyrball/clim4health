@@ -169,8 +169,30 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
       stop("'ncores' cannot be equal to or greater than the available cores.")
     }
   }
-
+  obs_dims <- obs$dims
   out_dims <- exp$dims
+
+  if (length(intersect(names(out_dims), names(obs_dims))) <
+        max(length(out_dims), length(obs_dims))) {
+    stop(paste0("Please ensure that 'exp' and 'obs' have the same ",
+                "named dimensions. 'exp' has dimensions: '",
+                paste(names(out_dims), collapse = "', '"),
+                "'. 'obs' has dimensions: '",
+                paste(names(obs_dims), collapse = "', '"), "'."))
+  }
+  for (dim in names(out_dims)) {
+    if (dim != "dataset" && dim != memb_dim) {
+      if (out_dims[[dim]] != obs_dims[[dim]]) {
+        stop(paste0("Dimension '", dim, "' has different lengths in ",
+                    "'exp' and 'obs'. 'exp' has dimension ", dim, " = ",
+                    out_dims[[dim]], " while 'obs' has dimension ", dim, " = ",
+                    obs_dims[[dim]], ". Please ensure that 'exp' and 'obs' ",
+                    "have the same lengths for all named dimensions except ",
+                    "'dataset' and 'ensemble'."))
+      }
+    }
+  }
+
   out_dims[["sdate"]] <- 1
   out_dims[["ensemble"]] <- 1
 
