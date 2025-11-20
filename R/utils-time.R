@@ -1,5 +1,5 @@
 #' .pad_array
-#' 
+#'
 #' Pad data array to 31-day months with NAs so they can be merged.
 #'
 #' @param aggregated_data_i data array to be padded
@@ -9,7 +9,7 @@
 #' @returns padded data array
 #' @noRd
 .pad_array <- function(aggregated_data_i, dates_i, dim_aggregation = "time") {
-  
+
   # Identify dim_aggregation
   dims     <- dim(aggregated_data_i)
   dim_pos  <- which(names(dims) == dim_aggregation)
