@@ -287,8 +287,9 @@
     if (i == 1) {
       data_out <- data_tmp
     } else {
-      data_out <- CST_BindDim(x = list(data_out, data_tmp), along = "sdate",
-                              var_dim = "var", dat_dim = "dataset")
+      data_out <- CSTools::CST_BindDim(x = list(data_out, data_tmp),
+                                       along = "sdate",
+                                       var_dim = "var", dat_dim = "dataset")
     }
   }
   data_out$coords$sdate <- data_out$attrs$Dates[, 1]
@@ -1376,8 +1377,8 @@
   } else if (length(data_out) == 0) {
     stop("No valid data found.")
   } else {
-    data_out <- CST_BindDim(data_out, along = "var",
-                            var_dim = "var", dat_dim = "dataset")
+    data_out <- CSTools::CST_BindDim(data_out, along = "var",
+                                     var_dim = "var", dat_dim = "dataset")
   }
   data_out$attrs$source_files <- unlist(file_list_var)
   data_out$attrs$source_files <- gsub("NETCDF:\"(.*)\"", "\\1",

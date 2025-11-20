@@ -1,16 +1,16 @@
 # currently CSDownscale is not available in CRAN
-source(paste0("https://earth.bsc.es/gitlab/es/csdownscale/-/raw/",
-              "master/R/Analogs.R"))
-source(paste0("https://earth.bsc.es/gitlab/es/csdownscale/-/raw/",
-              "master/R/Interpolation.R"))
-source(paste0("https://earth.bsc.es/gitlab/es/csdownscale/-/raw/",
-              "master/R/Intbc.R"))
-source(paste0("https://earth.bsc.es/gitlab/es/csdownscale/-/raw/",
-              "master/R/Intlr.R"))
-source(paste0("https://earth.bsc.es/gitlab/es/csdownscale/-/raw/",
-              "master/R/LogisticReg.R"))
-source(paste0("https://earth.bsc.es/gitlab/es/csdownscale/-/raw/",
-              "master/R/Utils.R"))
+#source(paste0("https://earth.bsc.es/gitlab/es/csdownscale/-/raw/",
+#              "master/R/Analogs.R"))
+#source(paste0("https://earth.bsc.es/gitlab/es/csdownscale/-/raw/",
+#              "master/R/Interpolation.R"))
+#source(paste0("https://earth.bsc.es/gitlab/es/csdownscale/-/raw/",
+#              "master/R/Intbc.R"))
+#source(paste0("https://earth.bsc.es/gitlab/es/csdownscale/-/raw/",
+#              "master/R/Intlr.R"))
+#source(paste0("https://earth.bsc.es/gitlab/es/csdownscale/-/raw/",
+#              "master/R/LogisticReg.R"))
+#source(paste0("https://earth.bsc.es/gitlab/es/csdownscale/-/raw/",
+#              "master/R/Utils.R"))
 
 #' c4h_downscale
 #'
@@ -113,6 +113,13 @@ c4h_downscale <- function(downscale_function,
   lat_dim <- "latitude"
   lon_dim <- "longitude"
 
+  # get required dimensions for exp and obs and exp_cor
+  exp_dims <- names(dim(exp$data))
+  obs_dims <- names(dim(obs$data))
+  if (!is.null(exp_cor)) {
+    exp_dims <- names(dim(exp_cor$data))
+  }
+
   if (!inherits(exp, "s2dv_cube")) {
     stop("Parameter 'exp' must be an s2dv_cube object loaded and",
          " transformed using clim4health functions.")
@@ -166,6 +173,8 @@ c4h_downscale <- function(downscale_function,
                                      ncores = ncores)
         }
       }
+
+      out$exp <- .manage_dims(out$exp, c(exp_dims))
       return(out)
     }
   }
@@ -339,12 +348,6 @@ c4h_downscale <- function(downscale_function,
     }
   }
 
-  # get required dimensions for exp and obs and exp_cor
-  exp_dims <- names(dim(exp$data))
-  obs_dims <- names(dim(obs$data))
-  if (!is.null(exp_cor)) {
-    exp_dims <- names(dim(exp_cor$data))
-  }
   if (!is.null(points)) {
     exp_dims <- c(exp_dims[!exp_dims %in% c("longitude", "latitude")],
                   "location")
