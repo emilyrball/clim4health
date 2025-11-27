@@ -26,6 +26,12 @@
 #' @param palette GHR, RColorBrewer or colorspace palette. Use "-" before the 
 #' palette name (e.g., "-Reds") to reverse it. Alternatively, a vector of
 #' hex codes to create a continuous interpolated palette.
+#' @param centering Value at which to center the colour palette. Defaults to 
+#' NULL (no centering).
+#' @param bins Number of bins for categorization of numerical variables. 
+#' Defaults to NULL (no binning).
+#' @param bins_method Method to compute the bins, only used when `bins` is not NULL.
+#' Possible values are "quantile" and "equal" (default).
 #' @param coordgrid If TRUE, display coordinate grids on the map.
 #' @param ... Extra arguments indicating fixed aesthetics to be passed to 
 #'`stars::geom_stars`, including `lwd`, `alpha` and `colour`.
@@ -76,6 +82,9 @@ c4h_plot <- function(data,
                      title = NULL,
                      legend = NULL,
                      palette = "-RdBu",
+                     centering = NULL,
+                     bins = NULL,
+                     bins_method = "equal",
                      coordgrid = FALSE,
                      ...) {
   
@@ -143,6 +152,13 @@ c4h_plot <- function(data,
       if(boundaries != "countries"){
         stop("'boundaries' must be set to either 'countries' or be a polygon 'sf' object.")
       }
+    }
+  }
+  
+  # Requirements: centering 
+  if(!is.null(centering)){
+    if(!is.numeric(centering) & length(centering > 1)){
+      stop("'centering' must be a numeric of length 1.")
     }
   }
   
@@ -330,16 +346,52 @@ c4h_plot <- function(data,
   }
   
   # Palette
-  my_palette <- GHRexplore::GHR_palette(palette)(n = 30)
-  if ("location" %in% names(dims_data)){
-    p <- p + ggplot2::scale_colour_gradientn(colors = my_palette, na.value = "grey70")  
+  if (is.null(centering)) { # No centering
     
-  }else if ("area" %in% names(dims_data)){
-    p <- p + ggplot2::scale_fill_gradientn(colors = my_palette, na.value = "grey70")  
+    # Standard continuous palette   
+    my_palette <- GHRexplore::GHR_palette(palette)(n = 30)
+    if ("location" %in% names(dims_data)){
+      p <- p + ggplot2::scale_colour_gradientn(colors = my_palette, na.value = "grey70")  
+    }else if ("area" %in% names(dims_data)){
+      p <- p + ggplot2::scale_fill_gradientn(colors = my_palette, na.value = "grey70")  
+    }else {
+      p <- p + ggplot2::scale_fill_gradientn(colors = my_palette, na.value = "#00000000")  
+    }
     
-  }else {
-    p <- p + ggplot2::scale_fill_gradientn(colors = my_palette, na.value = "#00000000")  
+  } else { # Centering
+    
+    # normalized the selected midpoint on a 0-1 scale 
+    my_palette <- GHRexplore::GHR_palette(palette)(n = 25) # Odd number, 13 is the centre
+    if ("location" %in% names(dims_data) | "area" %in% names(dims_data)) {
+      data_min <- min(plot_data[[varname]], na.rm = TRUE)
+      data_max <- max(plot_data[[varname]], na.rm = TRUE)
+    } else {
+      data_min <- min(plot_data[[1]], na.rm = TRUE)
+      data_max <- max(plot_data[[1]], na.rm = TRUE)
+    }
+    
+    # Is the centering between the min and the max?
+    if(centering < data_min | centering > data_max){
+      stop("'centering' must be between the data minimum and maximum values.")
+    }
+    
+    rescaled_center <- (centering - data_min)/(data_max - data_min)
+    values_pos <- c(seq(0, rescaled_center, length.out = 13)[1:12],
+                    rescaled_center,
+                    seq(rescaled_center, 1, length.out = 13)[2:13])
+    
+    if ("location" %in% names(dims_data)){
+      p <- p + ggplot2::scale_colour_gradientn(colors = my_palette, values = values_pos,
+                                               na.value = "grey70")  
+    }else if ("area" %in% names(dims_data)){
+      p <- p + ggplot2::scale_fill_gradientn(colors = my_palette, values = values_pos,
+                                             na.value = "grey70")  
+    }else {
+      p <- p + ggplot2::scale_fill_gradientn(colors = my_palette, values = values_pos,
+                                             na.value = "#00000000")  
+    }
   }
+
   
   # Boundaries on top, only for grid
   if(!is.null(boundaries) & "longitude" %in% names(dims_data)){

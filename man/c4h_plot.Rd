@@ -16,6 +16,9 @@ c4h_plot(
   title = NULL,
   legend = NULL,
   palette = "-RdBu",
+  centering = NULL,
+  bins = NULL,
+  bins_method = "equal",
   coordgrid = FALSE,
   ...
 )
@@ -54,6 +57,15 @@ names.}
 \item{palette}{GHR, RColorBrewer or colorspace palette. Use "-" before the
 palette name (e.g., "-Reds") to reverse it. Alternatively, a vector of
 hex codes to create a continuous interpolated palette.}
+
+\item{centering}{Value at which to center the colour palette. Defaults to
+NULL (no centering).}
+
+\item{bins}{Number of bins for categorization of numerical variables.
+Defaults to NULL (no binning).}
+
+\item{bins_method}{Method to compute the bins, only used when \code{bins} is not NULL.
+Possible values are "quantile" and "equal" (default).}
 
 \item{coordgrid}{If TRUE, display coordinate grids on the map.}
 
