@@ -19,6 +19,7 @@ c4h_plot(
   centering = NULL,
   bins = NULL,
   bins_method = "equal",
+  bins_label = NULL,
   coordgrid = FALSE,
   ...
 )
@@ -66,6 +67,9 @@ Defaults to NULL (no binning).}
 
 \item{bins_method}{Method to compute the bins, only used when \code{bins} is not NULL.
 Possible values are "quantile" and "equal" (default).}
+
+\item{bins_label}{Optional labels for the bins. They must have the same length
+as the number of bins. Defaults to NULL (default interval labels).}
 
 \item{coordgrid}{If TRUE, display coordinate grids on the map.}
 

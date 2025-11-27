@@ -32,6 +32,8 @@
 #' Defaults to NULL (no binning).
 #' @param bins_method Method to compute the bins, only used when `bins` is not NULL.
 #' Possible values are "quantile" and "equal" (default).
+#' @param bins_label Optional labels for the bins. They must have the same length 
+#' as the number of bins. Defaults to NULL (default interval labels).
 #' @param coordgrid If TRUE, display coordinate grids on the map.
 #' @param ... Extra arguments indicating fixed aesthetics to be passed to 
 #'`stars::geom_stars`, including `lwd`, `alpha` and `colour`.
@@ -85,6 +87,7 @@ c4h_plot <- function(data,
                      centering = NULL,
                      bins = NULL,
                      bins_method = "equal",
+                     bins_label = NULL,
                      coordgrid = FALSE,
                      ...) {
   
@@ -162,6 +165,17 @@ c4h_plot <- function(data,
     }
   }
   
+  # Requirements: bins 
+  if(!is.null(bins)){
+    if(abs(bins - round(bins)) > 1e-10){
+      stop("bins must be an integer.")
+    }else if(!bins_method %in% c("quantile", "equal")){
+      stop("bins_method must be 'quantile' or 'equal'.")
+    }else if(!is.null(bins_label) && length(bins_label) != bins){
+      stop("The length of bins_label must be equal to the number of bins.")
+    }
+  }
+  
   # Number of panels
   if(length(time) * length(sdate) * length(ensemble) > 30){
     warning(paste0("The number of panels is very large, consider selecting a ",
@@ -216,6 +230,9 @@ c4h_plot <- function(data,
     }
   }
   
+  # Get varname
+  varname <- data$attrs$Variable$varName
+  
   
   # 3. Conversion to stars ----
   if ("longitude" %in% names(dims_data)) { # Gridded data
@@ -224,7 +241,7 @@ c4h_plot <- function(data,
                       which(names(dim(plot_data)) == "latitude"))
     plot_data <- aperm(plot_data, c(spatial_dims, setdiff(1:length(dims_data), spatial_dims)))
     plot_data <- stars::st_as_stars(plot_data)
-    names(plot_data) <- data$attrs$Variable$varName
+    names(plot_data) <- varname
     plot_data <- stars::st_set_dimensions(plot_data, "longitude",
                                           values = c(data$coords$longitude))
     plot_data <- stars::st_set_dimensions(plot_data, "latitude",
@@ -260,7 +277,6 @@ c4h_plot <- function(data,
                                       ensemble = c(data$coords$ensemble)[ensemble],
                                       location = point_geom
                                     ))
-    varname <- data$attrs$Variable$varName
     names(plot_data) <- varname
     plot_data <- sf::st_as_sf(plot_data, long = TRUE)
     # plot_data <- plot_data[!is.na(sf::st_drop_geometry(plot_data)[,varname]),] # drop missing?
@@ -276,13 +292,31 @@ c4h_plot <- function(data,
                                       ensemble = c(data$coords$ensemble)[ensemble],
                                       area = data$attrs$area$geom
                                     ))
-    varname <- data$attrs$Variable$varName
     names(plot_data) <- varname
     plot_data <- sf::st_as_sf(plot_data, long = TRUE)
     
   }
   
   # 4. Plot ----
+  
+  # Binning 
+  if (!is.null(bins)) {
+    if (bins_method == "quantile") {
+      if (is.null(bins_label)){
+        plot_data[[varname]] <- ggplot2::cut_number(plot_data[[varname]], n = bins)
+      }else{
+        plot_data[[varname]] <- ggplot2::cut_number(plot_data[[varname]], n = bins, 
+                                                    labels = bins_label)
+      }
+    } else if (bins_method == "equal") {
+      if(is.null(bins_label)){
+        plot_data[[varname]] <- ggplot2::cut_interval(plot_data[[varname]], n = bins)
+      } else {
+        plot_data[[varname]] <- ggplot2::cut_interval(plot_data[[varname]], n = bins, 
+                                                      labels = bins_label)
+      }
+    }
+  }
   
   # Base plot
   if ("longitude" %in% names(dims_data)) { # Gridded data
@@ -346,7 +380,21 @@ c4h_plot <- function(data,
   }
   
   # Palette
-  if (is.null(centering)) { # No centering
+  if (!is.null(bins)) { # Binning
+    
+    # Categorical palette 
+    level_names <- unique(plot_data[[varname]])
+    level_names <- level_names[!is.na(level_names)]
+    my_palette <- GHRexplore::GHR_palette(palette, length(level_names))(n = length(level_names))
+    if ("location" %in% names(dims_data)){
+      p <- p + ggplot2::scale_colour_manual(values = my_palette, na.value = "grey70")  
+    }else if ("area" %in% names(dims_data)){
+      p <- p + ggplot2::scale_fill_manual(values = my_palette, na.value = "grey70")  
+    }else {
+      p <- p + ggplot2::scale_fill_manual(values = my_palette, na.value = "#00000000")  
+    }    
+    
+  } else if (is.null(centering)) { # No centering, continuous
     
     # Standard continuous palette   
     my_palette <- GHRexplore::GHR_palette(palette)(n = 30)
@@ -358,17 +406,12 @@ c4h_plot <- function(data,
       p <- p + ggplot2::scale_fill_gradientn(colors = my_palette, na.value = "#00000000")  
     }
     
-  } else { # Centering
+  } else { # Centering, continuous
     
     # normalized the selected midpoint on a 0-1 scale 
     my_palette <- GHRexplore::GHR_palette(palette)(n = 25) # Odd number, 13 is the centre
-    if ("location" %in% names(dims_data) | "area" %in% names(dims_data)) {
-      data_min <- min(plot_data[[varname]], na.rm = TRUE)
-      data_max <- max(plot_data[[varname]], na.rm = TRUE)
-    } else {
-      data_min <- min(plot_data[[1]], na.rm = TRUE)
-      data_max <- max(plot_data[[1]], na.rm = TRUE)
-    }
+    data_min <- min(plot_data[[varname]], na.rm = TRUE)
+    data_max <- max(plot_data[[varname]], na.rm = TRUE)
     
     # Is the centering between the min and the max?
     if(centering < data_min | centering > data_max){
@@ -391,7 +434,7 @@ c4h_plot <- function(data,
                                              na.value = "#00000000")  
     }
   }
-
+  
   
   # Boundaries on top, only for grid
   if(!is.null(boundaries) & "longitude" %in% names(dims_data)){
