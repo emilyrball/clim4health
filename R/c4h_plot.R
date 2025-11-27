@@ -435,6 +435,7 @@ c4h_plot <- function(data,
         plot.margin = ggplot2::theme_bw()$plot.margin,
         strip.text.y = ggplot2::element_text(angle = 90, margin = ggplot2::margin(b = 0)),
         strip.text.x = ggplot2::element_text(margin = ggplot2::margin(b = 0)),
+        panel.border = ggplot2::element_rect(color = "black", fill = NA, linewidth = 0.1),
         legend.key.height = ggplot2::unit(1, "cm"))
   }
   
