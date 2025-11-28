@@ -68,43 +68,44 @@
 #' process. The default value is NULL.
 #' @param loocv a logical indicating whether to apply leave-one-out
 #' cross-validation when applying the bias correction. Default to FALSE.
+#' @param ... additional arguments to be passed to the CSDownscale function.
 #' @returns A list of statistically downscaled data as s2dv_cube objects.
 #' @export
 #'
 #' @examples
-#' hcst <- c4h_load(paste0(getwd(), "/inst/extdata/hindcast/"),
-#'                  variable = "t2m",
-#'                  year = 2010:2012,
-#'                  month = 1,
-#'                  leadtime_month = 1:3,
-#'                  ext = "nc")
-#' lats <- hcst$coords$latitude
-#' lons <- hcst$coords$longitude
-#' obs <- c4h_load(paste0(getwd(), "/inst/extdata/reanalysis/"),
-#'                 variable = "t2m",
-#'                 year = 2010:2012,
-#'                 month = 1,
-#'                 leadtime_month = 1:3,
-#'                 bbox = c(max(lats), min(lons),
-#'                          min(lats), max(lons)),
-#'                 ext = "nc")
-#' dwn <- c4h_downscale("Intbc", exp = hcst, obs = obs,
-#'                      bc_method = "evmos",
-#'                      method_remap = "bilinear",
-#'                      target_grid = paste0(getwd(), "/inst/extdata/",
-#'                                           "reanalysis/t2m_201001.nc"))
+#' # hcst <- c4h_load(system.file("extdata", "hindcast", package = "clim4health"),
+#' #                  variable = "t2m",
+#' #                  year = 2010:2012,
+#' #                  month = 1,
+#' #                  leadtime_month = 1:3,
+#' #                  ext = "nc")
+#' # lats <- hcst$coords$latitude
+#' # lons <- hcst$coords$longitude
+#' # obs <- c4h_load(system.file("extdata", "reanalysis", package = "clim4health"),
+#' #                 variable = "t2m",
+#' #                 year = 2010:2012,
+#' #                 month = 1,
+#' #                 leadtime_month = 1:3,
+#' #                 bbox = c(max(lats), min(lons),
+#' #                          min(lats), max(lons)),
+#' #                 ext = "nc")
+#' # dwn <- c4h_downscale("Intbc", exp = hcst, obs = obs,
+#' #                      bc_method = "evmos",
+#' #                      method_remap = "bilinear",
+#' #                      target_grid = paste0(getwd(), "/inst/extdata/",
+#' #                                           "reanalysis/t2m_201001.nc"))
 c4h_downscale <- function(downscale_function,
-  # overlapping inputs for all CSDownscale functions
-  exp, obs = NULL, exp_cor = NULL, bbox = NULL, ncores = NULL,
-  target_grid = NULL,
-  # additional inputs for Intbc
-  bc_method = NULL, method_remap = NULL, points = NULL,
-  method_point_interp = NULL,
-  # additional inputs for Intlr
-  lr_method = NULL,
-  loocv = FALSE,
-  ...
-) {
+                          # overlapping inputs for all CSDownscale functions
+                          exp, obs = NULL, exp_cor = NULL, bbox = NULL, ncores = NULL,
+                          target_grid = NULL,
+                          # additional inputs for Intbc
+                          bc_method = NULL, method_remap = NULL, points = NULL,
+                          method_point_interp = NULL,
+                          # additional inputs for Intlr
+                          lr_method = NULL,
+                          loocv = FALSE,
+                          ...) {
+  
   # clim4health s2dv_cube objects will have the following dimensions
   # to input into CSDownscale functions
   sdate_dim <- "sdate"
@@ -112,19 +113,19 @@ c4h_downscale <- function(downscale_function,
   member_dim <- "ensemble"
   lat_dim <- "latitude"
   lon_dim <- "longitude"
-
+  
   # get required dimensions for exp and obs and exp_cor
   exp_dims <- names(dim(exp$data))
   obs_dims <- names(dim(obs$data))
   if (!is.null(exp_cor)) {
     exp_dims <- names(dim(exp_cor$data))
   }
-
+  
   if (!inherits(exp, "s2dv_cube")) {
     stop("Parameter 'exp' must be an s2dv_cube object loaded and",
          " transformed using clim4health functions.")
   }
-
+  
   # check spatial format
   if (!all(c("latitude", "longitude") %in% names(exp$dims))) {
     if (!("area" %in% names(exp$dims))) {
@@ -173,27 +174,27 @@ c4h_downscale <- function(downscale_function,
                                      ncores = ncores)
         }
       }
-
+      
       out$exp <- .manage_dims(out$exp, c(exp_dims))
       return(out)
     }
   }
-
+  
   .cdo_check()
-
+  
   if (!downscale_function %in% c("Interpolation", "Intbc",
                                  "Intlr", "Analogs")) {
     stop("Please specify a downscaling function with 'downscale_function'.",
          " Options are: 'Interpolation', 'Intbc', 'Analogs', 'Intlr'.")
   }
-
+  
   if (downscale_function %in% c("Interpolation", "Intbc", "Intlr")) {
     if (!is.null(points)) {
       # case: downscaling to point locations
       if (!inherits(points, "list") ||
-            !all(c("latitude", "longitude") %in% names(points)) ||
-            !is.numeric(points$latitude) || !is.numeric(points$longitude) ||
-            length(points$latitude) != length(points$longitude)) {
+          !all(c("latitude", "longitude") %in% names(points)) ||
+          !is.numeric(points$latitude) || !is.numeric(points$longitude) ||
+          length(points$latitude) != length(points$longitude)) {
         stop(paste0("'points' must be a list with two elements named ",
                     "'latitude' and 'longitude', both numeric vectors of the",
                     " same length indicating the locations to downscale the",
@@ -247,13 +248,13 @@ c4h_downscale <- function(downscale_function,
       }
     }
   }
-
+  
   if (length(method_remap) > 1) {
     # case: if more than one method_remap is provided, stop
     stop("'method_remap' must be a single character string. Accepted values",
          " are 'con', 'bil', 'bic', 'nn', 'con2'.")
   }
-
+  
   # catch missing arguments for each downscaling function
   if (downscale_function == "Intbc") {
     if (is.null(bc_method)) {
@@ -263,14 +264,14 @@ c4h_downscale <- function(downscale_function,
            "'qm' are also accepted.")
     }
   }
-
+  
   if (downscale_function == "Intlr") {
     if (is.null(lr_method)) {
       stop("If using 'Intlr', 'lr_method' must be specified. Options ",
            "are: 'basic', 'large-scale' and '9nn'.")
     }
   }
-
+  
   if (downscale_function %in% c("Intbc", "Intlr", "Analogs")) {
     if (is.null(obs)) {
       stop(paste0("If using '", downscale_function, "', 'obs' must be ",
@@ -278,23 +279,23 @@ c4h_downscale <- function(downscale_function,
                   "transformed using clim4health functions."))
     }
   }
-
+  
   if (downscale_function == "Analogs") {
     if (is.null(target_grid)) {
       # case: 'Analogs' downscaling to a grid requires 'target_grid'
       message(paste0("Note: using method '", downscale_function, "' and ",
                      "'target_grid' has not been specified. c4h_downscale ",
                      "will use the grid of 'exp' as the coarse grid."))
-
+      
       # create temporary netCDF file with reduced dimensions if needed
       source_file_exp <- exp$attrs$source_files[1]
-
+      
       tmp_file_exp <- .reduce_source_file(source_file_exp)
       exp$attrs$source_files[1] <- tmp_file_exp
       target_grid <- exp$attrs$source_files[1]
     }
   }
-
+  
   if (is.null(bbox)) {
     region <- c(min(exp$coords$longitude),
                 max(exp$coords$longitude),
@@ -302,10 +303,10 @@ c4h_downscale <- function(downscale_function,
                 max(exp$coords$latitude))
   } else {
     if (!(length(bbox) == 4 && is.numeric(bbox) &&
-            all(bbox[c(1, 3)] > -90) || all(bbox[c(1, 3)] < 90) &&
-            all(bbox[c(1, 3)] > -90) || all(bbox[c(1, 3)] < 90) &&
-            all(bbox[c(2, 4)] > -180) || all(bbox[c(1, 3)] < 180) &&
-            all(bbox[c(2, 4)] > -180) || all(bbox[c(1, 3)] < 180))) {
+          all(bbox[c(1, 3)] > -90) || all(bbox[c(1, 3)] < 90) &&
+          all(bbox[c(1, 3)] > -90) || all(bbox[c(1, 3)] < 90) &&
+          all(bbox[c(2, 4)] > -180) || all(bbox[c(1, 3)] < 180) &&
+          all(bbox[c(2, 4)] > -180) || all(bbox[c(1, 3)] < 180))) {
       stop("'bbox' coordinates are out of bound. N,W,S,E coordinates,
              latitudes from 90 to -90, longitudes -180 to 180")
     }
@@ -313,7 +314,7 @@ c4h_downscale <- function(downscale_function,
     # lonmin, lonmax, latmin, latmax
     region <- c(bbox[2], bbox[4], bbox[3], bbox[1])
   }
-
+  
   # cases of bugs in CSDownscale
   if (!is.null(points)) {
     if (downscale_function == "Intlr" && is.null(method_remap)) {
@@ -322,10 +323,10 @@ c4h_downscale <- function(downscale_function,
     }
     # create temporary netCDF file with reduced dimensions if needed
     source_file_exp <- exp$attrs$source_files[1]
-
+    
     tmp_file_exp <- .reduce_source_file(source_file_exp)
     exp$attrs$source_files[1] <- tmp_file_exp
-
+    
     if (!is.null(obs)) {
       source_file_obs <- NULL
       if (is.na(match("location", names(dim(obs$data))))) {
@@ -340,14 +341,14 @@ c4h_downscale <- function(downscale_function,
       exp_cor$attrs$source_files[1] <- tmp_file_exp
     }
   }
-
+  
   if (!is.null(ncores)) {
     if (ncores > (parallel::detectCores() - 1)) {
       # if ncores is greater than the number of available cores, stop
       stop("'ncores' cannot be equal to or greater than the available cores.")
     }
   }
-
+  
   if (!is.null(points)) {
     exp_dims <- c(exp_dims[!exp_dims %in% c("longitude", "latitude")],
                   "location")
@@ -367,7 +368,7 @@ c4h_downscale <- function(downscale_function,
                              method_point_interp = method_point_interp,
                              ncores = ncores)
     out$exp <- .manage_dims(out$exp, exp_dims)
-
+    
   } else if (downscale_function == "Intbc") {
     out <- CST_Intbc(exp = exp, obs = obs, exp_cor = exp_cor,
                      target_grid = target_grid, bc_method = bc_method,
@@ -379,7 +380,7 @@ c4h_downscale <- function(downscale_function,
                      ncores = ncores, loocv = loocv)
     out$exp <- .manage_dims(out$exp, exp_dims)
     out$obs <- .manage_dims(out$obs, obs_dims)
-
+    
   } else if (downscale_function == "Intlr") {
     out <- CST_Intlr(exp = exp, obs = obs, exp_cor = exp_cor,
                      lr_method = lr_method, target_grid = target_grid,
@@ -393,7 +394,7 @@ c4h_downscale <- function(downscale_function,
                      ...)
     out$exp <- .manage_dims(out$exp, exp_dims)
     out$obs <- .manage_dims(out$obs, obs_dims)
-
+    
   } else if (downscale_function == "Analogs") {
     out <- CST_Analogs(exp = exp, obs = obs,
                        grid_exp = target_grid,
@@ -407,7 +408,7 @@ c4h_downscale <- function(downscale_function,
     out$exp <- .manage_dims(out$exp, c(exp_dims, "analogs"))
     out$obs <- .manage_dims(out$obs, obs_dims)
   }
-
+  
   # remove temporary files if created
   if (!is.null(points)) {
     out$exp$attrs$location <- points

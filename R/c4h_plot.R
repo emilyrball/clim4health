@@ -44,27 +44,28 @@
 #' library("sf")
 #' 
 #' # Region municipalities
-#' mun_path <- paste0(getwd(), "/inst/extdata/areas/munip_vallecauca.gpkg")
+#' mun_path <- system.file("extdata", "areas", "munip_vallecauca.gpkg",
+#'                         package = "clim4health")
 #' mun <- read_sf(mun_path)
 #' 
 #' # Forecast
-#' fcst_path <- paste0(getwd(), "/inst/extdata/forecast/")
+#' fcst_path <- system.file("extdata", "forecast", package = "clim4health")
 #' fcst <- c4h_load(fcst_path, variable = "t2m", ext = 'nc')
 #' c4h_plot(fcst, title = "Forecast", ensemble = TRUE) 
 #' 
 #' # Reanalysis
-#' rean_path <- paste0(getwd(), "/inst/extdata/reanalysis/")
+#' rean_path <- system.file("extdata", "reanalysis", package = "clim4health")
 #' rean <- c4h_load(rean_path, variable = "t2m", ext = 'nc')
 #' c4h_plot(rean, title = "Reanalysis", boundaries = mun, 
 #'          mask_boundaries = TRUE, coordgrid = TRUE) 
 #' 
 #' # Hindcast
-#' hind_path <- paste0(getwd(), "/inst/extdata/hindcast/")
+#' hind_path <- system.file("extdata", "hindcast", package = "clim4health")
 #' hind <- c4h_load(hind_path, variable = "t2m", ext = 'nc')
 #' c4h_plot(hind, title = "Hindcast", ensemble = TRUE)   
 #'                  
 #' # Stations
-#' stations_path <- paste0(getwd(), "/inst/extdata/stations/")
+#' stations_path <- system.file("extdata", "stations", package = "clim4health")
 #' stations <- c4h_load(stations_path, var = "temp_mean", ext = "csv")
 #' c4h_plot(stations, title = "Stations", time = 1:2, 
 #'          boundaries = mun, coordgrid = TRUE) 
@@ -364,17 +365,17 @@ c4h_plot <- function(data,
   # Faceting
   if(!is.null(f1) & is.null(f2)){ # Wrap
     p <- p +
-      ggplot2::facet_wrap(as.formula(paste("~", f1)),
+      ggplot2::facet_wrap(stats::as.formula(paste("~", f1)),
                           labeller = "label_both")
   }else if(!is.null(f1) & !is.null(f2)){ # Grid
     
     if(!isTRUE(coordgrid)) {
       p <- p +
-        ggplot2::facet_grid(as.formula(paste(f1, "~", f2)),
+        ggplot2::facet_grid(stats::as.formula(paste(f1, "~", f2)),
                             labeller = "label_both", switch = "y")
     } else{
       p <- p +
-        ggplot2::facet_grid(as.formula(paste(f1, "~", f2)), labeller = "label_both")      
+        ggplot2::facet_grid(stats::as.formula(paste(f1, "~", f2)), labeller = "label_both")      
     }
     
   }
