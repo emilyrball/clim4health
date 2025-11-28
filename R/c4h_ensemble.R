@@ -9,8 +9,7 @@
 #'
 #' @examples
 #' # Forecast
-#' fcst_path <- paste0(getwd(), "/inst/extdata/forecast/")
-#' fcst <- c4h_load(fcst_path,
+#' fcst <- c4h_load(system.file("extdata", "forecast", package = "clim4health"),
 #'                  var = "t2m",
 #'                  year = 2025,
 #'                  month = 1,

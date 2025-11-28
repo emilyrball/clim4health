@@ -11,7 +11,7 @@
 #' @export
 #'
 #' @examples
-#' TBD
+#' # TBD
 c4h_convert_units <- function(data,
                               to,
                               variable = NULL,

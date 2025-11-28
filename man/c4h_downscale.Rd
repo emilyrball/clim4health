@@ -94,25 +94,25 @@ A list of statistically downscaled data as s2dv_cube objects.
 Downscale and calibrate climate data.
 }
 \examples{
-hcst <- c4h_load(paste0(getwd(), "/inst/extdata/hindcast/"),
-                 variable = "t2m",
-                 year = 2010:2012,
-                 month = 1,
-                 leadtime_month = 1:3,
-                 ext = "nc")
-lats <- hcst$coords$latitude
-lons <- hcst$coords$longitude
-obs <- c4h_load(paste0(getwd(), "/inst/extdata/reanalysis/"),
-                variable = "t2m",
-                year = 2010:2012,
-                month = 1,
-                leadtime_month = 1:3,
-                bbox = c(max(lats), min(lons),
-                         min(lats), max(lons)),
-                ext = "nc")
-dwn <- c4h_downscale("Intbc", exp = hcst, obs = obs,
-                     bc_method = "evmos",
-                     method_remap = "bilinear",
-                     target_grid = paste0(getwd(), "/inst/extdata/",
-                                          "reanalysis/t2m_201001.nc"))
+# hcst <- c4h_load(system.file("extdata", "hindcast", package = "clim4health"),
+#                  variable = "t2m",
+#                  year = 2010:2012,
+#                  month = 1,
+#                  leadtime_month = 1:3,
+#                  ext = "nc")
+# lats <- hcst$coords$latitude
+# lons <- hcst$coords$longitude
+# obs <- c4h_load(system.file("extdata", "reanalysis", package = "clim4health"),
+#                 variable = "t2m",
+#                 year = 2010:2012,
+#                 month = 1,
+#                 leadtime_month = 1:3,
+#                 bbox = c(max(lats), min(lons),
+#                          min(lats), max(lons)),
+#                 ext = "nc")
+# dwn <- c4h_downscale("Intbc", exp = hcst, obs = obs,
+#                      bc_method = "evmos",
+#                      method_remap = "bilinear",
+#                      target_grid = paste0(getwd(), "/inst/extdata/",
+#                                           "reanalysis/t2m_201001.nc"))
 }
