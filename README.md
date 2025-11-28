@@ -58,7 +58,7 @@ Global Health Resilience
 Barcelona Supercomputing Center\
 Earth Data and Diagnostics
 
-**[Rebeca Nunes, MSc](https://www.bsc.es/es/nunes-rodrigues-rebeca)** \
+**[Rebeca Nunes, MSc](https://www.bsc.es/es/nunes-rodrigues-rebeca)** 
 <a href="https://orcid.org/0009-0009-8738-0985" style="margin-left: 15px;"><img src="https://orcid.org/sites/default/files/images/orcid_16x16.png" alt="ORCID" style="width: 16px; height: 16px;" /></a>\
 Barcelona Supercomputing Center\
 Earth Data and Diagnostics
