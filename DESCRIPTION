@@ -9,6 +9,8 @@ Authors@R: c(
     person("Carles", "Milà", , "carles.milagarcia@bsc.es", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0003-0470-0760")),
     person("Raul", "Capellan", role = "aut"),
+    person("Rebeca", "Nunes", role = "aut",
+           comment = c(ORCID = "0009-0009-8738-0985")),
     person("Daniela", "Lührsen", role = "aut",
            comment = c(ORCID = "0009-0002-6340-5964")),
     person("Anna B.", "Kawiecki", role = "aut",
@@ -29,24 +31,24 @@ Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
 Imports:
-    abind,
     CSTools,
     dplyr,
-    easyNCDF,
     ecmwfr,
-    exactextractr,
     ggplot2,
     GHRexplore,
     lubridate,
-    raster,
     s2dv,
     sf,
     startR, 
     stars,
     terra,
-    cubelyr
+    data.table,
+    measurements,
+    ncdf4,
+    purrr
 Suggests: 
     testthat (>= 3.0.0),
-    spData
+    spData,
+    cubelyr
 Config/testthat/edition: 3
 SystemRequirements: CDO (Climate Data Operators, https://code.mpimet.mpg.de/projects/cdo)

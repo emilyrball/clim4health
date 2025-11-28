@@ -120,8 +120,10 @@ c4h_time <- function(data,
                      Friday    = 5,
                      Saturday  = 6,
                      Sunday = 7)
-      epiweeks <- lubridate:::.other_week(time_i, wnum)
-      epiyears <- lubridate:::.other_year(time_i, wnum)
+      other_week <- utils::getFromNamespace(".other_week", "lubridate")
+      other_year <- utils::getFromNamespace(".other_year", "lubridate")
+      epiweeks <- other_week(time_i, wnum)
+      epiyears <- other_year(time_i, wnum)
 
       # Create time groups and resulting dates
       dates_tmp_i <- paste(epiyears, sprintf("%02d", epiweeks), sep = "-")

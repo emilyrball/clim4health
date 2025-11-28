@@ -86,6 +86,8 @@ process. The default value is NULL.}
 
 \item{loocv}{a logical indicating whether to apply leave-one-out
 cross-validation when applying the bias correction. Default to FALSE.}
+
+\item{...}{additional arguments to be passed to the CSDownscale function.}
 }
 \value{
 A list of statistically downscaled data as s2dv_cube objects.

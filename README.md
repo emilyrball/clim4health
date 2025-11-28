@@ -25,7 +25,7 @@ provided.
 <div align="center">
 <img src='man/figures/package_structure.jpg' width="80%" /></center>
 </div>
-<br> \
+<br> 
 
 **clim4health** is one of the packages developed by the
 [Global Health Resilience](https://www.bsc.es/discover-bsc/organisation/research-departments/global-health-resilience) (GHR)
@@ -55,6 +55,11 @@ Barcelona Supercomputing Center\
 Global Health Resilience
 
 **[Raul Capellan Fernandez, MSc](https://www.bsc.es/capellan-fernandez-raul)** \
+Barcelona Supercomputing Center\
+Earth Data and Diagnostics
+
+**[Rebeca Nunes, MSc](https://www.bsc.es/es/nunes-rodrigues-rebeca)** \
+<a href="https://orcid.org/0009-0009-8738-0985" style="margin-left: 15px;"><img src="https://orcid.org/sites/default/files/images/orcid_16x16.png" alt="ORCID" style="width: 16px; height: 16px;" /></a>\
 Barcelona Supercomputing Center\
 Earth Data and Diagnostics
 

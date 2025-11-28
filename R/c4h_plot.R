@@ -365,17 +365,17 @@ c4h_plot <- function(data,
   # Faceting
   if(!is.null(f1) & is.null(f2)){ # Wrap
     p <- p +
-      ggplot2::facet_wrap(as.formula(paste("~", f1)),
+      ggplot2::facet_wrap(stats::as.formula(paste("~", f1)),
                           labeller = "label_both")
   }else if(!is.null(f1) & !is.null(f2)){ # Grid
     
     if(!isTRUE(coordgrid)) {
       p <- p +
-        ggplot2::facet_grid(as.formula(paste(f1, "~", f2)),
+        ggplot2::facet_grid(stats::as.formula(paste(f1, "~", f2)),
                             labeller = "label_both", switch = "y")
     } else{
       p <- p +
-        ggplot2::facet_grid(as.formula(paste(f1, "~", f2)), labeller = "label_both")      
+        ggplot2::facet_grid(stats::as.formula(paste(f1, "~", f2)), labeller = "label_both")      
     }
     
   }
