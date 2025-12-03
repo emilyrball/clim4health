@@ -236,6 +236,8 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
       sign <- .format_output(data = temp$sign, out_dims = out_dims,
                              out_coords = out_coords, out_attrs = out_attrs)
       temp <- list(rpss = rpss, sign = sign)
+      attributes(temp) <- list("metric" = "BSS",
+                               "threshold" = threshold * 100)
       data[[paste0("BSS", 100 * threshold)]] <- temp
     }
   }
@@ -255,6 +257,7 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
     sign <- .format_output(data = temp$sign, out_dims = out_dims,
                            out_coords = out_coords, out_attrs = out_attrs)
     temp <- list(rpss = rpss, sign = sign)
+    attributes(temp) <- list("metric" = "RPSS")
     data[[paste0("RPSS")]] <- temp
   }
   if ("CRPSS" %in% metrics) {
@@ -269,6 +272,7 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
     sign <- .format_output(data = temp$sign, out_dims = out_dims,
                            out_coords = out_coords, out_attrs = out_attrs)
     temp <- list(crpss = crpss, sign = sign)
+    attributes(temp) <- list("metric" = "CRPSS")
     data[[paste0("CRPSS")]] <- temp
   }
   if ("AbsBiasSS" %in% metrics) {
@@ -284,6 +288,7 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
     sign <- .format_output(data = temp$sign, out_dims = out_dims,
                            out_coords = out_coords, out_attrs = out_attrs)
     temp <- list(biasSS = biasss, sign = sign)
+    attributes(temp) <- list("metric" = "AbsBiasSS")
     data[["AbsBiasSS"]] <- temp
   }
   if ("MSE" %in% metrics) {
@@ -299,6 +304,7 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
                                  out_coords = out_coords, out_attrs = out_attrs)
     temp <- list(mse = mse, conf.lower = conf_lower,
                  conf.upper = conf_upper)
+    attributes(temp) <- list("metric" = "MSE")
     data[["MSE"]] <- temp
   }
   if ("MSSS" %in% metrics) {
@@ -314,6 +320,7 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
     pval <- .format_output(data = temp$p.val, out_dims = out_dims,
                            out_coords = out_coords, out_attrs = out_attrs)
     temp <- list(msss = msss, p.val = pval)
+    attributes(temp) <- list("metric" = "MSSS")
     data[["MSSS"]] <- temp
   }
   if ("RMSE" %in% metrics) {
@@ -329,6 +336,7 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
                                  out_coords = out_coords, out_attrs = out_attrs)
     temp <- list(rmse = rmse, conf.lower = conf_lower,
                  conf.upper = conf_upper)
+    attributes(temp) <- list("metric" = "RMSE")
     data[["RMSE"]] <- temp
   }
   if ("RMSSS" %in% metrics) {
@@ -344,6 +352,7 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
     pval <- .format_output(data = temp$p.val, out_dims = out_dims,
                            out_coords = out_coords, out_attrs = out_attrs)
     temp <- list(rmsss = rmsss, p.val = pval)
+    attributes(temp) <- list("metric" = "RMSSS")
     data[["RMSSS"]] <- temp
   }
   if ("ROCSS" %in% metrics) {
@@ -359,7 +368,9 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
     sign <- .format_output(data = temp$sign, out_dims = out_dims,
                            out_coords = out_coords, out_attrs = out_attrs)
     temp <- list(rpss = rpss, sign = sign)
+    attributes(temp) <- list("metric" = "ROCSS")
     data[["ROCSS"]] <- temp
   }
+  
   return(data)
 }
