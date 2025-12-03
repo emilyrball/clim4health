@@ -899,8 +899,7 @@
 
         if (any(leadtime_month == "all") ||
               (length(leadtime_month) == 1 && (leadtime_month == 1))) {
-          grid_dates <- grid_dates |>
-            dplyr::filter(.data$forecast_date %in% date_vals)
+          grid_dates <- grid_dates[grid_dates$forecast_date %in% date_vals,]
         }
         coords <- list()
         for (dim in names(dims)) {
@@ -1051,8 +1050,7 @@
                              origin = "1970-01-01")
         if (any(leadtime_month == "all") ||
               (length(leadtime_month) == 1 && (leadtime_month == 1))) {
-          grid_dates <- grid_dates |>
-            dplyr::filter(.data$forecast_date %in% date_vals)
+          grid_dates <- grid_dates[grid_dates$forecast_date %in% date_vals,]
         }
         #grid_dates <- grid_dates |>
         #  dplyr::filter(as.Date(.data$sdate, origin = "1970-01-01") %in% date_vals &
@@ -1205,13 +1203,10 @@
                              origin = "1970-01-01")
         if (any(leadtime_month == "all") ||
               (length(leadtime_month) == 1 && (leadtime_month == 1))) {
-          grid_dates <- grid_dates |>
-            dplyr::filter(.data$forecast_date %in% date_vals)
+          grid_dates <- grid_dates[grid_dates$forecast_date %in% date_vals,]
         }
-        grid_dates <- grid_dates |>
-          dplyr::filter(as.Date(.data$sdate, origin = "1970-01-01") %in% date_vals &
-                          as.Date(.data$forecast_date, origin = "1970-01-01") %in%
-                            date_vals)
+        grid_dates <- grid_dates[as.Date(grid_dates$sdate, origin = "1970-01-01") %in% date_vals &
+                                   as.Date(grid_dates$forecast_date, origin = "1970-01-01") %in% date_vals, ]
 
         coords <- list()
         for (dim in names(dims)) {
