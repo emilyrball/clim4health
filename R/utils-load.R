@@ -888,8 +888,15 @@
         }
         if (!(all(as.POSIXct(date_vals, origin = "1970-01-01", tz = "UTC") %in%
                     start_dates))) {
+          
           x <- x |> dplyr::filter(as.POSIXct(.data$valid_time, origin = "1970-01-01",
                                               tz = "UTC") %in% start_dates)
+          # TO BE REVIEWED!
+          # filter_indx <- as.POSIXct(stars::st_get_dimension_values(x, "valid_time"), 
+          #                           origin = "1970-01-01",
+          #                           tz = "UTC") %in% start_dates
+          # filter_indx <- which(filter_indx)
+          # x <-  .slice_stars_dimname(x, "valid_time", filter_indx)
         }
 
         dims <- stars::st_dimensions(x)
@@ -1043,6 +1050,11 @@
           x <- x |> dplyr::filter(as.Date(.data$valid_time,
                                            origin = "1970-01-01") %in%
                                      start_dates)
+          # TO BE REVIEWED!
+          # filter_indx <- as.Date(stars::st_get_dimension_values(x, "valid_time"), 
+          #                        origin = "1970-01-01") %in% start_dates
+          # filter_indx <- which(filter_indx)
+          # x <-  .slice_stars_dimname(x, "valid_time", filter_indx)
         }
 
         dims <- stars::st_dimensions(x)
@@ -1196,6 +1208,11 @@
           x <- x |> dplyr::filter(as.Date(.data$valid_time,
                                            origin = "1970-01-01") %in%
                                      start_dates)
+          # TO BE REVIEWED!
+          # filter_indx <- as.Date(stars::st_get_dimension_values(x, "valid_time"), 
+          #                        origin = "1970-01-01") %in% start_dates
+          # filter_indx <- which(filter_indx)
+          # x <-  .slice_stars_dimname(x, "valid_time", filter_indx)
         }
 
         dims <- stars::st_dimensions(x)
@@ -1300,6 +1317,10 @@
       # case: forecast/hindcast data
       if (!any(leadtime_month == "all")) {
         x <- x |> dplyr::filter(.data$forecastMonth %in% leadtime_month)
+        # TO BE REVIEWED!
+        # filter_indx <- stars::st_get_dimension_values(x, "forecastMonth") %in% leadtime_month
+        # filter_indx <- which(filter_indx)
+        # x <-  .slice_stars_dimname(x, "forecastMonth", filter_indx)
       }
       start_dates <- .paste_outer(.paste_outer(year, sprintf("-%02d", month)),
                                   sprintf("-%02d", day))
@@ -1312,6 +1333,11 @@
                                            origin = "1970-01-01",
                                            tz = "UTC") %in%
                                   start_dates)
+        # TO BE REVIEWED!
+        # filter_indx <- as.Date(stars::st_get_dimension_values(x, "forecast_reference_time"), 
+        #                        origin = "1970-01-01") %in% start_dates
+        # filter_indx <- which(filter_indx)
+        # x <-  .slice_stars_dimname(x, "forecast_reference_time", filter_indx)
       }
       dims <- stars::st_dimensions(x)
 
@@ -1384,4 +1410,30 @@
   data_out$attrs$Variable$metadata$units <- unlist(units_out)
   names(data_out$attrs$Variable$metadata$units) <- data_out$coords$var
   return(data_out)
+}
+
+#' Slice stars object using a dimension name and a slice index.
+#'
+#' @param x stars object
+#' @param dimname dimension name to be sliced
+#' @param slice index of the slice
+#'
+#' @returns the filtered stars object
+#' @noRd
+.slice_stars_dimname <- function(x, dimname, slice) {
+  
+  # Get dims and the position of dimname
+  dims <- names(stars::st_dimensions(x))
+  pos <- match(dimname, dims)
+  
+  # Insert slicing
+  idx_strs <- rep("", length(dims))
+  idx_strs[pos] <- paste0("c(", paste(slice, collapse = ","), ")")
+  
+  # build call text, making sure drop is placed inside [ ]
+  call_text <- paste0("x[,", paste(idx_strs, collapse = ","),
+                      ", drop = FALSE", "]")
+  
+  # evaluate the call in an environment where x is present
+  eval(parse(text = call_text), envir = list2env(list(x = x)))
 }
