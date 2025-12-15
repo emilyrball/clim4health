@@ -1,46 +1,5 @@
-#' .pad_dates
-#'
-#' Pad dates to full months with NAs so they can be merged.
-#'
-#' @param dates_i vector of dates to be padded
-#'
-#' @returns a list with the padded dates and a position map
-#' indicating the mapping between original and padded dates.
-#' @noRd
-.pad_dates <- function(dates_i) {
-  years  <- lubridate::year(dates_i)
-  months <- lubridate::month(dates_i)
-
-  out <- list()
-  pos_map <- list()
-
-  counter <- 0
-  for (y in unique(years)) {
-    for (m in unique(months)) {
-      block <- dates_i[years == y & months == m]
-      block_days <- as.integer(format(block, "%d"))
-
-      target <- sprintf("%s-%02d-%02d UTC", y, m, 1:31)
-
-      filled <- rep(NA_character_, 31)
-      filled[block_days] <- format(block, "%Y-%m-%d UTC")
-
-      out[[paste(y, m, sep = "-")]] <- filled
-
-      new_idx <- counter + block_days
-      old_idx <- seq_along(block_days)
-      pos_map[[paste(y, m, sep = "-")]] <- list(old = old_idx, new = new_idx)
-
-      counter <- counter + 31
-    }
-  }
-
-  list(dates_new = unlist(out, use.names = FALSE),
-       pos_map = pos_map)
-}
-
 #' .pad_array
-#' 
+#'
 #' Pad data array to 31-day months with NAs so they can be merged.
 #'
 #' @param aggregated_data_i data array to be padded
@@ -50,31 +9,36 @@
 #' @returns padded data array
 #' @noRd
 .pad_array <- function(aggregated_data_i, dates_i, dim_aggregation = "time") {
+
+  # Identify dim_aggregation
   dims     <- dim(aggregated_data_i)
   dim_pos  <- which(names(dims) == dim_aggregation)
 
+  # Find unique year–month pairs (“blocks”)
   years  <- lubridate::year(dates_i)
   months <- lubridate::month(dates_i)
-
   combos <- unique(data.frame(year = years, month = months))
   n_blocks <- nrow(combos)
 
+  # New dimensions and empty array using 31 days per month
   new_len <- 31 * n_blocks
   dims_new <- dims
   dims_new[dim_pos] <- new_len
-
   out <- array(NA_real_, dim = dims_new, dimnames = dimnames(aggregated_data_i))
 
+  # store new date labels
   dates_blocks <- vector("list", n_blocks)
 
+  # Loop over combos' rows
   for (k in seq_len(n_blocks)) {
     y <- combos$year[k]
     m <- combos$month[k]
 
+    # Get old indices and the day numbers
     old_idx <- which(years == y & months == m)
-
     block_days <- as.integer(format(dates_i[old_idx], "%d"))
 
+    # Determine positions in the new array
     new_block_start <- (k - 1) * 31
     new_idx <- new_block_start + block_days
 
@@ -83,6 +47,7 @@
     idx_new[[dim_pos]] <- new_idx
     idx_old[[dim_pos]] <- old_idx
 
+    # copy data into the right spots
     out <- do.call(
       `[<-`,
       c(
@@ -90,12 +55,13 @@
         list(do.call(`[`, c(list(aggregated_data_i), idx_old)))
       )
     )
-
+    # Build padded date labels
     padded_labels <- rep(NA_character_, 31)
     padded_labels[block_days] <- format(dates_i[old_idx], "%Y-%m-%d UTC")
     dates_blocks[[k]] <- padded_labels
   }
 
+  # Final combined date vector
   dates_new <- unlist(dates_blocks, use.names = FALSE)
 
   list(array = out, dates = dates_new)

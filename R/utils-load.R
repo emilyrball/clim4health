@@ -287,8 +287,9 @@
     if (i == 1) {
       data_out <- data_tmp
     } else {
-      data_out <- CST_BindDim(x = list(data_out, data_tmp), along = "sdate",
-                              var_dim = "var", dat_dim = "dataset")
+      data_out <- CSTools::CST_BindDim(x = list(data_out, data_tmp),
+                                       along = "sdate",
+                                       var_dim = "var", dat_dim = "dataset")
     }
   }
   data_out$coords$sdate <- data_out$attrs$Dates[, 1]
@@ -546,60 +547,14 @@
   possible_time_names <- c("year", "month", "week", "day", "date", "time")
   times <- .get_csv_dims(headers, data, possible_time_names)
 
-  # run through possible time/date combinations
-  ### what about case YYYY and MM stored in separate columns?
-  sum_na <- length(times$val)
-  dates <- NA
-  date_fun <- NULL
-  for (f in list(lubridate::ymd, lubridate::dmy, lubridate::mdy,
-                 lubridate::ym, lubridate::my)) {
-    dates_tmp <- f(times$val)
-    if (sum(is.na(dates_tmp)) < sum_na) {
-      dates <- dates_all <- dates_tmp
-      sum_na <- sum(is.na(dates_tmp))
-      date_fun <- f
-      ## choose a date format that produces least NAs
-    }
-  }
-  if (!typeof(dates) == "logical") {
-    dates <- unique(dates)
-  }
+  dates_all <- lubridate::parse_date_time(
+    times$val,
+    orders = c("Ymd HMS", "Ymd", "dmY HMS", "dmY", "mdY HMS", "mdY",
+               "Ym", "mY"),
+    tz = "UTC"
+  )
+  dates <- unique(dates_all)
 
-  # could be stored as "YYYY/MM/DD hh:mm:ss"
-  dates_tmp <- tryCatch({
-    as.POSIXct(times$val, tz = "UTC")
-  },
-  error = function(x) {
-    return(NA)
-  },
-  warning = function(x) {
-    return(NA)
-  })
-
-  # if length of dates_tmp is longer then hourly data could be stored
-  if (length(unique(dates_tmp)) > length(dates)) {
-    dates <- dates_all <- dates_tmp
-    date_fun <- as.POSIXct
-  }
-
-  # final option could be year is stored as date
-  if (typeof(dates) == "logical") {
-    dates <- tryCatch({
-      lubridate::year(times$val)
-    },
-    error = function(x) {
-      return(NA)
-    },
-    warning = function(x) {
-      return(NA)
-    })
-    dates_all <- dates
-    date_fun <- lubridate::year
-  }
-
-  if (typeof(dates) == "logical") {
-    stop("Cannot parse dates. Stopping.")
-  }
   # filter dates if year, month, day or time are specified
   if (any(year == "all")) {
     year <- unique(lubridate::year(dates_all))
@@ -615,12 +570,14 @@
   }
   start_dates <- .paste_outer(.paste_outer(year, sprintf("-%02d", month)),
                               sprintf("-%02d", day))
-  start_dates <- .paste_outer(start_dates,
-                              sprintf(" %02d:00:00", time))
-  start_dates <- as.POSIXct(start_dates, tz = "UTC",
-                            format = "%Y-%m-%d %H:%M:%S")
+  if (any(with(as.POSIXlt(dates), hour != 0 | min != 0 | sec != 0))) {
+    start_dates <- .paste_outer(start_dates,
+                                sprintf(" %02d:00:00", time))
+  }
 
-  start_dates_tmp <- date_fun(start_dates)
+  start_dates_tmp <-
+    lubridate::parse_date_time(start_dates, orders =
+                               c("Ymd HMS", "Ymd"), tz = "UTC")
   start_dates <- unique(start_dates_tmp[!is.na(start_dates_tmp)])
 
   if (any(leadtime_month == "all")) {
@@ -638,9 +595,11 @@
   # use forecast_date as this contains all possible dates
   start_dates <- unique(sort(c(grid_dates$forecast_date)))
 
-  date_selection <- which(dates_all %in% date_fun(start_dates))
+  date_selection <- which(as.Date(dates_all) %in% as.Date(start_dates))
   data <- data[date_selection, ]
   dates_all <- dates_all[date_selection]
+  lats$val <- lats$val[date_selection]
+  lons$val <- lons$val[date_selection]
   dates <- unique(dates_all)
 
   dates <- matrix(as.POSIXct(grid_dates$forecast_date,
@@ -681,8 +640,11 @@
   # reshape data and dates
   for (i in seq_len(nrow(grid_dates))) {
     s <- which(dates[, 1] == grid_dates$sdate[i])
-    t <- as.integer(grid_dates$time[i])
-    d <- which(dates_all == date_fun(grid_dates$forecast_date[i]))
+    if (length(s) == 0) {
+      next
+    }
+    t <- as.integer(grid_dates$time[i]) - min(leadtime_month) + 1
+    d <- which(as.Date(dates_all) == as.Date(grid_dates$forecast_date[i]))
 
     for (loc in seq_along(coordinates)) {
       lnx <- which(lons$val == lon[loc])
@@ -926,7 +888,7 @@
         }
         if (!(all(as.POSIXct(date_vals, origin = "1970-01-01", tz = "UTC") %in%
                     start_dates))) {
-          x <- x %>% dplyr::filter(as.POSIXct(valid_time, origin = "1970-01-01",
+          x <- x |> dplyr::filter(as.POSIXct(.data$valid_time, origin = "1970-01-01",
                                               tz = "UTC") %in% start_dates)
         }
 
@@ -937,8 +899,7 @@
 
         if (any(leadtime_month == "all") ||
               (length(leadtime_month) == 1 && (leadtime_month == 1))) {
-          grid_dates <- grid_dates %>%
-            dplyr::filter(forecast_date %in% date_vals)
+          grid_dates <- grid_dates[grid_dates$forecast_date %in% date_vals,]
         }
         coords <- list()
         for (dim in names(dims)) {
@@ -1079,7 +1040,7 @@
                       ". Please adjust the date selection accordingly."))
         }
         if (!(all(as.Date(date_vals) %in% start_dates))) {
-          x <- x %>% dplyr::filter(as.Date(valid_time,
+          x <- x |> dplyr::filter(as.Date(.data$valid_time,
                                            origin = "1970-01-01") %in%
                                      start_dates)
         }
@@ -1089,12 +1050,11 @@
                              origin = "1970-01-01")
         if (any(leadtime_month == "all") ||
               (length(leadtime_month) == 1 && (leadtime_month == 1))) {
-          grid_dates <- grid_dates %>%
-            dplyr::filter(forecast_date %in% date_vals)
+          grid_dates <- grid_dates[grid_dates$forecast_date %in% date_vals,]
         }
-        #grid_dates <- grid_dates %>%
-        #  dplyr::filter(as.Date(sdate, origin = "1970-01-01") %in% date_vals &
-        #                  as.Date(forecast_date, origin = "1970-01-01") %in%
+        #grid_dates <- grid_dates |>
+        #  dplyr::filter(as.Date(.data$sdate, origin = "1970-01-01") %in% date_vals &
+        #                  as.Date(.data$forecast_date, origin = "1970-01-01") %in%
         #                    date_vals)
 
         coords <- list()
@@ -1233,7 +1193,7 @@
                       ". Please adjust the date selection accordingly."))
         }
         if (!(all(as.Date(date_vals) %in% start_dates))) {
-          x <- x %>% dplyr::filter(as.Date(valid_time,
+          x <- x |> dplyr::filter(as.Date(.data$valid_time,
                                            origin = "1970-01-01") %in%
                                      start_dates)
         }
@@ -1243,13 +1203,10 @@
                              origin = "1970-01-01")
         if (any(leadtime_month == "all") ||
               (length(leadtime_month) == 1 && (leadtime_month == 1))) {
-          grid_dates <- grid_dates %>%
-            dplyr::filter(forecast_date %in% date_vals)
+          grid_dates <- grid_dates[grid_dates$forecast_date %in% date_vals,]
         }
-        grid_dates <- grid_dates %>%
-          dplyr::filter(as.Date(sdate, origin = "1970-01-01") %in% date_vals &
-                          as.Date(forecast_date, origin = "1970-01-01") %in%
-                            date_vals)
+        grid_dates <- grid_dates[as.Date(grid_dates$sdate, origin = "1970-01-01") %in% date_vals &
+                                   as.Date(grid_dates$forecast_date, origin = "1970-01-01") %in% date_vals, ]
 
         coords <- list()
         for (dim in names(dims)) {
@@ -1342,7 +1299,7 @@
     } else if ("forecast_reference_time" %in% dim_names) {
       # case: forecast/hindcast data
       if (!any(leadtime_month == "all")) {
-        x <- x %>% dplyr::filter(forecastMonth %in% leadtime_month)
+        x <- x |> dplyr::filter(.data$forecastMonth %in% leadtime_month)
       }
       start_dates <- .paste_outer(.paste_outer(year, sprintf("-%02d", month)),
                                   sprintf("-%02d", day))
@@ -1351,10 +1308,10 @@
       if (!(all(date_vals %in% start_dates))) {
         date_vals <- stars::st_get_dimension_values(x, concat_dim)
         date_vals <- as.Date(date_vals, origin = "1970-01-01")
-
-        x <- x %>% dplyr::filter(as.Date(forecast_reference_time,
-                                         origin = "1970-01-01") %in%
-                                   start_dates)
+        x <- x |> dplyr::filter(as.POSIXct(.data$forecast_reference_time,
+                                           origin = "1970-01-01",
+                                           tz = "UTC") %in%
+                                  start_dates)
       }
       dims <- stars::st_dimensions(x)
 
@@ -1415,8 +1372,8 @@
   } else if (length(data_out) == 0) {
     stop("No valid data found.")
   } else {
-    data_out <- CST_BindDim(data_out, along = "var",
-                            var_dim = "var", dat_dim = "dataset")
+    data_out <- CSTools::CST_BindDim(data_out, along = "var",
+                                     var_dim = "var", dat_dim = "dataset")
   }
   data_out$attrs$source_files <- unlist(file_list_var)
   data_out$attrs$source_files <- gsub("NETCDF:\"(.*)\"", "\\1",

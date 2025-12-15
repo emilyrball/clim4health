@@ -42,8 +42,8 @@ and 'member' dimensions.}
 and 'member' dimensions.}
 
 \item{metrics}{A character vector of the verification metrics to be
-calculated. Valid options are: "bss", "rpss", "crpss", "AbsBiasSS", "MSE",
-"MSSS", "RMSSS", "ROCSS".}
+calculated. Valid options are: "BSS", "RPSS", "CRPSS", "AbsBiasSS", "MSE",
+"MSSS", "RMSE", "RMSSS", "ROCSS".}
 
 \item{ref}{An optional s2dv_cube object of reference data with at least the
 'sdate' and 'member' dimensions. The dimensions must be the same as 'exp'
@@ -55,7 +55,7 @@ Brier Skill Score (BSS) calculation. The default is c(0.1, 0.9). Only
 applicable if "bss" is in 'metrics'.}
 
 \item{prob_thresholds}{Optional numeric vector of thresholds for the
-Relative Probability Skill Score (RPSS) calculation. The default is c(1/3,
+Ranked Probability Skill Score (RPSS) calculation. The default is c(1/3,
 2/3). Only applicable if "rpss" is in 'metrics'.}
 
 \item{alpha}{A numeric of the significance level to be used in the
@@ -121,15 +121,15 @@ Only relevant if "BSS" or "RPSS" is in 'metrics'.}
 
 \item{comp_dim}{A character string indicating the name of dimension along
 which obs is taken into account only if it is complete. The default value
-is NULL. Only relevant if "MSE" is in 'metrics'.}
+is NULL. Only relevant if "MSE" or "RMSE" is in 'metrics'.}
 
 \item{limits}{A vector of two integers indicating the range along comp_dim
 to be completed. The default value is c(1, length(comp_dim dimension)). Only
-relevant if "MSE" is in 'metrics'.}
+relevant if "MSE" or "RMSE" is in 'metrics'.}
 
 \item{conf}{A logical value indicating whether to retrieve the confidence
-intervals or not. The default value is TRUE. Only relevant if "MSE" is in
-'metrics'.}
+intervals or not. The default value is TRUE. Only relevant if "MSE" or "RMSE"
+is in 'metrics'.}
 
 \item{dat_dim}{A character string indicating the name of dataset dimension.
 The length of this dimension can be different between 'exp' and 'obs'.
@@ -164,7 +164,7 @@ as s2dv_cube objects.
 Quality assessment of climate forecasts
 }
 \examples{
-hcst <- c4h_load(paste0(getwd(), "/inst/extdata/hindcast/"),
+hcst <- c4h_load(system.file("extdata", "hindcast", package = "clim4health"),
                  variable = "t2m",
                  year = 2010:2012,
                  month = 1,
@@ -172,7 +172,7 @@ hcst <- c4h_load(paste0(getwd(), "/inst/extdata/hindcast/"),
                  ext = "nc")
 lats <- hcst$coords$latitude
 lons <- hcst$coords$longitude
-obs <- c4h_load(paste0(getwd(), "/inst/extdata/reanalysis/"),
+obs <- c4h_load(system.file("extdata", "reanalysis", package = "clim4health"),
                 variable = "t2m",
                 year = 2010:2012,
                 month = 1,
@@ -180,7 +180,8 @@ obs <- c4h_load(paste0(getwd(), "/inst/extdata/reanalysis/"),
                 bbox = c(max(lats), min(lons),
                          min(lats), max(lons)),
                 ext = "nc")
-shp_path <- paste0(getwd(), "/inst/extdata/areas/munip_vallecauca.gpkg")
+shp_path <- system.file("extdata", "areas", "munip_vallecauca.gpkg",
+                        package = "clim4health")
 obs <- c4h_space(obs,
                  areas = shp_path,
                  fun = "mean",

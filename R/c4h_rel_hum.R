@@ -8,7 +8,7 @@
 #' @export
 #'
 #' @examples
-#' TBD
+#' # TBD
 c4h_rel_hum <- function(tas, tdps) {
 
   # Check class type

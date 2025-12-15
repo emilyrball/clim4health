@@ -79,8 +79,6 @@ c4h_get <- function(pat,
                     outpath = getwd()) {
 
   all_params <- c(as.list(environment()))
-  names(all_params)[which(names(all_params) == "bbox")] <- "area"
-  area <- bbox
 
   # check the parameters of the function and give error messages
   datasets <- names(.datasets_info)
@@ -104,41 +102,23 @@ c4h_get <- function(pat,
 
   # check if all required params have correct values
   for (p in required_params) {
-    if (!all(all_params[[p]] %in% .datasets_info[[dataset]][[p]])) {
-      if (p == "area") {
-        if (!(length(bbox) == 4 && is.numeric(bbox) &&
-                all(bbox[c(1, 3)] > -90) || all(bbox[c(1, 3)] < 90) &&
-                all(bbox[c(1, 3)] > -90) || all(bbox[c(1, 3)] < 90) &&
-                all(bbox[c(2, 4)] > -180) || all(bbox[c(1, 3)] < 180) &&
-                all(bbox[c(2, 4)] > -180) || all(bbox[c(1, 3)] < 180))) {
-          stop("Coordinates are out of bound. N,W,S,E coordinates, 
+    
+    if (p == "bbox") {
+      if (!(length(bbox) == 4 && is.numeric(bbox) &&
+            (all(bbox[c(1, 3)] > -90) || all(bbox[c(1, 3)] < 90)) &&
+            (all(bbox[c(1, 3)] > -90) || all(bbox[c(1, 3)] < 90)) &&
+            (all(bbox[c(2, 4)] > -180) || all(bbox[c(1, 3)] < 180)) &&
+            (all(bbox[c(2, 4)] > -180) || all(bbox[c(1, 3)] < 180)))) {
+        stop("Coordinates are out of bound. N,W,S,E coordinates, 
                latitudes from 90 to -90, longitudes -180 to 180. Please adjust
                 'bbox' parameter.")
-        }
-      } else {
-        cat(paste0("Your value for ", p,
-                   " is not valid. It must be one of the following: ",
-                   paste(.datasets_info[[dataset]][[p]], collapse = ", ")))
-        return(invisible(NULL))
       }
+    } else if (!all(all_params[[p]] %in% .datasets_info[[dataset]][[p]])) {
+      stop(paste0("Your value for ", p,
+                 " is not valid. It must be one of the following: ",
+                 paste(.datasets_info[[dataset]][[p]], collapse = ", ")))
     }
   }
-
-
-  if (!(is.numeric(year)) || any(year > format(Sys.Date(), "%Y")) ||
-        any(year < 1950)) {
-    stop("Years but be numeric and between 1950 and current year.")
-  }
-  if (!(is.numeric(month)) || any(month > 12) || any(month < 1)) {
-    stop("Months  must be numeric and between 1 and 12.")
-  }
-  if (!(is.numeric(day)) || any(day > 31) || any(day < 1)) {
-    stop("Days must be numeric and between 1 and 31.")
-  }
-  if (!is.numeric(time) || any(time > 23) || any(time < 0)) {
-    stop("Times must be numeric and between 0 and 23.")
-  }
-
 
   # give a correct filename, remove ".nc" (it will be added later again)
   if (outname != make.names(outname)) {
@@ -185,7 +165,11 @@ c4h_get <- function(pat,
       )
       # add additional parameters
       for (i in required_params[!required_params %in% c("year", "month")]) {
-        request[[i]] <- get(i)
+        if (i == "bbox") {
+          request[["area"]] <- get("bbox")
+        } else {
+          request[[i]] <- get(i)
+        }
       }
       # load data and print time it took
       t1 <- Sys.time()

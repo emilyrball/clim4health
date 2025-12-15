@@ -26,6 +26,14 @@
 #' @param palette GHR, RColorBrewer or colorspace palette. Use "-" before the 
 #' palette name (e.g., "-Reds") to reverse it. Alternatively, a vector of
 #' hex codes to create a continuous interpolated palette.
+#' @param centering Value at which to center the colour palette. Defaults to 
+#' NULL (no centering).
+#' @param bins Number of bins for categorization of numerical variables. 
+#' Defaults to NULL (no binning).
+#' @param bins_method Method to compute the bins, only used when `bins` is not NULL.
+#' Possible values are "quantile" and "equal" (default).
+#' @param bins_label Optional labels for the bins. They must have the same length 
+#' as the number of bins. Defaults to NULL (default interval labels).
 #' @param coordgrid If TRUE, display coordinate grids on the map.
 #' @param ... Extra arguments indicating fixed aesthetics to be passed to 
 #'`stars::geom_stars`, including `lwd`, `alpha` and `colour`.
@@ -36,27 +44,28 @@
 #' library("sf")
 #' 
 #' # Region municipalities
-#' mun_path <- paste0(getwd(), "/inst/extdata/areas/munip_vallecauca.gpkg")
+#' mun_path <- system.file("extdata", "areas", "munip_vallecauca.gpkg",
+#'                         package = "clim4health")
 #' mun <- read_sf(mun_path)
 #' 
 #' # Forecast
-#' fcst_path <- paste0(getwd(), "/inst/extdata/forecast/")
+#' fcst_path <- system.file("extdata", "forecast", package = "clim4health")
 #' fcst <- c4h_load(fcst_path, variable = "t2m", ext = 'nc')
 #' c4h_plot(fcst, title = "Forecast", ensemble = TRUE) 
 #' 
 #' # Reanalysis
-#' rean_path <- paste0(getwd(), "/inst/extdata/reanalysis/")
+#' rean_path <- system.file("extdata", "reanalysis", package = "clim4health")
 #' rean <- c4h_load(rean_path, variable = "t2m", ext = 'nc')
 #' c4h_plot(rean, title = "Reanalysis", boundaries = mun, 
 #'          mask_boundaries = TRUE, coordgrid = TRUE) 
 #' 
 #' # Hindcast
-#' hind_path <- paste0(getwd(), "/inst/extdata/hindcast/")
+#' hind_path <- system.file("extdata", "hindcast", package = "clim4health")
 #' hind <- c4h_load(hind_path, variable = "t2m", ext = 'nc')
 #' c4h_plot(hind, title = "Hindcast", ensemble = TRUE)   
 #'                  
 #' # Stations
-#' stations_path <- paste0(getwd(), "/inst/extdata/stations/")
+#' stations_path <- system.file("extdata", "stations", package = "clim4health")
 #' stations <- c4h_load(stations_path, var = "temp_mean", ext = "csv")
 #' c4h_plot(stations, title = "Stations", time = 1:2, 
 #'          boundaries = mun, coordgrid = TRUE) 
@@ -76,6 +85,10 @@ c4h_plot <- function(data,
                      title = NULL,
                      legend = NULL,
                      palette = "-RdBu",
+                     centering = NULL,
+                     bins = NULL,
+                     bins_method = "equal",
+                     bins_label = NULL,
                      coordgrid = FALSE,
                      ...) {
   
@@ -146,6 +159,24 @@ c4h_plot <- function(data,
     }
   }
   
+  # Requirements: centering 
+  if(!is.null(centering)){
+    if(!is.numeric(centering) & length(centering > 1)){
+      stop("'centering' must be a numeric of length 1.")
+    }
+  }
+  
+  # Requirements: bins 
+  if(!is.null(bins)){
+    if(abs(bins - round(bins)) > 1e-10){
+      stop("bins must be an integer.")
+    }else if(!bins_method %in% c("quantile", "equal")){
+      stop("bins_method must be 'quantile' or 'equal'.")
+    }else if(!is.null(bins_label) && length(bins_label) != bins){
+      stop("The length of bins_label must be equal to the number of bins.")
+    }
+  }
+  
   # Number of panels
   if(length(time) * length(sdate) * length(ensemble) > 30){
     warning(paste0("The number of panels is very large, consider selecting a ",
@@ -178,6 +209,7 @@ c4h_plot <- function(data,
     keep_margins <- which(names(dims_data) != "ensemble")
     plot_data <- apply(plot_data, MARGIN = keep_margins, FUN = ensemble_fun)
     dim(plot_data) <- c(dim(plot_data), "ensemble"=1)
+    plot_data <- aperm(plot_data, perm = match(names(dim(plot_data)), names(dims_data)))
     ensemble <- 1
     
     # Select ensemble member
@@ -195,10 +227,12 @@ c4h_plot <- function(data,
         bound_sf <- boundaries
       }
     } else if(boundaries == "countries"){
-      data(world, package = "spData")
-      bound_sf <- world
+      bound_sf <- spData::world
     }
   }
+  
+  # Get varname
+  varname <- data$attrs$Variable$varName
   
   
   # 3. Conversion to stars ----
@@ -208,7 +242,7 @@ c4h_plot <- function(data,
                       which(names(dim(plot_data)) == "latitude"))
     plot_data <- aperm(plot_data, c(spatial_dims, setdiff(1:length(dims_data), spatial_dims)))
     plot_data <- stars::st_as_stars(plot_data)
-    names(plot_data) <- data$attrs$Variable$varName
+    names(plot_data) <- varname
     plot_data <- stars::st_set_dimensions(plot_data, "longitude",
                                           values = c(data$coords$longitude))
     plot_data <- stars::st_set_dimensions(plot_data, "latitude",
@@ -237,14 +271,13 @@ c4h_plot <- function(data,
                              crs = 4326) 
     plot_data <- stars::st_as_stars(plot_data,
                                     dimensions = stars::st_dimensions(
-                                      dataset = c(data$coord$dataset),
-                                      var = c(data$coord$var),
+                                      dataset = c(data$coords$dataset),
+                                      var = c(data$coords$var),
                                       sdate = c(data$coords$sdate)[sdate],
                                       time = c(data$coords$time)[time],
                                       ensemble = c(data$coords$ensemble)[ensemble],
                                       location = point_geom
                                     ))
-    varname <- data$attrs$Variable$varName
     names(plot_data) <- varname
     plot_data <- sf::st_as_sf(plot_data, long = TRUE)
     # plot_data <- plot_data[!is.na(sf::st_drop_geometry(plot_data)[,varname]),] # drop missing?
@@ -253,20 +286,38 @@ c4h_plot <- function(data,
     
     plot_data <- stars::st_as_stars(plot_data,
                                     dimensions = stars::st_dimensions(
-                                      dataset = c(data$coord$dataset),
-                                      var = c(data$coord$var),
+                                      dataset = c(data$coords$dataset),
+                                      var = c(data$coords$var),
                                       sdate = c(data$coords$sdate)[sdate],
                                       time = c(data$coords$time)[time],
                                       ensemble = c(data$coords$ensemble)[ensemble],
                                       area = data$attrs$area$geom
                                     ))
-    varname <- data$attrs$Variable$varName
     names(plot_data) <- varname
     plot_data <- sf::st_as_sf(plot_data, long = TRUE)
     
   }
   
   # 4. Plot ----
+  
+  # Binning 
+  if (!is.null(bins)) {
+    if (bins_method == "quantile") {
+      if (is.null(bins_label)){
+        plot_data[[varname]] <- ggplot2::cut_number(plot_data[[varname]], n = bins)
+      }else{
+        plot_data[[varname]] <- ggplot2::cut_number(plot_data[[varname]], n = bins, 
+                                                    labels = bins_label)
+      }
+    } else if (bins_method == "equal") {
+      if(is.null(bins_label)){
+        plot_data[[varname]] <- ggplot2::cut_interval(plot_data[[varname]], n = bins)
+      } else {
+        plot_data[[varname]] <- ggplot2::cut_interval(plot_data[[varname]], n = bins, 
+                                                      labels = bins_label)
+      }
+    }
+  }
   
   # Base plot
   if ("longitude" %in% names(dims_data)) { # Gridded data
@@ -314,32 +365,77 @@ c4h_plot <- function(data,
   # Faceting
   if(!is.null(f1) & is.null(f2)){ # Wrap
     p <- p +
-      ggplot2::facet_wrap(as.formula(paste("~", f1)),
+      ggplot2::facet_wrap(stats::as.formula(paste("~", f1)),
                           labeller = "label_both")
   }else if(!is.null(f1) & !is.null(f2)){ # Grid
     
     if(!isTRUE(coordgrid)) {
       p <- p +
-        ggplot2::facet_grid(as.formula(paste(f1, "~", f2)),
+        ggplot2::facet_grid(stats::as.formula(paste(f1, "~", f2)),
                             labeller = "label_both", switch = "y")
     } else{
       p <- p +
-        ggplot2::facet_grid(as.formula(paste(f1, "~", f2)), labeller = "label_both")      
+        ggplot2::facet_grid(stats::as.formula(paste(f1, "~", f2)), labeller = "label_both")      
     }
     
   }
   
   # Palette
-  my_palette <- GHRexplore::GHR_palette(palette)(n = 30)
-  if ("location" %in% names(dims_data)){
-    p <- p + ggplot2::scale_colour_gradientn(colors = my_palette, na.value = "grey70")  
+  if (!is.null(bins)) { # Binning
     
-  }else if ("area" %in% names(dims_data)){
-    p <- p + ggplot2::scale_fill_gradientn(colors = my_palette, na.value = "grey70")  
+    # Categorical palette 
+    level_names <- unique(plot_data[[varname]])
+    level_names <- level_names[!is.na(level_names)]
+    my_palette <- GHRexplore::GHR_palette(palette, length(level_names))(n = length(level_names))
+    if ("location" %in% names(dims_data)){
+      p <- p + ggplot2::scale_colour_manual(values = my_palette, na.value = "grey70")  
+    }else if ("area" %in% names(dims_data)){
+      p <- p + ggplot2::scale_fill_manual(values = my_palette, na.value = "grey70")  
+    }else {
+      p <- p + ggplot2::scale_fill_manual(values = my_palette, na.value = "#00000000")  
+    }    
     
-  }else {
-    p <- p + ggplot2::scale_fill_gradientn(colors = my_palette, na.value = "#00000000")  
+  } else if (is.null(centering)) { # No centering, continuous
+    
+    # Standard continuous palette   
+    my_palette <- GHRexplore::GHR_palette(palette)(n = 30)
+    if ("location" %in% names(dims_data)){
+      p <- p + ggplot2::scale_colour_gradientn(colors = my_palette, na.value = "grey70")  
+    }else if ("area" %in% names(dims_data)){
+      p <- p + ggplot2::scale_fill_gradientn(colors = my_palette, na.value = "grey70")  
+    }else {
+      p <- p + ggplot2::scale_fill_gradientn(colors = my_palette, na.value = "#00000000")  
+    }
+    
+  } else { # Centering, continuous
+    
+    # normalized the selected midpoint on a 0-1 scale 
+    my_palette <- GHRexplore::GHR_palette(palette)(n = 25) # Odd number, 13 is the centre
+    data_min <- min(plot_data[[varname]], na.rm = TRUE)
+    data_max <- max(plot_data[[varname]], na.rm = TRUE)
+    
+    # Is the centering between the min and the max?
+    if(centering < data_min | centering > data_max){
+      stop("'centering' must be between the data minimum and maximum values.")
+    }
+    
+    rescaled_center <- (centering - data_min)/(data_max - data_min)
+    values_pos <- c(seq(0, rescaled_center, length.out = 13)[1:12],
+                    rescaled_center,
+                    seq(rescaled_center, 1, length.out = 13)[2:13])
+    
+    if ("location" %in% names(dims_data)){
+      p <- p + ggplot2::scale_colour_gradientn(colors = my_palette, values = values_pos,
+                                               na.value = "grey70")  
+    }else if ("area" %in% names(dims_data)){
+      p <- p + ggplot2::scale_fill_gradientn(colors = my_palette, values = values_pos,
+                                             na.value = "grey70")  
+    }else {
+      p <- p + ggplot2::scale_fill_gradientn(colors = my_palette, values = values_pos,
+                                             na.value = "#00000000")  
+    }
   }
+  
   
   # Boundaries on top, only for grid
   if(!is.null(boundaries) & "longitude" %in% names(dims_data)){
@@ -367,7 +463,6 @@ c4h_plot <- function(data,
         panel.grid.minor = ggplot2::element_blank(),
         axis.ticks = ggplot2::element_line(linewidth = 0.3, color = "grey50"),
         axis.text = ggplot2::element_text(size = 7, color = "grey30"),
-        axis.text.x = ggplot2::element_text(angle = -45, hjust = 0),
         strip.text.y = ggplot2::element_text(margin = ggplot2::margin(b = 0)),
         strip.text.x = ggplot2::element_text(margin = ggplot2::margin(b = 0)),
         legend.key.height = ggplot2::unit(1, "cm")) +
@@ -384,6 +479,7 @@ c4h_plot <- function(data,
         plot.margin = ggplot2::theme_bw()$plot.margin,
         strip.text.y = ggplot2::element_text(angle = 90, margin = ggplot2::margin(b = 0)),
         strip.text.x = ggplot2::element_text(margin = ggplot2::margin(b = 0)),
+        panel.border = ggplot2::element_rect(color = "black", fill = NA, linewidth = 0.1),
         legend.key.height = ggplot2::unit(1, "cm"))
   }
   
@@ -398,19 +494,18 @@ c4h_plot <- function(data,
       p <- p + ggplot2::labs(col = legend)
     }
   }
-
+  
+  # Fix labels when time is numeric
   if((!"sdate" %in% c(f1, f2)) & ("time" %in% c(f1, f2)) & is.numeric(data$coords$time)) {
     
     if("longitude" %in% names(dims_data)){
       subtitle <- paste0("Start date: ", 
-                         stars::st_get_dimension_values(plot_stars, "sdate"))
+                         stars::st_get_dimension_values(plot_data, "sdate"))
     } else {
-      subtitle <- paste0("Start date: ", plot_stars$sdate[1])
+      subtitle <- paste0("Start date: ", plot_data$sdate[1])
     }
     p <- p +
-      ggplot2::labs(subtitle =  paste0(
-        "Start date: ",
-        stars::st_get_dimension_values(plot_stars, "sdate")))
+      ggplot2::labs(subtitle = subtitle)
   }
   
   return(p)

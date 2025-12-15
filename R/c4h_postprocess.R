@@ -7,8 +7,8 @@
 #' @param obs An s2dv_cube object of observation data with at least the 'sdate'
 #' and 'member' dimensions.
 #' @param metrics A character vector of the verification metrics to be
-#' calculated. Valid options are: "bss", "rpss", "crpss", "AbsBiasSS", "MSE",
-#' "MSSS", "RMSSS", "ROCSS".
+#' calculated. Valid options are: "BSS", "RPSS", "CRPSS", "AbsBiasSS", "MSE",
+#' "MSSS", "RMSE", "RMSSS", "ROCSS".
 #' @param ref An optional s2dv_cube object of reference data with at least the
 #' 'sdate' and 'member' dimensions. The dimensions must be the same as 'exp'
 #' except 'memb_dim' and 'dat_dim'. If 'ref' is NULL, the climatological
@@ -17,7 +17,7 @@
 #' Brier Skill Score (BSS) calculation. The default is c(0.1, 0.9). Only
 #' applicable if "bss" is in 'metrics'.
 #' @param prob_thresholds Optional numeric vector of thresholds for the
-#' Relative Probability Skill Score (RPSS) calculation. The default is c(1/3,
+#' Ranked Probability Skill Score (RPSS) calculation. The default is c(1/3,
 #' 2/3). Only applicable if "rpss" is in 'metrics'.
 #' @param alpha A numeric of the significance level to be used in the
 #' statistical significance test. The default value is 0.05. Relevant for all
@@ -70,13 +70,13 @@
 #' @param weights_ref Same as 'weights_exp' but for the reference forecast.
 #' @param comp_dim A character string indicating the name of dimension along
 #' which obs is taken into account only if it is complete. The default value
-#' is NULL. Only relevant if "MSE" is in 'metrics'.
+#' is NULL. Only relevant if "MSE" or "RMSE" is in 'metrics'.
 #' @param limits A vector of two integers indicating the range along comp_dim
 #' to be completed. The default value is c(1, length(comp_dim dimension)). Only
-#' relevant if "MSE" is in 'metrics'.
+#' relevant if "MSE" or "RMSE" is in 'metrics'.
 #' @param conf A logical value indicating whether to retrieve the confidence
-#' intervals or not. The default value is TRUE. Only relevant if "MSE" is in
-#' 'metrics'.
+#' intervals or not. The default value is TRUE. Only relevant if "MSE" or "RMSE"
+#' is in 'metrics'.
 #' @param dat_dim A character string indicating the name of dataset dimension.
 #' The length of this dimension can be different between 'exp' and 'obs'.
 #' The default value is NULL.
@@ -102,7 +102,7 @@
 #' @export
 #'
 #' @examples
-#' hcst <- c4h_load(paste0(getwd(), "/inst/extdata/hindcast/"),
+#' hcst <- c4h_load(system.file("extdata", "hindcast", package = "clim4health"),
 #'                  variable = "t2m",
 #'                  year = 2010:2012,
 #'                  month = 1,
@@ -110,7 +110,7 @@
 #'                  ext = "nc")
 #' lats <- hcst$coords$latitude
 #' lons <- hcst$coords$longitude
-#' obs <- c4h_load(paste0(getwd(), "/inst/extdata/reanalysis/"),
+#' obs <- c4h_load(system.file("extdata", "reanalysis", package = "clim4health"),
 #'                 variable = "t2m",
 #'                 year = 2010:2012,
 #'                 month = 1,
@@ -118,7 +118,8 @@
 #'                 bbox = c(max(lats), min(lons),
 #'                          min(lats), max(lons)),
 #'                 ext = "nc")
-#' shp_path <- paste0(getwd(), "/inst/extdata/areas/munip_vallecauca.gpkg")
+#' shp_path <- system.file("extdata", "areas", "munip_vallecauca.gpkg",
+#'                         package = "clim4health")
 #' obs <- c4h_space(obs,
 #'                  areas = shp_path,
 #'                  fun = "mean",
@@ -145,28 +146,63 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
                             sign = FALSE, pval = TRUE,
                             sig_method = "one-sided Fisher") {
   if (is.null(exp) || is.null(obs)) {
-    stop("Parameters 'exp' and 'obs' must be specified. They should be",
+    stop("Parameters 'exp' and 'obs' must be specified. They should be ",
          "s2dv_cube objects that have been loaded and transformed using",
          "clim4health functions.")
   }
 
-  if (is.null(metrics)) {
-    stop("Parameter 'metrics' must be specified. This should be a character",
-         "vector of the verification metrics to be calculated. Valid options",
-         "are:  Valid options are: \"bss\", \"rpss\", \"crpss\", \"AbsBiasSS\"",
-         ", \"MSE\", \"MSSS\", \"RMSSS\", \"ROCSS\".")
+  if (is.null(metrics) || !(all(metrics %in% c("BSS", "RPSS", "CRPSS",
+                                               "AbsBiasSS", "MSE",
+                                               "MSSS", "RMSE", "RMSSS",
+                                               "ROCSS")))) {
+    stop("Parameter 'metrics' must be specified. This should be a character ",
+         "vector of the verification metrics to be calculated. Valid options ",
+         "are: \"BSS\", \"RPSS\", \"CRPSS\", \"AbsBiasSS\"",
+         ", \"MSE\", \"MSSS\", \"RMSE\", \"RMSSS\", \"ROCSS\".")
   }
 
   time_dim <- "sdate"
   memb_dim <- "ensemble"
 
-  
   if (!is.null(ncores)) {
     if (ncores > (parallel::detectCores() - 1)) {
       # if ncores is greater than the number of available cores, stop
       stop("'ncores' cannot be equal to or greater than the available cores.")
     }
   }
+  obs_dims <- obs$dims
+  out_dims <- exp$dims
+
+  if (length(intersect(names(out_dims), names(obs_dims))) <
+        max(length(out_dims), length(obs_dims))) {
+    stop(paste0("Please ensure that 'exp' and 'obs' have the same ",
+                "named dimensions. 'exp' has dimensions: '",
+                paste(names(out_dims), collapse = "', '"),
+                "'. 'obs' has dimensions: '",
+                paste(names(obs_dims), collapse = "', '"), "'."))
+  }
+  for (dim in names(out_dims)) {
+    if (dim != "dataset" && dim != memb_dim) {
+      if (out_dims[[dim]] != obs_dims[[dim]]) {
+        stop(paste0("Dimension '", dim, "' has different lengths in ",
+                    "'exp' and 'obs'. 'exp' has dimension ", dim, " = ",
+                    out_dims[[dim]], " while 'obs' has dimension ", dim, " = ",
+                    obs_dims[[dim]], ". Please ensure that 'exp' and 'obs' ",
+                    "have the same lengths for all named dimensions except ",
+                    "'dataset' and 'ensemble'."))
+      }
+    }
+  }
+
+  out_dims[["sdate"]] <- 1
+  out_dims[["ensemble"]] <- 1
+
+  out_coords <- exp$coords
+  out_coords[["sdate"]] <- out_coords[["sdate"]][1]
+  out_coords[["ensemble"]] <- out_coords[["ensemble"]][1]
+
+  out_attrs <- exp$attrs
+  out_attrs$Dates <- out_attrs$Dates[1, , drop = FALSE]
 
   obs <- .get_array(obs)
   exp <- .get_array(exp)
@@ -185,7 +221,7 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
   # skill
   if ("BSS" %in% metrics) {
     for (threshold in brier_thresholds) {
-      data[[paste0("BSS", threshold)]] <-
+      temp <-
         s2dv::RPSS(exp, obs, ref = ref,
                    time_dim = time_dim, memb_dim = memb_dim, cat_dim = cat_dim,
                    dat_dim = dat_dim, prob_thresholds = threshold,
@@ -195,10 +231,18 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
                    cross.val = cross.val, na.rm = na.rm,
                    sig_method.type = sig_method_type_brier, alpha = alpha,
                    N.eff = N.eff, ncores = ncores)
+      rpss <- .format_output(data = temp$rpss, out_dims = out_dims,
+                             out_coords = out_coords, out_attrs = out_attrs)
+      sign <- .format_output(data = temp$sign, out_dims = out_dims,
+                             out_coords = out_coords, out_attrs = out_attrs)
+      temp <- list(rpss = rpss, sign = sign)
+      attributes(temp) <- list("metric" = "BSS",
+                               "threshold" = threshold * 100)
+      data[[paste0("BSS", 100 * threshold)]] <- temp
     }
   }
   if ("RPSS" %in% metrics) {
-    data[["RPSS"]] <-
+    temp <-
       s2dv::RPSS(exp, obs, ref = ref, time_dim = time_dim,
                  memb_dim = memb_dim, cat_dim = cat_dim, dat_dim = dat_dim,
                  prob_thresholds = prob_thresholds,
@@ -208,56 +252,125 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
                  cross.val = cross.val, na.rm = na.rm,
                  sig_method.type = sig_method_type_brier,
                  alpha = alpha, N.eff = N.eff, ncores = ncores)
+    rpss <- .format_output(data = temp$rpss, out_dims = out_dims,
+                           out_coords = out_coords, out_attrs = out_attrs)
+    sign <- .format_output(data = temp$sign, out_dims = out_dims,
+                           out_coords = out_coords, out_attrs = out_attrs)
+    temp <- list(rpss = rpss, sign = sign)
+    attributes(temp) <- list("metric" = "RPSS")
+    data[[paste0("RPSS")]] <- temp
   }
   if ("CRPSS" %in% metrics) {
-    data[["CRPSS"]] <- s2dv::CRPSS(exp, obs, ref = ref, time_dim = time_dim,
-                                   memb_dim = memb_dim, dat_dim = dat_dim,
-                                   Fair = Fair, clim.cross.val = clim.cross.val,
-                                   sig_method.type = sig_method_type_brier,
-                                   alpha = alpha, N.eff = N.eff,
-                                   ncores = ncores)
+    temp <- s2dv::CRPSS(exp, obs, ref = ref, time_dim = time_dim,
+                        memb_dim = memb_dim, dat_dim = dat_dim,
+                        Fair = Fair, clim.cross.val = clim.cross.val,
+                        sig_method.type = sig_method_type_brier,
+                        alpha = alpha, N.eff = N.eff,
+                        ncores = ncores)
+    crpss <- .format_output(data = temp$crpss, out_dims = out_dims,
+                            out_coords = out_coords, out_attrs = out_attrs)
+    sign <- .format_output(data = temp$sign, out_dims = out_dims,
+                           out_coords = out_coords, out_attrs = out_attrs)
+    temp <- list(crpss = crpss, sign = sign)
+    attributes(temp) <- list("metric" = "CRPSS")
+    data[[paste0("CRPSS")]] <- temp
   }
   if ("AbsBiasSS" %in% metrics) {
-    data[["AbsBiasSS"]] <- s2dv::AbsBiasSS(exp, obs, ref = ref,
-                                           time_dim = time_dim,
-                                           memb_dim = memb_dim,
-                                           dat_dim = dat_dim, na.rm = na.rm,
-                                           sig_method.type =
-                                             sig_method_type_brier,
-                                           alpha = alpha, ncores = ncores)
+    temp <- s2dv::AbsBiasSS(exp, obs, ref = ref,
+                            time_dim = time_dim,
+                            memb_dim = memb_dim,
+                            dat_dim = dat_dim, na.rm = na.rm,
+                            sig_method.type =
+                              sig_method_type_brier,
+                            alpha = alpha, ncores = ncores)
+    biasss <- .format_output(data = temp$biasSS, out_dims = out_dims,
+                             out_coords = out_coords, out_attrs = out_attrs)
+    sign <- .format_output(data = temp$sign, out_dims = out_dims,
+                           out_coords = out_coords, out_attrs = out_attrs)
+    temp <- list(biasSS = biasss, sign = sign)
+    attributes(temp) <- list("metric" = "AbsBiasSS")
+    data[["AbsBiasSS"]] <- temp
   }
   if ("MSE" %in% metrics) {
-    data[["MSE"]] <- s2dv::MSE(exp, obs, time_dim = time_dim,
-                               dat_dim = dat_dim, memb_dim = memb_dim,
-                               comp_dim = comp_dim, limits = limits,
-                               conf = conf, alpha = alpha, ncores = ncores)
+    temp <- s2dv::MSE(exp, obs, time_dim = time_dim,
+                      dat_dim = dat_dim, memb_dim = memb_dim,
+                      comp_dim = comp_dim, limits = limits,
+                      conf = conf, alpha = alpha, ncores = ncores)
+    mse <- .format_output(data = temp$mse, out_dims = out_dims,
+                          out_coords = out_coords, out_attrs = out_attrs)
+    conf_lower <- .format_output(data = temp$conf.lower, out_dims = out_dims,
+                                 out_coords = out_coords, out_attrs = out_attrs)
+    conf_upper <- .format_output(data = temp$conf.upper, out_dims = out_dims,
+                                 out_coords = out_coords, out_attrs = out_attrs)
+    temp <- list(mse = mse, conf.lower = conf_lower,
+                 conf.upper = conf_upper)
+    attributes(temp) <- list("metric" = "MSE")
+    data[["MSE"]] <- temp
   }
   if ("MSSS" %in% metrics) {
-    data[["MSSS"]] <- s2dv::MSSS(exp, obs, ref = ref,
-                                 time_dim = time_dim, dat_dim = dat_dim,
-                                 memb_dim = memb_dim, pval = pval, sign = sign,
-                                 alpha = alpha, N.eff = N.eff,
-                                 sig_method = sig_method,
-                                 sig_method.type = sig_method.type,
-                                 ncores = ncores)
+    temp <- s2dv::MSSS(exp, obs, ref = ref,
+                       time_dim = time_dim, dat_dim = dat_dim,
+                       memb_dim = memb_dim, pval = pval, sign = sign,
+                       alpha = alpha, N.eff = N.eff,
+                       sig_method = sig_method,
+                       sig_method.type = sig_method.type,
+                       ncores = ncores)
+    msss <- .format_output(data = temp$msss, out_dims = out_dims,
+                           out_coords = out_coords, out_attrs = out_attrs)
+    pval <- .format_output(data = temp$p.val, out_dims = out_dims,
+                           out_coords = out_coords, out_attrs = out_attrs)
+    temp <- list(msss = msss, p.val = pval)
+    attributes(temp) <- list("metric" = "MSSS")
+    data[["MSSS"]] <- temp
+  }
+  if ("RMSE" %in% metrics) {
+    temp <- s2dv::RMS(exp, obs, time_dim = time_dim,
+                      dat_dim = dat_dim, memb_dim = memb_dim,
+                      comp_dim = comp_dim, limits = limits,
+                      conf = conf, alpha = alpha, ncores = ncores)
+    rmse <- .format_output(data = temp$rms, out_dims = out_dims,
+                           out_coords = out_coords, out_attrs = out_attrs)
+    conf_lower <- .format_output(data = temp$conf.lower, out_dims = out_dims,
+                                 out_coords = out_coords, out_attrs = out_attrs)
+    conf_upper <- .format_output(data = temp$conf.upper, out_dims = out_dims,
+                                 out_coords = out_coords, out_attrs = out_attrs)
+    temp <- list(rmse = rmse, conf.lower = conf_lower,
+                 conf.upper = conf_upper)
+    attributes(temp) <- list("metric" = "RMSE")
+    data[["RMSE"]] <- temp
   }
   if ("RMSSS" %in% metrics) {
-    data[["RMSSS"]] <- s2dv::RMSSS(exp, obs, ref = ref,
-                                   time_dim = time_dim, dat_dim = dat_dim,
-                                   memb_dim = memb_dim, pval = pval,
-                                   sign = sign, alpha = alpha, N.eff = N.eff,
-                                   sig_method = sig_method,
-                                   sig_method.type = sig_method.type,
-                                   ncores = ncores)
+    temp <- s2dv::RMSSS(exp, obs, ref = ref,
+                        time_dim = time_dim, dat_dim = dat_dim,
+                        memb_dim = memb_dim, pval = pval,
+                        sign = sign, alpha = alpha, N.eff = N.eff,
+                        sig_method = sig_method,
+                        sig_method.type = sig_method.type,
+                        ncores = ncores)
+    rmsss <- .format_output(data = temp$rmsss, out_dims = out_dims,
+                            out_coords = out_coords, out_attrs = out_attrs)
+    pval <- .format_output(data = temp$p.val, out_dims = out_dims,
+                           out_coords = out_coords, out_attrs = out_attrs)
+    temp <- list(rmsss = rmsss, p.val = pval)
+    attributes(temp) <- list("metric" = "RMSSS")
+    data[["RMSSS"]] <- temp
   }
   if ("ROCSS" %in% metrics) {
-    data[["ROCSS"]] <- s2dv::ROCSS(exp, obs,
-                                   ref = ref, time_dim = time_dim,
-                                   memb_dim = memb_dim, cat_dim = cat_dim,
-                                   dat_dim = dat_dim,
-                                   prob_thresholds = prob_thresholds,
-                                   indices_for_clim = indices_for_clim,
-                                   cross.val = cross.val, ncores = ncores)
+    temp <- s2dv::ROCSS(exp, obs,
+                        ref = ref, time_dim = time_dim,
+                        memb_dim = memb_dim, cat_dim = cat_dim,
+                        dat_dim = dat_dim,
+                        prob_thresholds = prob_thresholds,
+                        indices_for_clim = indices_for_clim,
+                        cross.val = cross.val, ncores = ncores)
+    rpss <- .format_output(data = temp$rpss, out_dims = out_dims,
+                           out_coords = out_coords, out_attrs = out_attrs)
+    sign <- .format_output(data = temp$sign, out_dims = out_dims,
+                           out_coords = out_coords, out_attrs = out_attrs)
+    temp <- list(rpss = rpss, sign = sign)
+    attributes(temp) <- list("metric" = "ROCSS")
+    data[["ROCSS"]] <- temp
   }
+  
   return(data)
 }

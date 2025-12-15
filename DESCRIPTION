@@ -1,29 +1,53 @@
 Package: clim4health
-Title: Post-processing of climate data for health applications
+Title: Post-processing Of Climate Data For Health Applications
 Version: 0.0.0.9000
-Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
+Authors@R: c(
+    person("Emily", "Ball", role = c("aut"),
+           comment = c(ORCID = "0000-0002-3002-4068")),
+    person("Alba", "Llabrés", role = c("aut"),
+           comment = c(ORCID = "0000-0003-2144-675X")),
+    person("Carles", "Milà", , "carles.milagarcia@bsc.es", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0003-0470-0760")),
+    person("Raul", "Capellan", role = "aut"),
+    person("Rebeca", "Nunes", role = "aut",
+           comment = c(ORCID = "0009-0009-8738-0985")),
+    person("Daniela", "Lührsen", role = "aut",
+           comment = c(ORCID = "0009-0002-6340-5964")),
+    person("Anna B.", "Kawiecki", role = "aut",
+           comment = c(ORCID = "0000-0002-0499-2612")),
+    person("Rachel", "Lowe", role = c("aut"),
+           comment = c(ORCID = "0000-0003-3939-7343"))
+    )
+Description: Obtain, transform and export climate data including reanalyses,
+    forecasts, hindcasts, and weather stations for their use in epidemiological analyses.
+    It is organised in three sequential blocks, input (download and load data), 
+    transform (postprocessing, downscaling, spatiotemporal aggregation and 
+    threshold-based indicators) and output (visualizing and exporting data).
 License: AGPL (>= 3)
+URL: https://gitlab.earth.bsc.es/ghr/clim4health,
+    https://bsc-es.github.io/GHRtools/docs/clim4health/clim4health
+BugReports: https://gitlab.earth.bsc.es/ghr/clim4health/-/issues
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 Imports:
-    abind,
     CSTools,
     dplyr,
-    easyNCDF,
     ecmwfr,
-    exactextractr,
     ggplot2,
     GHRexplore,
     lubridate,
-    raster,
     s2dv,
     sf,
     startR, 
     stars,
-    terra
+    terra,
+    data.table,
+    measurements,
+    ncdf4
 Suggests: 
     testthat (>= 3.0.0),
+    spData,
+    cubelyr
 Config/testthat/edition: 3
+SystemRequirements: CDO (Climate Data Operators, https://code.mpimet.mpg.de/projects/cdo)

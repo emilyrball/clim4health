@@ -22,19 +22,19 @@
 #' @export
 #'
 #' @examples
-#' # # Forecast data included in the package
-#' # fcst_path <- system.file("extdata/forecast/", package = "clim4health")
-#' # fcst_path <- paste0(fcst_path, "/")
-#' #
-#' # # Load the forecast data
-#' # fcst <- c4h_load(fcst_path,
-#'                    variable = "t2m",
-#'                    year = 2025,
-#'                    month = 1,
-#'                    ext = 'nc')
-#' # class(fcst)
-#' # dim(fcst$data)
-#' # summary(fcst$data)
+#' # Forecast data included in the package
+#' fcst_path <- system.file("extdata/forecast/", package = "clim4health")
+#' fcst_path <- paste0(fcst_path, "/")
+#'
+#' # Load the forecast data
+#' fcst <- c4h_load(fcst_path,
+#'                  variable = "t2m",
+#'                  year = 2025,
+#'                  month = 1,
+#'                  ext = 'nc')
+#' class(fcst)
+#' dim(fcst$data)
+#' summary(fcst$data)
 #'
 c4h_load <- function(path,
                      variable = NULL,
@@ -45,7 +45,7 @@ c4h_load <- function(path,
                      leadtime_month = "all",
                      ext = NULL,
                      bbox = NULL) {
-  
+
   if (is.null(ext)) {
     stop("Please specify the file extension using the 'ext' parameter.")
   } else if (!(ext %in% c("nc", "csv"))) {
