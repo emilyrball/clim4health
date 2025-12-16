@@ -4,7 +4,7 @@
 #'
 #'
 #' @param data The object you want to transform
-#' @param format Format of the object you want to save 
+#' @param format Format of the object you want to save
 #' could be: s2dv terra, csv or polygons
 #' @param path the path where you want to save the file saved
 #'
@@ -14,7 +14,7 @@
 #' @examples
 #' fcst_path <- "inst/extdata/forecast/"
 #' fcst_path <- paste0(fcst_path)
-#' 
+#'
 #' fcst <- clim4health::c4h_load(fcst_path,
 #'                             variable = "t2m",
 #'                             year = 2025,
@@ -24,45 +24,46 @@
 #' save_s2dv(fcst, 's2dv', 'out.nc')
 
 
-c4h_save <- function (data, format, path) {
-  if (format == 's2dv') {
+c4h_save <- function(data, format, path) {
+  if (format == "s2dv") {
     .save_s2dv(data, path)
-  } else if (format == 'terra') {
+  } else if (format == "terra") {
     .save_terra(data, path)
-  } else if (format == 'csv') {
+  } else if (format == "csv") {
     .save_csv(data, path)
-  }else if (format == 'polygons'){
+  }else if (format == "polygons"){
     .save_polygons(data, path)
   }
 }
 
 
 .save_s2dv <- function(cube, path = "out.nc") {
-  
+
   # Detect longitude / latitude dims
+  ### REVIEW - should not require latitude and longitude dimensions?
   lon <- as.vector(cube$coords$longitude)
   lat <- as.vector(cube$coords$latitude)
-  
+
   # Drop non-spatial singleton dims (dataset, var, sdate, etc.)
   arr <- drop(cube$data)
-  
+
   # Collapse everything except lon/lat into "band"
   dim_arr <- dim(arr)
   nlon <- length(lon)
   nlat <- length(lat)
   nband <- prod(dim_arr) / (nlon * nlat)
   arr3 <- array(arr, dim = c(nlon, nlat, nband))  # [lon, lat, band]
-  
+
   # Build stars object
   dims <- stars::st_dimensions(
     x = lon,
     y = lat,
     band = seq_len(nband)
   )
-  
+
   st <- stars::st_as_stars(arr3, dimensions = dims)
   names(st) <- cube$attrs$varName %||% "var"
-  
+
   # Write NetCDF file
   stars::write_stars(st, path)
   message("Saved NetCDF: ", path)
