@@ -44,7 +44,8 @@ Imports:
     terra,
     data.table,
     measurements,
-    ncdf4
+    ncdf4,
+    ggpattern
 Suggests: 
     testthat (>= 3.0.0),
     spData,

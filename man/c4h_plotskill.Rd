@@ -15,7 +15,8 @@ c4h_plotskill(
   mask_boundaries = FALSE,
   title = NULL,
   legend = NULL,
-  palette = "-RdBu",
+  palette = "-Green",
+  noskillcol = "#D0C1F5",
   coordgrid = FALSE,
   ...
 )
@@ -54,6 +55,9 @@ names.}
 palette name (e.g., "-Reds") to reverse it. Alternatively, a vector of
 hex codes to create a continuous interpolated palette.}
 
+\item{noskillcol}{Colour for skill scores < 0 depicting a skill lower than
+climatologies.}
+
 \item{coordgrid}{If TRUE, display coordinate grids on the map.}
 
 \item{...}{Extra arguments indicating fixed aesthetics to be passed to
@@ -70,11 +74,11 @@ For MSE and RMSE,please use the function \code{c4h_plot}.
 }
 \examples{
 hcst <- c4h_load(system.file("extdata", "hindcast", package = "clim4health"),
-variable = "t2m",
-year = 2010:2012,
-month = 1,
-leadtime_month = 1:3,
-ext = "nc")
+                 variable = "t2m",
+                 year = 2010:2012,
+                 month = 1,
+                 leadtime_month = 1:3,
+                 ext = "nc")
 lats <- hcst$coords$latitude
 lons <- hcst$coords$longitude
 obs <- c4h_load(system.file("extdata", "reanalysis", package = "clim4health"),
@@ -101,7 +105,10 @@ skill <- c4h_postprocess(exp = hcst,
                          obs = obs,
                          metrics = c("BSS", "CRPSS"),
                          brier_thresholds = c(0.1, 0.9))
-c4h_plotskill(skill$CRPSS$crpss)                         
+# Make some artificial significance for testing
+skill$CRPSS$sign$data[1, 1, 1, 1:3, 1, sample(1:42, 10)] <- TRUE
+c4h_plotskill(skill = skill$CRPSS$crpss,
+              sign = skill$CRPSS$sign)                         
 }
 \seealso{
 \code{\link[=c4h_postprocess]{c4h_postprocess()}},  \code{\link[=c4h_plot]{c4h_plot()}}

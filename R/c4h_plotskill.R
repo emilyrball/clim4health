@@ -38,11 +38,11 @@
 #' @seealso [c4h_postprocess()],  [c4h_plot()]
 #' @examples 
 #' hcst <- c4h_load(system.file("extdata", "hindcast", package = "clim4health"),
-#' variable = "t2m",
-#' year = 2010:2012,
-#' month = 1,
-#' leadtime_month = 1:3,
-#' ext = "nc")
+#'                  variable = "t2m",
+#'                  year = 2010:2012,
+#'                  month = 1,
+#'                  leadtime_month = 1:3,
+#'                  ext = "nc")
 #' lats <- hcst$coords$latitude
 #' lons <- hcst$coords$longitude
 #' obs <- c4h_load(system.file("extdata", "reanalysis", package = "clim4health"),
@@ -69,7 +69,10 @@
 #'                          obs = obs,
 #'                          metrics = c("BSS", "CRPSS"),
 #'                          brier_thresholds = c(0.1, 0.9))
-#' c4h_plotskill(skill$CRPSS$crpss)                         
+#' # Make some artificial significance for testing
+#' skill$CRPSS$sign$data[1, 1, 1, 1:3, 1, sample(1:42, 10)] <- TRUE
+#' c4h_plotskill(skill = skill$CRPSS$crpss,
+#'               sign = skill$CRPSS$sign)                         
 
 
 # skill <- skill$CRPSS$crpss
@@ -102,9 +105,35 @@ c4h_plotskill <- function(skill,
   
   # 1. Data checks ----
   
-  # Get array info
-  dims_skill <- skill$dims
-  plot_skill <- skill$data
+  # Get skill array info
+  if (inherits(skill, "s2dv_cube")) {
+    dims_skill <- skill$dims
+    plot_skill <- skill$data
+  } else {
+    stop("'skill' must be an s2dv array.")
+  }
+  
+  # Requirements: skill data
+  if (any(plot_skill > 1)) {
+    stop("'skill' data must be lower than 1. Please use 'c4h_plot'",
+         " for other metrics.")
+  }
+  
+  # Get significance array info and requirements
+  if (!is.null(sign)) {
+    if (inherits(sign, "s2dv_cube")) {
+      dims_sign <- sign$dims
+      plot_sign <- sign$data
+    } else {
+      stop("'sign' must be an s2dv array.")
+    }
+    if (!is.logical(plot_sign)) {
+      stop("'sign' data must be of type logical (TRUE/FALSE).")
+    }
+    if (!identical(dims_skill, dims_sign)) {
+      stop("The dimensions of 'skill' and 'sign' must be identical.")
+    }
+  }
   
   # Requirements: sdate
   if (!is.null(sdate) & !is.numeric(sdate)) {
@@ -153,7 +182,8 @@ c4h_plotskill <- function(skill,
   if (!is.null(boundaries)) {
     if (!inherits(boundaries, "sf")) {
       if (boundaries != "countries") {
-        stop("'boundaries' must be set to either 'countries' or be a polygon 'sf' object.")
+        stop("'boundaries' must be set to either 'countries' or be a ",
+             "polygon 'sf' object.")
       }
     }
   }
@@ -169,18 +199,22 @@ c4h_plotskill <- function(skill,
   # Identify reanalysis/stations/areas and transform 'time' dimension if needed
   if (dims_skill["sdate"] == 1) {
     skill$coords$time <- skill$attrs$Dates
+    if (!is.null(sign)) sign$coords$time <- sign$attrs$Dates
   } else {
     skill$coords$sdate <- skill$attrs$Dates[, 1]
+    if (!is.null(sign)) sign$coords$sdate <- sign$attrs$Dates[, 1]
   }
   
   # Select 'sdate' if needed
   if (all(sdate %in% 1:dims_skill["sdate"])) {
     plot_skill <- .subset_array_named(plot_skill, sdate = sdate)
+    if (!is.null(sign)) plot_sign <- .subset_array_named(plot_sign, sdate = sdate)
   }
   
   # Select 'time' if needed
   if (all(time %in% 1:dims_skill["time"])) {
     plot_skill <- .subset_array_named(plot_skill, time = time)
+    if (!is.null(sign)) plot_sign <- .subset_array_named(plot_sign, time = time)
   }
   
   # Aggregate ensemble members if needed
@@ -193,9 +227,16 @@ c4h_plotskill <- function(skill,
     plot_skill <- aperm(plot_skill, perm = match(names(dim(plot_skill)), names(dims_skill)))
     ensemble <- 1
     
+    if (!is.null(sign)) {
+      plot_sign <- apply(plot_sign, MARGIN = keep_margins, FUN = ensemble_fun)
+      dim(plot_sign) <- c(dim(plot_sign), "ensemble" = 1)
+      plot_sign <- aperm(plot_sign, perm = match(names(dim(plot_sign)), names(dims_skill)))
+    }
+    
     # Select ensemble member
   } else if(all(ensemble %in% 1:dims_skill["ensemble"])) {
     plot_skill <- .subset_array_named(plot_skill, ensemble = ensemble)
+    if (!is.null(sign)) plot_sign <- .subset_array_named(plot_sign, ensemble = ensemble)
   }
   
   # Select boundaries if needed
@@ -235,10 +276,16 @@ c4h_plotskill <- function(skill,
                                            values = c(skill$coords$time)[time]) 
     sf::st_crs(plot_skill) <- 4326
     
+    if (!is.null(sign)) {
+      plot_sign <- aperm(plot_sign, c(spatial_dims, setdiff(1:length(dims_skill), spatial_dims)))
+      plot_skill[["sign"]] <- plot_sign
+    }
+    
     # Mask if needed
     if (isTRUE(mask_boundaries) & !is.null(boundaries)) {
       sf::sf_use_s2(FALSE) 
       suppressMessages(plot_skill <- plot_skill[bound_sf])
+      if (!is.null(sign)) suppressMessages(plot_sign <- plot_sign[bound_sf])
       sf::sf_use_s2(FALSE) 
     }
     
@@ -259,6 +306,9 @@ c4h_plotskill <- function(skill,
                                        location = point_geom
                                      ))
     names(plot_skill) <- varname
+    if (!is.null(sign)) {
+      plot_skill[["sign"]] <- plot_sign
+    }
     plot_skill <- sf::st_as_sf(plot_skill, long = TRUE)
     
   } else if ("area" %in% names(dims_skill)) { # Polygon data
@@ -273,6 +323,9 @@ c4h_plotskill <- function(skill,
                                        area = skill$attrs$area$geom
                                      ))
     names(plot_skill) <- varname
+    if (!is.null(sign)) {
+      plot_skill[["sign"]] <- plot_sign
+    }
     plot_skill <- sf::st_as_sf(plot_skill, long = TRUE)
     
   }
@@ -292,6 +345,10 @@ c4h_plotskill <- function(skill,
       stars::geom_stars(data = plot_skill, ...) +
       ggplot2::coord_equal(expand = FALSE)
     
+    if (!is.null(sign)) {
+      message("Not implemented yet.")
+    }
+    
   } else if ("location" %in% names(dims_skill)) { # Point data
     if (!is.null(boundaries)) {
       p <- ggplot2::ggplot() +
@@ -300,6 +357,11 @@ c4h_plotskill <- function(skill,
         ggplot2::geom_sf(data = plot_skill, ggplot2::aes(colour = .data[[varname]]), ...)  +
         ggplot2::scale_x_continuous(labels = function(x) paste0(ifelse(x < 0, "-", ""), abs(x))) +
         ggplot2::scale_y_continuous(labels = function(y) paste0(ifelse(y < 0, "-", ""), abs(y)))
+      
+      if (!is.null(sign)) {
+        message("Not implemented yet.")
+      }
+      
     } else {
       p <- ggplot2::ggplot() +
         ggplot2::geom_sf(data = plot_skill, ggplot2::aes(colour = .data[[varname]]), ...)  +
@@ -326,6 +388,19 @@ c4h_plotskill <- function(skill,
                          ...)   +
         ggplot2::scale_x_continuous(labels = function(x) paste0(ifelse(x < 0, "-", ""), abs(x))) +
         ggplot2::scale_y_continuous(labels = function(y) paste0(ifelse(y < 0, "-", ""), abs(y)))
+    }
+    if (!is.null(skill)) {
+      p <- p + 
+        ggpattern::geom_sf_pattern(data = plot_skill[plot_skill$sign,],
+                                   ggplot2::aes(pattern = "Significant"),
+                                   pattern_alpha = 0.8,
+                                   fill = NA) +
+        ggpattern::scale_pattern_manual(
+          name = "",
+          values = c("Significant" = "stripe")) +
+        ggplot2::guides(fill = ggplot2::guide_legend(order = 1),
+                        pattern = ggplot2::guide_legend(order = 2))
+      
     }
   }
   

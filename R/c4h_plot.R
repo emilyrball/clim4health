@@ -95,8 +95,12 @@ c4h_plot <- function(data,
   # 1. Data checks ----
   
   # Get array info
-  dims_data <- data$dims
-  plot_data <- data$data
+  if (inherits(data, "s2dv_cube")) {
+    dims_data <- data$dims
+    plot_data <- data$data
+  } else {
+    stop("'data' must be an s2dv array.")
+  }
   
   # Requirements: var
   if(is.null(var) & dims_data["var"]>1){
