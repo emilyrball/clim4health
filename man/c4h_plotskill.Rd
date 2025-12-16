@@ -88,12 +88,6 @@ obs <- c4h_load(system.file("extdata", "reanalysis", package = "clim4health"),
 shp_path <- system.file("extdata", "areas", "munip_vallecauca.gpkg",
                         package = "clim4health")
                         
-# Postprocess grid
-skill <- c4h_postprocess(exp = hcst,
-                         obs = obs,
-                         metrics = c("BSS", "CRPSS"),
-                         brier_thresholds = c(0.1, 0.9))      
-                        
 # Postprocess area                         
 obs <- c4h_space(obs,
                  areas = shp_path,
@@ -106,7 +100,8 @@ hcst <- c4h_space(hcst,
 skill <- c4h_postprocess(exp = hcst,
                          obs = obs,
                          metrics = c("BSS", "CRPSS"),
-                         brier_thresholds = c(0.1, 0.9))                         
+                         brier_thresholds = c(0.1, 0.9))
+c4h_plotskill(skill$CRPSS$crpss)                         
 }
 \seealso{
 \code{\link[=c4h_postprocess]{c4h_postprocess()}},  \code{\link[=c4h_plot]{c4h_plot()}}

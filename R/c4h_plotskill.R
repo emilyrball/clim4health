@@ -27,6 +27,8 @@
 #' @param palette GHR, RColorBrewer or colorspace palette. Use "-" before the 
 #' palette name (e.g., "-Reds") to reverse it. Alternatively, a vector of
 #' hex codes to create a continuous interpolated palette.
+#' @param noskillcol Colour for skill scores < 0 depicting a skill lower than 
+#' climatologies.
 #' @param coordgrid If TRUE, display coordinate grids on the map.
 #' @param ... Extra arguments indicating fixed aesthetics to be passed to 
 #'`stars::geom_stars`, including `lwd`, `alpha` and `colour`.
@@ -54,12 +56,6 @@
 #' shp_path <- system.file("extdata", "areas", "munip_vallecauca.gpkg",
 #'                         package = "clim4health")
 #'                         
-#' # Postprocess grid - does not work
-#' skill <- c4h_postprocess(exp = hcst,
-#'                          obs = obs,
-#'                          metrics = c("BSS", "CRPSS"),
-#'                          brier_thresholds = c(0.1, 0.9))      
-#'                         
 #' # Postprocess area                         
 #' obs <- c4h_space(obs,
 #'                  areas = shp_path,
@@ -72,7 +68,22 @@
 #' skill <- c4h_postprocess(exp = hcst,
 #'                          obs = obs,
 #'                          metrics = c("BSS", "CRPSS"),
-#'                          brier_thresholds = c(0.1, 0.9))                         
+#'                          brier_thresholds = c(0.1, 0.9))
+#' c4h_plotskill(skill$CRPSS$crpss)                         
+
+
+# skill <- skill$CRPSS$crpss
+# sign = NULL
+# sdate = NULL
+# time = NULL
+# ensemble = NULL
+# ensemble_fun = mean
+# boundaries = NULL
+# mask_boundaries = FALSE
+# title = NULL
+# legend = NULL
+# palette = "-RdBu"
+# coordgrid = FALSE
 
 c4h_plotskill <- function(skill,
                           sign = NULL,
@@ -84,7 +95,8 @@ c4h_plotskill <- function(skill,
                           mask_boundaries = FALSE,
                           title = NULL,
                           legend = NULL,
-                          palette = "-RdBu",
+                          palette = "-Green",
+                          noskillcol = "#D0C1F5",
                           coordgrid = FALSE,
                           ...) {
   
@@ -156,9 +168,9 @@ c4h_plotskill <- function(skill,
   
   # Identify reanalysis/stations/areas and transform 'time' dimension if needed
   if (dims_skill["sdate"] == 1) {
-    data$coords$time <- data$attrs$Dates
+    skill$coords$time <- skill$attrs$Dates
   } else {
-    data$coords$sdate <- data$attrs$Dates[, 1]
+    skill$coords$sdate <- skill$attrs$Dates[, 1]
   }
   
   # Select 'sdate' if needed
@@ -200,8 +212,8 @@ c4h_plotskill <- function(skill,
     }
   }
   
-  # Get varname
-  varname <- data$attrs$Variable$varName
+  # Get varname - Fix in postprocess?
+  varname <- skill$attrs$Variable$varName
   
   # 3. Conversion to stars ----
   if ("longitude" %in% names(dims_skill)) { # Gridded data
@@ -212,15 +224,15 @@ c4h_plotskill <- function(skill,
     plot_skill <- stars::st_as_stars(plot_skill)
     names(plot_skill) <- varname
     plot_skill <- stars::st_set_dimensions(plot_skill, "longitude",
-                                          values = c(data$coords$longitude))
+                                           values = c(skill$coords$longitude))
     plot_skill <- stars::st_set_dimensions(plot_skill, "latitude",
-                                          values = c(data$coords$latitude))
+                                           values = c(skill$coords$latitude))
     plot_skill <- stars::st_set_dimensions(plot_skill, "sdate",
-                                          values = c(data$coords$sdate)[sdate])
+                                           values = c(skill$coords$sdate)[sdate])
     plot_skill <- stars::st_set_dimensions(plot_skill, "ensemble",
-                                          values = c(data$coords$ensemble)[ensemble])
+                                           values = c(skill$coords$ensemble)[ensemble])
     plot_skill <- stars::st_set_dimensions(plot_skill, "time",
-                                          values = c(data$coords$time)[time]) 
+                                           values = c(skill$coords$time)[time]) 
     sf::st_crs(plot_skill) <- 4326
     
     # Mask if needed
@@ -232,34 +244,34 @@ c4h_plotskill <- function(skill,
     
   } else if ("location" %in% names(dims_skill)) { # Point data
     
-    lon <- data$attrs$location$longitude
-    lat <- data$attrs$location$latitude
+    lon <- skill$attrs$location$longitude
+    lat <- skill$attrs$location$latitude
     point_geom <- sf::st_sfc(lapply(seq_along(lon),
                                     function(i) sf::st_point(c(lon[i], lat[i]))),
                              crs = 4326) 
     plot_skill <- stars::st_as_stars(plot_skill,
-                                    dimensions = stars::st_dimensions(
-                                      dataset = c(data$coords$dataset),
-                                      var = c(data$coords$var),
-                                      sdate = c(data$coords$sdate)[sdate],
-                                      time = c(data$coords$time)[time],
-                                      ensemble = c(data$coords$ensemble)[ensemble],
-                                      location = point_geom
-                                    ))
+                                     dimensions = stars::st_dimensions(
+                                       dataset = c(skill$coords$dataset),
+                                       var = c(skill$coords$var),
+                                       sdate = c(skill$coords$sdate)[sdate],
+                                       time = c(skill$coords$time)[time],
+                                       ensemble = c(skill$coords$ensemble)[ensemble],
+                                       location = point_geom
+                                     ))
     names(plot_skill) <- varname
     plot_skill <- sf::st_as_sf(plot_skill, long = TRUE)
-
+    
   } else if ("area" %in% names(dims_skill)) { # Polygon data
     
     plot_skill <- stars::st_as_stars(plot_skill,
-                                    dimensions = stars::st_dimensions(
-                                      dataset = c(data$coords$dataset),
-                                      var = c(data$coords$var),
-                                      sdate = c(data$coords$sdate)[sdate],
-                                      time = c(data$coords$time)[time],
-                                      ensemble = c(data$coords$ensemble)[ensemble],
-                                      area = data$attrs$area$geom
-                                    ))
+                                     dimensions = stars::st_dimensions(
+                                       dataset = c(skill$coords$dataset),
+                                       var = c(skill$coords$var),
+                                       sdate = c(skill$coords$sdate)[sdate],
+                                       time = c(skill$coords$time)[time],
+                                       ensemble = c(skill$coords$ensemble)[ensemble],
+                                       area = skill$attrs$area$geom
+                                     ))
     names(plot_skill) <- varname
     plot_skill <- sf::st_as_sf(plot_skill, long = TRUE)
     
@@ -267,10 +279,12 @@ c4h_plotskill <- function(skill,
   
   # 4. Plot ----
   
-  # Binning 
+  # Binning, reverse factor
   plot_skill[[varname]] <- cut(plot_skill[[varname]], 
-                              breaks = c(-Inf, seq(0, 1, by = 0.1)),
-                              labels = paste0("<", seq(0, 1, by = 0.1)))
+                               breaks = c(-Inf, seq(0, 1, by = 0.1)),
+                               labels = paste0("<", seq(0, 1, by = 0.1)))
+  plot_skill[[varname]] <- factor(plot_skill[[varname]],
+                                  levels = rev(levels(plot_skill[[varname]])))
   
   # Base plot
   if ("longitude" %in% names(dims_skill)) { # Gridded data
@@ -334,16 +348,17 @@ c4h_plotskill <- function(skill,
   }
   
   # Palette
-    level_names <- unique(plot_skill[[varname]])
-    level_names <- level_names[!is.na(level_names)]
-    my_palette <- GHRexplore::GHR_palette(palette, length(level_names))(n = length(level_names))
-    if ("location" %in% names(dims_skill)) {
-      p <- p + ggplot2::scale_colour_manual(values = my_palette, na.value = "grey70")  
-    } else if ("area" %in% names(dims_skill)) {
-      p <- p + ggplot2::scale_fill_manual(values = my_palette, na.value = "grey70")  
-    } else {
-      p <- p + ggplot2::scale_fill_manual(values = my_palette, na.value = "#00000000")  
-    }    
+  level_names <- unique(plot_skill[[varname]])
+  level_names <- level_names[!is.na(level_names)]
+  my_palette <- GHRexplore::GHR_palette(palette, length(level_names) - 1)(n = length(level_names) - 1)
+  my_palette <- c(my_palette, noskillcol) # Colour for non-significant
+  if ("location" %in% names(dims_skill)) {
+    p <- p + ggplot2::scale_colour_manual(values = my_palette, na.value = "grey70")  
+  } else if ("area" %in% names(dims_skill)) {
+    p <- p + ggplot2::scale_fill_manual(values = my_palette, na.value = "grey70")  
+  } else {
+    p <- p + ggplot2::scale_fill_manual(values = my_palette, na.value = "#00000000")  
+  }    
   
   # Boundaries on top, only for grid
   if (!is.null(boundaries) & "longitude" %in% names(dims_skill)) {
@@ -372,8 +387,7 @@ c4h_plotskill <- function(skill,
         axis.ticks = ggplot2::element_line(linewidth = 0.3, color = "grey50"),
         axis.text = ggplot2::element_text(size = 7, color = "grey30"),
         strip.text.y = ggplot2::element_text(margin = ggplot2::margin(b = 0)),
-        strip.text.x = ggplot2::element_text(margin = ggplot2::margin(b = 0)),
-        legend.key.height = ggplot2::unit(1, "cm")) +
+        strip.text.x = ggplot2::element_text(margin = ggplot2::margin(b = 0))) +
       ggplot2::xlab("") + ggplot2::ylab("")
     
     if (!isTRUE(coordgrid)) {
@@ -387,8 +401,7 @@ c4h_plotskill <- function(skill,
         plot.margin = ggplot2::theme_bw()$plot.margin,
         strip.text.y = ggplot2::element_text(angle = 90, margin = ggplot2::margin(b = 0)),
         strip.text.x = ggplot2::element_text(margin = ggplot2::margin(b = 0)),
-        panel.border = ggplot2::element_rect(color = "black", fill = NA, linewidth = 0.1),
-        legend.key.height = ggplot2::unit(1, "cm"))
+        panel.border = ggplot2::element_rect(color = "black", fill = NA, linewidth = 0.1))
   }
   
   # Labels
@@ -404,7 +417,7 @@ c4h_plotskill <- function(skill,
   }
   
   # Fix labels when time is numeric
-  if ((!"sdate" %in% c(f1, f2)) & ("time" %in% c(f1, f2)) & is.numeric(data$coords$time)) {
+  if ((!"sdate" %in% c(f1, f2)) & ("time" %in% c(f1, f2)) & is.numeric(skill$coords$time)) {
     
     if ("longitude" %in% names(dims_skill)) {
       subtitle <- paste0("Start date: ", 
