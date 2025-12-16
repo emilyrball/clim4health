@@ -37,6 +37,11 @@
 #' 
 #' @seealso [c4h_postprocess()],  [c4h_plot()]
 #' @examples 
+#' # DISCLAIMER: The purpose of these examples is to show the functionality
+#' # of the different functions. To perform postprocessing, a much larger time
+#' # series is required.
+#' 
+#' # Hindcast and reanalysis data loading
 #' hcst <- c4h_load(system.file("extdata", "hindcast", package = "clim4health"),
 #'                  variable = "t2m",
 #'                  year = 2010:2012,
@@ -45,7 +50,8 @@
 #'                  ext = "nc")
 #' lats <- hcst$coords$latitude
 #' lons <- hcst$coords$longitude
-#' obs <- c4h_load(system.file("extdata", "reanalysis", package = "clim4health"),
+#' obs <- c4h_load(system.file("extdata", "reanalysis",
+#'                 package = "clim4health"),
 #'                 variable = "t2m",
 #'                 year = 2010:2012,
 #'                 month = 1,
@@ -53,10 +59,22 @@
 #'                 bbox = c(max(lats), min(lons),
 #'                          min(lats), max(lons)),
 #'                 ext = "nc")
+#'                 
+#' # # Gridded data - downscale and postprocess
+#' # dwn <- c4h_downscale("Interpolation", exp = hcst, obs = obs,
+#' #                      method_remap = "bilinear",
+#' #                      target_grid = system.file("extdata",
+#' #                                                "reanalysis/t2m_201001.nc",
+#' #                                                package = "clim4health"))
+#' # hcst_dwn <- dwn$exp
+#' # skill <- c4h_postprocess(exp = hcst_dwn,
+#' #                          obs = obs,
+#' #                          metrics = c("RMSE"))
+#' # c4h_plotskill(skill = skill$CRPSS$crpss)
+#'                          
+#' # Polygon data - aggregate and postprocess
 #' shp_path <- system.file("extdata", "areas", "munip_vallecauca.gpkg",
 #'                         package = "clim4health")
-#'                         
-#' # Postprocess area                         
 #' obs <- c4h_space(obs,
 #'                  areas = shp_path,
 #'                  fun = "mean",
@@ -69,10 +87,37 @@
 #'                          obs = obs,
 #'                          metrics = c("BSS", "CRPSS"),
 #'                          brier_thresholds = c(0.1, 0.9))
+#' c4h_plotskill(skill$CRPSS$crpss)
+#'                          
 #' # Make some artificial significance for testing
-#' skill$CRPSS$sign$data[1, 1, 1, 1:3, 1, sample(1:42, 10)] <- TRUE
+#' # skill$CRPSS$sign$data[1, 1, 1, 1:3, 1, sample(1:42, 10)] <- TRUE
 #' c4h_plotskill(skill = skill$CRPSS$crpss,
-#'               sign = skill$CRPSS$sign)                         
+#'               sign = skill$CRPSS$sign)      
+#'               
+#' # # Station data - aggregate, downscale and postprocess
+#' # point_locs <- clim4health::c4h_load(system.file("extdata",
+#' #                                                "stations",
+#' #                                                package = "clim4health"),
+#' #                                     ext = "csv",
+#' #                                     year = 2010:2012,
+#' #                                     month = 1,
+#' #                                     leadtime_month = 1:3,
+#' #                                     variable = "temp_mean")
+#' # points <- list(latitude = point_locs$attrs$location$latitude,
+#' #                longitude = point_locs$attrs$location$longitude)
+#' # point_locs <- c4h_time(point_locs,
+#' #                        time_aggregation = "monthly",
+#' #                        dim_aggregation = "sdate",
+#' #                        fun = "mean")
+#' # 
+#' # dwn <- c4h_downscale("Interpolation", exp = hcst,
+#' #                      points = points, method_point_interp = "bilinear")
+#' # hcst_dwn <- dwn$exp
+#' # skill <- c4h_postprocess(exp = hcst_dwn,
+#' #                          obs = point_locs,
+#' #                          metrics = c("RMSE"))
+#' # c4h_plotskill(skill = skill$CRPSS$crpss)
+
 
 
 # skill <- skill$CRPSS$crpss
@@ -334,8 +379,8 @@ c4h_plotskill <- function(skill,
   
   # Binning, reverse factor
   plot_skill[[varname]] <- cut(plot_skill[[varname]], 
-                               breaks = c(-Inf, seq(0, 1, by = 0.1)),
-                               labels = paste0("<", seq(0, 1, by = 0.1)))
+                               breaks = c(-Inf, seq(0, 1, by = 0.2)),
+                               labels = paste0("<", seq(0, 1, by = 0.2)))
   plot_skill[[varname]] <- factor(plot_skill[[varname]],
                                   levels = rev(levels(plot_skill[[varname]])))
   
@@ -345,8 +390,9 @@ c4h_plotskill <- function(skill,
       stars::geom_stars(data = plot_skill, ...) +
       ggplot2::coord_equal(expand = FALSE)
     
+    # Skill hatching
     if (!is.null(sign)) {
-      message("Not implemented yet.")
+      stop("Significance not yet implemented for gridded data.")
     }
     
   } else if ("location" %in% names(dims_skill)) { # Point data
@@ -358,8 +404,9 @@ c4h_plotskill <- function(skill,
         ggplot2::scale_x_continuous(labels = function(x) paste0(ifelse(x < 0, "-", ""), abs(x))) +
         ggplot2::scale_y_continuous(labels = function(y) paste0(ifelse(y < 0, "-", ""), abs(y)))
       
+      # Skill hatching
       if (!is.null(sign)) {
-        message("Not implemented yet.")
+        stop("Significance not yet implemented for point data.")
       }
       
     } else {
@@ -389,7 +436,12 @@ c4h_plotskill <- function(skill,
         ggplot2::scale_x_continuous(labels = function(x) paste0(ifelse(x < 0, "-", ""), abs(x))) +
         ggplot2::scale_y_continuous(labels = function(y) paste0(ifelse(y < 0, "-", ""), abs(y)))
     }
-    if (!is.null(skill)) {
+    
+    # Skill hatching
+    if (!is.null(sign)) {
+      if (sum(plot_skill$sign) == 0) {
+        message("No areas have a significant skill score.")
+      }
       p <- p + 
         ggpattern::geom_sf_pattern(data = plot_skill[plot_skill$sign,],
                                    ggplot2::aes(pattern = "Significant"),
