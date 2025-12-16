@@ -1308,10 +1308,10 @@
       if (!(all(date_vals %in% start_dates))) {
         date_vals <- stars::st_get_dimension_values(x, concat_dim)
         date_vals <- as.Date(date_vals, origin = "1970-01-01")
-
-        x <- x |> dplyr::filter(as.Date(.data$forecast_reference_time,
-                                         origin = "1970-01-01") %in%
-                                   start_dates)
+        x <- x |> dplyr::filter(as.POSIXct(.data$forecast_reference_time,
+                                           origin = "1970-01-01",
+                                           tz = "UTC") %in%
+                                  start_dates)
       }
       dims <- stars::st_dimensions(x)
 
