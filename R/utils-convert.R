@@ -1,6 +1,6 @@
 # Transform s2dv into terra
 .s2dv_to_terra <- function(cube, crs = "EPSG:4326") {
-  ### REVIEW - requires lat/lon coordinates
+  ### REVIEW - requires lat/lon coordinates, OK for now
   lon <- as.vector(cube$coords$longitude)
   lat <- as.vector(cube$coords$latitude)
 
@@ -14,7 +14,13 @@
   layers <- list()
   k <- 1
   for (t in seq_len(nt)) {
+    print(dates[t])
     for (m in seq_len(nm)) {
+      # REVIEW - assumes first var
+      # REVIEW - assumes first sdate
+
+      # REVIEW - assuming first sdate but dates is subsetted in order sdate
+      # then time so this is not correct if multiple sdates exist
       vals <- as.vector(cube$data[1, 1, 1, t, m, , ])
       xyz <- data.frame(
         x = rep(lon, each = length(lat)),
@@ -46,39 +52,78 @@
 
 # Transform s2dv into csv
 .s2dv_to_csv <- function(cube, file = NULL) {
-  ### REVIEW - should not require lat/lon coordinates
-  ### REVIEW - argument file is redundant?
+  ### REVIEW - argument file is redundant as can be used in c4h_save?
   stopifnot(inherits(cube, "s2dv_cube"))
 
-  lon <- as.vector(cube$coords$longitude)
-  lat <- as.vector(cube$coords$latitude)
   d  <- dim(cube$data)
 
-  nds <- d[1]
-  nvar <- d[2]
-  nsd <- d[3]
-  nt <- d[4]
-  nm <- d[5]
+  nds  <- .get_dim(d, "dataset")
+  nvar <- .get_dim(d, "var")
+  nsd  <- .get_dim(d, "sdate")
+  nt   <- .get_dim(d, "time")
+  nm   <- .get_dim(d, "ensemble")
 
+  # ---- identify spatial dimensions ----
+  core_dims <- c("dataset", "var", "sdate", "time", "ensemble")
+  spatial_dims <- setdiff(names(d), core_dims)
+
+  # ---- extract spatial coordinates ----
+  spatial_coords <- lapply(spatial_dims, function(dimn) {
+    as.vector(cube$coords[[dimn]])
+  })
+  names(spatial_coords) <- spatial_dims
+
+  # ---- dates and ensemble values ----
   dates <- tryCatch(as.Date(cube$attrs$Dates), error = function(e) NULL)
   ens   <- tryCatch(as.vector(cube$coords$ensemble), error = function(e) NULL)
 
-  df <- expand.grid(
-    dataset   = seq_len(nds),
-    var       = seq_len(nvar),
-    sdate     = seq_len(nsd),
-    time      = seq_len(nt),
-    ensemble  = seq_len(nm),
-    latitude  = lat,
-    longitude = lon
+  # ---- build expand.grid arguments ----
+  grid_args <- c(
+    list(
+      dataset  = seq_len(nds),
+      var      = seq_len(nvar),
+      sdate    = seq_len(nsd),
+      time     = seq_len(nt),
+      ensemble = seq_len(nm)
+    ),
+    spatial_coords
   )
+
+  df <- do.call(expand.grid, c(grid_args, list(KEEP.OUT.ATTRS = FALSE)))
+
   df$value <- as.vector(cube$data)
 
-  if (!is.null(dates) && length(dates) == nt) {
-    df$date <- as.character(dates[df$time])
+  # ---- assign dates ----
+  if (!is.null(dates)) {
+    if (nsd > 1 && nt > 1) {
+      # Dates 2-D
+      df$date <- as.character(dates[
+        cbind(df$sdate, df$time)
+      ])
+    } else if (length(dates) == nt) {
+      # Dates 1-D
+      df$date <- as.character(dates[df$time])
+    } else if (length(dates) == nsd) {
+      # Dates 1-D
+      df$date <- as.character(dates[df$sdate])
+    }
   }
-  if (!is.null(ens)   && length(ens)   == nm) {
+
+  # ---- assign variable names ----
+  var_names <- tryCatch(as.vector(cube$coords$var), error = function(e) NULL)
+  if (!is.null(var_names) && nvar == length(var_names)) {
+    df$var_name <- var_names[df$var]
+  }
+
+  # ---- assign ensemble values ----
+  if (!is.null(ens) && length(ens) == nm) {
     df$ensemble_value <- ens[df$ensemble]
+  }
+
+  # ---- if s2dv_cube contains location ----
+  if ("location" %in% names(cube$coords)) {
+    df$latitude  <- cube$attrs$location$latitude[df$location]
+    df$longitude <- cube$attrs$location$longitude[df$location]
   }
 
   if (!is.null(file)) utils::write.csv(df, file = file, row.names = FALSE)
@@ -435,3 +480,5 @@
   # join array [time, ensemble, lat, lon] later based on indexes
   list(mats = mats, lon = lon_vec, lat = lat_vec)
 }
+
+.get_dim <- function(d, x) if (x %in% names(d)) d[[x]] else 1L
