@@ -12,7 +12,9 @@
 
   args <- list(...)
   for (n in names(args)) {
-    if (!n %in% dims) stop(paste("Invalid dimension name:", n))
+    if (!n %in% dims) {
+      stop(paste("Invalid dimension name:", n))
+    }
     index_list[[n]] <- args[[n]]
   }
 
