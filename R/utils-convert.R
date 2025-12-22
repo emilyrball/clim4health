@@ -101,10 +101,10 @@
         cbind(df$sdate, df$time)
       ])
     } else if (length(dates) == nt) {
-      # Dates 1-D
+      # Dates 1-D and time dimension
       df$date <- as.character(dates[df$time])
     } else if (length(dates) == nsd) {
-      # Dates 1-D
+      # Dates 1-D and sdate dimension
       df$date <- as.character(dates[df$sdate])
     }
   }
