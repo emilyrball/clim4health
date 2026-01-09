@@ -102,7 +102,7 @@
 #' @export
 #'
 #' @examples
-#' hcst <- c4h_load(paste0(getwd(), "/inst/extdata/hindcast/"),
+#' hcst <- c4h_load(system.file("extdata", "hindcast", package = "clim4health"),
 #'                  variable = "t2m",
 #'                  year = 2010:2012,
 #'                  month = 1,
@@ -110,7 +110,7 @@
 #'                  ext = "nc")
 #' lats <- hcst$coords$latitude
 #' lons <- hcst$coords$longitude
-#' obs <- c4h_load(paste0(getwd(), "/inst/extdata/reanalysis/"),
+#' obs <- c4h_load(system.file("extdata", "reanalysis", package = "clim4health"),
 #'                 variable = "t2m",
 #'                 year = 2010:2012,
 #'                 month = 1,
@@ -118,7 +118,8 @@
 #'                 bbox = c(max(lats), min(lons),
 #'                          min(lats), max(lons)),
 #'                 ext = "nc")
-#' shp_path <- paste0(getwd(), "/inst/extdata/areas/munip_vallecauca.gpkg")
+#' shp_path <- system.file("extdata", "areas", "munip_vallecauca.gpkg",
+#'                         package = "clim4health")
 #' obs <- c4h_space(obs,
 #'                  areas = shp_path,
 #'                  fun = "mean",
@@ -253,6 +254,8 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
                            out_coords = out_coords, out_attrs = out_attrs)
     sign <- .format_output(data = temp$sign, out_dims = out_dims,
                            out_coords = out_coords, out_attrs = out_attrs)
+    rpss$attrs$Variable$varName <- "RPSS"
+    sign$attrs$Variable$varName <- "RPSS"
     temp <- list(rpss = rpss, sign = sign)
     data[[paste0("RPSS")]] <- temp
   }
@@ -267,6 +270,8 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
                             out_coords = out_coords, out_attrs = out_attrs)
     sign <- .format_output(data = temp$sign, out_dims = out_dims,
                            out_coords = out_coords, out_attrs = out_attrs)
+    crpss$attrs$Variable$varName <- "CRPSS"
+    sign$attrs$Variable$varName <- "CRPSS"
     temp <- list(crpss = crpss, sign = sign)
     data[[paste0("CRPSS")]] <- temp
   }
@@ -282,6 +287,8 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
                              out_coords = out_coords, out_attrs = out_attrs)
     sign <- .format_output(data = temp$sign, out_dims = out_dims,
                            out_coords = out_coords, out_attrs = out_attrs)
+    biasss$attrs$Variable$varName <- "AbsBiasSS"
+    sign$attrs$Variable$varName <- "AbsBiasSS"
     temp <- list(biasSS = biasss, sign = sign)
     data[["AbsBiasSS"]] <- temp
   }
@@ -296,6 +303,9 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
                                  out_coords = out_coords, out_attrs = out_attrs)
     conf_upper <- .format_output(data = temp$conf.upper, out_dims = out_dims,
                                  out_coords = out_coords, out_attrs = out_attrs)
+    mse$attrs$Variable$varName <- "MSE"
+    conf_lower$attrs$Variable$varName <- "MSE"
+    conf_upper$attrs$Variable$varName <- "MSE"
     temp <- list(mse = mse, conf.lower = conf_lower,
                  conf.upper = conf_upper)
     data[["MSE"]] <- temp
@@ -312,6 +322,8 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
                            out_coords = out_coords, out_attrs = out_attrs)
     pval <- .format_output(data = temp$p.val, out_dims = out_dims,
                            out_coords = out_coords, out_attrs = out_attrs)
+    msss$attrs$Variable$varName <- "MSSS"
+    pval$attrs$Variable$varName <- "MSSS"
     temp <- list(msss = msss, p.val = pval)
     data[["MSSS"]] <- temp
   }
@@ -326,6 +338,9 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
                                  out_coords = out_coords, out_attrs = out_attrs)
     conf_upper <- .format_output(data = temp$conf.upper, out_dims = out_dims,
                                  out_coords = out_coords, out_attrs = out_attrs)
+    rmse$attrs$Variable$varName <- "RMSE"
+    conf_lower$attrs$Variable$varName <- "RMSE"
+    conf_upper$attrs$Variable$varName <- "RMSE"
     temp <- list(rmse = rmse, conf.lower = conf_lower,
                  conf.upper = conf_upper)
     data[["RMSE"]] <- temp
@@ -342,6 +357,8 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
                             out_coords = out_coords, out_attrs = out_attrs)
     pval <- .format_output(data = temp$p.val, out_dims = out_dims,
                            out_coords = out_coords, out_attrs = out_attrs)
+    rmsss$attrs$Variable$varName <- "RMSSS"
+    pval$attrs$Variable$varName <- "RMSSS"
     temp <- list(rmsss = rmsss, p.val = pval)
     data[["RMSSS"]] <- temp
   }
@@ -357,6 +374,8 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
                            out_coords = out_coords, out_attrs = out_attrs)
     sign <- .format_output(data = temp$sign, out_dims = out_dims,
                            out_coords = out_coords, out_attrs = out_attrs)
+    rpss$attrs$Variable$varName <- "ROCSS"
+    sign$attrs$Variable$varName <- "ROCSS"
     temp <- list(rpss = rpss, sign = sign)
     data[["ROCSS"]] <- temp
   }

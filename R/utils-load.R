@@ -888,7 +888,7 @@
         }
         if (!(all(as.POSIXct(date_vals, origin = "1970-01-01", tz = "UTC") %in%
                     start_dates))) {
-          x <- x %>% dplyr::filter(as.POSIXct(valid_time, origin = "1970-01-01",
+          x <- x |> dplyr::filter(as.POSIXct(.data$valid_time, origin = "1970-01-01",
                                               tz = "UTC") %in% start_dates)
         }
 
@@ -899,8 +899,7 @@
 
         if (any(leadtime_month == "all") ||
               (length(leadtime_month) == 1 && (leadtime_month == 1))) {
-          grid_dates <- grid_dates %>%
-            dplyr::filter(forecast_date %in% date_vals)
+          grid_dates <- grid_dates[grid_dates$forecast_date %in% date_vals,]
         }
         coords <- list()
         for (dim in names(dims)) {
@@ -1041,7 +1040,7 @@
                       ". Please adjust the date selection accordingly."))
         }
         if (!(all(as.Date(date_vals) %in% start_dates))) {
-          x <- x %>% dplyr::filter(as.Date(valid_time,
+          x <- x |> dplyr::filter(as.Date(.data$valid_time,
                                            origin = "1970-01-01") %in%
                                      start_dates)
         }
@@ -1051,12 +1050,11 @@
                              origin = "1970-01-01")
         if (any(leadtime_month == "all") ||
               (length(leadtime_month) == 1 && (leadtime_month == 1))) {
-          grid_dates <- grid_dates %>%
-            dplyr::filter(forecast_date %in% date_vals)
+          grid_dates <- grid_dates[grid_dates$forecast_date %in% date_vals,]
         }
-        #grid_dates <- grid_dates %>%
-        #  dplyr::filter(as.Date(sdate, origin = "1970-01-01") %in% date_vals &
-        #                  as.Date(forecast_date, origin = "1970-01-01") %in%
+        #grid_dates <- grid_dates |>
+        #  dplyr::filter(as.Date(.data$sdate, origin = "1970-01-01") %in% date_vals &
+        #                  as.Date(.data$forecast_date, origin = "1970-01-01") %in%
         #                    date_vals)
 
         coords <- list()
@@ -1195,7 +1193,7 @@
                       ". Please adjust the date selection accordingly."))
         }
         if (!(all(as.Date(date_vals) %in% start_dates))) {
-          x <- x %>% dplyr::filter(as.Date(valid_time,
+          x <- x |> dplyr::filter(as.Date(.data$valid_time,
                                            origin = "1970-01-01") %in%
                                      start_dates)
         }
@@ -1205,13 +1203,10 @@
                              origin = "1970-01-01")
         if (any(leadtime_month == "all") ||
               (length(leadtime_month) == 1 && (leadtime_month == 1))) {
-          grid_dates <- grid_dates %>%
-            dplyr::filter(forecast_date %in% date_vals)
+          grid_dates <- grid_dates[grid_dates$forecast_date %in% date_vals,]
         }
-        grid_dates <- grid_dates %>%
-          dplyr::filter(as.Date(sdate, origin = "1970-01-01") %in% date_vals &
-                          as.Date(forecast_date, origin = "1970-01-01") %in%
-                            date_vals)
+        grid_dates <- grid_dates[as.Date(grid_dates$sdate, origin = "1970-01-01") %in% date_vals &
+                                   as.Date(grid_dates$forecast_date, origin = "1970-01-01") %in% date_vals, ]
 
         coords <- list()
         for (dim in names(dims)) {
@@ -1304,7 +1299,7 @@
     } else if ("forecast_reference_time" %in% dim_names) {
       # case: forecast/hindcast data
       if (!any(leadtime_month == "all")) {
-        x <- x %>% dplyr::filter(forecastMonth %in% leadtime_month)
+        x <- x |> dplyr::filter(.data$forecastMonth %in% leadtime_month)
       }
       start_dates <- .paste_outer(.paste_outer(year, sprintf("-%02d", month)),
                                   sprintf("-%02d", day))
@@ -1313,10 +1308,10 @@
       if (!(all(date_vals %in% start_dates))) {
         date_vals <- stars::st_get_dimension_values(x, concat_dim)
         date_vals <- as.Date(date_vals, origin = "1970-01-01")
-
-        x <- x %>% dplyr::filter(as.Date(forecast_reference_time,
-                                         origin = "1970-01-01") %in%
-                                   start_dates)
+        x <- x |> dplyr::filter(as.POSIXct(.data$forecast_reference_time,
+                                           origin = "1970-01-01",
+                                           tz = "UTC") %in%
+                                  start_dates)
       }
       dims <- stars::st_dimensions(x)
 

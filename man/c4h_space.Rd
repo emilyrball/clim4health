@@ -35,11 +35,12 @@ Spatial aggregation of climate products into areas.
 library(sf)
 
 # Region municipalities
-munip_path <- paste0(getwd(), "/inst/extdata/areas/munip_vallecauca.gpkg")
+munip_path <- system.file("extdata", "areas", "munip_vallecauca.gpkg",
+                        package = "clim4health")
 munip <- read_sf(munip_path)
 
 # Forecast
-fcst_path <- paste0(getwd(), "/inst/extdata/forecast/")
+fcst_path <- system.file("extdata", "forecast", package = "clim4health")
 fcst <- c4h_load(fcst_path, variable = "t2m", ext = 'nc')
 
 # Spatial aggregation

@@ -38,8 +38,7 @@ Apply a threshold-based mask to climate data
 }
 \examples{
 # Read reanalysis data
-obs_path <- system.file("extdata/reanalysis/", package = "clim4health")
-obs_path <- paste0(obs_path, "/")
+obs_path <- system.file("extdata", "reanalysis", package = "clim4health")
 obs <- c4h_load(obs_path,
                 variable = "t2m",
                 year = 2010,

@@ -17,14 +17,13 @@
 #' @export
 #'
 #' @examples
-#' # # Monthly aggregation of reanalysis data
-#' # obs_path <- system.file("extdata/reanalysis/", package = "clim4health")
-#' # obs_path <- paste0(obs_path, "/")
-#' # obs <- c4h_load(obs_path, variable = "t2m",
-#' #                 year = 2010, month = 1, ext = "nc")
-#' # obs_month <- c4h_time(obs, time_aggregation = "monthly",
-#'                         dim_aggregation = "time")
-#' # dim(obs_month$data)
+#' # Monthly aggregation of reanalysis data
+#' obs_path <- system.file("extdata", "reanalysis", package = "clim4health")
+#' obs <- c4h_load(obs_path, variable = "t2m",
+#'                 year = 2010, month = 1, ext = "nc")
+#' obs_month <- c4h_time(obs, time_aggregation = "monthly",
+#'                       dim_aggregation = "time")
+#' dim(obs_month$data)
 c4h_time <- function(data,
                      time_aggregation,
                      dim_aggregation,
@@ -121,8 +120,10 @@ c4h_time <- function(data,
                      Friday    = 5,
                      Saturday  = 6,
                      Sunday = 7)
-      epiweeks <- lubridate:::.other_week(time_i, wnum)
-      epiyears <- lubridate:::.other_year(time_i, wnum)
+      other_week <- utils::getFromNamespace(".other_week", "lubridate")
+      other_year <- utils::getFromNamespace(".other_year", "lubridate")
+      epiweeks <- other_week(time_i, wnum)
+      epiyears <- other_year(time_i, wnum)
 
       # Create time groups and resulting dates
       dates_tmp_i <- paste(epiyears, sprintf("%02d", epiweeks), sep = "-")

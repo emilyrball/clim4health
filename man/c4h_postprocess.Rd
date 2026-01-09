@@ -164,7 +164,7 @@ as s2dv_cube objects.
 Quality assessment of climate forecasts
 }
 \examples{
-hcst <- c4h_load(paste0(getwd(), "/inst/extdata/hindcast/"),
+hcst <- c4h_load(system.file("extdata", "hindcast", package = "clim4health"),
                  variable = "t2m",
                  year = 2010:2012,
                  month = 1,
@@ -172,7 +172,7 @@ hcst <- c4h_load(paste0(getwd(), "/inst/extdata/hindcast/"),
                  ext = "nc")
 lats <- hcst$coords$latitude
 lons <- hcst$coords$longitude
-obs <- c4h_load(paste0(getwd(), "/inst/extdata/reanalysis/"),
+obs <- c4h_load(system.file("extdata", "reanalysis", package = "clim4health"),
                 variable = "t2m",
                 year = 2010:2012,
                 month = 1,
@@ -180,7 +180,8 @@ obs <- c4h_load(paste0(getwd(), "/inst/extdata/reanalysis/"),
                 bbox = c(max(lats), min(lons),
                          min(lats), max(lons)),
                 ext = "nc")
-shp_path <- paste0(getwd(), "/inst/extdata/areas/munip_vallecauca.gpkg")
+shp_path <- system.file("extdata", "areas", "munip_vallecauca.gpkg",
+                        package = "clim4health")
 obs <- c4h_space(obs,
                  areas = shp_path,
                  fun = "mean",

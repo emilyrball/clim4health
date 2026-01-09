@@ -21,11 +21,12 @@
 #' library(sf)
 #'
 #' # Region municipalities
-#' munip_path <- paste0(getwd(), "/inst/extdata/areas/munip_vallecauca.gpkg")
+#' munip_path <- system.file("extdata", "areas", "munip_vallecauca.gpkg",
+#'                         package = "clim4health")
 #' munip <- read_sf(munip_path)
 #'
 #' # Forecast
-#' fcst_path <- paste0(getwd(), "/inst/extdata/forecast/")
+#' fcst_path <- system.file("extdata", "forecast", package = "clim4health")
 #' fcst <- c4h_load(fcst_path, variable = "t2m", ext = 'nc')
 #'
 #' # Spatial aggregation
@@ -86,23 +87,40 @@ c4h_space <- function(data,
     KEEP.OUT.ATTRS = FALSE,
     stringsAsFactors = FALSE
   )
-  
-  out_list <- purrr::pmap(index_grid, function(...) {
-    .make_raster(
-      index_list = list(...),
-      data = data$data,
-      lat = lat,
-      lon = lon,
-      n_spatial = length(spatial_dims), # latitude and longitude
-      crs_code = ref
+  out_list <- do.call(
+    mapply,
+    c(
+      list(
+        FUN = function(...) {
+          .make_raster(
+            index_list = list(...),
+            data = data$data,
+            lat = lat,
+            lon = lon,
+            n_spatial = length(spatial_dims),
+            crs_code = ref
+          )
+        },
+        SIMPLIFY = FALSE
+      ),
+      index_grid
     )
-  })
+  )
   
   out <- terra::rast(out_list)
-  
-  columns_index <- purrr::pmap_chr(index_grid,
-                                   ~ paste0(sprintf("%02d", c(...)),
-                                            collapse = "_"))
+
+  columns_index <- do.call(
+    mapply,
+    c(
+      list(
+        FUN = function(...) {
+          paste0(sprintf("%02d", c(...)), collapse = "_")
+        },
+        SIMPLIFY = TRUE
+      ),
+      index_grid
+    )
+  )
   
   # extract area data (for all areas in poly) with terra::extract
   if(weighting == "none"| fun != "mean"){

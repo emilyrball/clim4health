@@ -102,44 +102,23 @@ c4h_get <- function(pat,
 
   # check if all required params have correct values
   for (p in required_params) {
-    if (!all(all_params[[p]] %in% .datasets_info[[dataset]][[p]])) {
-      if (p == "bbox") {
-        if (!(length(bbox) == 4 && is.numeric(bbox) &&
-                all(bbox[c(1, 3)] > -90) || all(bbox[c(1, 3)] < 90) &&
-                all(bbox[c(1, 3)] > -90) || all(bbox[c(1, 3)] < 90) &&
-                all(bbox[c(2, 4)] > -180) || all(bbox[c(1, 3)] < 180) &&
-                all(bbox[c(2, 4)] > -180) || all(bbox[c(1, 3)] < 180))) {
-          stop("Coordinates are out of bound. N,W,S,E coordinates, 
+    
+    if (p == "bbox") {
+      if (!(length(bbox) == 4 && is.numeric(bbox) &&
+            (all(bbox[c(1, 3)] > -90) || all(bbox[c(1, 3)] < 90)) &&
+            (all(bbox[c(1, 3)] > -90) || all(bbox[c(1, 3)] < 90)) &&
+            (all(bbox[c(2, 4)] > -180) || all(bbox[c(1, 3)] < 180)) &&
+            (all(bbox[c(2, 4)] > -180) || all(bbox[c(1, 3)] < 180)))) {
+        stop("Coordinates are out of bound. N,W,S,E coordinates, 
                latitudes from 90 to -90, longitudes -180 to 180. Please adjust
                 'bbox' parameter.")
-        }
-      } else {
-        cat(paste0("Your value for ", p,
-                   " is not valid. It must be one of the following: ",
-                   paste(.datasets_info[[dataset]][[p]], collapse = ", ")))
-        return(invisible(NULL))
       }
+    } else if (!all(all_params[[p]] %in% .datasets_info[[dataset]][[p]])) {
+      stop(paste0("Your value for ", p,
+                 " is not valid. It must be one of the following: ",
+                 paste(.datasets_info[[dataset]][[p]], collapse = ", ")))
     }
   }
-
-  if ("bbox" %in% names(required_params)) {
-    names(required_params)[which(names(required_params) == "bbox")] <- "area"
-  }
-
-  if (!(is.numeric(year)) || any(year > format(Sys.Date(), "%Y")) ||
-        any(year < 1950)) {
-    stop("Years but be numeric and between 1950 and current year.")
-  }
-  if (!(is.numeric(month)) || any(month > 12) || any(month < 1)) {
-    stop("Months  must be numeric and between 1 and 12.")
-  }
-  if (!(is.numeric(day)) || any(day > 31) || any(day < 1)) {
-    stop("Days must be numeric and between 1 and 31.")
-  }
-  if (!is.numeric(time) || any(time > 23) || any(time < 0)) {
-    stop("Times must be numeric and between 0 and 23.")
-  }
-
 
   # give a correct filename, remove ".nc" (it will be added later again)
   if (outname != make.names(outname)) {
