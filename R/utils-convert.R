@@ -180,7 +180,8 @@
 #' @returns An sf object with polygons.
 #' @noRd
 .s2dv_to_polygons <- function(cube, crs = "EPSG:4326") {
-
+  ### REVIEW - requires lat/lon coordinates, should be able to input
+  ### REVIEW - other s2dv_cube types?
   rstack <- .s2dv_to_terra(cube, crs = crs)
   pv <- terra::as.polygons(rstack, dissolve = FALSE,
                            values = TRUE, na.rm = FALSE)
@@ -266,7 +267,7 @@
 #' .csv_to_s2dv
 #'
 #' Transform csv into s2dv
-#' #' @param df The data.frame object to be transformed.
+#' @param df The data.frame object to be transformed.
 #' @param value_cols Character vector with the names of the columns
 #' containing the values to be transformed. Default is "value".
 #' @param var_names Character vector with the names of the variables.
@@ -275,6 +276,7 @@
 #' @noRd
 .csv_to_s2dv <- function(df, value_cols = "value", var_names = NULL) {
   # Validate basic columns
+  ### REVIEW - are latitude and longitude required?
   needed <- c("latitude", "longitude")
   if (!all(needed %in% names(df))) {
     stop("The CSV should have columns: ", paste(needed, collapse = ", "))
@@ -370,8 +372,6 @@
 
   # REVIEW - nice error message
   stopifnot(inherits(sf_polys, "sf"))
-  ### REVIEW - can be removed?
-  #if (!requireNamespace("sf", quietly = TRUE)) stop("Instala 'sf'.")
 
   # 1) Centers of each cell based on the bbox (robust and simple)
   b <- do.call(
