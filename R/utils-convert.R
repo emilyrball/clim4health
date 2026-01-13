@@ -3,57 +3,82 @@
 #' Transform s2dv into terra
 #'
 #' @param cube The s2dv_cube object to be transformed.
-#' @param crs Coordinate Reference System (default: "EPSG:4326").
+#' @param crs Coordinate Reference System of the s2dv_cube. The default is
+#' "EPSG:4326".
 #'
 #' @returns A terra::SpatRaster object.
 #' @noRd
 .s2dv_to_terra <- function(cube, crs = "EPSG:4326") {
   ### REVIEW - requires lat/lon coordinates, OK for now
+  ### REVIEW - if lat/lon required, add check for them?
   lon <- as.vector(cube$coords$longitude)
   lat <- as.vector(cube$coords$latitude)
 
   d  <- dim(cube$data)
+  nd <- d[1]
+  nv <- d[2]
+  ns <- d[3]
   nt <- d[4]
   nm <- d[5]
 
-  dates <- tryCatch(as.Date(cube$attrs$Dates), error = function(e) NULL)
-  ens   <- tryCatch(as.vector(cube$coords$ensemble), error = function(e) NULL)
-
   layers <- list()
   k <- 1
-  for (t in seq_len(nt)) {
-    print(dates[t])
-    for (m in seq_len(nm)) {
-      # REVIEW - assumes first var
-      # REVIEW - assumes first sdate
 
-      # REVIEW - assuming first sdate but dates is subsetted in order sdate
-      # then time so this is not correct if multiple sdates exist
-      vals <- as.vector(cube$data[1, 1, 1, t, m, , ])
-      xyz <- data.frame(
-        x = rep(lon, each = length(lat)),
-        y = rep(lat, times = length(lon)),
-        z = vals
-      )
-      r <- terra::rast(xyz, type = "xyz", crs = crs)
-
-      t_lab <- if (!is.null(dates) && length(dates) >= t) {
-        format(dates[t], "%Y%m%d")
+  # REVIEW - nested loops
+  for (d in seq_len(nd)) {
+    d_lab <- if (!is.null(cube$coords$dataset) &&
+                   length(cube$coords$dataset) >= d) {
+      paste0("dataset_", cube$coords$dataset[d])
+    } else {
+      sprintf("dataset_%02d", d)
+    }
+    for (v in seq_len(nv)) {
+      v_lab <- if (!is.null(cube$coords$var) &&
+                     length(cube$coords$var) >= v) {
+        paste0("var_", cube$coords$var[v])
       } else {
-        sprintf("%02d", t)
+        sprintf("var_%02d", v)
       }
-      m_lab <- if (!is.null(ens)   && length(ens)   >= m) {
-        as.character(ens[m])
-      } else {
-        sprintf("%02d", m)
-      }
-      names(r) <- sprintf("time_%s_ens_%s", t_lab, m_lab)
+      for (s in seq_len(ns)) {
+        s_lab <- if (!is.null(cube$attrs$Dates) &&
+                       length(cube$attrs$Dates[, 1]) >= s) {
+          paste0("sdate_", format(cube$attrs$Dates[s, 1], "%Y%m%d"))
+        } else {
+          sprintf("sdate_%02d", s)
+        }
+        for (t in seq_len(nt)) {
+          t_lab <- if (!is.null(cube$attrs$Dates) &&
+                         length(cube$attrs$Dates[s, ]) >= t) {
+            paste0("time_", format(cube$attrs$Dates[s, t], "%Y%m%d"))
+          } else {
+            sprintf("time_%02d", t)
+          }
+          for (m in seq_len(nm)) {
+            vals <- as.vector(cube$data[d, v, s, t, m, , ])
+            xyz <- data.frame(
+              x = rep(lon, each = length(lat)),
+              y = rep(lat, times = length(lon)),
+              z = vals
+            )
+            r <- terra::rast(xyz, type = "xyz", crs = crs)
 
-      layers[[k]] <- r
-      k <- k + 1
+            m_lab <- if (!is.null(cube$coords$ensemble) &&
+                           length(cube$coords$ensemble) >= m) {
+              paste0("ensemble_", cube$coords$ensemble[m])
+            } else {
+              sprintf("ensemble_%02d", m)
+            }
+            names(r) <- paste(d_lab, v_lab, s_lab, t_lab, m_lab, sep = "_")
+
+            layers[[k]] <- r
+            k <- k + 1
+          }
+        }
+      }
     }
   }
 
+  # stack layers
   rstack <- do.call(c, layers)
   return(rstack)
 }
@@ -174,7 +199,7 @@
 #' @param variable Name of the variable. The default is "t2m".
 #' @param dataset Dataset index. The default is 1.
 #' @param sdate Start date index. The default is 1.
-#' @returns A s2dv_cube object.
+#' @returns An s2dv_cube object.
 #' @noRd
 .terra_to_s2dv <- function(rstack, dates = NULL, ensemble_vals = NULL,
                            variable = "t2m", dataset = 1, sdate = 1) {
