@@ -1,17 +1,3 @@
-# currently CSDownscale is not available in CRAN
-#source(paste0("https://earth.bsc.es/gitlab/es/csdownscale/-/raw/",
-#              "master/R/Analogs.R"))
-#source(paste0("https://earth.bsc.es/gitlab/es/csdownscale/-/raw/",
-#              "master/R/Interpolation.R"))
-#source(paste0("https://earth.bsc.es/gitlab/es/csdownscale/-/raw/",
-#              "master/R/Intbc.R"))
-#source(paste0("https://earth.bsc.es/gitlab/es/csdownscale/-/raw/",
-#              "master/R/Intlr.R"))
-#source(paste0("https://earth.bsc.es/gitlab/es/csdownscale/-/raw/",
-#              "master/R/LogisticReg.R"))
-#source(paste0("https://earth.bsc.es/gitlab/es/csdownscale/-/raw/",
-#              "master/R/Utils.R"))
-
 #' c4h_downscale
 #'
 #' Downscale and calibrate climate data.
@@ -359,52 +345,57 @@ c4h_downscale <- function(downscale_function,
     }
   }
   if (downscale_function == "Interpolation") {
-    out <- CST_Interpolation(exp = exp, points = points,
-                             method_remap = method_remap,
-                             target_grid = target_grid,
-                             lat_dim = lat_dim,
-                             lon_dim = lon_dim,
-                             region = region,
-                             method_point_interp = method_point_interp,
-                             ncores = ncores)
+    out <- CSDownscale::CST_Interpolation(exp = exp, points = points,
+                                          method_remap = method_remap,
+                                          target_grid = target_grid,
+                                          lat_dim = lat_dim,
+                                          lon_dim = lon_dim,
+                                          region = region,
+                                          method_point_interp =
+                                            method_point_interp,
+                                          ncores = ncores)
     out$exp <- .manage_dims(out$exp, exp_dims)
     
   } else if (downscale_function == "Intbc") {
-    out <- CST_Intbc(exp = exp, obs = obs, exp_cor = exp_cor,
-                     target_grid = target_grid, bc_method = bc_method,
-                     int_method = method_remap, points = points,
-                     method_point_interp = method_point_interp,
-                     lat_dim = lat_dim, lon_dim = lon_dim,
-                     sdate_dim = sdate_dim, member_dim = member_dim,
-                     time_dim = time_dim, region = region,
-                     ncores = ncores, loocv = loocv)
+    out <- CSDownscale::CST_Intbc(exp = exp, obs = obs, exp_cor = exp_cor,
+                                  target_grid = target_grid,
+                                  bc_method = bc_method,
+                                  int_method = method_remap, points = points,
+                                  method_point_interp = method_point_interp,
+                                  lat_dim = lat_dim, lon_dim = lon_dim,
+                                  sdate_dim = sdate_dim,
+                                  member_dim = member_dim,
+                                  time_dim = time_dim, region = region,
+                                  ncores = ncores, loocv = loocv)
     out$exp <- .manage_dims(out$exp, exp_dims)
     out$obs <- .manage_dims(out$obs, obs_dims)
     
   } else if (downscale_function == "Intlr") {
-    out <- CST_Intlr(exp = exp, obs = obs, exp_cor = exp_cor,
-                     lr_method = lr_method, target_grid = target_grid,
-                     points = points, int_method = method_remap,
-                     method_point_interp = method_point_interp,
-                     lat_dim = lat_dim, lon_dim = lon_dim,
-                     sdate_dim = sdate_dim, time_dim = time_dim,
-                     member_dim = member_dim,
-                     region = region,
-                     ncores = ncores, loocv = loocv,
-                     ...)
+    out <- CSDownscale::CST_Intlr(exp = exp, obs = obs, exp_cor = exp_cor,
+                                  lr_method = lr_method,
+                                  target_grid = target_grid,
+                                  points = points, int_method = method_remap,
+                                  method_point_interp = method_point_interp,
+                                  lat_dim = lat_dim, lon_dim = lon_dim,
+                                  sdate_dim = sdate_dim, time_dim = time_dim,
+                                  member_dim = member_dim,
+                                  region = region,
+                                  ncores = ncores, loocv = loocv,
+                                  ...)
     out$exp <- .manage_dims(out$exp, exp_dims)
     out$obs <- .manage_dims(out$obs, obs_dims)
     
   } else if (downscale_function == "Analogs") {
-    out <- CST_Analogs(exp = exp, obs = obs,
-                       grid_exp = target_grid,
-                       lat_dim = lat_dim, lon_dim = lon_dim,
-                       sdate_dim = sdate_dim, time_dim = time_dim,
-                       member_dim = member_dim,
-                       region = region,
-                       ncores = ncores,
-                       loocv = loocv,
-                       ...)
+    out <- CSDownscale::CST_Analogs(exp = exp, obs = obs,
+                                    grid_exp = target_grid,
+                                    lat_dim = lat_dim, lon_dim = lon_dim,
+                                    sdate_dim = sdate_dim,
+                                    time_dim = time_dim,
+                                    member_dim = member_dim,
+                                    region = region,
+                                    ncores = ncores,
+                                    loocv = loocv,
+                                    ...)
     out$exp <- .manage_dims(out$exp, c(exp_dims, "analogs"))
     out$obs <- .manage_dims(out$obs, obs_dims)
   }
@@ -434,7 +425,7 @@ c4h_downscale <- function(downscale_function,
     }
   }
   if (downscale_function == "Analogs") {
-    if (file.exists(tmp_file_exp)) {
+    if (exists("tmp_file_exp")) {
       system(paste0("rm ", tmp_file_exp))
     }
   }
