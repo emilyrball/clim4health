@@ -1,4 +1,4 @@
-#' c4h_download
+#' c4h_save
 #'
 #' Save objects manipulated using clim4health functions
 #' in different formats: s2dv, terra, csv, polygons.

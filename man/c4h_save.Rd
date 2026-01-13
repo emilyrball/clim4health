@@ -2,7 +2,7 @@
 % Please edit documentation in R/c4h_save.R
 \name{c4h_save}
 \alias{c4h_save}
-\title{c4h_download}
+\title{c4h_save}
 \usage{
 c4h_save(data, format, path)
 }

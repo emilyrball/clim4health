@@ -3,17 +3,10 @@
 #' Convert objects between formats including s2dv, terra, csv, polygons.
 #'
 #' @param data The object to transform
-#' @param input_format A string specifying the format of the object 'data'.
-#' Valid options are 's2dv', 'terra', 'csv' or 'polygons'
 #' @param output_format A string specifying the desired output format.
 #' Valid options are 's2dv', 'terra', 'csv' or 'polygons'
-#' @param variable A string specifying the variable name to extract from the
-#' object data when converting from terra to s2dv. The default is NULL.
-#' @param dates  List of the dates you want to assign to the objects
-#' format: yyyy-mm-dd. The default is NULL. ## REVIEW
-#' @param aux_vals List of auxiliary values used for ensembles
 #'
-#' @returns An object could be s2dv, terra, csv or polygons.
+#' @returns An R object of type terra SpatRaster, data.frame or sf polygons.
 #' @export
 #'
 #' @examples
@@ -23,56 +16,37 @@
 #'
 #' ### Convert s2dv into terra
 #' # out <- c4h_convert(fcst,
-#' #                    "s2dv",
-#' #                    "terra",
-#' #                    variable = NULL,
-#' #                    dates = NULL,
-#' #                    aux_vals = NULL)
+#' #                    "terra")
+#' ### Convert s2dv into csv
+#' # out <- c4h_convert(fcst,
+#' #                    "csv")
 #' ## REVIEW - more examples
 #' # s2dv gridded to terra - done
-#' # s2dv gridded to csv
+#' # s2dv gridded to csv - done
 #' # s2dv point to csv
-#' # s2dv polygon to csv
+#'
+#' ### Polygon examples
+#' # library(sf)
+#' #
+#' # # Region municipalities
+#' # munip_path <- system.file("extdata", "areas", "munip_vallecauca.gpkg",
+#' #                         package = "clim4health")
+#' # munip <- read_sf(munip_path)
+#' # fcst_aggr <- c4h_space(fcst, munip)
+#'
+#' # # s2dv polygon to csv
+#' # out <- c4h_convert(fcst_aggr,
+#' #                    "csv")
 #' # s2dv polygon to polygons
-#' # polygon data, point data,
 c4h_convert <- function(data_object,
-                        input_format,
-                        output_format,
-                        variable = NULL,
-                        dates = NULL,
-                        aux_vals = NULL) {
+                        output_format) {
+  if (output_format == "terra") {
+    .s2dv_to_terra(data_object) ### REVIEW crs argument unused
 
-  if (input_format == "s2dv") {
+  } else if (output_format == "csv") {
+    .s2dv_to_csv(data_object) ### REVIEW file argument unused
 
-    if (output_format == "terra") {
-      return(.s2dv_to_terra(data_object))
-
-    } else if (output_format == "csv") {
-      return(.s2dv_to_csv(data_object))
-
-    } else if (output_format == "polygons") {
-      return(.s2dv_to_polygons(data_object)) ### REVIEW crs argument unused
-    }
-
-  } else if (input_format == "terra") {
-    if (output_format == "s2dv") {
-      return(.terra_to_s2dv(data_object,
-                            dates = as.Date(dates),
-                            ensemble_vals = aux_vals,
-                            variable = variable))
-    }
-
-  } else if (input_format == "csv") {
-    if (output_format == "s2dv") {
-      return(.csv_to_s2dv(data_object))
-    }
-
-  } else if (input_format == "polygons")  {
-    if (output_format == "s2dv") {
-      return(.polygons_to_s2dv(data_object,
-                               dates = as.Date(dates),
-                               ensemble_vals = aux_vals))
-                               # REVIEW - variable argument missing?
-    }
+  } else if (output_format == "polygons") {
+    .s2dv_to_polygons(data_object) ### REVIEW crs argument unused
   }
 }

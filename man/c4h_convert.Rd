@@ -4,34 +4,16 @@
 \alias{c4h_convert}
 \title{c4h_convert}
 \usage{
-c4h_convert(
-  data_object,
-  input_format,
-  output_format,
-  variable = NULL,
-  dates = NULL,
-  aux_vals = NULL
-)
+c4h_convert(data_object, output_format)
 }
 \arguments{
-\item{input_format}{A string specifying the format of the object 'data'.
-Valid options are 's2dv', 'terra', 'csv' or 'polygons'}
-
 \item{output_format}{A string specifying the desired output format.
 Valid options are 's2dv', 'terra', 'csv' or 'polygons'}
-
-\item{variable}{A string specifying the variable name to extract from the
-object data when converting from terra to s2dv. The default is NULL.}
-
-\item{dates}{List of the dates you want to assign to the objects
-format: yyyy-mm-dd. The default is NULL. ## REVIEW}
-
-\item{aux_vals}{List of auxiliary values used for ensembles}
 
 \item{data}{The object to transform}
 }
 \value{
-An object could be s2dv, terra, csv or polygons.
+An R object of type terra SpatRaster, data.frame or sf polygons.
 }
 \description{
 Convert objects between formats including s2dv, terra, csv, polygons.
@@ -43,16 +25,26 @@ fcst <- c4h_load(fcst_path, variable = "t2m", ext = 'nc')
 
 ### Convert s2dv into terra
 # out <- c4h_convert(fcst,
-#                    "s2dv",
-#                    "terra",
-#                    variable = NULL,
-#                    dates = NULL,
-#                    aux_vals = NULL)
+#                    "terra")
+### Convert s2dv into csv
+# out <- c4h_convert(fcst,
+#                    "csv")
 ## REVIEW - more examples
 # s2dv gridded to terra - done
-# s2dv gridded to csv
+# s2dv gridded to csv - done
 # s2dv point to csv
-# s2dv polygon to csv
+
+### Polygon examples
+# library(sf)
+#
+# # Region municipalities
+# munip_path <- system.file("extdata", "areas", "munip_vallecauca.gpkg",
+#                         package = "clim4health")
+# munip <- read_sf(munip_path)
+# fcst_aggr <- c4h_space(fcst, munip)
+
+# # s2dv polygon to csv
+# out <- c4h_convert(fcst_aggr,
+#                    "csv")
 # s2dv polygon to polygons
-# polygon data, point data,
 }
