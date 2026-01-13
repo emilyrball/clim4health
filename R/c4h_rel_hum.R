@@ -1,5 +1,7 @@
 #' c4h_rel_hum
 #'
+#' Calculate relative humidity from temperature and dew point temperature.
+#'
 #' @param tas an s2dv_cube object with the temperature in degrees Celsius.
 #' @param tdps an s2dv_cube object with the dew point temperature in degrees
 #' Celsius.

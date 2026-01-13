@@ -47,4 +47,11 @@ fcst <- c4h_load(fcst_path, variable = "t2m", ext = 'nc')
 # out <- c4h_convert(fcst_aggr,
 #                    "csv")
 # s2dv polygon to polygons
+
+### Station data example
+# station_path <- system.file("extdata", "stations", "temp_vallecauca.csv",
+#                        package = "clim4health")
+# stations <- c4h_load(station_path, variable = "temp_mean", ext = 'csv')
+# out <- c4h_convert(stations,
+#                    "csv")
 }

@@ -172,7 +172,8 @@ hcst <- c4h_load(system.file("extdata", "hindcast", package = "clim4health"),
                  ext = "nc")
 lats <- hcst$coords$latitude
 lons <- hcst$coords$longitude
-obs <- c4h_load(system.file("extdata", "reanalysis", package = "clim4health"),
+obs <- c4h_load(system.file("extdata", "reanalysis",
+                package = "clim4health"),
                 variable = "t2m",
                 year = 2010:2012,
                 month = 1,
@@ -180,6 +181,17 @@ obs <- c4h_load(system.file("extdata", "reanalysis", package = "clim4health"),
                 bbox = c(max(lats), min(lons),
                          min(lats), max(lons)),
                 ext = "nc")
+### Example with gridded data
+# dwn <- c4h_downscale("Interpolation", exp = hcst, obs = obs,
+#                      method_remap = "bilinear",
+#                      target_grid = system.file("extdata",
+#                                                "reanalysis/t2m_201001.nc",
+#                                                package = "clim4health"))
+# hcst_dwn <- dwn$exp
+# skill <- c4h_postprocess(exp = hcst_dwn,
+#                          obs = obs,
+#                          metrics = c("RMSE"))
+## Example with polygon data
 shp_path <- system.file("extdata", "areas", "munip_vallecauca.gpkg",
                         package = "clim4health")
 obs <- c4h_space(obs,
@@ -194,4 +206,26 @@ skill <- c4h_postprocess(exp = hcst,
                          obs = obs,
                          metrics = c("BSS", "CRPSS"),
                          brier_thresholds = c(0.1, 0.9))
+## Example with station data
+# point_locs <- clim4health::c4h_load(system.file("extdata",
+#                                                "stations",
+#                                                package = "clim4health"),
+#                                     ext = "csv",
+#                                     year = 2010:2012,
+#                                     month = 1,
+#                                     leadtime_month = 1:3,
+#                                     variable = "temp_mean")
+# points <- list(latitude = point_locs$attrs$location$latitude,
+#                longitude = point_locs$attrs$location$longitude)
+# point_locs <- c4h_time(point_locs,
+#                        time_aggregation = "monthly",
+#                        dim_aggregation = "sdate",
+#                        fun = "mean")
+#
+# dwn <- c4h_downscale("Interpolation", exp = hcst,
+#                      points = points, method_point_interp = "bilinear")
+# hcst_dwn <- dwn$exp
+# skill <- c4h_postprocess(exp = hcst_dwn,
+#                          obs = point_locs,
+#                          metrics = c("RMSE"))
 }
