@@ -1,17 +1,3 @@
-# currently CSDownscale is not available in CRAN
-#source(paste0("https://earth.bsc.es/gitlab/es/csdownscale/-/raw/",
-#              "master/R/Analogs.R"))
-#source(paste0("https://earth.bsc.es/gitlab/es/csdownscale/-/raw/",
-#              "master/R/Interpolation.R"))
-#source(paste0("https://earth.bsc.es/gitlab/es/csdownscale/-/raw/",
-#              "master/R/Intbc.R"))
-#source(paste0("https://earth.bsc.es/gitlab/es/csdownscale/-/raw/",
-#              "master/R/Intlr.R"))
-#source(paste0("https://earth.bsc.es/gitlab/es/csdownscale/-/raw/",
-#              "master/R/LogisticReg.R"))
-#source(paste0("https://earth.bsc.es/gitlab/es/csdownscale/-/raw/",
-#              "master/R/Utils.R"))
-
 #' c4h_downscale
 #'
 #' Downscale and calibrate climate data.
