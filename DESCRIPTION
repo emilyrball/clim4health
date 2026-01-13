@@ -39,7 +39,6 @@ Imports:
     lubridate,
     s2dv,
     sf,
-    startR, 
     stars,
     terra,
     data.table,

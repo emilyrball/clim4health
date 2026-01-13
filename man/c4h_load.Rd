@@ -33,7 +33,8 @@ Default is all months.}
 Default is all hours.}
 
 \item{leadtime_month}{A vector of months for the forecast leadtime. e.g.
-c(1,2) for January and February. Default is all months.}
+c(1,2) for January and February for data initialized in January.
+Default is to load all possible months.}
 
 \item{ext}{File extension. Options include "nc", ".nc", "csv", and ".csv".}
 
