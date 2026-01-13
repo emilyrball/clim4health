@@ -760,10 +760,12 @@
 
     date_vals <- stars::st_get_dimension_values(x, concat_dim)
     date_vals <- as.POSIXct(date_vals, origin = "1970-01-01", tz = "UTC")
-    if (length(unique(date_vals)) > length(unique(lubridate::ymd(date_vals)))) {
+
+    len_date_day <- length(unique(as.Date(date_vals)))
+    len_date_month <- length(unique(format(date_vals, "%Y-%m")))
+    if (length(unique(date_vals)) > len_date_day) {
       time_freq <- "hourly"
-    } else if (length(unique(lubridate::ymd(date_vals))) >
-                 length(unique(lubridate::ym(date_vals)))) {
+    } else if (len_date_day > len_date_month) {
       time_freq <- "daily"
     } else {
       time_freq <- "monthly"
