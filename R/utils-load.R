@@ -727,14 +727,14 @@
   file_vars <- lapply(file_list, function(x) {
     names(sf::gdal_read_mdim(x, proxy = TRUE)[[1]])
   })
-  file_vars <- unlist(file_vars)
 
   file_list_var <- list()
   for (var in variable) {
-    file_list_var[[var]] <- file_list[grep(var, file_vars)]
+    file_list_var[[var]] <- file_list[
+      vapply(file_vars, function(v) var %in% v, logical(1))
+    ]
     names(file_list_var[[var]]) <- NULL
   }
-
   data_out <- list()
   units_out <- list()
 
@@ -808,6 +808,9 @@
                                            nXSize = lon_size,
                                            nYSize = lat_size),
                            curvilinear = FALSE)
+
+    x <- x[var, drop = FALSE]
+
     lon_vals <- stars::st_get_dimension_values(x, "x")
     lat_vals <- stars::st_get_dimension_values(x, "y")
     date_vals <- stars::st_get_dimension_values(x, concat_dim)
@@ -884,8 +887,12 @@
   } else if (length(data_out) == 0) {
     stop("No valid data found.")
   } else {
+    dates <- data_out[[1]]$attrs$Dates
     data_out <- CSTools::CST_BindDim(data_out, along = "var",
-                                     var_dim = "var", dat_dim = "dataset")
+                                     var_dim = "var",
+                                     dat_dim = "dataset")
+
+    data_out$attrs$Dates <- dates
   }
   data_out$attrs$source_files <- unlist(file_list_var)
   data_out$attrs$source_files <- gsub("NETCDF:\"(.*)\"", "\\1",
