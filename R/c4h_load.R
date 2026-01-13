@@ -13,12 +13,12 @@
 #' @param time A vector of hours (0-23). Only needed when datasets are hourly.
 #' Default is all hours.
 #' @param leadtime_month A vector of months for the forecast leadtime. e.g.
-#' c(1,2) for January and February. Default is all months.
+#' c(1,2) for January and February for data initialized in January.
+#' Default is to load all possible months.
 #' @param ext File extension. Options include "nc", ".nc", "csv", and ".csv".
 #' @param bbox A vector of coordinates. (in order: North, West, South, East).
 #'
 #' @returns An s2dv_cube object.
-#' @import dplyr
 #' @export
 #'
 #' @examples
