@@ -13,7 +13,7 @@
 #' format: yyyy-mm-dd. The default is NULL. ## REVIEW
 #' @param aux_vals List of auxiliary values used for ensembles
 #'
-#' @returns An object could be s2db, terra, csv or polygons.
+#' @returns An object could be s2dv, terra, csv or polygons.
 #' @export
 #'
 #' @examples

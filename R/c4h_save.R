@@ -1,29 +1,22 @@
 #' c4h_download
 #'
-#' download the objects in different formats, s2dv, terra, csv, polygons.
+#' Save objects manipulated using clim4health functions
+#' in different formats: s2dv, terra, csv, polygons.
 #'
-#'
-#' @param data The object you want to transform
-#' @param format Format of the object you want to save
-#' could be: s2dv terra, csv or polygons
-#' @param path the path where you want to save the file saved
+#' @param data The object you want to save, which could be an s2dv_cube,
+#' terra, data.frame or sf object.
+#' @param format A string indicating the format of the object you want to save.
+#' Options are: "s2dv", "terra", "csv" or "polygons"
+#' @param path A string indicating the path where you want to save the file.
 #'
 #' @returns None
 #' @export
 #'
 #' @examples
-#' fcst_path <- "inst/extdata/forecast/"
-#' fcst_path <- paste0(fcst_path)
+#' fcst_path <- system.file("extdata", "forecast", package = "clim4health")
+#' fcst <- c4h_load(fcst_path, variable = "t2m", ext = 'nc')
 #'
-#' fcst <- clim4health::c4h_load(fcst_path,
-#'                             variable = "t2m",
-#'                             year = 2025,
-#'                             month = 1,
-#'                             ext = 'nc'
-#'                            )
-#' save_s2dv(fcst, 's2dv', 'out.nc')
-
-
+#' save_s2dv(fcst, "s2dv", "out.nc")
 c4h_save <- function(data, format, path) {
   if (format == "s2dv") {
     .save_s2dv(data, path)
@@ -36,7 +29,15 @@ c4h_save <- function(data, format, path) {
   }
 }
 
-
+#' .save_s2dv
+#'
+#' Save an object of class s2dv_cube to a NetCDF file.
+#'
+#' @param cube The s2dv_cube object to be saved.
+#' @param path A string indicating the path where to save the NetCDF file.
+#'
+#' @returns None
+#' @noRd
 .save_s2dv <- function(cube, path = "out.nc") {
 
   # Detect longitude / latitude dims
@@ -69,20 +70,46 @@ c4h_save <- function(data, format, path) {
   message("Saved NetCDF: ", path)
 }
 
-# Save terra::SpatRaster (driver inferred by file extension, e.g., .tif)
+#' .save_terra
+#'
+#' Save terra::SpatRaster (driver inferred by file extension, e.g., .tif)
+#'
+#' @param r The SpatRaster object to be saved.
+#' @param path A string indicating the path where to save the NetCDF file.
+#' @param overwrite Logical indicating whether to overwrite existing files.
+#' The default is TRUE.
+#'
+#' @returns None
+#' @noRd
 .save_terra <- function(r, path, overwrite = TRUE) {
   # Expects a SpatRaster / path = "out.tif"
   stopifnot(inherits(r, "SpatRaster"))
   terra::writeRaster(r, filename = path, overwrite = overwrite)
 }
 
-# Save a data.frame to CSV
+#' .save_csv
+#'
+#' Save a data.frame to CSV
+#'
+#' @param df The data.frame to be saved.
+#' @param path A string indicating the path where to save the CSV file.
+#' @returns None
+#' @noRd
 .save_csv <- function(df, path) {
   # Expects a data.frame; writes a standard CSV without row names.
   utils::write.csv(df, file = path, row.names = FALSE)
 }
 
-# Save polygons (sf) to GeoPackage (.gpkg) or other formats (by extension)
+#' .save_polygons
+#'
+#' Save polygons (sf) to GeoPackage (.gpkg) or other formats (by extension)
+#' using sf::st_write
+#' @param sf_obj The sf object to be saved.
+#' @param path A string indicating the path where to save the file.
+#' @param layer A string indicating the layer name within the file. The default
+#' is "data".
+#' @returns None
+#' @noRd
 .save_polygons <- function(sf_obj, path, layer = "data") {
   # Expects an sf object; path = "polys.gpkg"
   sf::st_write(sf_obj, dsn = path, layer = layer, append = FALSE, quiet = TRUE)

@@ -1,4 +1,12 @@
-# Transform s2dv into terra
+#' .s2dv_to_terra
+#'
+#' Transform s2dv into terra
+#'
+#' @param cube The s2dv_cube object to be transformed.
+#' @param crs Coordinate Reference System (default: "EPSG:4326").
+#'
+#' @returns A terra::SpatRaster object.
+#' @noRd
 .s2dv_to_terra <- function(cube, crs = "EPSG:4326") {
   ### REVIEW - requires lat/lon coordinates, OK for now
   lon <- as.vector(cube$coords$longitude)
@@ -50,7 +58,15 @@
   return(rstack)
 }
 
-# Transform s2dv into csv
+#' .s2dv_to_csv
+#'
+#' Transform s2dv into csv
+#'
+#' @param cube The s2dv_cube object to be transformed.
+#' @param file Optional file path to save the CSV. If NULL, the data.frame
+#' is not saved.
+#' @returns A data.frame or writes a CSV file.
+#' @noRd
 .s2dv_to_csv <- function(cube, file = NULL) {
   ### REVIEW - argument file is redundant as can be used in c4h_save?
   stopifnot(inherits(cube, "s2dv_cube"))
@@ -130,7 +146,14 @@
   return(df)
 }
 
-# Transform s2dv into polygons
+#' .s2dv_to_polygons
+#'
+#' Transform s2dv into polygons
+#'
+#' @param cube The s2dv_cube object to be transformed.
+#' @param crs Coordinate Reference System (default: "EPSG:4326").
+#' @returns An sf object with polygons.
+#' @noRd
 .s2dv_to_polygons <- function(cube, crs = "EPSG:4326") {
 
   rstack <- .s2dv_to_terra(cube, crs = crs)
@@ -140,13 +163,25 @@
   return(sf_obj)
 }
 
-# Transform terra into s2dv
+#' .terra_to_s2dv
+#'
+#' Transform terra into s2dv
+#'
+#' @param rstack The terra::SpatRaster object to be transformed.
+#' @param dates  List of the dates you want to assign to the objects
+#' format: yyyy-mm-dd. The default is NULL.
+#' @param ensemble_vals List of auxiliary values used for ensembles
+#' @param variable Name of the variable. The default is "t2m".
+#' @param dataset Dataset index. The default is 1.
+#' @param sdate Start date index. The default is 1.
+#' @returns A s2dv_cube object.
+#' @noRd
 .terra_to_s2dv <- function(rstack, dates = NULL, ensemble_vals = NULL,
                            variable = "t2m", dataset = 1, sdate = 1) {
   # REVIEW variable = "t2m" as default - shouldn't break but will just name
   # output variable as t2m
 
-  # REVIEW - nice error message
+  # REVIEW - nicer error message
   stopifnot(inherits(rstack, "SpatRaster"))
 
   # Data.frame xy + layers
@@ -203,7 +238,16 @@
   cube
 }
 
-# Transform csv into s2dv
+#' .csv_to_s2dv
+#'
+#' Transform csv into s2dv
+#' #' @param df The data.frame object to be transformed.
+#' @param value_cols Character vector with the names of the columns
+#' containing the values to be transformed. Default is "value".
+#' @param var_names Character vector with the names of the variables.
+#' If NULL, the names in value_cols are used.
+#' @returns A s2dv_cube object.
+#' @noRd
 .csv_to_s2dv <- function(df, value_cols = "value", var_names = NULL) {
   # Validate basic columns
   needed <- c("latitude", "longitude")
@@ -282,7 +326,17 @@
   return(cube)
 }
 
-# Transform polygons into s2dv
+#' .polygons_to_s2dv
+#'
+#' Transform polygons into s2dv
+#' @param sf_polys The sf object with polygons to be transformed.
+#' @param dates  List of the dates you want to assign to the objects
+#' format: yyyy-mm-dd. The default is NULL.
+#' @param ensemble_vals List of auxiliary values used for ensembles
+#' @param variable Name of the variable. The default is "t2m".
+#' @param round_digits Number of digits to round the coordinates. Default is 6.
+#' @returns A s2dv_cube object.
+#' @noRd
 .polygons_to_s2dv <- function(sf_polys,
                               dates = NULL,
                               ensemble_vals = NULL,
@@ -372,9 +426,15 @@
   cube
 }
 
-#############################
-#### Auxiliary functions ####
-#############################
+#' .parse_time_ens
+#'
+#' Parse time and ensemble from layer names
+#' @param layer_names Character vector with the names of the layers.
+#' @param dates  List of the dates you want to assign to the objects
+#' format: yyyy-mm-dd. The default is NULL.
+#' @param ensemble_vals List of auxiliary values used for ensembles
+#' @returns A list with time_idx, ens_idx, time_labels and ens_labels.
+#' @noRd
 .parse_time_ens <- function(layer_names, dates = NULL, ensemble_vals = NULL) {
   # Return list(time_idx, ens_idx, time_labels, ens_labels)
   time_idx <- integer(length(layer_names))
@@ -452,6 +512,15 @@
        ens_labels  = ens_labels)
 }
 
+#' .build_array_from_xy_layers
+#'
+#' Build array from x,y and list of layers
+#' @param x Numeric vector with the x (longitude) coordinates.
+#' @param y Numeric vector with the y (latitude) coordinates.
+#' @param layer_list Named list of numeric vectors (each length ncell).
+#' @param lat_desc Logical indicating if latitude is in descending order.
+#' @returns A list with arr, lon_vec and lat_vec.
+#' @noRd
 .build_array_from_xy_layers <- function(x, y, layer_list, lat_desc = TRUE) {
   # x: lon vector (repeated by cells), y: lat vector, length ncell
   # layer_list: named list of numeric vectors (each length ncell)
@@ -481,4 +550,10 @@
   list(mats = mats, lon = lon_vec, lat = lat_vec)
 }
 
+#' .get_dim
+#' Get dimension size or 1 if not present
+#' @param d Named integer vector with dimensions.
+#' @param x Name of the dimension to get.
+#' @returns Integer size of the dimension or 1 if not present.
+#' @noRd
 .get_dim <- function(d, x) if (x %in% names(d)) d[[x]] else 1L
