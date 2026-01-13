@@ -44,6 +44,7 @@ Imports:
     terra,
     data.table,
     measurements,
+    CSDownscale,
     ncdf4
 Suggests: 
     testthat (>= 3.0.0),

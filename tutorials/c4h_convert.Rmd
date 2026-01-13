@@ -1,0 +1,63 @@
+# Tutorial: c4h_convert
+
+<img src="figures/general/logo_harmonize.png" align="left" height="50"/></a> <img src="figures/general/logo_bsc.png" align="left" height="50"/></a> <img src="figures/general/logo_clim4health.svg" align="center" height="50" width="100"/></a>
+
+## Overview and objectives
+
+Inside clim4health is a function to convert data objects. The goal of convert is to transform the climate data object into different formats. This step facilitates data exchange and integration with external tools and ensures compatibility with different modeling or visualization platforms.
+
+## Load the data
+
+``` r
+fcst_path <- "inst/extdata/forecast/"
+fcst_path <- paste0(fcst_path)
+
+fcst <- clim4health::c4h_load(fcst_path,
+                             variable = "t2m",
+                             year = 2025,
+                             month = 1,
+                             ext = 'nc'
+                            )
+```
+
+## Convert s2dv into terra files
+
+``` r
+obj_terra <- clim4health:::c4h_convert(fcst, 's2dv', 'terra')
+print(obj_terra)
+```
+
+## Convert s2dv into csv files
+
+``` r
+obj_csv <- clim4health:::c4h_convert(fcst, 's2dv', 'csv')
+print(obj_csv)
+```
+
+## Convert s2dv into polygons files
+
+``` r
+obj_polygons <- clim4health:::c4h_convert(fcst, 's2dv', 'polygons')
+print(obj_polygons)
+```
+
+## Convert terra into s2dv files
+
+``` r
+obj_s2dv_1 <- clim4health:::c4h_convert(obj_terra,'terra','s2dv',dates = as.Date(c("2025-01-01","2025-02-01","2025-03-01")),aux_vals=0:50,var_name='t2_m')
+print(obj_s2dv_1)
+```
+
+## Convert csv into s2dv files
+
+``` r
+obj_s2dv_2 <- clim4health:::c4h_convert(obj_csv,'csv','s2dv',var_name='t2_m')
+print(obj_s2dv_2) 
+```
+
+## Convert polygons into s2dv files
+
+``` r
+obj_s2dv_3 <- clim4health:::c4h_convert(obj_polygons,'polygons','s2dv',dates = as.Date(c("2025-01-01","2025-02-01","2025-03-01")),aux_vals=0:50)
+print(obj_s2dv_3) 
+```

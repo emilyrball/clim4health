@@ -1,17 +1,3 @@
-# currently CSDownscale is not available in CRAN
-#source(paste0("https://earth.bsc.es/gitlab/es/csdownscale/-/raw/",
-#              "master/R/Analogs.R"))
-#source(paste0("https://earth.bsc.es/gitlab/es/csdownscale/-/raw/",
-#              "master/R/Interpolation.R"))
-#source(paste0("https://earth.bsc.es/gitlab/es/csdownscale/-/raw/",
-#              "master/R/Intbc.R"))
-#source(paste0("https://earth.bsc.es/gitlab/es/csdownscale/-/raw/",
-#              "master/R/Intlr.R"))
-#source(paste0("https://earth.bsc.es/gitlab/es/csdownscale/-/raw/",
-#              "master/R/LogisticReg.R"))
-#source(paste0("https://earth.bsc.es/gitlab/es/csdownscale/-/raw/",
-#              "master/R/Utils.R"))
-
 #' c4h_downscale
 #'
 #' Downscale and calibrate climate data.
@@ -73,30 +59,66 @@
 #' @export
 #'
 #' @examples
-#' # hcst <- c4h_load(system.file("extdata", "hindcast", package = "clim4health"),
-#' #                  variable = "t2m",
-#' #                  year = 2010:2012,
-#' #                  month = 1,
-#' #                  leadtime_month = 1:3,
-#' #                  ext = "nc")
-#' # lats <- hcst$coords$latitude
-#' # lons <- hcst$coords$longitude
-#' # obs <- c4h_load(system.file("extdata", "reanalysis", package = "clim4health"),
-#' #                 variable = "t2m",
-#' #                 year = 2010:2012,
-#' #                 month = 1,
-#' #                 leadtime_month = 1:3,
-#' #                 bbox = c(max(lats), min(lons),
-#' #                          min(lats), max(lons)),
-#' #                 ext = "nc")
-#' # dwn <- c4h_downscale("Intbc", exp = hcst, obs = obs,
-#' #                      bc_method = "evmos",
+#' hcst <- c4h_load(system.file("extdata", "hindcast", package = "clim4health"),
+#'                  variable = "t2m",
+#'                  year = 2010:2012,
+#'                  month = 1,
+#'                  leadtime_month = 1:3,
+#'                  ext = "nc")
+#' lats <- hcst$coords$latitude
+#' lons <- hcst$coords$longitude
+#' obs <- c4h_load(system.file("extdata", "reanalysis",
+#'                 package = "clim4health"),
+#'                 variable = "t2m",
+#'                 year = 2010:2012,
+#'                 month = 1,
+#'                 leadtime_month = 1:3,
+#'                 bbox = c(max(lats), min(lons),
+#'                          min(lats), max(lons)),
+#'                 ext = "nc")
+#' ### Example with gridded data
+#' # dwn <- c4h_downscale("Interpolation", exp = hcst, obs = obs,
 #' #                      method_remap = "bilinear",
-#' #                      target_grid = paste0(getwd(), "/inst/extdata/",
-#' #                                           "reanalysis/t2m_201001.nc"))
+#' #                      target_grid = system.file("extdata",
+#' #                                                "reanalysis/t2m_201001.nc",
+#' #                                                package = "clim4health"))
+#' ## Example with polygon data
+#' shp_path <- system.file("extdata", "areas", "munip_vallecauca.gpkg",
+#'                         package = "clim4health")
+#' obs <- c4h_space(obs,
+#'                  areas = shp_path,
+#'                  fun = "mean",
+#'                  areas_id = "munip_code")
+#' hcst <- c4h_space(hcst,
+#'                   areas = shp_path,
+#'                   fun = "mean",
+#'                   areas_id = "munip_code")
+#' # hcst_agg_cal <- c4h_downscale(downscale_function = "Intbc",
+#' #                             exp = hcst_agg,
+#' #                             obs = obs_agg,
+#' #                             bc_method = "qm")
+#' ## Example with station data
+#' # point_locs <- clim4health::c4h_load(system.file("extdata",
+#' #                                                "stations",
+#' #                                                package = "clim4health"),
+#' #                                     ext = "csv",
+#' #                                     year = 2010:2012,
+#' #                                     month = 1,
+#' #                                     leadtime_month = 1:3,
+#' #                                     variable = "temp_mean")
+#' # points <- list(latitude = point_locs$attrs$location$latitude,
+#' #                longitude = point_locs$attrs$location$longitude)
+#' # point_locs <- c4h_time(point_locs,
+#' #                        time_aggregation = "monthly",
+#' #                        dim_aggregation = "sdate",
+#' #                        fun = "mean")
+#' #
+#' # dwn <- c4h_downscale("Interpolation", exp = hcst,
+#' #                      points = points, method_point_interp = "bilinear")
 c4h_downscale <- function(downscale_function,
                           # overlapping inputs for all CSDownscale functions
-                          exp, obs = NULL, exp_cor = NULL, bbox = NULL, ncores = NULL,
+                          exp, obs = NULL, exp_cor = NULL,
+                          bbox = NULL, ncores = NULL,
                           target_grid = NULL,
                           # additional inputs for Intbc
                           bc_method = NULL, method_remap = NULL, points = NULL,
@@ -359,52 +381,57 @@ c4h_downscale <- function(downscale_function,
     }
   }
   if (downscale_function == "Interpolation") {
-    out <- CST_Interpolation(exp = exp, points = points,
-                             method_remap = method_remap,
-                             target_grid = target_grid,
-                             lat_dim = lat_dim,
-                             lon_dim = lon_dim,
-                             region = region,
-                             method_point_interp = method_point_interp,
-                             ncores = ncores)
+    out <- CSDownscale::CST_Interpolation(exp = exp, points = points,
+                                          method_remap = method_remap,
+                                          target_grid = target_grid,
+                                          lat_dim = lat_dim,
+                                          lon_dim = lon_dim,
+                                          region = region,
+                                          method_point_interp =
+                                            method_point_interp,
+                                          ncores = ncores)
     out$exp <- .manage_dims(out$exp, exp_dims)
     
   } else if (downscale_function == "Intbc") {
-    out <- CST_Intbc(exp = exp, obs = obs, exp_cor = exp_cor,
-                     target_grid = target_grid, bc_method = bc_method,
-                     int_method = method_remap, points = points,
-                     method_point_interp = method_point_interp,
-                     lat_dim = lat_dim, lon_dim = lon_dim,
-                     sdate_dim = sdate_dim, member_dim = member_dim,
-                     time_dim = time_dim, region = region,
-                     ncores = ncores, loocv = loocv)
+    out <- CSDownscale::CST_Intbc(exp = exp, obs = obs, exp_cor = exp_cor,
+                                  target_grid = target_grid,
+                                  bc_method = bc_method,
+                                  int_method = method_remap, points = points,
+                                  method_point_interp = method_point_interp,
+                                  lat_dim = lat_dim, lon_dim = lon_dim,
+                                  sdate_dim = sdate_dim,
+                                  member_dim = member_dim,
+                                  time_dim = time_dim, region = region,
+                                  ncores = ncores, loocv = loocv)
     out$exp <- .manage_dims(out$exp, exp_dims)
     out$obs <- .manage_dims(out$obs, obs_dims)
     
   } else if (downscale_function == "Intlr") {
-    out <- CST_Intlr(exp = exp, obs = obs, exp_cor = exp_cor,
-                     lr_method = lr_method, target_grid = target_grid,
-                     points = points, int_method = method_remap,
-                     method_point_interp = method_point_interp,
-                     lat_dim = lat_dim, lon_dim = lon_dim,
-                     sdate_dim = sdate_dim, time_dim = time_dim,
-                     member_dim = member_dim,
-                     region = region,
-                     ncores = ncores, loocv = loocv,
-                     ...)
+    out <- CSDownscale::CST_Intlr(exp = exp, obs = obs, exp_cor = exp_cor,
+                                  lr_method = lr_method,
+                                  target_grid = target_grid,
+                                  points = points, int_method = method_remap,
+                                  method_point_interp = method_point_interp,
+                                  lat_dim = lat_dim, lon_dim = lon_dim,
+                                  sdate_dim = sdate_dim, time_dim = time_dim,
+                                  member_dim = member_dim,
+                                  region = region,
+                                  ncores = ncores, loocv = loocv,
+                                  ...)
     out$exp <- .manage_dims(out$exp, exp_dims)
     out$obs <- .manage_dims(out$obs, obs_dims)
     
   } else if (downscale_function == "Analogs") {
-    out <- CST_Analogs(exp = exp, obs = obs,
-                       grid_exp = target_grid,
-                       lat_dim = lat_dim, lon_dim = lon_dim,
-                       sdate_dim = sdate_dim, time_dim = time_dim,
-                       member_dim = member_dim,
-                       region = region,
-                       ncores = ncores,
-                       loocv = loocv,
-                       ...)
+    out <- CSDownscale::CST_Analogs(exp = exp, obs = obs,
+                                    grid_exp = target_grid,
+                                    lat_dim = lat_dim, lon_dim = lon_dim,
+                                    sdate_dim = sdate_dim,
+                                    time_dim = time_dim,
+                                    member_dim = member_dim,
+                                    region = region,
+                                    ncores = ncores,
+                                    loocv = loocv,
+                                    ...)
     out$exp <- .manage_dims(out$exp, c(exp_dims, "analogs"))
     out$obs <- .manage_dims(out$obs, obs_dims)
   }
@@ -434,7 +461,7 @@ c4h_downscale <- function(downscale_function,
     }
   }
   if (downscale_function == "Analogs") {
-    if (file.exists(tmp_file_exp)) {
+    if (exists("tmp_file_exp")) {
       system(paste0("rm ", tmp_file_exp))
     }
   }

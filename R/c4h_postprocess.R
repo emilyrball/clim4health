@@ -110,7 +110,8 @@
 #'                  ext = "nc")
 #' lats <- hcst$coords$latitude
 #' lons <- hcst$coords$longitude
-#' obs <- c4h_load(system.file("extdata", "reanalysis", package = "clim4health"),
+#' obs <- c4h_load(system.file("extdata", "reanalysis",
+#'                 package = "clim4health"),
 #'                 variable = "t2m",
 #'                 year = 2010:2012,
 #'                 month = 1,
@@ -118,6 +119,17 @@
 #'                 bbox = c(max(lats), min(lons),
 #'                          min(lats), max(lons)),
 #'                 ext = "nc")
+#' ### Example with gridded data
+#' # dwn <- c4h_downscale("Interpolation", exp = hcst, obs = obs,
+#' #                      method_remap = "bilinear",
+#' #                      target_grid = system.file("extdata",
+#' #                                                "reanalysis/t2m_201001.nc",
+#' #                                                package = "clim4health"))
+#' # hcst_dwn <- dwn$exp
+#' # skill <- c4h_postprocess(exp = hcst_dwn,
+#' #                          obs = obs,
+#' #                          metrics = c("RMSE"))
+#' ## Example with polygon data
 #' shp_path <- system.file("extdata", "areas", "munip_vallecauca.gpkg",
 #'                         package = "clim4health")
 #' obs <- c4h_space(obs,
@@ -132,6 +144,28 @@
 #'                          obs = obs,
 #'                          metrics = c("BSS", "CRPSS"),
 #'                          brier_thresholds = c(0.1, 0.9))
+#' ## Example with station data
+#' # point_locs <- clim4health::c4h_load(system.file("extdata",
+#' #                                                "stations",
+#' #                                                package = "clim4health"),
+#' #                                     ext = "csv",
+#' #                                     year = 2010:2012,
+#' #                                     month = 1,
+#' #                                     leadtime_month = 1:3,
+#' #                                     variable = "temp_mean")
+#' # points <- list(latitude = point_locs$attrs$location$latitude,
+#' #                longitude = point_locs$attrs$location$longitude)
+#' # point_locs <- c4h_time(point_locs,
+#' #                        time_aggregation = "monthly",
+#' #                        dim_aggregation = "sdate",
+#' #                        fun = "mean")
+#' #
+#' # dwn <- c4h_downscale("Interpolation", exp = hcst,
+#' #                      points = points, method_point_interp = "bilinear")
+#' # hcst_dwn <- dwn$exp
+#' # skill <- c4h_postprocess(exp = hcst_dwn,
+#' #                          obs = point_locs,
+#' #                          metrics = c("RMSE"))
 c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
                             brier_thresholds = c(0.1, 0.9),
                             prob_thresholds = c(1 / 3, 2 / 3),
@@ -236,8 +270,6 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
       sign <- .format_output(data = temp$sign, out_dims = out_dims,
                              out_coords = out_coords, out_attrs = out_attrs)
       temp <- list(rpss = rpss, sign = sign)
-      attributes(temp) <- list("metric" = "BSS",
-                               "threshold" = threshold * 100)
       data[[paste0("BSS", 100 * threshold)]] <- temp
     }
   }
@@ -256,8 +288,9 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
                            out_coords = out_coords, out_attrs = out_attrs)
     sign <- .format_output(data = temp$sign, out_dims = out_dims,
                            out_coords = out_coords, out_attrs = out_attrs)
+    rpss$attrs$Variable$varName <- "RPSS"
+    sign$attrs$Variable$varName <- "RPSS"
     temp <- list(rpss = rpss, sign = sign)
-    attributes(temp) <- list("metric" = "RPSS")
     data[[paste0("RPSS")]] <- temp
   }
   if ("CRPSS" %in% metrics) {
@@ -271,8 +304,9 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
                             out_coords = out_coords, out_attrs = out_attrs)
     sign <- .format_output(data = temp$sign, out_dims = out_dims,
                            out_coords = out_coords, out_attrs = out_attrs)
+    crpss$attrs$Variable$varName <- "CRPSS"
+    sign$attrs$Variable$varName <- "CRPSS"
     temp <- list(crpss = crpss, sign = sign)
-    attributes(temp) <- list("metric" = "CRPSS")
     data[[paste0("CRPSS")]] <- temp
   }
   if ("AbsBiasSS" %in% metrics) {
@@ -287,8 +321,9 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
                              out_coords = out_coords, out_attrs = out_attrs)
     sign <- .format_output(data = temp$sign, out_dims = out_dims,
                            out_coords = out_coords, out_attrs = out_attrs)
+    biasss$attrs$Variable$varName <- "AbsBiasSS"
+    sign$attrs$Variable$varName <- "AbsBiasSS"
     temp <- list(biasSS = biasss, sign = sign)
-    attributes(temp) <- list("metric" = "AbsBiasSS")
     data[["AbsBiasSS"]] <- temp
   }
   if ("MSE" %in% metrics) {
@@ -302,9 +337,11 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
                                  out_coords = out_coords, out_attrs = out_attrs)
     conf_upper <- .format_output(data = temp$conf.upper, out_dims = out_dims,
                                  out_coords = out_coords, out_attrs = out_attrs)
+    mse$attrs$Variable$varName <- "MSE"
+    conf_lower$attrs$Variable$varName <- "MSE"
+    conf_upper$attrs$Variable$varName <- "MSE"
     temp <- list(mse = mse, conf.lower = conf_lower,
                  conf.upper = conf_upper)
-    attributes(temp) <- list("metric" = "MSE")
     data[["MSE"]] <- temp
   }
   if ("MSSS" %in% metrics) {
@@ -319,8 +356,9 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
                            out_coords = out_coords, out_attrs = out_attrs)
     pval <- .format_output(data = temp$p.val, out_dims = out_dims,
                            out_coords = out_coords, out_attrs = out_attrs)
+    msss$attrs$Variable$varName <- "MSSS"
+    pval$attrs$Variable$varName <- "MSSS"
     temp <- list(msss = msss, p.val = pval)
-    attributes(temp) <- list("metric" = "MSSS")
     data[["MSSS"]] <- temp
   }
   if ("RMSE" %in% metrics) {
@@ -334,9 +372,11 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
                                  out_coords = out_coords, out_attrs = out_attrs)
     conf_upper <- .format_output(data = temp$conf.upper, out_dims = out_dims,
                                  out_coords = out_coords, out_attrs = out_attrs)
+    rmse$attrs$Variable$varName <- "RMSE"
+    conf_lower$attrs$Variable$varName <- "RMSE"
+    conf_upper$attrs$Variable$varName <- "RMSE"
     temp <- list(rmse = rmse, conf.lower = conf_lower,
                  conf.upper = conf_upper)
-    attributes(temp) <- list("metric" = "RMSE")
     data[["RMSE"]] <- temp
   }
   if ("RMSSS" %in% metrics) {
@@ -351,8 +391,9 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
                             out_coords = out_coords, out_attrs = out_attrs)
     pval <- .format_output(data = temp$p.val, out_dims = out_dims,
                            out_coords = out_coords, out_attrs = out_attrs)
+    rmsss$attrs$Variable$varName <- "RMSSS"
+    pval$attrs$Variable$varName <- "RMSSS"
     temp <- list(rmsss = rmsss, p.val = pval)
-    attributes(temp) <- list("metric" = "RMSSS")
     data[["RMSSS"]] <- temp
   }
   if ("ROCSS" %in% metrics) {
@@ -367,10 +408,10 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
                            out_coords = out_coords, out_attrs = out_attrs)
     sign <- .format_output(data = temp$sign, out_dims = out_dims,
                            out_coords = out_coords, out_attrs = out_attrs)
+    rpss$attrs$Variable$varName <- "ROCSS"
+    sign$attrs$Variable$varName <- "ROCSS"
     temp <- list(rpss = rpss, sign = sign)
-    attributes(temp) <- list("metric" = "ROCSS")
     data[["ROCSS"]] <- temp
   }
-  
   return(data)
 }
