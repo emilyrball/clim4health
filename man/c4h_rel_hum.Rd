@@ -16,7 +16,7 @@ Celsius.}
 an s2dv_cube object with the relative humidity as a percentage.
 }
 \description{
-c4h_rel_hum
+Calculate relative humidity from temperature and dew point temperature.
 }
 \examples{
 # TBD
