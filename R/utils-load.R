@@ -809,7 +809,10 @@
                                            nYSize = lat_size),
                            curvilinear = FALSE)
 
-    #x <- x[var, drop = FALSE]
+    attr_names <- names(x)
+    # select only the requested variable
+    attr_var <- attr_names[grep(var, attr_names)]
+    x <- x[attr_var, drop = FALSE]
 
     lon_vals <- stars::st_get_dimension_values(x, "x")
     lat_vals <- stars::st_get_dimension_values(x, "y")
