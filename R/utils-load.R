@@ -809,7 +809,7 @@
                                            nYSize = lat_size),
                            curvilinear = FALSE)
 
-    x <- x[var, drop = FALSE]
+    #x <- x[var, drop = FALSE]
 
     lon_vals <- stars::st_get_dimension_values(x, "x")
     lat_vals <- stars::st_get_dimension_values(x, "y")
