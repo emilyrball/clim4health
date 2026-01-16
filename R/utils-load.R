@@ -809,15 +809,21 @@
                                            nYSize = lat_size),
                            curvilinear = FALSE)
 
-    #x <- x[var, drop = FALSE]
+    # select only the requested variable
+    attr_names <- names(x)
+    if (length(attr_names) == 1) {
+      attr_var <- attr_names
+    } else {
+      attr_var <- attr_names[grep(var, attr_names)]
+    }
+    x <- x[attr_var, drop = FALSE]
 
     lon_vals <- stars::st_get_dimension_values(x, "x")
     lat_vals <- stars::st_get_dimension_values(x, "y")
     date_vals <- stars::st_get_dimension_values(x, concat_dim)
     date_vals <- as.POSIXct(date_vals, origin = "1970-01-01", tz = "UTC")
 
-    units <- sapply(x, function(y) attr(y, "units")$numerator[1])
-    names(units) <- NULL
+    units <- .extract_units(x, attr_var)
 
     if (any(year == "all")) {
       year <- unique(lubridate::year(date_vals))
@@ -1525,4 +1531,25 @@
                                     units = units,
                                     source_files = file_list))
   data
+}
+
+#' .extract_units
+#'
+#' Extract the units of a variable from a stars object
+#'
+#' @param x stars object
+#' @param attr_var a string indicating the variable name
+#' 
+#' @returns the s2dv_cube object
+#' @noRd
+.extract_units <- function(x, attr_var) {
+  numerator <- units(x[[attr_var]])$numerator
+  denominator <- units(x[[attr_var]])$denominator
+
+  if (length(denominator) > 0) {
+    units_str <- paste0(numerator, "/", denominator)
+  } else {
+    units_str <- numerator
+  }
+  return(units_str)
 }
