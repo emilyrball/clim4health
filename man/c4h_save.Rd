@@ -13,7 +13,7 @@ terra, data.frame or sf object.}
 \item{format}{A string indicating the format of the object you want to save.
 Options are: "s2dv", "terra", "csv" or "polygons"}
 
-\item{path}{A string indicating the path where you want to save the file.}
+\item{path}{A string indicating the path to save the file.}
 }
 \value{
 None
@@ -26,5 +26,5 @@ in different formats: s2dv, terra, csv, polygons.
 fcst_path <- system.file("extdata", "forecast", package = "clim4health")
 fcst <- c4h_load(fcst_path, variable = "t2m", ext = 'nc')
 
-save_s2dv(fcst, "s2dv", "out.nc")
+c4h_save(fcst, "s2dv", "out.nc")
 }

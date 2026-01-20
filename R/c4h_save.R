@@ -7,7 +7,7 @@
 #' terra, data.frame or sf object.
 #' @param format A string indicating the format of the object you want to save.
 #' Options are: "s2dv", "terra", "csv" or "polygons"
-#' @param path A string indicating the path where you want to save the file.
+#' @param path A string indicating the path to save the file.
 #'
 #' @returns None
 #' @export
@@ -16,7 +16,7 @@
 #' fcst_path <- system.file("extdata", "forecast", package = "clim4health")
 #' fcst <- c4h_load(fcst_path, variable = "t2m", ext = 'nc')
 #'
-#' save_s2dv(fcst, "s2dv", "out.nc")
+#' c4h_save(fcst, "s2dv", "out.nc")
 c4h_save <- function(data, format, path) {
   if (format == "s2dv") {
     .save_s2dv(data, path)
@@ -24,7 +24,7 @@ c4h_save <- function(data, format, path) {
     .save_terra(data, path)
   } else if (format == "csv") {
     .save_csv(data, path)
-  }else if (format == "polygons"){
+  } else if (format == "polygons") {
     .save_polygons(data, path)
   }
 }
@@ -34,7 +34,7 @@ c4h_save <- function(data, format, path) {
 #' Save an object of class s2dv_cube to a NetCDF file.
 #'
 #' @param cube The s2dv_cube object to be saved.
-#' @param path A string indicating the path where to save the NetCDF file.
+#' @param path A string indicating the path to save the NetCDF file.
 #'
 #' @returns None
 #' @noRd
@@ -42,6 +42,7 @@ c4h_save <- function(data, format, path) {
 
   # Detect longitude / latitude dims
   ### REVIEW - should not require latitude and longitude dimensions?
+  ### REVIEW - multivariate data
   lon <- as.vector(cube$coords$longitude)
   lat <- as.vector(cube$coords$latitude)
 
@@ -75,7 +76,7 @@ c4h_save <- function(data, format, path) {
 #' Save terra::SpatRaster (driver inferred by file extension, e.g., .tif)
 #'
 #' @param r The SpatRaster object to be saved.
-#' @param path A string indicating the path where to save the NetCDF file.
+#' @param path A string indicating the path to save the NetCDF file.
 #' @param overwrite Logical indicating whether to overwrite existing files.
 #' The default is TRUE.
 #'
@@ -92,7 +93,7 @@ c4h_save <- function(data, format, path) {
 #' Save a data.frame to CSV
 #'
 #' @param df The data.frame to be saved.
-#' @param path A string indicating the path where to save the CSV file.
+#' @param path A string indicating the path to save the CSV file.
 #' @returns None
 #' @noRd
 .save_csv <- function(df, path) {
@@ -105,7 +106,7 @@ c4h_save <- function(data, format, path) {
 #' Save polygons (sf) to GeoPackage (.gpkg) or other formats (by extension)
 #' using sf::st_write
 #' @param sf_obj The sf object to be saved.
-#' @param path A string indicating the path where to save the file.
+#' @param path A string indicating the path to save the file.
 #' @param layer A string indicating the layer name within the file. The default
 #' is "data".
 #' @returns None
