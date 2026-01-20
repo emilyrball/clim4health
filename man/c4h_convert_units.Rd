@@ -4,18 +4,21 @@
 \alias{c4h_convert_units}
 \title{c4h_convert_units}
 \usage{
-c4h_convert_units(data, to, variable = NULL, from = NULL)
+c4h_convert_units(data, to = NULL, variable = NULL, from = NULL)
 }
 \arguments{
 \item{data}{an s2dv_cube object containing the data to be converted.}
 
-\item{to}{a character string specifying the target units to convert to.}
+\item{to}{a character string specifying the target units to convert to. If
+NULL, no conversion will be performed and the current units will be
+displayed. The default is NULL.}
 
 \item{variable}{a character string specifying the variable to convert.
-If NULL, the first variable will be used.}
+If NULL, the first variable will be used. The default is NULL.}
 
 \item{from}{a character string specifying the current units of the variable.
-If NULL, the current units will be inferred from the data.}
+If NULL, the current units will be inferred from the data. The default is
+NULL.}
 }
 \value{
 an s2dv_cube object with the converted units.
@@ -24,5 +27,23 @@ an s2dv_cube object with the converted units.
 c4h_convert_units
 }
 \examples{
-# TBD
+# Forecast data included in the package
+fcst_path <- system.file("extdata/forecast/", package = "clim4health")
+fcst_path <- paste0(fcst_path, "/")
+
+# Load the forecast data
+fcst <- c4h_load(fcst_path,
+                 variable = "t2m",
+                 year = 2025,
+                 month = 1,
+                 ext = 'nc')
+
+# Display the current units
+c4h_convert_units(fcst, variable = "t2m")
+
+# Convert from Kelvin to Celsius
+fcst_celsius <- c4h_convert_units(fcst,
+                                  to = "celsius",
+                                  variable = "t2m",
+                                  from = "K")
 }

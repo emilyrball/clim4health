@@ -42,7 +42,7 @@ Imports:
     stars,
     terra,
     data.table,
-    measurements,
+    udunits2,
     CSDownscale,
     ncdf4
 Suggests: 
