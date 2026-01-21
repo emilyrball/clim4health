@@ -125,7 +125,8 @@
       vars$col <- which(headers %in% variable)
     } else {
       # if variable name does not exist
-      stop(paste0("Variable name ", variable, " not found."))
+      stop(paste0("Variable name ", variable, " not found. Possible names are:",
+                  " ", paste(headers, collapse = ", ")))
     }
   } else {
     # if variable is not specified, print the list of possible columns
