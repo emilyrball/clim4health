@@ -110,6 +110,10 @@ c4h_plot <- function(
     stop("Only one 'var' is possible.")
   } else if (!is.null(var)) {
     .subset_array_named(plot_data, var = var)
+
+    data$attrs$Variable$varName <- data$attrs$Variable$varName[var]
+    data$attrs$Variable$metadata$units <-
+      data$attrs$Variable$metadata$units[var]
   }
 
   # Requirements: sdate

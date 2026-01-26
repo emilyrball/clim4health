@@ -11,8 +11,8 @@ c4h_collapse(data, dim, fun = "mean", na.rm = TRUE)
 
 \item{dim}{Dimension to collapse. Options include 'ensemble' and 'time'.}
 
-\item{fun}{Function to perform the aggregation, defaults to 'mean'. Other options
-include 'median', 'min' and 'max'.}
+\item{fun}{Function to perform the aggregation, defaults to 'mean'. Other
+options include 'median', 'min' and 'max'.}
 
 \item{na.rm}{Logical, indicating whether NA values should be ignored when
 applying the collapsing function. Defaults to TRUE.}
@@ -21,13 +21,19 @@ applying the collapsing function. Defaults to TRUE.}
 The collapsed s2dv_cube.
 }
 \description{
-\code{c4h_collapse()} works differently depending on the dimension being collapsed:
+\code{c4h_collapse()} works differently depending on the dimension being
+collapsed:
 \itemize{
-\item Use dim = "ensemble" to compute a summary statistic across ensemble members in
-forecast and hindcast datasets.
-\item Use dim = "time" to compute climatologies with observational data (i.e. the
+\item Use dim = "ensemble" to compute a summary statistic across ensemble members
+in forecast and hindcast datasets.
+\item Use dim = "time" to compute a time mean with observational data (i.e. the
 length of the 'sdate' dimension must be one). In this case the first "time"
-of the dataset is assigned as the new s2dv time coordinate.
+of the dataset is assigned as the new s2dv time coordinate. To compute time
+aggregations when 'sdate' has length greater than one, use the function
+\code{c4h_time()} instead.
+\item Use dim = "sdate" to compute a climatology, if each 'sdate' corresponds to
+a different year. In this case the first "sdate" of the dataset is assigned
+as the new s2dv sdate coordinate.
 }
 }
 \examples{
@@ -40,15 +46,25 @@ fcst <- c4h_load(system.file("extdata", "forecast", package = "clim4health"),
 fcst$dims
 
 # Ensemble median of a forecast
-fcst_coll <- c4h_collapse(fcst, dim = "ensemble", fun = "median") 
+fcst_coll <- c4h_collapse(fcst, dim = "ensemble", fun = "median")
 fcst_coll$dims
 
-# Load an observational dataset
+# Load an observational time-series dataset
 stations_path <- system.file("extdata", "stations", package = "clim4health")
 stations <- c4h_load(stations_path, var = "temp_mean", ext = "csv")
 stations$dims
 
-# Compute climatologies (average temp conditions) 
-stations_coll <- c4h_collapse(stations, dim = "time") 
+# Compute time-mean (average temp conditions)
+stations_coll <- c4h_collapse(stations, dim = "time")
 stations_coll$dims
+
+# Load an observational dataset aligned to a hindcast
+obs_path <- system.file("extdata", "reanalysis", package = "clim4health")
+obs <- c4h_load(obs_path, var = "t2m", ext = "nc",
+                year = 2010:2012, month = 1, leadtime_month = 1:3)
+obs$dims
+
+# Compute climatology (average over years)
+obs_coll <- c4h_collapse(obs, dim = "sdate")
+obs_coll$dims
 }

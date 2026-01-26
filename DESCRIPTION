@@ -39,13 +39,12 @@ Imports:
     lubridate,
     s2dv,
     sf,
-    startR, 
     stars,
     terra,
     data.table,
-    measurements,
-    ncdf4,
-    ggpattern
+    udunits2,
+    CSDownscale,
+    ncdf4
 Suggests: 
     testthat (>= 3.0.0),
     spData,
