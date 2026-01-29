@@ -408,6 +408,11 @@ c4h_plot <- function(
           ggplot2::aes(colour = .data[[varname]]),
           ...
         ) +
+        ggplot2::coord_sf(
+          xlim = sf::st_bbox(plot_data)[c("xmin", "xmax")],
+          ylim = sf::st_bbox(plot_data)[c("ymin", "ymax")],
+          expand = TRUE
+        ) +
         ggplot2::scale_x_continuous(labels = function(x) {
           paste0(ifelse(x < 0, "-", ""), abs(x))
         }) +
