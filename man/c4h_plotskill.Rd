@@ -76,84 +76,88 @@ For MSE and RMSE,please use the function \code{c4h_plot}.
 # DISCLAIMER: The purpose of these examples is to show the functionality
 # of the different functions. To perform postprocessing, a much larger time
 # series is required.
-
-# Hindcast and reanalysis data loading
-hcst <- c4h_load(system.file("extdata", "hindcast", package = "clim4health"),
-                 variable = "t2m",
-                 year = 2010:2012,
-                 month = 1,
-                 leadtime_month = 1:3,
-                 ext = "nc")
+# Load data
+hcst <- c4h_load(
+  system.file("extdata", "hindcast", package = "clim4health"),
+  variable = "t2m",
+  year = 2010:2012,
+  month = 1,
+  leadtime_month = 1:3,
+  ext = "nc"
+)
 lats <- hcst$coords$latitude
 lons <- hcst$coords$longitude
-obs <- c4h_load(system.file("extdata", "reanalysis",
-                package = "clim4health"),
-                variable = "t2m",
-                year = 2010:2012,
-                month = 1,
-                leadtime_month = 1:3,
-                bbox = c(max(lats), min(lons),
-                         min(lats), max(lons)),
-                ext = "nc")
+obs <- c4h_load(
+  system.file("extdata", "reanalysis", package = "clim4health"),
+  variable = "t2m",
+  year = 2010:2012,
+  month = 1,
+  leadtime_month = 1:3,
+  bbox = c(max(lats), min(lons), min(lats), max(lons)),
+  ext = "nc"
+)
 
-# # Gridded data - downscale and postprocess
-# dwn <- c4h_downscale("Interpolation", exp = hcst, obs = obs,
-#                      method_remap = "bilinear",
-#                      print_sys_msg = TRUE,
-#                      target_grid = system.file("extdata",
-#                                                "reanalysis/t2m_201001.nc",
-#                                                package = "clim4health"))
-# hcst_dwn <- dwn$exp
-# skill_grid <- c4h_postprocess(exp = hcst_dwn,
-#                               obs = obs,
-#                               metrics = c("CRPSS"))
-# c4h_plotskill(skill_grid$CRPSS$crpss)
+# Example with gridded data
+dwn <- c4h_downscale(
+  "Interpolation",
+  exp = hcst,
+  obs = obs,
+  method_remap = "bilinear",
+  target_grid = system.file(
+    "extdata",
+    "reanalysis/t2m_201001.nc",
+    package = "clim4health"
+  )
+)
+hcst_dwn <- dwn$exp
+skill_grid <- c4h_postprocess(exp = hcst_dwn, obs = obs, metrics = "BSS")
+c4h_plotskill(skill_grid$BSS10$rpss, skill_grid$BSS10$sign)
+# Make some artificial significance for testing
+skill_grid$BSS10$sign$data[,,,,, 3:8, 15:25] <- TRUE
+c4h_plotskill(skill = skill_grid$BSS10$rpss, sign = skill_grid$BSS10$sign)
 
-# Polygon data - aggregate and postprocess
-shp_path <- system.file("extdata", "areas", "munip_vallecauca.gpkg",
-                        package = "clim4health")
-obs_poly <- c4h_space(obs,
-                      areas = shp_path,
+# Example with polygon data
+areas <- sf::read_sf(system.file("extdata", "areas", "munip_vallecauca.gpkg",
+                                 package = "clim4health"))
+obs_area <- c4h_space(obs,
+                      areas = areas,
                       fun = "mean",
                       areas_id = "munip_code")
-hcst_poly <- c4h_space(hcst,
-                       areas = shp_path,
+hcst_area <- c4h_space(hcst,
+                       areas = areas,
                        fun = "mean",
                        areas_id = "munip_code")
-skill_poly <- c4h_postprocess(exp = hcst_poly,
-                              obs = obs_poly,
-                              metrics = c("BSS", "CRPSS"),
+skill_area <- c4h_postprocess(exp = hcst_area,
+                              obs = obs_area,
+                              metrics = "CRPSS",
                               brier_thresholds = c(0.1, 0.9))
-c4h_plotskill(skill_poly$CRPSS$crpss)
-
+c4h_plotskill(skill_area$CRPSS$crpss, skill_area$CRPSS$sign)
 # Make some artificial significance for testing
-# skill$CRPSS$sign$data[1, 1, 1, 1:3, 1, sample(1:42, 10)] <- TRUE
-# c4h_plotskill(skill = skill$CRPSS$crpss,
-#               sign = skill$CRPSS$sign)
+skill_area$CRPSS$sign$data[1, 1, 1, 1:3, 1, sample(1:42, 10)] <- TRUE
+c4h_plotskill(skill = skill_area$CRPSS$crpss, sign = skill_area$CRPSS$sign)
 
-# # Station data - aggregate, downscale and postprocess
-# point_locs <- clim4health::c4h_load(system.file("extdata",
-#                                                "stations",
-#                                                package = "clim4health"),
-#                                     ext = "csv",
-#                                     year = 2010:2012,
-#                                     month = 1,
-#                                     leadtime_month = 1:3,
-#                                     variable = "temp_mean")
-# points <- list(latitude = point_locs$attrs$location$latitude,
-#                longitude = point_locs$attrs$location$longitude)
-# point_locs <- c4h_time(point_locs,
-#                        time_aggregation = "monthly",
-#                        dim_aggregation = "sdate",
-#                        fun = "mean")
-# 
-# dwn_point <- c4h_downscale("Interpolation", exp = hcst,
-#                      points = points, method_point_interp = "bilinear")
-# hcst_point <- dwn_point$exp
-# skill_point <- c4h_postprocess(exp = hcst_point,
-#                                obs = point_locs,
-#                                metrics = c("RMSE"))
-# c4h_plotskill(skill = skill_point$CRPSS$crpss)
+# Example with station data
+point_locs <- clim4health::c4h_load(system.file("extdata",
+                                               "stations",
+                                               package = "clim4health"),
+                                    ext = "csv",
+                                    year = 2010:2012,
+                                    month = 1,
+                                    leadtime_month = 1:3,
+                                    variable = "temp_mean")
+points <- list(latitude = point_locs$attrs$location$latitude,
+               longitude = point_locs$attrs$location$longitude)
+point_locs <- c4h_time(point_locs,
+                       time_aggregation = "monthly",
+                       dim_aggregation = "sdate",
+                       fun = "mean")
+dwn <- c4h_downscale("Interpolation", exp = hcst,
+                     points = points, method_point_interp = "bilinear")
+hcst_dwn <- dwn$exp
+skill_point <- c4h_postprocess(exp = hcst_dwn,
+                               obs = point_locs,
+                               metrics = "BSS")
+c4h_plotskill(skill = skill_point$BSS10$rpss, boundaries = areas)
 }
 \seealso{
 \code{\link[=c4h_postprocess]{c4h_postprocess()}},  \code{\link[=c4h_plot]{c4h_plot()}}

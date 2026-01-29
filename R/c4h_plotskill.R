@@ -40,87 +40,90 @@
 #' # DISCLAIMER: The purpose of these examples is to show the functionality
 #' # of the different functions. To perform postprocessing, a much larger time
 #' # series is required.
-#'
-#' # Hindcast and reanalysis data loading
-#' hcst <- c4h_load(system.file("extdata", "hindcast", package = "clim4health"),
-#'                  variable = "t2m",
-#'                  year = 2010:2012,
-#'                  month = 1,
-#'                  leadtime_month = 1:3,
-#'                  ext = "nc")
+#' # Load data
+#' hcst <- c4h_load(
+#'   system.file("extdata", "hindcast", package = "clim4health"),
+#'   variable = "t2m",
+#'   year = 2010:2012,
+#'   month = 1,
+#'   leadtime_month = 1:3,
+#'   ext = "nc"
+#' )
 #' lats <- hcst$coords$latitude
 #' lons <- hcst$coords$longitude
-#' obs <- c4h_load(system.file("extdata", "reanalysis",
-#'                 package = "clim4health"),
-#'                 variable = "t2m",
-#'                 year = 2010:2012,
-#'                 month = 1,
-#'                 leadtime_month = 1:3,
-#'                 bbox = c(max(lats), min(lons),
-#'                          min(lats), max(lons)),
-#'                 ext = "nc")
+#' obs <- c4h_load(
+#'   system.file("extdata", "reanalysis", package = "clim4health"),
+#'   variable = "t2m",
+#'   year = 2010:2012,
+#'   month = 1,
+#'   leadtime_month = 1:3,
+#'   bbox = c(max(lats), min(lons), min(lats), max(lons)),
+#'   ext = "nc"
+#' )
 #'
-#' # # Gridded data - downscale and postprocess
-#' # dwn <- c4h_downscale("Interpolation", exp = hcst, obs = obs,
-#' #                      method_remap = "bilinear",
-#' #                      print_sys_msg = TRUE,
-#' #                      target_grid = system.file("extdata",
-#' #                                                "reanalysis/t2m_201001.nc",
-#' #                                                package = "clim4health"))
-#' # hcst_dwn <- dwn$exp
-#' # skill_grid <- c4h_postprocess(exp = hcst_dwn,
-#' #                               obs = obs,
-#' #                               metrics = c("CRPSS"))
-#' # c4h_plotskill(skill_grid$CRPSS$crpss)
+#' # Example with gridded data
+#' dwn <- c4h_downscale(
+#'   "Interpolation",
+#'   exp = hcst,
+#'   obs = obs,
+#'   method_remap = "bilinear",
+#'   target_grid = system.file(
+#'     "extdata",
+#'     "reanalysis/t2m_201001.nc",
+#'     package = "clim4health"
+#'   )
+#' )
+#' hcst_dwn <- dwn$exp
+#' skill_grid <- c4h_postprocess(exp = hcst_dwn, obs = obs, metrics = "BSS")
+#' c4h_plotskill(skill_grid$BSS10$rpss, skill_grid$BSS10$sign)
+#' # Make some artificial significance for testing
+#' skill_grid$BSS10$sign$data[,,,,, 3:8, 15:25] <- TRUE
+#' c4h_plotskill(skill = skill_grid$BSS10$rpss, sign = skill_grid$BSS10$sign)
 #'
-#' # Polygon data - aggregate and postprocess
-#' shp_path <- system.file("extdata", "areas", "munip_vallecauca.gpkg",
-#'                         package = "clim4health")
-#' obs_poly <- c4h_space(obs,
-#'                       areas = shp_path,
+#' # Example with polygon data
+#' areas <- sf::read_sf(system.file("extdata", "areas", "munip_vallecauca.gpkg",
+#'                                  package = "clim4health"))
+#' obs_area <- c4h_space(obs,
+#'                       areas = areas,
 #'                       fun = "mean",
 #'                       areas_id = "munip_code")
-#' hcst_poly <- c4h_space(hcst,
-#'                        areas = shp_path,
+#' hcst_area <- c4h_space(hcst,
+#'                        areas = areas,
 #'                        fun = "mean",
 #'                        areas_id = "munip_code")
-#' skill_poly <- c4h_postprocess(exp = hcst_poly,
-#'                               obs = obs_poly,
-#'                               metrics = c("BSS", "CRPSS"),
+#' skill_area <- c4h_postprocess(exp = hcst_area,
+#'                               obs = obs_area,
+#'                               metrics = "CRPSS",
 #'                               brier_thresholds = c(0.1, 0.9))
-#' c4h_plotskill(skill_poly$CRPSS$crpss)
-#'
+#' c4h_plotskill(skill_area$CRPSS$crpss, skill_area$CRPSS$sign)
 #' # Make some artificial significance for testing
-#' # skill$CRPSS$sign$data[1, 1, 1, 1:3, 1, sample(1:42, 10)] <- TRUE
-#' # c4h_plotskill(skill = skill$CRPSS$crpss,
-#' #               sign = skill$CRPSS$sign)
+#' skill_area$CRPSS$sign$data[1, 1, 1, 1:3, 1, sample(1:42, 10)] <- TRUE
+#' c4h_plotskill(skill = skill_area$CRPSS$crpss, sign = skill_area$CRPSS$sign)
 #'
-#' # # Station data - aggregate, downscale and postprocess
-#' # point_locs <- clim4health::c4h_load(system.file("extdata",
-#' #                                                "stations",
-#' #                                                package = "clim4health"),
-#' #                                     ext = "csv",
-#' #                                     year = 2010:2012,
-#' #                                     month = 1,
-#' #                                     leadtime_month = 1:3,
-#' #                                     variable = "temp_mean")
-#' # points <- list(latitude = point_locs$attrs$location$latitude,
-#' #                longitude = point_locs$attrs$location$longitude)
-#' # point_locs <- c4h_time(point_locs,
-#' #                        time_aggregation = "monthly",
-#' #                        dim_aggregation = "sdate",
-#' #                        fun = "mean")
-#' # 
-#' # dwn_point <- c4h_downscale("Interpolation", exp = hcst,
-#' #                      points = points, method_point_interp = "bilinear")
-#' # hcst_point <- dwn_point$exp
-#' # skill_point <- c4h_postprocess(exp = hcst_point,
-#' #                                obs = point_locs,
-#' #                                metrics = c("RMSE"))
-#' # c4h_plotskill(skill = skill_point$CRPSS$crpss)
-
-# skill <- skill$CRPSS$crpss
-# sign = NULL
+#' # Example with station data
+#' point_locs <- clim4health::c4h_load(system.file("extdata",
+#'                                                "stations",
+#'                                                package = "clim4health"),
+#'                                     ext = "csv",
+#'                                     year = 2010:2012,
+#'                                     month = 1,
+#'                                     leadtime_month = 1:3,
+#'                                     variable = "temp_mean")
+#' points <- list(latitude = point_locs$attrs$location$latitude,
+#'                longitude = point_locs$attrs$location$longitude)
+#' point_locs <- c4h_time(point_locs,
+#'                        time_aggregation = "monthly",
+#'                        dim_aggregation = "sdate",
+#'                        fun = "mean")
+#' dwn <- c4h_downscale("Interpolation", exp = hcst,
+#'                      points = points, method_point_interp = "bilinear")
+#' hcst_dwn <- dwn$exp
+#' skill_point <- c4h_postprocess(exp = hcst_dwn,
+#'                                obs = point_locs,
+#'                                metrics = "BSS")
+#' c4h_plotskill(skill = skill_point$BSS10$rpss, boundaries = areas)
+# skill <- skill_area$CRPSS$crpss
+# sign <- skill_area$CRPSS$sign
 # sdate = NULL
 # time = NULL
 # ensemble = NULL
@@ -162,7 +165,7 @@ c4h_plotskill <- function(
   if (any(plot_skill > 1, na.rm = TRUE)) {
     stop(
       "'skill' data must be lower than 1. Please use 'c4h_plot'",
-      " for other metrics."
+      " for other metrics such as RMSE and MSE."
     )
   }
 
@@ -212,7 +215,9 @@ c4h_plotskill <- function(
   if (!is.null(ensemble) && !isTRUE(ensemble) && !is.numeric(ensemble)) {
     stop("'ensemble' must be either TRUE, NULL, or of type numeric.")
   } else if (
-    !is.null(ensemble) && !isTRUE(ensemble) && any(ensemble > dims_skill["ensemble"])
+    !is.null(ensemble) &&
+      !isTRUE(ensemble) &&
+      any(ensemble > dims_skill["ensemble"])
   ) {
     stop(paste0(
       "A wrong 'ensemble' has been selected (possible range: 1 - ",
@@ -259,7 +264,7 @@ c4h_plotskill <- function(
     ))
   }
 
-  # 2. Data preparation ----
+  # 2. Data preprocessing ----
 
   # Identify reanalysis/stations/areas and transform 'time' dimension if needed
   if (dims_skill["sdate"] == 1) {
@@ -281,7 +286,9 @@ c4h_plotskill <- function(
   # Select 'time' if needed
   if (all(time %in% 1:dims_skill["time"])) {
     plot_skill <- .subset_array_named(plot_skill, time = time)
-    if (!is.null(sign)) plot_sign <- .subset_array_named(plot_sign, time = time)
+    if (!is.null(sign)) {
+      plot_sign <- .subset_array_named(plot_sign, time = time)
+    }
   }
 
   # Aggregate ensemble members if needed
@@ -298,7 +305,6 @@ c4h_plotskill <- function(
       perm = match(names(dim(plot_skill)), names(dims_skill))
     )
     ensemble <- 1
-
     if (!is.null(sign)) {
       plot_sign <- apply(plot_sign, MARGIN = keep_margins, FUN = ensemble_fun)
       dim(plot_sign) <- c(dim(plot_sign), "ensemble" = 1)
@@ -330,13 +336,12 @@ c4h_plotskill <- function(
     }
   }
 
-  # Get varname - Fix in postprocess?
+  # Get varname
   varname <- skill$attrs$Variable$varName
 
   # 3. Conversion to stars ----
   if ("longitude" %in% names(dims_skill)) {
-    # Gridded data
-
+    # Gridded data ----
     spatial_dims <- c(
       which(names(dim(plot_skill)) == "longitude"),
       which(names(dim(plot_skill)) == "latitude")
@@ -375,6 +380,7 @@ c4h_plotskill <- function(
     sf::st_crs(plot_skill) <- 4326
 
     if (!is.null(sign)) {
+      plot_sign <- ifelse(is.na(plot_sign), FALSE, plot_sign)
       plot_sign <- aperm(
         plot_sign,
         c(spatial_dims, setdiff(seq_along(dims_skill), spatial_dims))
@@ -392,7 +398,8 @@ c4h_plotskill <- function(
       sf::sf_use_s2(FALSE)
     }
   } else if ("location" %in% names(dims_skill)) {
-    # Point data
+    # Point data ----
+    spatial_dims <- which(names(dim(plot_skill)) == "location")
 
     lon <- skill$attrs$location$longitude
     lat <- skill$attrs$location$latitude
@@ -413,11 +420,17 @@ c4h_plotskill <- function(
     )
     names(plot_skill) <- varname
     if (!is.null(sign)) {
+      plot_sign <- ifelse(is.na(plot_sign), FALSE, plot_sign)
+      plot_sign <- aperm(
+        plot_sign,
+        c(spatial_dims, setdiff(seq_along(dims_skill), spatial_dims))
+      )
       plot_skill[["sign"]] <- plot_sign
     }
     plot_skill <- sf::st_as_sf(plot_skill, long = TRUE)
   } else if ("area" %in% names(dims_skill)) {
-    # Polygon data
+    # Polygon data ----
+    spatial_dims <- which(names(dim(plot_skill)) == "area")
 
     plot_skill <- stars::st_as_stars(
       plot_skill,
@@ -432,6 +445,11 @@ c4h_plotskill <- function(
     )
     names(plot_skill) <- varname
     if (!is.null(sign)) {
+      plot_sign <- ifelse(is.na(plot_sign), FALSE, plot_sign)
+      plot_sign <- aperm(
+        plot_sign,
+        c(spatial_dims, setdiff(seq_along(dims_skill), spatial_dims))
+      )
       plot_skill[["sign"]] <- plot_sign
     }
     plot_skill <- sf::st_as_sf(plot_skill, long = TRUE)
@@ -452,17 +470,62 @@ c4h_plotskill <- function(
 
   # Base plot
   if ("longitude" %in% names(dims_skill)) {
-    # Gridded data
+    # Gridded data ----
     p <- ggplot2::ggplot() +
-      stars::geom_stars(data = plot_skill, ...) +
+      stars::geom_stars(data = plot_skill, show.legend = TRUE, ...) +
       ggplot2::coord_equal(expand = FALSE)
 
     # Skill hatching
     if (!is.null(sign)) {
-      stop("Significance not yet implemented for gridded data.")
+      if (sum(plot_skill$sign, na.rm = TRUE) == 0) {
+        message("No areas have a significant skill score.")
+        sign <- NULL
+      } else {
+        # Polygon hatching approach
+        skill_polys <- sf::st_as_sf(plot_skill[2, drop = TRUE], long = TRUE)
+        skill_polys <- skill_polys[skill_polys$sign, ]
+        skill_polys <- dplyr::group_by(
+          skill_polys,
+          dplyr::across(dplyr::all_of(setdiff(
+            names(skill_polys),
+            c("sign", "geometry")
+          )))
+        ) |>
+          dplyr::summarise(
+            geometry = sf::st_union(.data$geometry),
+            .groups = "drop"
+          )
+
+        suppressMessages({
+          p <- p +
+            ggpattern::geom_sf_pattern(
+              data = skill_polys,
+              ggplot2::aes(pattern = "Significant"),
+              pattern_fill = "black",
+              pattern_density = 0.05,
+              pattern_alpha = 0.6,
+              lwd = 0,
+              fill = NA
+            ) +
+            ggpattern::scale_pattern_manual(
+              name = "",
+              values = c("Significant" = "stripe")
+            ) +
+            ggplot2::guides(
+              fill = ggplot2::guide_legend(order = 1),
+              pattern = ggplot2::guide_legend(order = 2)
+            ) +
+            ggplot2::scale_x_continuous(labels = function(x) {
+              paste0(ifelse(x < 0, "-", ""), abs(x))
+            }) +
+            ggplot2::scale_y_continuous(labels = function(y) {
+              paste0(ifelse(y < 0, "-", ""), abs(y))
+            })
+        })
+      }
     }
   } else if ("location" %in% names(dims_skill)) {
-    # Point data
+    # Point data ----
     if (!is.null(boundaries)) {
       p <- ggplot2::ggplot() +
         ggplot2::geom_sf(
@@ -474,8 +537,14 @@ c4h_plotskill <- function(
         ) +
         ggplot2::geom_sf(
           data = plot_skill,
+          show.legend = TRUE,
           ggplot2::aes(colour = .data[[varname]]),
           ...
+        ) +
+        ggplot2::coord_sf(
+          xlim = sf::st_bbox(plot_skill)[c("xmin", "xmax")],
+          ylim = sf::st_bbox(plot_skill)[c("ymin", "ymax")],
+          expand = TRUE
         ) +
         ggplot2::scale_x_continuous(labels = function(x) {
           paste0(ifelse(x < 0, "-", ""), abs(x))
@@ -503,7 +572,7 @@ c4h_plotskill <- function(
         })
     }
   } else if ("area" %in% names(dims_skill)) {
-    # Polygon data
+    # Polygon data ----
     if (!is.null(boundaries)) {
       p <- ggplot2::ggplot() +
         ggplot2::geom_sf(
@@ -511,7 +580,8 @@ c4h_plotskill <- function(
           alpha = 0,
           col = "grey10",
           linewidth = 0.1,
-          inherit.aes = FALSE
+          inherit.aes = FALSE,
+          show.legend = TRUE
         ) +
         ggplot2::geom_sf(
           data = plot_skill,
@@ -549,22 +619,26 @@ c4h_plotskill <- function(
     if (!is.null(sign)) {
       if (sum(plot_skill$sign) == 0) {
         message("No areas have a significant skill score.")
+        sign <- NULL
+      } else {
+        p <- p +
+          ggpattern::geom_sf_pattern(
+            data = plot_skill[plot_skill$sign, ],
+            ggplot2::aes(pattern = "Significant"),
+            pattern_fill = "black",
+            pattern_density = 0.05,
+            pattern_alpha = 0.6,
+            fill = NA
+          ) +
+          ggpattern::scale_pattern_manual(
+            name = "",
+            values = c("Significant" = "stripe")
+          ) +
+          ggplot2::guides(
+            fill = ggplot2::guide_legend(order = 1),
+            # pattern = ggplot2::guide_legend(order = 2)
+          )
       }
-      p <- p +
-        ggpattern::geom_sf_pattern(
-          data = plot_skill[plot_skill$sign, ],
-          ggplot2::aes(pattern = "Significant"),
-          pattern_alpha = 0.8,
-          fill = NA
-        ) +
-        ggpattern::scale_pattern_manual(
-          name = "",
-          values = c("Significant" = "stripe")
-        ) +
-        ggplot2::guides(
-          fill = ggplot2::guide_legend(order = 1),
-          pattern = ggplot2::guide_legend(order = 2)
-        )
     }
   }
 
@@ -578,7 +652,6 @@ c4h_plotskill <- function(
       )
   } else if (!is.null(f1) && !is.null(f2)) {
     # Grid
-
     if (!isTRUE(coordgrid)) {
       p <- p +
         ggplot2::facet_grid(
@@ -595,22 +668,35 @@ c4h_plotskill <- function(
     }
   }
 
-  # Palette
-  level_names <- unique(plot_skill[[varname]])
+  # Palette ----
+  level_names <- levels(plot_skill[[varname]])
   level_names <- level_names[!is.na(level_names)]
-  my_palette <- GHRexplore::GHR_palette(palette, length(level_names) - 1)(
+  my_palette <- GHRexplore::GHR_palette(palette)(
     n = length(level_names) - 1
   )
   my_palette <- c(my_palette, noskillcol) # Colour for non-significant
+  names(my_palette) <- level_names
   if ("location" %in% names(dims_skill)) {
     p <- p +
-      ggplot2::scale_colour_manual(values = my_palette, na.value = "grey70")
+      ggplot2::scale_colour_manual(
+        values = my_palette,
+        na.value = "grey70",
+        drop = FALSE
+      )
   } else if ("area" %in% names(dims_skill)) {
     p <- p +
-      ggplot2::scale_fill_manual(values = my_palette, na.value = "grey70")
+      ggplot2::scale_fill_manual(
+        values = my_palette,
+        na.value = "grey70",
+        drop = FALSE
+      )
   } else {
     p <- p +
-      ggplot2::scale_fill_manual(values = my_palette, na.value = "grey70")
+      ggplot2::scale_fill_manual(
+        values = my_palette,
+        na.value = "grey70",
+        drop = FALSE
+      )
   }
 
   # Boundaries on top, only for grid
@@ -693,7 +779,11 @@ c4h_plotskill <- function(
   }
 
   # Fix labels when time is numeric
-  if ((!"sdate" %in% c(f1, f2)) && ("time" %in% c(f1, f2)) && is.numeric(skill$coords$time)) {
+  if (
+    (!"sdate" %in% c(f1, f2)) &&
+      ("time" %in% c(f1, f2)) &&
+      is.numeric(skill$coords$time)
+  ) {
     if ("longitude" %in% names(dims_skill)) {
       subtitle <- paste0(
         "Start date: ",
