@@ -32,12 +32,8 @@ to NULL (all starting dates).}
 \item{time}{Numerical index of the time to be plotted. Defaults to NULL (all
 times).}
 
-\item{ensemble}{Numerical index of the ensemble member to be plotted. If
-set to TRUE, it aggregates all the ensemble members. Defaults to NULL (all
-times).}
-
-\item{ensemble_fun}{Aggregation function used when ensemble = TRUE.
-Defaults to the mean.}
+\item{ensemble}{Numerical index of the ensemble member to be plotted. Defaults
+to NULL (all ensemble members).}
 
 \item{boundaries}{Polygon boundaries to add to the map.  Set to NULL for no
 boundaries (default), otherwise supply a polygon \code{sf} object or set to
@@ -158,6 +154,10 @@ skill_point <- c4h_postprocess(exp = hcst_dwn,
                                obs = point_locs,
                                metrics = "BSS")
 c4h_plotskill(skill = skill_point$BSS10$rpss, boundaries = areas)
+# Make some artificial significance for testing
+skill_point$BSS10$sign$data[1, 1, 1, 1:3, 1, 4:6] <- TRUE
+c4h_plotskill(skill = skill_point$BSS10$rpss, sign = skill_point$BSS10$sign, boundaries = areas)
+
 }
 \seealso{
 \code{\link[=c4h_postprocess]{c4h_postprocess()}},  \code{\link[=c4h_plot]{c4h_plot()}}

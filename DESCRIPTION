@@ -44,7 +44,8 @@ Imports:
     data.table,
     udunits2,
     CSDownscale,
-    ncdf4
+    ncdf4,
+    ggpattern
 Suggests: 
     testthat (>= 3.0.0),
     spData,

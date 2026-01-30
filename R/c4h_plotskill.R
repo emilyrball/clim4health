@@ -11,16 +11,13 @@
 #' to NULL (all starting dates).
 #' @param time Numerical index of the time to be plotted. Defaults to NULL (all
 #' times).
-#' @param ensemble Numerical index of the ensemble member to be plotted. If
-#' set to TRUE, it aggregates all the ensemble members. Defaults to NULL (all
-#' times).
+#' @param ensemble Numerical index of the ensemble member to be plotted. Defaults
+#' to NULL (all ensemble members).
 #' @param boundaries Polygon boundaries to add to the map.  Set to NULL for no
 #' boundaries (default), otherwise supply a polygon `sf` object or set to
 #' "countries" for coarse country boundaries.
 #' @param mask_boundaries If TRUE (default), mask the data to the provided
 #' boundaries.
-#' @param ensemble_fun Aggregation function used when ensemble = TRUE.
-#' Defaults to the mean.
 #' @param title Optional plot title.
 #' @param legend Optional legend title. If NULL (default), it uses the variable
 #' names.
@@ -296,31 +293,8 @@ c4h_plotskill <- function(
     }
   }
 
-  # Aggregate ensemble members if needed
-  if ((dims_skill["ensemble"] > 1) && isTRUE(ensemble)) {
-    message(paste0(
-      "Aggregating ensemble members with the function: ",
-      deparse(substitute(ensemble_fun))
-    ))
-    keep_margins <- which(names(dims_skill) != "ensemble")
-    plot_skill <- apply(plot_skill, MARGIN = keep_margins, FUN = ensemble_fun)
-    dim(plot_skill) <- c(dim(plot_skill), "ensemble" = 1)
-    plot_skill <- aperm(
-      plot_skill,
-      perm = match(names(dim(plot_skill)), names(dims_skill))
-    )
-    ensemble <- 1
-    if (!is.null(sign)) {
-      plot_sign <- apply(plot_sign, MARGIN = keep_margins, FUN = ensemble_fun)
-      dim(plot_sign) <- c(dim(plot_sign), "ensemble" = 1)
-      plot_sign <- aperm(
-        plot_sign,
-        perm = match(names(dim(plot_sign)), names(dims_skill))
-      )
-    }
-
-    # Select ensemble member
-  } else if (all(ensemble %in% 1:dims_skill["ensemble"])) {
+  # Select ensemble member if needed
+  if (all(ensemble %in% 1:dims_skill["ensemble"])) {
     plot_skill <- .subset_array_named(plot_skill, ensemble = ensemble)
     if (!is.null(sign)) {
       plot_sign <- .subset_array_named(plot_sign, ensemble = ensemble)
@@ -524,7 +498,9 @@ c4h_plotskill <- function(
             pattern = ggplot2::guide_legend(
               override.aes = list(
                 fill = "white",
-                pattern_density = 0.2
+                pattern_density = 0.2,
+                pattern_spacing = 0.01,
+                lwd = 0.2
               )
             )
           ) +
@@ -639,8 +615,9 @@ c4h_plotskill <- function(
           pattern = ggplot2::guide_legend(
             override.aes = list(
               fill = "white",
-              pattern_density = 0.3,
-              lwd = 0.5
+              pattern_density = 0.2,
+              pattern_spacing = 0.01,
+              lwd = 0.2
             )
           )
         )

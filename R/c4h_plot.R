@@ -12,7 +12,7 @@
 #' times).
 #' @param ensemble Numerical index of the ensemble member to be plotted. If
 #' set to TRUE, it aggregates all the ensemble members. Defaults to NULL (all
-#' times).
+#' ensemble members).
 #' @param boundaries Polygon boundaries to add to the map.  Set to NULL for no
 #' boundaries (default), otherwise supply a polygon `sf` object or set to
 #' "countries" for coarse country boundaries.
@@ -145,7 +145,11 @@ c4h_plot <- function(
   # Requirements: ensemble
   if (!is.null(ensemble) && !isTRUE(ensemble) && !is.numeric(ensemble)) {
     stop("'ensemble' must be either TRUE, NULL, or of type numeric.")
-  } else if (!is.null(ensemble) && !isTRUE(ensemble) && any(ensemble > dims_data["ensemble"])) {
+  } else if (
+    !is.null(ensemble) &&
+      !isTRUE(ensemble) &&
+      any(ensemble > dims_data["ensemble"])
+  ) {
     stop(paste0(
       "A wrong 'ensemble' has been selected (possible range: 1 - ",
       dims_data["time"],
@@ -671,7 +675,11 @@ c4h_plot <- function(
   }
 
   # Fix labels when time is numeric
-  if ((!"sdate" %in% c(f1, f2)) && ("time" %in% c(f1, f2)) && is.numeric(data$coords$time)) {
+  if (
+    (!"sdate" %in% c(f1, f2)) &&
+      ("time" %in% c(f1, f2)) &&
+      is.numeric(data$coords$time)
+  ) {
     if ("longitude" %in% names(dims_data)) {
       subtitle <- paste0(
         "Start date: ",
