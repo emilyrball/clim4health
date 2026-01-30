@@ -122,21 +122,9 @@
 #' c4h_plotskill(skill = skill_point$BSS10$rpss, boundaries = areas)
 #' # Make some artificial significance for testing
 #' skill_point$BSS10$sign$data[1, 1, 1, 1:3, 1, 4:6] <- TRUE
-#' c4h_plotskill(skill = skill_point$BSS10$rpss, sign = skill_point$BSS10$sign, boundaries = areas)
-#'
-
-# skill <- skill_grid$BSS10$rpss
-# sign <- skill_grid$BSS10$sign
-# sdate = NULL
-# time = NULL
-# ensemble = NULL
-# boundaries = NULL
-# mask_boundaries = FALSE
-# title = NULL
-# legend = NULL
-# palette = "-RdBu"
-# noskillcol = "#D0C1F5"
-# coordgrid = FALSE
+#' c4h_plotskill(skill = skill_point$BSS10$rpss,
+#'               sign = skill_point$BSS10$sign,
+#'               boundaries = areas)
 
 c4h_plotskill <- function(
   skill,

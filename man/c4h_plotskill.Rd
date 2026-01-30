@@ -156,8 +156,9 @@ skill_point <- c4h_postprocess(exp = hcst_dwn,
 c4h_plotskill(skill = skill_point$BSS10$rpss, boundaries = areas)
 # Make some artificial significance for testing
 skill_point$BSS10$sign$data[1, 1, 1, 1:3, 1, 4:6] <- TRUE
-c4h_plotskill(skill = skill_point$BSS10$rpss, sign = skill_point$BSS10$sign, boundaries = areas)
-
+c4h_plotskill(skill = skill_point$BSS10$rpss,
+              sign = skill_point$BSS10$sign,
+              boundaries = areas)
 }
 \seealso{
 \code{\link[=c4h_postprocess]{c4h_postprocess()}},  \code{\link[=c4h_plot]{c4h_plot()}}
