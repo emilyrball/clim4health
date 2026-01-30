@@ -38,7 +38,7 @@ times).}
 
 \item{ensemble}{Numerical index of the ensemble member to be plotted. If
 set to TRUE, it aggregates all the ensemble members. Defaults to NULL (all
-times).}
+ensemble members).}
 
 \item{ensemble_fun}{Aggregation function used when ensemble = TRUE.
 Defaults to the mean.}
