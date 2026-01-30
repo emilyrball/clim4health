@@ -553,7 +553,7 @@ c4h_plot <- function(
     # Centering, continuous
 
     # normalized the selected midpoint on a 0-1 scale
-    my_palette <- GHRexplore::GHR_palette(palette)(n = 25) # Odd number, 13 is the centre
+    my_palette <- GHRexplore::GHR_palette(palette)(n = 25) # 13 is the centre
     data_min <- min(plot_data[[varname]], na.rm = TRUE)
     data_max <- max(plot_data[[varname]], na.rm = TRUE)
 
@@ -630,6 +630,7 @@ c4h_plot <- function(
           linewidth = 0.2
         ),
         panel.grid.minor = ggplot2::element_blank(),
+        panel.grid.major = ggplot2::element_line(linewidth = 0.2),
         axis.ticks = ggplot2::element_line(linewidth = 0.3, color = "grey50"),
         axis.text = ggplot2::element_text(size = 7, color = "grey30"),
         strip.text.y = ggplot2::element_text(margin = ggplot2::margin(b = 0)),

@@ -125,8 +125,8 @@
 #' c4h_plotskill(skill = skill_point$BSS10$rpss, sign = skill_point$BSS10$sign, boundaries = areas)
 #'
 
-# skill <- skill_point$BSS10$rpss
-# sign <- skill_point$BSS10$sign
+# skill <- skill_grid$BSS10$rpss
+# sign <- skill_grid$BSS10$sign
 # sdate = NULL
 # time = NULL
 # ensemble = NULL
@@ -371,9 +371,6 @@ c4h_plotskill <- function(
     if (isTRUE(mask_boundaries) && !is.null(boundaries)) {
       sf::sf_use_s2(FALSE)
       suppressMessages(plot_skill <- plot_skill[bound_sf])
-      if (!is.null(sign)) {
-        suppressMessages(plot_sign <- plot_sign[bound_sf])
-      }
       sf::sf_use_s2(FALSE)
     }
   } else if ("location" %in% names(dims_skill)) {
@@ -476,7 +473,13 @@ c4h_plotskill <- function(
     # Gridded data ----
     p <- ggplot2::ggplot() +
       stars::geom_stars(data = plot_skill, show.legend = TRUE, ...) +
-      ggplot2::coord_equal(expand = FALSE)
+      ggplot2::coord_equal(expand = FALSE) +
+      ggplot2::guides(
+        fill = ggplot2::guide_legend(
+          order = 1,
+          override.aes = list(lwd = 0.1, col = "grey10")
+        )
+      )
 
     # Skill hatching
     if (!is.null(sign)) {
@@ -491,7 +494,7 @@ c4h_plotskill <- function(
         )))
       ) |>
         dplyr::summarise(
-          geometry = sf::st_union(.data$geometry),
+          geometry = suppressMessages((sf::st_union(.data$geometry))),
           .groups = "drop"
         )
 
@@ -502,7 +505,7 @@ c4h_plotskill <- function(
             ggplot2::aes(pattern = "Significant"),
             pattern_fill = "black",
             pattern_density = 0.05,
-            pattern_alpha = 0.6,
+            pattern_alpha = 0.9,
             pattern_spacing = 0.03,
             lwd = 0,
             fill = NA
@@ -512,8 +515,8 @@ c4h_plotskill <- function(
             values = c("Significant" = "stripe")
           ) +
           ggplot2::guides(
-            fill = ggplot2::guide_legend(order = 1),
             pattern = ggplot2::guide_legend(
+              order = 2,
               override.aes = list(
                 fill = "white",
                 pattern_density = 0.2,
@@ -649,7 +652,7 @@ c4h_plotskill <- function(
           ggplot2::aes(pattern = "Significant"),
           pattern_fill = "black",
           pattern_density = 0.05,
-          pattern_alpha = 0.6,
+          pattern_alpha = 0.9,
           pattern_spacing = 0.03,
           lwd = 0,
           fill = NA
@@ -724,7 +727,7 @@ c4h_plotskill <- function(
     p <- p +
       ggplot2::scale_fill_manual(
         values = my_palette,
-        na.value = "grey70",
+        na.value = "#FFFFFF00",
         drop = FALSE
       )
   }
@@ -763,9 +766,10 @@ c4h_plotskill <- function(
         panel.background = ggplot2::element_rect(
           fill = NA,
           color = "grey10",
-          linewidth = 0.2
+          linewidth = 0.1
         ),
         panel.grid.minor = ggplot2::element_blank(),
+        panel.grid.major = ggplot2::element_line(linewidth = 0.2),
         axis.ticks = ggplot2::element_line(linewidth = 0.3, color = "grey50"),
         axis.text = ggplot2::element_text(size = 7, color = "grey30"),
         strip.text.y = ggplot2::element_text(margin = ggplot2::margin(b = 0)),
