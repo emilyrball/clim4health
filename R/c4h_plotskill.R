@@ -122,8 +122,13 @@
 #'                                obs = point_locs,
 #'                                metrics = "BSS")
 #' c4h_plotskill(skill = skill_point$BSS10$rpss, boundaries = areas)
-# skill <- skill_area$CRPSS$crpss
-# sign <- skill_area$CRPSS$sign
+#' # Make some artificial significance for testing
+#' skill_point$BSS10$sign$data[1, 1, 1, 1:3, 1, 4:6] <- TRUE
+#' c4h_plotskill(skill = skill_point$BSS10$rpss, sign = skill_point$BSS10$sign, boundaries = areas)
+#'
+
+# skill <- skill_point$BSS10$rpss
+# sign <- skill_point$BSS10$sign
 # sdate = NULL
 # time = NULL
 # ensemble = NULL
@@ -468,6 +473,12 @@ c4h_plotskill <- function(
     levels = rev(levels(plot_skill[[varname]]))
   )
 
+  # Significance check
+  if (sum(plot_skill$sign, na.rm = TRUE) == 0) {
+    message("No areas have a significant skill score.")
+    sign <- NULL
+  }
+
   # Base plot
   if ("longitude" %in% names(dims_skill)) {
     # Gridded data ----
@@ -477,52 +488,53 @@ c4h_plotskill <- function(
 
     # Skill hatching
     if (!is.null(sign)) {
-      if (sum(plot_skill$sign, na.rm = TRUE) == 0) {
-        message("No areas have a significant skill score.")
-        sign <- NULL
-      } else {
-        # Polygon hatching approach
-        skill_polys <- sf::st_as_sf(plot_skill[2, drop = TRUE], long = TRUE)
-        skill_polys <- skill_polys[skill_polys$sign, ]
-        skill_polys <- dplyr::group_by(
-          skill_polys,
-          dplyr::across(dplyr::all_of(setdiff(
-            names(skill_polys),
-            c("sign", "geometry")
-          )))
-        ) |>
-          dplyr::summarise(
-            geometry = sf::st_union(.data$geometry),
-            .groups = "drop"
-          )
+      # Polygon hatching approach
+      skill_polys <- sf::st_as_sf(plot_skill[2, drop = TRUE], long = TRUE)
+      skill_polys <- skill_polys[skill_polys$sign, ]
+      skill_polys <- dplyr::group_by(
+        skill_polys,
+        dplyr::across(dplyr::all_of(setdiff(
+          names(skill_polys),
+          c("sign", "geometry")
+        )))
+      ) |>
+        dplyr::summarise(
+          geometry = sf::st_union(.data$geometry),
+          .groups = "drop"
+        )
 
-        suppressMessages({
-          p <- p +
-            ggpattern::geom_sf_pattern(
-              data = skill_polys,
-              ggplot2::aes(pattern = "Significant"),
-              pattern_fill = "black",
-              pattern_density = 0.05,
-              pattern_alpha = 0.6,
-              lwd = 0,
-              fill = NA
-            ) +
-            ggpattern::scale_pattern_manual(
-              name = "",
-              values = c("Significant" = "stripe")
-            ) +
-            ggplot2::guides(
-              fill = ggplot2::guide_legend(order = 1),
-              pattern = ggplot2::guide_legend(order = 2)
-            ) +
-            ggplot2::scale_x_continuous(labels = function(x) {
-              paste0(ifelse(x < 0, "-", ""), abs(x))
-            }) +
-            ggplot2::scale_y_continuous(labels = function(y) {
-              paste0(ifelse(y < 0, "-", ""), abs(y))
-            })
-        })
-      }
+      suppressMessages({
+        p <- p +
+          ggpattern::geom_sf_pattern(
+            data = skill_polys,
+            ggplot2::aes(pattern = "Significant"),
+            pattern_fill = "black",
+            pattern_density = 0.05,
+            pattern_alpha = 0.6,
+            pattern_spacing = 0.03,
+            lwd = 0,
+            fill = NA
+          ) +
+          ggpattern::scale_pattern_manual(
+            name = "",
+            values = c("Significant" = "stripe")
+          ) +
+          ggplot2::guides(
+            fill = ggplot2::guide_legend(order = 1),
+            pattern = ggplot2::guide_legend(
+              override.aes = list(
+                fill = "white",
+                pattern_density = 0.2
+              )
+            )
+          ) +
+          ggplot2::scale_x_continuous(labels = function(x) {
+            paste0(ifelse(x < 0, "-", ""), abs(x))
+          }) +
+          ggplot2::scale_y_continuous(labels = function(y) {
+            paste0(ifelse(y < 0, "-", ""), abs(y))
+          })
+      })
     }
   } else if ("location" %in% names(dims_skill)) {
     # Point data ----
@@ -534,43 +546,39 @@ c4h_plotskill <- function(
           col = "grey10",
           linewidth = 0.1,
           inherit.aes = FALSE
-        ) +
-        ggplot2::geom_sf(
-          data = plot_skill,
-          show.legend = TRUE,
-          ggplot2::aes(colour = .data[[varname]]),
-          ...
-        ) +
-        ggplot2::coord_sf(
-          xlim = sf::st_bbox(plot_skill)[c("xmin", "xmax")],
-          ylim = sf::st_bbox(plot_skill)[c("ymin", "ymax")],
-          expand = TRUE
-        ) +
-        ggplot2::scale_x_continuous(labels = function(x) {
-          paste0(ifelse(x < 0, "-", ""), abs(x))
-        }) +
-        ggplot2::scale_y_continuous(labels = function(y) {
-          paste0(ifelse(y < 0, "-", ""), abs(y))
-        })
-
-      # Skill hatching
-      if (!is.null(sign)) {
-        stop("Significance not yet implemented for point data.")
-      }
+        )
     } else {
-      p <- ggplot2::ggplot() +
+      p <- ggplot2::ggplot()
+    }
+
+    # Skill hatching
+    if (!is.null(sign)) {
+      p <- p +
+        ggplot2::geom_sf(
+          data = plot_skill,
+          ggplot2::aes(colour = .data[[varname]], fill = sign),
+          ...
+        )
+    } else {
+      p <- p +
         ggplot2::geom_sf(
           data = plot_skill,
           ggplot2::aes(colour = .data[[varname]]),
           ...
-        ) +
-        ggplot2::scale_x_continuous(labels = function(x) {
-          paste0(ifelse(x < 0, "-", ""), abs(x))
-        }) +
-        ggplot2::scale_y_continuous(labels = function(y) {
-          paste0(ifelse(y < 0, "-", ""), abs(y))
-        })
+        )
     }
+    p <- p +
+      ggplot2::coord_sf(
+        xlim = sf::st_bbox(plot_skill)[c("xmin", "xmax")],
+        ylim = sf::st_bbox(plot_skill)[c("ymin", "ymax")],
+        expand = TRUE
+      ) +
+      ggplot2::scale_x_continuous(labels = function(x) {
+        paste0(ifelse(x < 0, "-", ""), abs(x))
+      }) +
+      ggplot2::scale_y_continuous(labels = function(y) {
+        paste0(ifelse(y < 0, "-", ""), abs(y))
+      })
   } else if ("area" %in% names(dims_skill)) {
     # Polygon data ----
     if (!is.null(boundaries)) {
@@ -593,52 +601,49 @@ c4h_plotskill <- function(
           xlim = sf::st_bbox(plot_skill)[c("xmin", "xmax")],
           ylim = sf::st_bbox(plot_skill)[c("ymin", "ymax")],
           expand = TRUE
-        ) +
-        ggplot2::scale_x_continuous(labels = function(x) {
-          paste0(ifelse(x < 0, "-", ""), abs(x))
-        }) +
-        ggplot2::scale_y_continuous(labels = function(y) {
-          paste0(ifelse(y < 0, "-", ""), abs(y))
-        })
+        )
     } else {
       p <- ggplot2::ggplot() +
         ggplot2::geom_sf(
           data = plot_skill,
           ggplot2::aes(fill = .data[[varname]]),
           ...
-        ) +
-        ggplot2::scale_x_continuous(labels = function(x) {
-          paste0(ifelse(x < 0, "-", ""), abs(x))
-        }) +
-        ggplot2::scale_y_continuous(labels = function(y) {
-          paste0(ifelse(y < 0, "-", ""), abs(y))
-        })
+        )
     }
-
+    p <- p +
+      ggplot2::scale_x_continuous(labels = function(x) {
+        paste0(ifelse(x < 0, "-", ""), abs(x))
+      }) +
+      ggplot2::scale_y_continuous(labels = function(y) {
+        paste0(ifelse(y < 0, "-", ""), abs(y))
+      })
     # Skill hatching
     if (!is.null(sign)) {
-      if (sum(plot_skill$sign) == 0) {
-        message("No areas have a significant skill score.")
-        sign <- NULL
-      } else {
-        p <- p +
-          ggpattern::geom_sf_pattern(
-            data = plot_skill[plot_skill$sign, ],
-            ggplot2::aes(pattern = "Significant"),
-            pattern_fill = "black",
-            pattern_density = 0.05,
-            pattern_alpha = 0.6,
-            fill = NA
-          ) +
-          ggpattern::scale_pattern_manual(
-            name = "",
-            values = c("Significant" = "stripe")
-          ) +
-          ggplot2::guides(
-            fill = ggplot2::guide_legend(order = 1),
-            # pattern = ggplot2::guide_legend(order = 2)
+      p <- p +
+        ggpattern::geom_sf_pattern(
+          data = plot_skill[plot_skill$sign, ],
+          ggplot2::aes(pattern = "Significant"),
+          pattern_fill = "black",
+          pattern_density = 0.05,
+          pattern_alpha = 0.6,
+          pattern_spacing = 0.03,
+          lwd = 0,
+          fill = NA
+        ) +
+        ggpattern::scale_pattern_manual(
+          name = "",
+          values = c("Significant" = "stripe")
+        ) +
+        ggplot2::guides(
+          fill = ggplot2::guide_legend(order = 1),
+          pattern = ggplot2::guide_legend(
+            override.aes = list(
+              fill = "white",
+              pattern_density = 0.3,
+              lwd = 0.5
+            )
           )
-      }
+        )
     }
   }
 
