@@ -5,7 +5,7 @@
 #' NULL, no conversion will be performed and the current units will be
 #' displayed. The default is NULL.
 #' @param variable a character string specifying the variable to convert.
-#' If NULL, the first variable will be used. The default is NULL.
+#' If NULL, all variables will be converted. The default is NULL.
 #' @param from a character string specifying the current units of the variable.
 #' If NULL, the current units will be inferred from the data. The default is
 #' NULL.
@@ -52,15 +52,16 @@ c4h_convert_units <- function(data,
                any(variable %in% data$attrs$Variable$varName)) {
     var_idx <- which(data$attrs$Variable$varName %in% variable)
   } else {
-    var_idx <- 1
+    var_idx <- seq_len(data$dims["var"])
   }
 
   # If 'to' is NULL, display current units and exit
   if (is.null(to)) {
     current_units <- data$attrs$Variable$metadata$units[var_idx]
-    message(paste(paste0("The current units of variable '",
-                         data$attrs$Variable$varName[var_idx], "' are: ",
-                         current_units), sep = "\n"))
+    result <- paste0("'", data$attrs$Variable$varName[var_idx],
+                     "': ", current_units)
+    message(paste0("The current variable units are ",
+                   paste(result, collapse = ", "), "."))
     return(invisible(NULL))
   } else {
     if (length(to) == 1 && length(var_idx) > 1) {
@@ -91,13 +92,21 @@ c4h_convert_units <- function(data,
   } else {
     from <- data$attrs$Variable$metadata$units[var_idx]
   }
-  # stop if not valid units
-  if (!all(udunits2::ud.is.parseable(to))) {
-    invalid <- to[!udunits2::ud.is.parseable(to)]
-    stop(paste0("The specified 'to' units (", invalid, ") are not valid."))
-  } else if (!(all(udunits2::ud.is.parseable(from)))) {
-    invalid <- from[!udunits2::ud.is.parseable(from)]
-    stop(paste0("The specified 'from' units (", invalid, ") are not valid."))
+  ## stop if not valid units
+  #if (!all(udunits2::ud.is.parseable(to))) {
+  #  invalid <- to[!udunits2::ud.is.parseable(to)]
+  #  stop(paste0("The specified 'to' units (", invalid, ") are not valid."))
+  #} else if (!(all(udunits2::ud.is.parseable(from)))) {
+  #  invalid <- from[!udunits2::ud.is.parseable(from)]
+  #  stop(paste0("The specified 'from' units (", invalid, ") are not valid."))
+  #}
+  convertible <- apply(rbind(from, to), 2, function(x) {
+    units::ud_are_convertible(x[1], x[2])
+  })
+  if (!all(convertible)) {
+    non_convertible <- paste0(from[!convertible], " to ", to[!convertible])
+    stop(paste0("The specified units are not convertible: ",
+                paste(non_convertible, collapse = "; ")))
   }
 
   # Convert units
@@ -109,10 +118,10 @@ c4h_convert_units <- function(data,
         (\(s) {
           s[[2]] <- var_idx[idx]; s
         })(),
-      list(value = udunits2::ud.convert(
+      list(value = units::ud_convert(
         .subset_array_named(data$data, var = var_idx[idx]),
-        u1 = from[idx],
-        u2 = to[idx]
+        from = from[idx],
+        to = to[idx]
       ))
     ))
   }
