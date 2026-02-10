@@ -56,9 +56,9 @@
 #' probabilities. Default is NULL. Only relevant if "BSS" or "RPSS" is in
 #' 'metrics' and 'Fair' is TRUE.
 #' @param nmemb_ref A numeric value indicating the number of members of the
-#' reference forecast 'ref'. If 'ref' is a climatology, 'nmemb_ref' should be
-#' the number of years used to compute the climatology. Default is NULL. Only
-#' relevant if "BSS" or "RPSS" is in 'metrics'.
+#' reference forecast 'ref'. If 'ref' is NULL and uses the climatology,
+#' 'nmemb_ref' should be the number of years used to compute the climatology.
+#' Default is NULL. Only relevant if "BSS" or "RPSS" is in 'metrics'.
 #' @param weights_exp  A named numerical array of the forecast ensemble weights
 #' for probability calculation. The dimension should include 'memb_dim',
 #' 'time_dim' and 'dat_dim' if there are multiple datasets. All dimension
