@@ -269,6 +269,8 @@ c4h_postprocess <- function(exp, obs, metrics, ref = NULL,
                              out_coords = out_coords, out_attrs = out_attrs)
       sign <- .format_output(data = temp$sign, out_dims = out_dims,
                              out_coords = out_coords, out_attrs = out_attrs)
+      rpss$attrs$Variable$varName <- paste0("BSS", 100 * threshold)
+      sign$attrs$Variable$varName <- paste0("BSS", 100 * threshold)
       temp <- list(rpss = rpss, sign = sign)
       data[[paste0("BSS", 100 * threshold)]] <- temp
     }
