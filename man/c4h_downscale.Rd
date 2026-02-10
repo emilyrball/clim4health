@@ -29,7 +29,7 @@ c4h_downscale(
 
 \item{obs}{The observational data to downscale. It must be an s2dv_cube.}
 
-\item{exp_cor}{Optional data to downscale. It must be an s2dv_cube. If the
+\item{exp_cor}{Optional data to downscale. It must be an s2dv_cube. If
 provided, it will be downscaled using exp and obs; if not provided, the exp
 will be downscaled instead. The default value is NULL.}
 
@@ -44,7 +44,9 @@ computation. The default value is NULL.}
 \item{target_grid}{a character vector indicating the target grid (in the case
 of Interpolation techniques) or the coarse grid (in the case of Analogs) to
 be passed to CDO. It must be a grid recognised by CDO or a NetCDF file. The
-default value is NULL.}
+default value is NULL. If NULL, the grid of obs will be used as the target
+grid for Interpolation techniques, and the grid of exp will be used as the
+coarse grid for Analogs.}
 
 \item{bc_method}{a character vector indicating the bias adjustment method to
 be applied after an interpolation. Accepted methods are 'quantile_mapping',
@@ -114,42 +116,42 @@ obs <- c4h_load(system.file("extdata", "reanalysis",
                          min(lats), max(lons)),
                 ext = "nc")
 ### Example with gridded data
-# dwn <- c4h_downscale("Interpolation", exp = hcst, obs = obs,
-#                      method_remap = "bilinear",
-#                      target_grid = system.file("extdata",
-#                                                "reanalysis/t2m_201001.nc",
-#                                                package = "clim4health"))
+dwn <- c4h_downscale("Interpolation", exp = hcst, obs = obs,
+                     method_remap = "bilinear",
+                     target_grid = system.file("extdata",
+                                               "reanalysis/t2m_201001.nc",
+                                               package = "clim4health"))
 ## Example with polygon data
 shp_path <- system.file("extdata", "areas", "munip_vallecauca.gpkg",
                         package = "clim4health")
-obs <- c4h_space(obs,
-                 areas = shp_path,
-                 fun = "mean",
-                 areas_id = "munip_code")
-hcst <- c4h_space(hcst,
-                  areas = shp_path,
-                  fun = "mean",
-                  areas_id = "munip_code")
-# hcst_agg_cal <- c4h_downscale(downscale_function = "Intbc",
-#                             exp = hcst_agg,
-#                             obs = obs_agg,
-#                             bc_method = "qm")
+obs_agg <- c4h_space(obs,
+                     areas = shp_path,
+                     fun = "mean",
+                     areas_id = "munip_code")
+hcst_agg <- c4h_space(hcst,
+                      areas = shp_path,
+                      fun = "mean",
+                      areas_id = "munip_code")
+hcst_agg_cal <- c4h_downscale(downscale_function = "Intbc",
+                              exp = hcst_agg,
+                              obs = obs_agg,
+                              bc_method = "evmos")
 ## Example with station data
-# point_locs <- clim4health::c4h_load(system.file("extdata",
-#                                                "stations",
-#                                                package = "clim4health"),
-#                                     ext = "csv",
-#                                     year = 2010:2012,
-#                                     month = 1,
-#                                     leadtime_month = 1:3,
-#                                     variable = "temp_mean")
-# points <- list(latitude = point_locs$attrs$location$latitude,
-#                longitude = point_locs$attrs$location$longitude)
-# point_locs <- c4h_time(point_locs,
-#                        time_aggregation = "monthly",
-#                        dim_aggregation = "sdate",
-#                        fun = "mean")
-#
-# dwn <- c4h_downscale("Interpolation", exp = hcst,
-#                      points = points, method_point_interp = "bilinear")
+point_locs <- clim4health::c4h_load(system.file("extdata",
+                                               "stations",
+                                               package = "clim4health"),
+                                    ext = "csv",
+                                    year = 2010:2012,
+                                    month = 1,
+                                    leadtime_month = 1:3,
+                                    variable = "temp_mean")
+points <- list(latitude = point_locs$attrs$location$latitude,
+               longitude = point_locs$attrs$location$longitude)
+point_locs <- c4h_time(point_locs,
+                       time_aggregation = "monthly",
+                       dim_aggregation = "sdate",
+                       fun = "mean")
+
+dwn <- c4h_downscale("Interpolation", exp = hcst,
+                     points = points, method_point_interp = "bilinear")
 }
