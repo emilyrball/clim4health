@@ -42,9 +42,10 @@ Imports:
     stars,
     terra,
     data.table,
-    udunits2,
+    units,
     CSDownscale,
-    ncdf4
+    ncdf4,
+    ggpattern
 Suggests: 
     testthat (>= 3.0.0),
     spData,

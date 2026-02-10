@@ -58,9 +58,9 @@ c4h_load <- function(path,
                   "'.csv'."))
     }
   }
-  if (ext == "nc" && is.null(variable)) {
-    stop("Please specify parameter 'variable' to load.")
-  }
+  #if (ext == "nc" && is.null(variable)) {
+  #  stop("Please specify parameter 'variable' to load.")
+  #}
 
   # handle bbox parameter
   if (is.null(bbox)) {
@@ -92,10 +92,16 @@ c4h_load <- function(path,
         file_vars <- unlist(file_vars)
 
         all_vars <- unique(gsub(".*:", "", file_vars))
-        message(paste0("Variables found in 'path' are: '",
-                       paste(all_vars, collapse = "', '"), "'. Requested ",
-                       "variables are: '", paste(variable, collapse = "', '"),
-                       "'."))
+
+        if (is.null(variable)) {
+          stop(paste0("Please specify the variable name. Variables found ",
+                      "in 'path': ", paste(all_vars, collapse = "', '"), "."))
+        } else {
+          message(paste0("Variables found in 'path' are: '",
+                         paste(all_vars, collapse = "', '"), "'. Requested ",
+                         "variables are: '", paste(variable, collapse = "', '"),
+                         "'."))
+        }
       }
       # if <variable> is specified and can be found in any file names, filter
       find_variable <- unlist(lapply(variable, grepl, file_list))

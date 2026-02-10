@@ -14,7 +14,7 @@ NULL, no conversion will be performed and the current units will be
 displayed. The default is NULL.}
 
 \item{variable}{a character string specifying the variable to convert.
-If NULL, the first variable will be used. The default is NULL.}
+If NULL, all variables will be converted. The default is NULL.}
 
 \item{from}{a character string specifying the current units of the variable.
 If NULL, the current units will be inferred from the data. The default is

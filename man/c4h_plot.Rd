@@ -38,7 +38,7 @@ times).}
 
 \item{ensemble}{Numerical index of the ensemble member to be plotted. If
 set to TRUE, it aggregates all the ensemble members. Defaults to NULL (all
-times).}
+ensemble members).}
 
 \item{ensemble_fun}{Aggregation function used when ensemble = TRUE.
 Defaults to the mean.}
@@ -94,27 +94,27 @@ mun <- read_sf(mun_path)
 # Forecast
 fcst_path <- system.file("extdata", "forecast", package = "clim4health")
 fcst <- c4h_load(fcst_path, variable = "t2m", ext = 'nc')
-c4h_plot(fcst, title = "Forecast", ensemble = TRUE) 
+c4h_plot(fcst, title = "Forecast", ensemble = TRUE)
 
 # Reanalysis
 rean_path <- system.file("extdata", "reanalysis", package = "clim4health")
 rean <- c4h_load(rean_path, variable = "t2m", ext = 'nc')
-c4h_plot(rean, title = "Reanalysis", boundaries = mun, 
-         mask_boundaries = TRUE, coordgrid = TRUE) 
+c4h_plot(rean, title = "Reanalysis", boundaries = mun,
+         mask_boundaries = TRUE, coordgrid = TRUE)
 
 # Hindcast
 hind_path <- system.file("extdata", "hindcast", package = "clim4health")
 hind <- c4h_load(hind_path, variable = "t2m", ext = 'nc')
-c4h_plot(hind, title = "Hindcast", ensemble = TRUE)   
-                 
+c4h_plot(hind, title = "Hindcast", ensemble = TRUE)
+
 # Stations
 stations_path <- system.file("extdata", "stations", package = "clim4health")
 stations <- c4h_load(stations_path, var = "temp_mean", ext = "csv")
-c4h_plot(stations, title = "Stations", time = 1:2, 
-         boundaries = mun, coordgrid = TRUE) 
+c4h_plot(stations, title = "Stations", time = 1:2,
+         boundaries = mun, coordgrid = TRUE)
 
 # Spatially aggregated data
 fcst_aggr <- c4h_space(fcst, mun)
-c4h_plot(fcst_aggr, ensemble = 1:5, lwd = 0.1, 
-         title = "Temp. by municipality", coordgrid = TRUE) 
+c4h_plot(fcst_aggr, ensemble = 1:5, lwd = 0.1,
+         title = "Temp. by municipality", coordgrid = TRUE)
 }
