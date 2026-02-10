@@ -141,7 +141,7 @@ c4h_plotskill <- function(
   coordgrid = FALSE,
   ...
 ) {
-  # 1. Data checks ----
+  # 1. Data checks ---- # nolint: indentation_linter.
 
   # Get skill array info
   if (inherits(skill, "s2dv_cube")) {
@@ -469,22 +469,48 @@ c4h_plotskill <- function(
         )
       )
 
-    # Skill hatching
     if (!is.null(sign)) {
-      # Polygon hatching approach
-      skill_polys <- sf::st_as_sf(plot_skill[2, drop = TRUE], long = TRUE)
-      skill_polys <- skill_polys[skill_polys$sign, ]
-      skill_polys <- dplyr::group_by(
-        skill_polys,
-        dplyr::across(dplyr::all_of(setdiff(
-          names(skill_polys),
-          c("sign", "geometry")
-        )))
-      ) |>
-        dplyr::summarise(
-          geometry = suppressMessages((sf::st_union(.data$geometry))),
-          .groups = "drop"
-        )
+      # Skill hatching
+      skill_simple <- plot_skill[2, drop = TRUE]
+
+      if (is.null(f1)) {
+        # No dimension other than lon/lat
+        skill_polys <- sf::st_as_sf(skill_simple, long = TRUE, merge = TRUE)
+        skill_polys <- skill_polys[skill_polys$sign, ]
+      } else if (!is.null(f1)) {
+        # Valid 1st faceting variable - we need to loop
+        skill_polys <- sf::st_sf(geom = sf::st_sfc())
+        sf::st_crs(skill_polys) <- 4326 # Empty object to append to
+        dim_f1 <- stars::st_get_dimension_values(skill_simple, f1)
+        for (i in seq_along(dim_f1)) {
+          skill_simple_i <- .slice_stars_dimname(skill_simple, f1, i)
+          skill_simple_i <- skill_simple_i[, drop = TRUE]
+          if (!is.null(f2)) {
+            # Valid 2nd faceting variable - loop again
+            dim_f2 <- stars::st_get_dimension_values(skill_simple_i, f2)
+            for (j in dim_f2) {
+              skill_simple_ij <- .slice_stars_dimname(skill_simple_i, f2, j)
+              skill_simple_ij <- skill_simple_ij[, drop = TRUE]
+              skill_polys_ij <- sf::st_as_sf(
+                skill_simple_ij,
+                long = TRUE,
+                merge = TRUE
+              )
+              skill_polys_ij[f1] <- dim_f1[i]
+              skill_polys_ij[f2] <- dim_f2[j]
+            }
+          } else {
+            skill_polys_ij <- sf::st_as_sf(
+              skill_simple_i,
+              long = TRUE,
+              merge = TRUE
+            )
+            skill_polys_ij[f1] <- dim_f1[i]
+          }
+          skill_polys_ij <- skill_polys_ij[skill_polys_ij$sign, ]
+          skill_polys <- rbind(skill_polys, skill_polys_ij)
+        }
+      }
 
       suppressMessages({
         p <- p +
