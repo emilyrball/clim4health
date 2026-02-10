@@ -42,7 +42,7 @@ Imports:
     stars,
     terra,
     data.table,
-    udunits2,
+    units,
     CSDownscale,
     ncdf4,
     ggpattern
