@@ -34,7 +34,10 @@ Default is all hours.}
 
 \item{leadtime_month}{A vector of months for the forecast leadtime. e.g.
 c(1,2) for January and February for data initialized in January.
-Default is to load all possible months.}
+Default is "all". If "all" for hindcast and forecast data, all leadtime
+months will be loaded. If "all" for reanalysis or station data, data will be
+loaded as a time series in the time dimension, and the sdate dimension will
+be set to 1.}
 
 \item{ext}{File extension. Options include "nc", ".nc", "csv", and ".csv".}
 
@@ -57,9 +60,49 @@ fcst <- c4h_load(fcst_path,
                  variable = "t2m",
                  year = 2025,
                  month = 1,
-                 ext = 'nc')
+                 ext = "nc")
 class(fcst)
 dim(fcst$data)
 summary(fcst$data)
 
+# Hindcast data included in the package
+hcst_path <- system.file("extdata/hindcast/", package = "clim4health")
+hcst_path <- paste0(hcst_path, "/")
+
+# Load the hindcast data
+hcst <- c4h_load(hcst_path,
+                 variable = "t2m",
+                 year = 2010:2012,
+                 month = 1,
+                 leadtime_month = 1:3,
+                 ext = "nc")
+class(hcst)
+dim(hcst$data)
+summary(hcst$data)
+
+# Reanalysis data included in the package
+rean_path <- system.file("extdata/reanalysis/", package = "clim4health")
+rean_path <- paste0(rean_path, "/")
+
+# Load the reanalysis data with dates to match the hindcast
+rean <- c4h_load(rean_path,
+                 variable = "t2m",
+                 year = 2010:2012,
+                 month = 1,
+                 leadtime_month = 1:3,
+                 ext = "nc")
+class(rean)
+dim(rean$data)
+summary(rean$data)
+
+# Load the reanalysis data as a time series
+rean <- c4h_load(rean_path,
+                 variable = "t2m",
+                 year = 2010,
+                 month = 1:3,
+                 leadtime_month = "all",
+                 ext = "nc")
+class(rean)
+dim(rean$data)
+summary(rean$data)
 }
