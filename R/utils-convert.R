@@ -9,10 +9,20 @@
 #' @returns A terra::SpatRaster object.
 #' @noRd
 .s2dv_to_terra <- function(cube, crs = "EPSG:4326") {
-  ### REVIEW - requires lat/lon coordinates, OK for now
-  ### REVIEW - if lat/lon required, add check for them?
+  .validate_s2dv_cube(cube)
+
   lon <- as.vector(cube$coords$longitude)
   lat <- as.vector(cube$coords$latitude)
+
+  # REVIEW - logic copied from c4h_space
+  if (lat[1] > lat[length(lat)]) {
+    # if latitude is stored north to south, reverse it
+    lat <- rev(lat)
+    lat_dim  <- which(names(dim(cube$data)) == "latitude")
+    idx <- lapply(dim(cube$data), seq_len)
+    idx[[lat_dim]] <- rev(idx[[lat_dim]])
+    cube$data <- do.call(`[`, c(list(cube$data), idx, drop = FALSE))
+  }
 
   d  <- dim(cube$data)
 
@@ -22,24 +32,18 @@
   nt <- .get_dim(d, "time")
   nm <- .get_dim(d, "ensemble")
 
+  # terra is composed of rows(x/latitude), columns(y/longitude) and layers(z)
+  # create one layer to each combination of dataset, var, sdate, time, and ensemble
   layers <- list()
   k <- 1
 
   # REVIEW - nested loops
   for (d in seq_len(nd)) {
-    d_lab <- if (!is.null(cube$coords$dataset) &&
-                   length(cube$coords$dataset) >= d) {
-      paste0("dataset_", cube$coords$dataset[d])
-    } else {
-      sprintf("dataset_%02d", d)
-    }
+    d_lab <- .get_label(cube$coords$dataset, d, "dataset")
+
     for (v in seq_len(nv)) {
-      v_lab <- if (!is.null(cube$coords$var) &&
-                     length(cube$coords$var) >= v) {
-        paste0("var_", cube$coords$var[v])
-      } else {
-        sprintf("var_%02d", v)
-      }
+      v_lab <- .get_label(cube$coords$var, v, "var")
+
       for (s in seq_len(ns)) {
         s_lab <- if (!is.null(cube$attrs$Dates) &&
                        length(cube$attrs$Dates[, 1]) >= s) {
@@ -47,6 +51,7 @@
         } else {
           sprintf("sdate_%02d", s)
         }
+
         for (t in seq_len(nt)) {
           t_lab <- if (!is.null(cube$attrs$Dates) &&
                          length(cube$attrs$Dates[s, ]) >= t) {
@@ -54,6 +59,7 @@
           } else {
             sprintf("time_%02d", t)
           }
+
           for (m in seq_len(nm)) {
             vals <- as.vector(cube$data[d, v, s, t, m, , ])
             xyz <- data.frame(
@@ -63,12 +69,7 @@
             )
             r <- terra::rast(xyz, type = "xyz", crs = crs)
 
-            m_lab <- if (!is.null(cube$coords$ensemble) &&
-                           length(cube$coords$ensemble) >= m) {
-              paste0("ensemble_", cube$coords$ensemble[m])
-            } else {
-              sprintf("ensemble_%02d", m)
-            }
+            m_lab <- .get_label(cube$coords$ensemble, m, "ensemble")
             names(r) <- paste(d_lab, v_lab, s_lab, t_lab, m_lab, sep = "_")
 
             layers[[k]] <- r
@@ -95,7 +96,7 @@
 #' @noRd
 .s2dv_to_csv <- function(cube, file = NULL) {
   ### REVIEW - argument file is redundant as can be used in c4h_save?
-  stopifnot(inherits(cube, "s2dv_cube"))
+  .validate_s2dv_cube(cube)
 
   d  <- dim(cube$data)
 
@@ -183,6 +184,15 @@
 .s2dv_to_polygons <- function(cube, crs = "EPSG:4326") {
   ### REVIEW - requires lat/lon coordinates, should be able to input
   ### REVIEW - other s2dv_cube types? in particular area.
+
+  # Validate cube first
+  .validate_s2dv_cube(cube)
+
+  # .s2dv_to_terra requires lat/lon, so make sure they exist
+  if (!all(c("latitude", "longitude") %in% names(cube$coords))) {
+    stop("Cube must have latitude and longitude coordinates for polygons.")
+  }
+
   rstack <- .s2dv_to_terra(cube, crs = crs)
   pv <- terra::as.polygons(rstack, dissolve = FALSE,
                            values = TRUE, na.rm = FALSE)
@@ -197,3 +207,85 @@
 #' @returns Integer size of the dimension or 1 if not present.
 #' @noRd
 .get_dim <- function(d, x) if (x %in% names(d)) d[[x]] else 1L
+
+#' .get_label
+#' Generate a label for a cube dimension value
+#' @param x A vector of labels (e.g., variable names, ensemble labels).
+#' @param i Index of the value to label.
+#' @param prefix Prefix for the label if x is NULL or index is missing.
+#' @param width Width for numeric labels (default: 2).
+#' @returns A character string label.
+#' @noRd
+.get_label <- function(x, i, prefix, width = 2) {
+  if (!is.null(x) && length(x) >= i) {
+    paste0(prefix, "_", x[i])
+  } else {
+    paste0(prefix, "_", sprintf(paste0("%02d"), i))
+  }
+}
+
+#' .validate_s2dv_cube
+#' Validate an s2dv_cube object.
+#' @param cube The s2dv_cube object to validate.
+#' @returns Invisibly returns TRUE if the cube is valid; otherwise, stops
+#'   with an error.
+#' @noRd
+.validate_s2dv_cube <- function(cube) {
+  stopifnot(inherits(cube, "s2dv_cube"))
+
+  if (is.null(cube$data) || !is.array(cube$data))
+    stop("`cube$data` must be a multidimensional array.")
+
+  if (is.null(cube$coords))
+    stop("`cube$coords` is missing.")
+
+  dim_names <- names(cube$dims)
+  core_dims <- c("dataset", "var", "sdate", "time", "ensemble")
+  missing_core <- setdiff(core_dims, dim_names)
+  if (length(missing_core) > 0)
+    stop(
+      "Missing required core dimension(s): ", paste(missing_core, collapse = ", ")
+    )
+  
+  # Spatial validation
+  has_latlon  <- all(c("latitude", "longitude") %in% dim_names)
+  has_location <- "location" %in% dim_names
+  
+  if (!has_latlon && !has_location)
+    stop(
+      "Cube must contain either (latitude & longitude) or location dimension."
+    )
+  
+  # If lat/lon grid
+  if (has_latlon) {
+    if (length(cube$coords$latitude)  != dim(cube$data)[6])
+      stop("Latitude length does not match data dimension.")
+    if (length(cube$coords$longitude) != dim(cube$data)[7])
+      stop("Longitude length does not match data dimension.")
+  }
+  
+  # If location index
+  if (has_location) {
+    if (length(cube$coords$location) != dim(cube$data)[6])
+      stop("Location length does not match data dimension.")
+    if (!is.null(cube$attrs$location)) {
+      if (!all(c("latitude", "longitude") %in% names(cube$attrs$location)))
+        stop("`attrs$location` must contain latitude and longitude.")
+    }
+  }
+  
+  # Dates validation
+  if (!is.null(cube$attrs$Dates)) {
+    if (!is.matrix(cube$attrs$Dates))
+      stop("`attrs$Dates` must be a matrix.")
+
+    if (nrow(cube$attrs$Dates) < dim(cube$data)[3] ||
+        ncol(cube$attrs$Dates) < dim(cube$data)[4]) {
+      stop(
+        "`attrs$Dates` must have at least [sdate, time] dimensions."
+      )
+    }
+  }
+
+  invisible(TRUE)
+}
