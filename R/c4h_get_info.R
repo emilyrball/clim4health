@@ -51,10 +51,10 @@
                  "total_precipitation",
                  "leaf_area_index_high_vegetation",
                  "leaf_area_index_low_vegetation"),
-    year = c(1950:format(Sys.Date(), "%Y")),
-    month = c(1:12),
-    day = c(1:31),
-    time = c(0:23),#paste0(sprintf("%02d", 0:23), ":00")
+    year = 1950:format(Sys.Date(), "%Y"),
+    month = 1:12,
+    day = 1:31,
+    time = 0:23,#paste0(sprintf("%02d", 0:23), ":00")
     bbox = "N,W,S,E coordinates, latitudes from 90 to -90, longitudes -180 to 180"
   ),
   "reanalysis-era5-land-monthly-means" = list(
@@ -110,8 +110,8 @@
                  "total_precipitation",
                  "leaf_area_index_high_vegetation",
                  "leaf_area_index_low_vegetation"),
-    year = c(1950:format(Sys.Date(), "%Y")),
-    month = c(1:12),
+    year = 1950:format(Sys.Date(), "%Y"),
+    month = 1:12,
     time = 0,
     bbox = "N,W,S,E coordinates, latitudes from 90 to -90, longitudes -180 to 180"
   ),
@@ -382,8 +382,8 @@
                  "wave_spectral_peakedness",
                  "wave_spectral_skewness",
                  "zero_degree_level"),
-    year = c(1940:format(Sys.Date(), "%Y")),
-    month = c(1:12),
+    year = 1940:format(Sys.Date(), "%Y"),
+    month = 1:12,
     day= 1:31,
     time = 0:23,
     bbox = "N,W,S,E coordinates, latitudes from 90 to -90, longitudes -180 to 180"
@@ -653,8 +653,8 @@
                  "wave_spectral_peakedness",
                  "wave_spectral_skewness",
                  "zero_degree_level"),
-    year = c(1940:format(Sys.Date(), "%Y")),
-    month = c(1:12),
+    year = 1940:format(Sys.Date(), "%Y"),
+    month = 1:12,
     time = 0:23,
     bbox = "N,W,S,E coordinates, latitudes from 90 to -90, longitudes -180 to 180"
   ),
@@ -705,9 +705,9 @@
                      "monthly_minimum",
                      "monthly_maximum",
                      "monthly_standard_deviation"),
-    year = c(1981:format(Sys.Date(), "%Y")),
-    month = c(1:12),
-    leadtime_month = c(1:6),
+    year = 1981:format(Sys.Date(), "%Y"),
+    month = 1:12,
+    leadtime_month = 1:6,
     bbox = "N,W,S,E coordinates, latitudes from 90 to -90, longitudes -180 to 180"
   )
 )
