@@ -43,14 +43,10 @@
 #'
 #' @param file_list list of files or path to directory containing files to be
 #' loaded.
-#' @param variable name of variable to be loaded. If NULL, all variables will be
-#' loaded.
-#' @param year year of the data to be loaded. If "all", all years will be
-#' loaded.
+#' @param variable name of variable to be loaded.
 #' @param month month of the data to be loaded. If "all", all months will be
 #' loaded.
-#' @param day day of the data to be loaded. If "all", all days will be
-#' loaded.
+#' @param day day of the data to be loaded. If "all", all days will be loaded.
 #' @param time time of day of the data to be loaded. If "all", all times will be
 #' loaded.
 #' @param leadtime_month leadtime months to be loaded. If "all", all leadtime
@@ -63,7 +59,7 @@
 #' @returns an s2dv_cube object.
 #' @noRd
 .c4h_load_csv <- function(file_list,
-                          variable = NULL,
+                          variable,
                           year = "all",
                           month = "all",
                           day = "all",
@@ -76,12 +72,14 @@
 
   # skip up to 10 lines of header
   if (ncol(data) == 1) {
-    for (i in 1:11) {
+    found_header <- FALSE
+    for (i in 1:10) {
       if (ncol(data.table::fread(file_list, skip = i)) > 1) {
+        found_header <- TRUE
         break
       }
     }
-    if (i == 11) {
+    if (!found_header) {
       stop("Currently cannot handle >10 header lines in file.")
     } else {
       data <- data.table::fread(file_list, skip = i)
@@ -99,14 +97,14 @@
   lons <- .get_csv_dims(headers, data, c("x", "lon", "longitude"))
 
   # If lat_selection or lon_selection is "all", select all coordinates
-  if (lat_selection == "all") {
+  if (lat_selection == "all" && !is.null(lats$col)) {
     lat_selection <- c(min(lats$val), max(lats$val))
   }
-  if (lon_selection == "all") {
+  if (lon_selection == "all" && !is.null(lons$col)) {
     lon_selection <- c(min(lons$val), max(lons$val))
   }
   # subset to only the requested coordinates (lat_selection and lon_selection)
-  if (!(is.null(lats$col)) && !(is.null(lons$col))) {
+  if (!is.null(lats$col) && !is.null(lons$col)) {
     lat_lon_selection <- which(lats$val >= min(lat_selection) &
                                  lats$val <= max(lat_selection) &
                                  lons$val >= min(lon_selection) &
@@ -137,7 +135,6 @@
 
   # datetime management
   # get time columns
-  ### test what happens if you have a year and month column
   possible_time_names <- c("year", "month", "week", "day", "date", "time")
   times <- .get_csv_dims(headers, data, possible_time_names)
 
@@ -214,13 +211,14 @@
   lat <- c() # initialise
   lon <- c() # initialise
 
-  if (!(is.null(lats$col)) && !(is.null(lons$col))) {
+  if (!is.null(lats$col) && !is.null(lons$col)) {
     coordinates <- unique(paste0(lats$val, "; ", lons$val))
-    for (cc in seq_along(coordinates)) {
-      lat <- c(lat, as.numeric(strsplit(coordinates[cc], "; ")[[1]][1]))
-      lon <- c(lon, as.numeric(strsplit(coordinates[cc], "; ")[[1]][2]))
-    }
+    splits <- strsplit(coordinates, "; ")
+    coords_mat <- do.call(rbind, splits)
+    lat <- as.numeric(coords_mat[, 1])
+    lon <- as.numeric(coords_mat[, 2])
   } else {
+    coordinates <- 1
     lat <- 1
     lon <- 1
   }
@@ -247,7 +245,7 @@
       lnx <- which(lons$val == lon[loc])
       llx <- which(lats$val == lat[loc])
       idxs <- Reduce(intersect, list(lnx, llx, d))
-      if (!(length(idxs) == 0)) {
+      if (length(idxs) > 0) {
         for (v in seq_along(vars$col)) {
           data_array[, v, s, t, , loc] <- data[idxs, vars$col[v]]
         }
@@ -388,9 +386,9 @@
     lat_idx <- which(lat_vals >= min(lat_selection) &
                        lat_vals <= max(lat_selection))
 
-    lon_off  <- min(lon_idx)# - 1   # offset (0-based for RasterIO)
+    lon_off  <- min(lon_idx)
     lon_size <- length(lon_idx)
-    lat_off  <- min(lat_idx)# - 1   # offset (0-based for RasterIO)
+    lat_off  <- min(lat_idx)
     lat_size <- length(lat_idx)
 
     if (lat_size == length(lat_vals)) {
@@ -507,8 +505,8 @@
   data_out$attrs$source_files <- unlist(file_list_var)
   data_out$attrs$source_files <- gsub("NETCDF:\"(.*)\"", "\\1",
                                       data_out$attrs$source_files)
-  data_out$attrs$source_files <- gsub(":(.*)", "\\1",
-                                      data_out$attrs$source_files)
+  #data_out$attrs$source_files <- gsub(":(.*)", "\\1",
+  #                                    data_out$attrs$source_files)
   names(data_out$attrs$source_files) <- NULL
   data_out$attrs$Variable$metadata$units <- unlist(units_out)
   names(data_out$attrs$Variable$metadata$units) <- data_out$coords$var
@@ -564,8 +562,7 @@
   } else {
     timeseries <- FALSE
   }
-  one_dim <- any(leadtime_month == "all") ||
-    (length(leadtime_month) == 1 && (leadtime_month == 1))
+  one_dim <- any(leadtime_month == "all") || identical(leadtime_month, 1)
 
   start_dates <- .paste_outer(year, sprintf("-%02d", month))
   if (one_dim) {
@@ -750,8 +747,7 @@
   } else {
     timeseries <- FALSE
   }
-  one_dim <- any(leadtime_month == "all") ||
-    (length(leadtime_month) == 1 && (leadtime_month == 1))
+  one_dim <- any(leadtime_month == "all") || identical(leadtime_month, 1)
 
   if (one_dim) {
     # case: only one leadtime month
@@ -808,8 +804,7 @@
   dims <- stars::st_dimensions(x)
   date_vals <- as.Date(stars::st_get_dimension_values(x, "valid_time"),
                        origin = "1970-01-01")
-  if (any(leadtime_month == "all") ||
-        (length(leadtime_month) == 1 && (leadtime_month == 1))) {
+  if (one_dim) {
     grid_dates <- grid_dates[grid_dates$forecast_date %in% date_vals, ]
   }
 
@@ -923,8 +918,8 @@
   } else {
     timeseries <- FALSE
   }
-  one_dim <- any(leadtime_month == "all") ||
-    (length(leadtime_month) == 1 && (leadtime_month == 1))
+  one_dim <- any(leadtime_month == "all") || identical(leadtime_month, 1)
+
   if (one_dim) {
     # case: only one leadtime month
     start_dates <- .paste_outer(.paste_outer(year,
@@ -978,10 +973,10 @@
   if (one_dim) {
     grid_dates <- grid_dates[grid_dates$forecast_date %in% date_vals, ]
   }
-  grid_dates <- grid_dates[as.Date(grid_dates$sdate,
-                                   origin = "1970-01-01") %in% date_vals &
-                             as.Date(grid_dates$forecast_date,
-                                     origin = "1970-01-01") %in% date_vals, ]
+  sdate_date <- as.Date(grid_dates$sdate)
+  fdate_date <- as.Date(grid_dates$forecast_date)
+  grid_dates <- grid_dates[sdate_date %in% date_vals &
+                             fdate_date %in% date_vals, ]
   coords <- list()
   for (dim in names(dims)) {
     coords[[dim]] <- as.vector(stars::st_get_dimension_values(x, dim))
@@ -1065,6 +1060,8 @@
 #' Load seasonal forecast in s2dv_cube format
 #'
 #' @param x stars object
+#' @param leadtime_month A numeric vector specifying the lead time in months.
+#' @param date_vals A vector of date values in POSIXct format.
 #' @param year A numeric vector specifying the years to load.
 #' @param month A numeric vector specifying the month to load.
 #' @param day A numeric vector specifying the day to load.
@@ -1104,11 +1101,14 @@
            function(dim) as.vector(stars::st_get_dimension_values(x, dim)))
   names(coords) <- names(dims)  # set names explicitly
 
-  names(coords) <- sub("^x$", "longitude", names(coords))
-  names(coords) <- sub("^y$", "latitude", names(coords))
-  names(coords) <- sub("^forecastMonth$", "time", names(coords))
-  names(coords) <- sub("^forecast_reference_time$", "sdate", names(coords))
-  names(coords) <- sub("^number$", "ensemble", names(coords))
+  # Rename coordinates
+  coord_names <- names(coords)
+  old_names <- c("x", "y", "forecastMonth", "forecast_reference_time", "number")
+  new_names <- c("longitude", "latitude", "time", "sdate", "ensemble")
+  idx <- match(coord_names, old_names)
+  replace_idx <- which(!is.na(idx))
+  coord_names[replace_idx] <- new_names[idx[replace_idx]]
+  names(coords) <- coord_names
 
   coords[["sdate"]] <- as.POSIXct(coords[["sdate"]], origin = "1970-01-01",
                                   tz = "UTC")
@@ -1132,7 +1132,7 @@
   reorder_dims <- match(reorder_dims, names(coords))
   data_array[1, 1, , , , , ] <- aperm(x[[1]], reorder_dims)
 
-  coords <- coords[c("dataset", "var", "sdate", "time",
+  coords <- coords[c("sdate", "time",
                      "ensemble", "latitude", "longitude")]
 
   coords[["sdate"]] <- seq_along(coords[["sdate"]])
@@ -1156,7 +1156,7 @@
 #' @param x stars object
 #' @param attr_var a string indicating the variable name
 #'
-#' @returns the s2dv_cube object
+#' @returns a character string containing the units of the variable.
 #' @noRd
 .extract_units <- function(x, attr_var) {
   numerator <- units(x[[attr_var]])$numerator
@@ -1168,4 +1168,58 @@
     units_str <- numerator
   }
   units_str
+}
+
+#' .get_variables_nc
+#'
+#' Extract the variable names from a list of NetCDF files
+#'
+#' @param file_list A vector of file paths to NetCDF files
+#' @param variable A vector of variable names to extract.
+#'
+#' @returns NULL. This function raises an error via \code{stop()} when
+#' \code{variable} is \code{NULL}, or prints an informational message via
+#' \code{message()} otherwise.
+#' @noRd
+.get_variables_nc <- function(file_list, variable) {
+  file_vars <- lapply(file_list, function(x) {
+    names(sf::gdal_read_mdim(x, proxy = TRUE)[[1]])
+  })
+  file_vars <- unlist(file_vars)
+  all_vars <- unique(gsub(".*:", "", file_vars))
+
+  if (is.null(variable)) {
+    stop(paste0("Please specify the variable name. Variables found ",
+                "in 'path': '", paste(all_vars, collapse = "', '"), "'."))
+  } else {
+    message(paste0("Variables found in 'path' are: '",
+                   paste(all_vars, collapse = "', '"), "'. Requested ",
+                   "variables are: '", paste(variable, collapse = "', '"),
+                   "'."))
+  }
+  return(NULL)
+}
+
+#' .subset_file_list
+#'
+#' Subset list of files based on presence of name in file
+#'
+#' @param file_list A vector of file paths to NetCDF files
+#' @param in_var A vector of variable names or other strings to extract.
+#'
+#' @returns file_list, subsetted to only include files that contain any of
+#' the strings in in_var.
+#' @noRd
+.subset_file_list <- function(file_list, in_var) {
+  if (!identical(in_var, "all")) {
+    matches_var <- vapply(
+      file_list,
+      function(f) any(vapply(in_var, grepl, logical(1), f)),
+      logical(1)
+    )
+    if (any(matches_var)) {
+      file_list <- file_list[matches_var]
+    }
+  }
+  return(file_list)
 }

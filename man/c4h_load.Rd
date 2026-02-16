@@ -41,7 +41,8 @@ be set to 1.}
 
 \item{ext}{File extension. Options include "nc", ".nc", "csv", and ".csv".}
 
-\item{bbox}{A vector of coordinates. (in order: North, West, South, East).}
+\item{bbox}{A vector of coordinates in order: c(lat_max, lon_min,
+lat_min, lon_max).}
 }
 \value{
 An s2dv_cube object.
