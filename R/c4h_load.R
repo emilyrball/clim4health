@@ -19,7 +19,8 @@
 #' loaded as a time series in the time dimension, and the sdate dimension will
 #' be set to 1.
 #' @param ext File extension. Options include "nc", ".nc", "csv", and ".csv".
-#' @param bbox A vector of coordinates. (in order: North, West, South, East).
+#' @param bbox A vector of coordinates in order: c(lat_max, lon_min,
+#' lat_min, lon_max).
 #'
 #' @returns An s2dv_cube object.
 #' @export
@@ -53,7 +54,7 @@
 #' class(hcst)
 #' dim(hcst$data)
 #' summary(hcst$data)
-#' 
+#'
 #' # Reanalysis data included in the package
 #' rean_path <- system.file("extdata/reanalysis/", package = "clim4health")
 #' rean_path <- paste0(rean_path, "/")
@@ -105,10 +106,14 @@ c4h_load <- function(path,
   # handle bbox parameter
   if (is.null(bbox)) {
     message(paste0("Note: parameter 'bbox' is not specified, loading all ",
-                   "latitudes and longitudes."))
+                   "possible latitudes and longitudes."))
     lat_selection <- "all"
     lon_selection <- "all"
   } else {
+    if (!is.numeric(bbox) || length(bbox) != 4) {
+      stop(paste0("Parameter 'bbox' must be a numeric vector of length 4 ",
+                  "(c(lat_max, lon_min, lat_min, lon_max))."))
+    }
     lat_selection <- c(bbox[3], bbox[1])
     lon_selection <- c(bbox[2], bbox[4])
   }
@@ -119,46 +124,28 @@ c4h_load <- function(path,
     if (dir.exists(path)) {
       # obtain all files in <path> if path is a directory
       file_list <- list.files(path = path, pattern = paste0("\\.", ext),
-                              full.names = TRUE)#, recursive = TRUE)
+                              full.names = TRUE)
       if (length(file_list) == 0) {
         stop("No files found in the specified 'path'.")
       }
 
       # if ext is nc, check which variables are in the files
       if (ext == "nc") {
-        file_vars <- lapply(file_list, function(x) {
-          names(sf::gdal_read_mdim(x, proxy = TRUE)[[1]])
-        })
-        file_vars <- unlist(file_vars)
-
-        all_vars <- unique(gsub(".*:", "", file_vars))
-
-        if (is.null(variable)) {
-          stop(paste0("Please specify the variable name. Variables found ",
-                      "in 'path': ", paste(all_vars, collapse = "', '"), "."))
-        } else {
-          message(paste0("Variables found in 'path' are: '",
-                         paste(all_vars, collapse = "', '"), "'. Requested ",
-                         "variables are: '", paste(variable, collapse = "', '"),
-                         "'."))
-        }
+        .get_variables_nc(file_list, variable = variable)
       }
+
       # if <variable> is specified and can be found in any file names, filter
-      find_variable <- unlist(lapply(variable, grepl, file_list))
-      if (!is.null(variable) && any(find_variable)) {
-        file_list <- rep(file_list, length(variable))[find_variable]
-      }
-
+      file_list <- .subset_file_list(file_list, variable)
       # if <year> is specified and can be found in any file names, filter
-      find_year <- unlist(lapply(year, grepl, file_list))
-      if (!(any(year == "all")) && any(find_year)) {
-        file_list <- rep(file_list, length(year))[find_year]
-      }
+      file_list <- .subset_file_list(file_list, year)
 
       file_list <- sort(unique(file_list))
     } else if (file.exists(path)) {
       # case: path is a single file
       file_list <- path
+      if (ext == "nc") {
+        .get_variables_nc(file_list, variable = variable)
+      }
     } else {
       stop("The specified 'path' does not exist.")
     }
@@ -183,9 +170,7 @@ c4h_load <- function(path,
                                leadtime_month = leadtime_month,
                                lat_selection = lat_selection,
                                lon_selection = lon_selection)
-  }
-
-  if (ext == "csv") { # Read .csv files
+  } else if (ext == "csv") { # Read .csv files
     data <- .c4h_load_csv(file_list = file_list,
                           variable = variable,
                           year = year,
