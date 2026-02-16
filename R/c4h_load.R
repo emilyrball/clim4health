@@ -80,6 +80,20 @@
 #' class(rean)
 #' dim(rean$data)
 #' summary(rean$data)
+#'
+#' # Load station data as a time series matching the reanalysis above
+#' stat_path <- system.file("extdata/stations/", package = "clim4health")
+#' stat_path <- paste0(stat_path, "/")
+#'
+#' station <- c4h_load(stat_path,
+#'                     variable = "temp_mean",
+#'                     year = 2010,
+#'                     month = 1:3,
+#'                     leadtime_month = "all",
+#'                     ext = "csv")
+#' class(station)
+#' dim(station$data)
+#' summary(station$data)
 c4h_load <- function(path,
                      variable = NULL,
                      year = "all",
