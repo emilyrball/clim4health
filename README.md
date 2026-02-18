@@ -2,7 +2,7 @@
 
 <!-- badges: start -->
 [![License](https://img.shields.io/badge/License-AGPL_v3-brightgreen.svg?style=flat)](https://www.gnu.org/licenses/agpl-3.0.html)
-![coverage](https://gitlab.earth.bsc.es/ghr/clim4health/badges/main/coverage.svg?job=coverage)
+![coverage](https://gitlab.earth.bsc.es/ghr/clim4health/badges/main/coverage.svg)
 <!-- badges: end -->
 
 <img src='man/figures/clim4health.jpg' align="right" width="14%" />
