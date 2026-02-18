@@ -1,0 +1,33 @@
+stages:
+  - test
+  - coverage
+
+unit-test:
+  stage: test
+  tags:
+    - ghrexplore_runner
+  image: rnunesro/clim4health:latest
+  script:
+    - R -e "remotes::install_local('.', dependencies = TRUE)"
+    - R -e "testthat::test_dir('tests')"
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      # when: manual
+
+coverage:
+  stage: coverage
+  tags:
+    - ghrexplore_runner
+  image: rnunesro/clim4health:latest
+  script:
+    - R -e 'remotes::install_deps(dependencies = TRUE)'
+    - >
+      R -e "
+      cov <- covr::package_coverage();
+      pct <- covr::percent_coverage(cov);
+      cat('\nCoverage:', round(pct,2),'%\n');
+      covr::to_cobertura(cov, 'coverage.xml')
+      "
+  coverage: '/Coverage:\s+(\d+\.\d+)%/'
+  #rules:
+    #- if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
