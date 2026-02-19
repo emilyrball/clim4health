@@ -111,29 +111,14 @@ c4h_time <- function(data,
       as.POSIXct(format(time_i, "%Y-%m-%d"), tz = "UTC")
 
     } else if (time_aggregation == "weekly") {
-
       # Epidemiological weeks and years
-      wnum <- switch(week_start,
-                     Monday = 1,
-                     Tuesday   = 2,
-                     Wednesday = 3,
-                     Thursday  = 4,
-                     Friday    = 5,
-                     Saturday  = 6,
-                     Sunday = 7)
-      other_week <- utils::getFromNamespace(".other_week", "lubridate")
-      other_year <- utils::getFromNamespace(".other_year", "lubridate")
-      epiweeks <- other_week(time_i, wnum)
-      epiyears <- other_year(time_i, wnum)
-
-      # Create time groups and resulting dates
-      dates_tmp_i <- paste(epiyears, sprintf("%02d", epiweeks), sep = "-")
-
-      idx <-
-        c(1, which(dates_tmp_i[-1] != dates_tmp_i[-length(dates_tmp_i)]) + 1)
-
-      dates_i <- time_i[idx] # The first day for each epiweek
-      paste(epiyears, sprintf("%02d", epiweeks), sep = "-")
+      time_i <- as.Date(time_i)
+      dates_tmp_i <- GHRexplore::date_to_epiyw(date = time_i,
+                                               weekday = week_start)
+      # convert back to ensure matching to the correct week start
+      dates_i <- unique(GHRexplore::epiyw_to_date(epiyw = dates_tmp_i,
+                                                  weekday = week_start))
+      paste(dates_tmp_i)
     }
 
     # Compute aggregation ----
