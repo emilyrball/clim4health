@@ -141,8 +141,8 @@
   dates_all <- lubridate::parse_date_time(
     times$val,
     orders = c("Ymd HMS", "Ymd", "dmY HMS", "dmY", "mdY HMS", "mdY",
-               "Ym", "mY"),
-    tz = "UTC"
+               "Ym", "mY")#,
+    #tz = "UTC"
   )
   dates <- unique(dates_all)
 
@@ -168,7 +168,7 @@
 
   start_dates_tmp <-
     lubridate::parse_date_time(start_dates, orders =
-                               c("Ymd HMS", "Ymd"), tz = "UTC")
+                               c("Ymd HMS", "Ymd"))#, tz = "UTC")
   start_dates <- unique(start_dates_tmp[!is.na(start_dates_tmp)])
 
   if (any(leadtime_month == "all")) {
@@ -178,7 +178,7 @@
     timeseries <- FALSE
   }
   grid_dates <- expand.grid(sdate = as.POSIXct(start_dates,
-                                               tz = "UTC",
+                                               #tz = "UTC",
                                                format = "%Y-%m-%d %H:%M:%S"),
                             time = leadtime_month)
 
@@ -197,12 +197,12 @@
   dates <- unique(dates_all)
 
   dates <- matrix(as.POSIXct(grid_dates$forecast_date,
-                             origin = "1970-01-01", tz = "UTC"),
+                             origin = "1970-01-01"),# tz = "UTC"),
                   nrow = length(unique(grid_dates$sdate)),
                   ncol = length(leadtime_month),
                   byrow = FALSE)
 
-  dates <- as.POSIXct(dates, origin = "1970-01-01", tz = "UTC")
+  dates <- as.POSIXct(dates, origin = "1970-01-01")#, tz = "UTC")
 
   names(dim(dates)) <- c("sdate", "time")
   # end datetime management
@@ -359,9 +359,10 @@
     }
 
     date_vals <- stars::st_get_dimension_values(x, concat_dim)
-    date_vals <- as.POSIXct(date_vals, origin = "1970-01-01", tz = "UTC")
+    date_vals <- as.POSIXct(date_vals, origin = "1970-01-01",
+                            format = "%Y-%m-%d %H:%M:%S", tz = "UTC")
 
-    len_date_day <- length(unique(as.Date(date_vals)))
+    len_date_day <- length(unique(format(date_vals, "%Y-%m-%d")))
     len_date_month <- length(unique(format(date_vals, "%Y-%m")))
     if (length(unique(date_vals)) > len_date_day) {
       time_freq <- "hourly"
@@ -422,7 +423,8 @@
     lon_vals <- stars::st_get_dimension_values(x, "x")
     lat_vals <- stars::st_get_dimension_values(x, "y")
     date_vals <- stars::st_get_dimension_values(x, concat_dim)
-    date_vals <- as.POSIXct(date_vals, origin = "1970-01-01", tz = "UTC")
+    date_vals <- as.POSIXct(date_vals, origin = "1970-01-01",
+                            format = "%Y-%m-%d %H:%M:%S", tz = "UTC")
 
     units <- .extract_units(x, attr_var)
 
@@ -755,7 +757,9 @@
                                              sprintf("-%02d", month)),
                                 sprintf("-%02d", day))
     leadtime_month <- 1
-    grid_dates <- expand.grid(sdate = as.Date(start_dates),
+    grid_dates <- expand.grid(sdate = as.POSIXct(start_dates, tz = "UTC",
+                                                 format = "%Y-%m-%d",
+                                                 origin = "1970-01-01"),
                               time = leadtime_month)
     grid_dates$forecast_date <- lubridate::add_with_rollback(
       grid_dates$sdate, months(grid_dates$time - 1)
@@ -772,7 +776,8 @@
                               time = leadtime_month,
                               sdate =
                                 as.POSIXct(start_dates_sd, tz = "UTC",
-                                           format = "%Y-%m-%d"))
+                                           format = "%Y-%m-%d",
+                                           origin = "1970-01-01"))
 
     grid_dates <- rev(grid_dates)
     grid_dates$forecast_date <- lubridate::add_with_rollback(
@@ -782,28 +787,33 @@
       paste0(lubridate::year(grid_dates$forecast_date),
              sprintf("-%02d", lubridate::month(grid_dates$forecast_date)),
              grid_dates$day)
-    grid_dates$forecast_date <-
-      as.Date(grid_dates$forecast_date,
-              format = "%Y-%m-%d")
+    grid_dates$forecast_date <- as.POSIXct(grid_dates$forecast_date, tz = "UTC",
+                                           format = "%Y-%m-%d",
+                                           origin = "1970-01-01")
   }
 
   start_dates <- unique(sort(c(grid_dates$forecast_date)))
-  if (!(any(as.Date(date_vals) %in% start_dates))) {
+  if (!(any(as.POSIXct(date_vals, origin = "1970-01-01",
+                       tz = "UTC", format = "%Y-%m-%d") %in% start_dates))) {
     stop(paste0("No matching dates found for the specified year, month,",
                 " day, and time. Dates found in data lie in the range: ",
-                paste0(range(as.Date(date_vals)), collapse = " - "),
+                paste0(range(as.POSIXct(date_vals, origin = "1970-01-01",
+                                        tz = "UTC", format = "%Y-%m-%d")),
+                       collapse = " - "),
                 ". Please adjust the date selection accordingly."))
   }
-  if (!(all(as.Date(date_vals) %in% start_dates))) {
-    filter_indx <- as.Date(stars::st_get_dimension_values(x, "valid_time"),
-                           origin = "1970-01-01") %in% start_dates
+  if (!(all(as.POSIXct(date_vals, origin = "1970-01-01",
+                       tz = "UTC", format = "%Y-%m-%d") %in% start_dates))) {
+    filter_indx <- as.POSIXct(stars::st_get_dimension_values(x, "valid_time"),
+                              origin = "1970-01-01",
+                              tz = "UTC", format = "%Y-%m-%d") %in% start_dates
     filter_indx <- which(filter_indx)
     x <-  .slice_stars_dimname(x, "valid_time", filter_indx)
   }
 
   dims <- stars::st_dimensions(x)
-  date_vals <- as.Date(stars::st_get_dimension_values(x, "valid_time"),
-                       origin = "1970-01-01")
+  date_vals <- as.POSIXct(stars::st_get_dimension_values(x, "valid_time"),
+                          origin = "1970-01-01", tz = "UTC")
   if (one_dim) {
     grid_dates <- grid_dates[grid_dates$forecast_date %in% date_vals, ]
   }
@@ -926,7 +936,9 @@
                                              sprintf("-%02d", month)),
                                 sprintf("-%02d", day))
     leadtime_month <- 1
-    grid_dates <- expand.grid(sdate = as.Date(start_dates),
+    grid_dates <- expand.grid(sdate = as.POSIXct(start_dates, tz = "UTC",
+                                                 format = "%Y-%m-%d",
+                                                 origin = "1970-01-01"),
                               time = leadtime_month)
     grid_dates$forecast_date <- lubridate::add_with_rollback(
       grid_dates$sdate, months(grid_dates$time - 1)
@@ -941,7 +953,8 @@
                               time = leadtime_month,
                               sdate =
                                 as.POSIXct(start_dates_sd, tz = "UTC",
-                                           format = "%Y-%m-%d"))
+                                           format = "%Y-%m-%d",
+                                           origin = "1970-01-01"))
     grid_dates <- rev(grid_dates)
     grid_dates$forecast_date <- lubridate::add_with_rollback(
       grid_dates$sdate, months(grid_dates$time - 1)
@@ -951,30 +964,39 @@
              sprintf("-%02d", lubridate::month(grid_dates$forecast_date)),
              grid_dates$day)
     grid_dates$forecast_date <-
-      as.Date(grid_dates$forecast_date,
-              format = "%Y-%m-%d")
+      as.POSIXct(grid_dates$forecast_date, tz = "UTC",
+                 format = "%Y-%m-%d", origin = "1970-01-01")
   }
   start_dates <- unique(sort(c(grid_dates$forecast_date)))
-  if (!(any(as.Date(date_vals) %in% start_dates))) {
+  if (!(any(as.POSIXct(date_vals, tz = "UTC", origin = "1970-01-01",
+                       format = "%Y-%m-%d") %in% start_dates))) {
     stop(paste0("No matching dates found for the specified year, month,",
                 " day, and time. Dates found in data lie in the range: ",
-                paste0(range(as.Date(date_vals)), collapse = " - "),
+                paste0(range(as.POSIXct(date_vals, tz = "UTC", 
+                                        origin = "1970-01-01",
+                                        format = "%Y-%m-%d")),
+                       collapse = " - "),
                 ". Please adjust the date selection accordingly."))
   }
-  if (!(all(as.Date(date_vals) %in% start_dates))) {
-    filter_indx <- as.Date(stars::st_get_dimension_values(x, "valid_time"),
-                           origin = "1970-01-01") %in% start_dates
+  if (!(all(as.POSIXct(date_vals, tz = "UTC", origin = "1970-01-01",
+                       format = "%Y-%m-%d") %in% start_dates))) {
+    filter_indx <- as.POSIXct(stars::st_get_dimension_values(x, "valid_time"),
+                              origin = "1970-01-01", tz = "UTC",
+                              format = "%Y-%m-%d") %in% start_dates
     filter_indx <- which(filter_indx)
     x <-  .slice_stars_dimname(x, "valid_time", filter_indx)
   }
   dims <- stars::st_dimensions(x)
-  date_vals <- as.Date(stars::st_get_dimension_values(x, "valid_time"),
-                       origin = "1970-01-01")
+  date_vals <- as.POSIXct(stars::st_get_dimension_values(x, "valid_time"),
+                          origin = "1970-01-01", tz = "UTC",
+                          format = "%Y-%m-%d")
   if (one_dim) {
     grid_dates <- grid_dates[grid_dates$forecast_date %in% date_vals, ]
   }
-  sdate_date <- as.Date(grid_dates$sdate)
-  fdate_date <- as.Date(grid_dates$forecast_date)
+  sdate_date <- as.POSIXct(grid_dates$sdate, origin = "1970-01-01", tz = "UTC",
+                           format = "%Y-%m-%d")
+  fdate_date <- as.POSIXct(grid_dates$forecast_date, origin = "1970-01-01",
+                           tz = "UTC", format = "%Y-%m-%d")
   grid_dates <- grid_dates[sdate_date %in% date_vals &
                              fdate_date %in% date_vals, ]
   coords <- list()
@@ -987,21 +1009,22 @@
   names(coords)[which(names(coords) == "y")] <- "latitude"
   names(coords)[which(names(coords) == "valid_time")] <- "time"
   coords[["time"]] <- as.POSIXct(coords[["time"]], origin = "1970-01-01",
-                                 tz = "UTC")
+                                 tz = "UTC", format = "%Y-%m-%d")
   if (one_dim) {
-    dates <- matrix(as.POSIXct(grid_dates$forecast_date,
+    dates <- matrix(as.POSIXct(grid_dates$forecast_date, format = "%Y-%m-%d",
                                origin = "1970-01-01", tz = "UTC"),
                     nrow = length(unique(grid_dates$sdate)),
                     ncol = length(leadtime_month),
                     byrow = FALSE)
   } else {
-    dates <- matrix(as.POSIXct(grid_dates$forecast_date,
+    dates <- matrix(as.POSIXct(grid_dates$forecast_date, format = "%Y-%m-%d",
                                origin = "1970-01-01", tz = "UTC"),
                     nrow = length(unique(grid_dates$sdate)),
                     byrow = TRUE)
     dates <- dates[, colSums(is.na(dates)) != nrow(dates)]
   }
-  dates <- as.POSIXct(dates, origin = "1970-01-01", tz = "UTC")
+  dates <- as.POSIXct(dates, origin = "1970-01-01",
+                      tz = "UTC", format = "%Y-%m-%d")
   if (is.null(dim(dates))) {
     dim(dates) <- c(sdate = 1, time = length(dates))
   }

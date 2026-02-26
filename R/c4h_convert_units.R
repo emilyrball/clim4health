@@ -112,12 +112,11 @@ c4h_convert_units <- function(data,
   # Convert units
   data_out <- data$data
   for (idx in seq_along(var_idx)) {
+    s <- rep(list(TRUE), length(dim(data$data)))
+    s[[2]] <- var_idx[idx]
+
     data_out <- do.call(`[<-`, c(
-      list(data_out),
-      rep(list(TRUE), length(dim(data$data))) |>
-        (\(s) {
-          s[[2]] <- var_idx[idx]; s
-        })(),
+      list(data_out), s,
       list(value = units::ud_convert(
         .subset_array_named(data$data, var = var_idx[idx]),
         from = from[idx],

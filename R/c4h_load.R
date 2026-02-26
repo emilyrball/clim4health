@@ -119,8 +119,6 @@ c4h_load <- function(path,
 
   # handle bbox parameter
   if (is.null(bbox)) {
-    message(paste0("Note: parameter 'bbox' is not specified, loading all ",
-                   "possible latitudes and longitudes."))
     lat_selection <- "all"
     lon_selection <- "all"
   } else {
