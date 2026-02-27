@@ -38,7 +38,7 @@ RUN R -e "\
         'rlang', 'rmarkdown', 'roxygen2', 'sf', 'testthat', 'tidyr', \
         'CSTools','png', 'filelock', 'rstudioapi', 'sp', 'gridpattern', \
         'keyring', 'getPass', 'cubelyr', 'spData', 'ggpattern', 'CSDownscale', \
-        'terra', 'stars', 'ecmwfr'), \
+        'terra', 'stars', 'ecmwfr', 'GHRexplore'), \
       INSTALL_opts = c('--no-docs','--no-help','--no-demo'))"
 
 # --------------------------------------------------------

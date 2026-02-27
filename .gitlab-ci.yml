@@ -1,6 +1,24 @@
 stages:
+  - check
   - test
   - coverage
+
+check:
+  stage: check
+  tags:
+    - ghrexplore_runner
+  image: rnunesro/clim4health:latest
+  cache: []
+  variables:
+    R_LIBS_SITE: /usr/local/lib/R/site-library
+  script:
+    - R CMD build .
+    - R CMD check --as-cran --no-manual clim4health_*.tar.gz
+  artifacts:
+    when: on_failure
+    paths:
+      - clim4health.Rcheck/00check.log
+    expire_in: 1 day
 
 unit-test:
   stage: test

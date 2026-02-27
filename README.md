@@ -55,7 +55,7 @@ Climate Services
 Barcelona Supercomputing Center\
 Global Health Resilience
 
-**[Raul Capellan Fernandez, MSc](https://www.bsc.es/capellan-fernandez-raul)** \
+**Raul Capellan Fernandez, MSc** \
 Barcelona Supercomputing Center\
 Earth Data and Diagnostics
 
