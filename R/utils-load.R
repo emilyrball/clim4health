@@ -44,6 +44,8 @@
 #' @param file_list list of files or path to directory containing files to be
 #' loaded.
 #' @param variable name of variable to be loaded.
+#' @param year year of the data to be loaded. If "all", all years will be
+#' loaded.
 #' @param month month of the data to be loaded. If "all", all months will be
 #' loaded.
 #' @param day day of the data to be loaded. If "all", all days will be loaded.
@@ -97,10 +99,10 @@
   lons <- .get_csv_dims(headers, data, c("x", "lon", "longitude"))
 
   # If lat_selection or lon_selection is "all", select all coordinates
-  if (lat_selection == "all" && !is.null(lats$col)) {
+  if (identical(lat_selection, "all") && !is.null(lats$col)) {
     lat_selection <- c(min(lats$val), max(lats$val))
   }
-  if (lon_selection == "all" && !is.null(lons$col)) {
+  if (identical(lon_selection, "all") && !is.null(lons$col)) {
     lon_selection <- c(min(lons$val), max(lons$val))
   }
   # subset to only the requested coordinates (lat_selection and lon_selection)
@@ -141,22 +143,22 @@
   dates_all <- lubridate::parse_date_time(
     times$val,
     orders = c("Ymd HMS", "Ymd", "dmY HMS", "dmY", "mdY HMS", "mdY",
-               "Ym", "mY")#,
-    #tz = "UTC"
+               "Ym", "mY")
+    ### REVIEW - tz = "UTC" to force timezone?
   )
   dates <- unique(dates_all)
 
   # filter dates if year, month, day or time are specified
-  if (any(year == "all")) {
+  if (identical(year, "all")) {
     year <- unique(lubridate::year(dates_all))
   }
-  if (any(month == "all")) {
+  if (identical(month, "all")) {
     month <- 1:12
   }
-  if (any(day == "all")) {
+  if (identical(day, "all")) {
     day <- 1:31
   }
-  if (any(time == "all")) {
+  if (identical(time, "all")) {
     time <- 0:23
   }
   start_dates <- .paste_outer(.paste_outer(year, sprintf("-%02d", month)),
@@ -168,17 +170,20 @@
 
   start_dates_tmp <-
     lubridate::parse_date_time(start_dates, orders =
-                               c("Ymd HMS", "Ymd"))#, tz = "UTC")
+                               c("Ymd HMS", "Ymd"))### REVIEW - tz = "UTC"
   start_dates <- unique(start_dates_tmp[!is.na(start_dates_tmp)])
 
-  if (any(leadtime_month == "all")) {
+  if (identical(leadtime_month, "all")) {
     timeseries <- TRUE
     leadtime_month <- 1
   } else {
     timeseries <- FALSE
   }
+
+  one_dim <- any(leadtime_month == "all") || identical(leadtime_month, 1)
+
   grid_dates <- expand.grid(sdate = as.POSIXct(start_dates,
-                                               #tz = "UTC",
+                                               ### REVIEW - tz = "UTC"
                                                format = "%Y-%m-%d %H:%M:%S"),
                             time = leadtime_month)
 
@@ -197,19 +202,19 @@
   dates <- unique(dates_all)
 
   dates <- matrix(as.POSIXct(grid_dates$forecast_date,
-                             origin = "1970-01-01"),# tz = "UTC"),
+                             origin = "1970-01-01"),### REVIEW - tz = "UTC"
                   nrow = length(unique(grid_dates$sdate)),
                   ncol = length(leadtime_month),
                   byrow = FALSE)
 
-  dates <- as.POSIXct(dates, origin = "1970-01-01")#, tz = "UTC")
+  dates <- as.POSIXct(dates, origin = "1970-01-01")### REVIEW - tz = "UTC"
 
   names(dim(dates)) <- c("sdate", "time")
   # end datetime management
 
   # obtain metadata
-  lat <- c() # initialise
-  lon <- c() # initialise
+  lat <- NULL # initialise
+  lon <- NULL # initialise
 
   if (!is.null(lats$col) && !is.null(lons$col)) {
     coordinates <- unique(paste0(lats$val, "; ", lons$val))
@@ -233,8 +238,9 @@
                               location = length(coordinates)))
 
   # reshape data and dates
+  s_index <- match(grid_dates$sdate, dates[, 1])
   for (i in seq_len(nrow(grid_dates))) {
-    s <- which(dates[, 1] == grid_dates$sdate[i])
+    s <- s_index[i]
     if (length(s) == 0) {
       next
     }
@@ -261,8 +267,8 @@
                  time = seq(dim(dates)[["time"]]),
                  ensemble = 1,
                  location = seq_along(coordinates))
-  # case 1: leadtime_month = 1
-  if (length(leadtime_month) == 1 && any(leadtime_month == 1) && timeseries) {
+
+  if (timeseries && one_dim) { # one_dim parameter needed to be defined?
     # rename sdate and time dimensions so time is stored in time dimension
     # and sdate is always 1
     data_array <- aperm(data_array, c(1, 2, 4, 3, 5, 6))
@@ -288,7 +294,7 @@
 
   data$attrs$location <- list(longitude = lon,
                               latitude = lat)
-  return(data)
+  data
 }
 
 #' .c4h_load_nc_stars
@@ -345,7 +351,6 @@
                      " Skipping."))
       next
     }
-
     # get individual file dimensions
     x <- stars::read_stars(file_list[1], proxy = TRUE)
     dim_names <- names(stars::st_dimensions(x))
@@ -356,8 +361,12 @@
       concat_dim <- "forecast_reference_time"
     } else if ("forecast_period" %in% dim_names) {
       concat_dim <- "forecast_period"
+    } else {
+      stop("Currently unable to load files with dimensions ",
+           paste(dim_names, collapse = ", "), ".")
     }
 
+    # determine from first file if data is hourly, daily, or monthly
     date_vals <- stars::st_get_dimension_values(x, concat_dim)
     date_vals <- as.POSIXct(date_vals, origin = "1970-01-01",
                             format = "%Y-%m-%d %H:%M:%S", tz = "UTC")
@@ -376,10 +385,10 @@
     lon_vals <- stars::st_get_dimension_values(x, "x")
     lat_vals <- stars::st_get_dimension_values(x, "y")
 
-    if (any(lat_selection == "all")) {
+    if (identical(lat_selection, "all")) {
       lat_selection <- lat_vals
     }
-    if (any(lon_selection == "all")) {
+    if (identical(lon_selection, "all")) {
       lon_selection <- lon_vals
     }
     lon_idx <- which(lon_vals >= min(lon_selection) &
@@ -422,22 +431,29 @@
 
     lon_vals <- stars::st_get_dimension_values(x, "x")
     lat_vals <- stars::st_get_dimension_values(x, "y")
-    date_vals <- stars::st_get_dimension_values(x, concat_dim)
+    # get all date values across files
+    date_vals <- do.call(c, lapply(file_list, function(f) {
+      stars::st_get_dimension_values(
+        stars::read_stars(f, proxy = TRUE),
+        concat_dim
+      )
+    }))
+
     date_vals <- as.POSIXct(date_vals, origin = "1970-01-01",
-                            format = "%Y-%m-%d %H:%M:%S", tz = "UTC")
+                            format = "%Y-%m-%d", tz = "UTC")
 
     units <- .extract_units(x, attr_var)
 
-    if (any(year == "all")) {
+    if (identical(year, "all")) {
       year <- unique(lubridate::year(date_vals))
     }
-    if (any(month == "all")) {
+    if (identical(month, "all")) {
       month <- 1:12
     }
-    if (any(day == "all")) {
+    if (identical(day, "all")) {
       day <- 1:31
     }
-    if (any(time == "all")) {
+    if (identical(time, "all")) {
       time <- 0:23
     }
 
@@ -507,12 +523,10 @@
   data_out$attrs$source_files <- unlist(file_list_var)
   data_out$attrs$source_files <- gsub("NETCDF:\"(.*)\"", "\\1",
                                       data_out$attrs$source_files)
-  #data_out$attrs$source_files <- gsub(":(.*)", "\\1",
-  #                                    data_out$attrs$source_files)
   names(data_out$attrs$source_files) <- NULL
   data_out$attrs$Variable$metadata$units <- unlist(units_out)
   names(data_out$attrs$Variable$metadata$units) <- data_out$coords$var
-  return(data_out)
+  data_out
 }
 
 #' Slice stars object using a dimension name and a slice index.
@@ -559,6 +573,9 @@
 .load_hourly_observations <- function(x, leadtime_month, date_vals,
                                       year, month, day, time,
                                       file_list, var, units) {
+  # initialise full list of dates
+  date_vals <- as.POSIXct(date_vals, format = "%Y-%m-%d %H:%M:%S",
+                          origin = "1970-01-01", tz = "UTC")
   if (any(leadtime_month == "all")) {
     timeseries <- TRUE
   } else {
@@ -597,6 +614,7 @@
                               time = leadtime_month,
                               sdate =
                                 as.POSIXct(start_dates_sd, tz = "UTC",
+                                           origin = "1970-01-01",
                                            format = "%Y-%m-%d %H:%M:%S"))
 
     grid_dates <- rev(grid_dates)
@@ -608,40 +626,44 @@
              sprintf("-%02d", lubridate::month(grid_dates$forecast_date)),
              grid_dates$dayhour)
     grid_dates$forecast_date <-
-      as.POSIXct(grid_dates$forecast_date, tz = "UTC",
+      as.POSIXct(grid_dates$forecast_date, tz = "UTC", origin = "1970-01-01",
                  format = "%Y-%m-%d %H:%M:%S")
   }
 
   start_dates <- unique(sort(c(grid_dates$forecast_date)))
-  if (!(any(as.POSIXct(date_vals, origin = "1970-01-01", tz = "UTC") %in%
-              start_dates))) {
+
+  if (!(any(date_vals %in% start_dates))) {
     stop(paste0("No matching dates found for the specified year, month,",
-                " day, and time. Dates found in data lie in the range: ",
-                paste0(range(date_vals), collapse = " - "),
+                " day, and hour of day (time). Dates found in data lie in the ",
+                "range: ", paste0(range(date_vals), collapse = " - "),
                 ". Please adjust the date selection accordingly."))
   }
-  if (!(all(as.POSIXct(date_vals, origin = "1970-01-01", tz = "UTC") %in%
-              start_dates))) {
-    filter_indx <- as.POSIXct(stars::st_get_dimension_values(x, "valid_time"),
-                              origin = "1970-01-01",
-                              tz = "UTC") %in% start_dates
+  if (!(all(date_vals %in% start_dates))) {
+    filter_indx <- date_vals %in% start_dates
     filter_indx <- which(filter_indx)
-    x <-  .slice_stars_dimname(x, "valid_time", filter_indx)
+    x <- .slice_stars_dimname(x, "valid_time", filter_indx)
+    date_vals <- date_vals[filter_indx]
   }
 
   dims <- stars::st_dimensions(x)
-
-  date_vals <- as.POSIXct(stars::st_get_dimension_values(x, "valid_time"),
-                          origin = "1970-01-01", tz = "UTC")
 
   if (one_dim) {
     grid_dates <- grid_dates[grid_dates$forecast_date %in% date_vals, ]
   }
   coords <- list()
   for (dim in names(dims)) {
-    coords[[dim]] <- as.vector(stars::st_get_dimension_values(x, dim))
+    if (dim != "valid_time") {
+      coords[[dim]] <- as.vector(stars::st_get_dimension_values(x, dim))
+    } else {
+      coords[[dim]] <- date_vals
+    }
   }
-  coords[["sdate"]] <- seq_along(unique(grid_dates$sdate))
+  if ("dayhour" %in% names(grid_dates)) {
+    coords[["sdate"]] <- seq_along(unique(paste0(grid_dates$sdate,
+                                                 grid_dates$dayhour)))
+  } else {
+    coords[["sdate"]] <- seq_along(unique(grid_dates$sdate))
+  }
   coords[["ensemble"]] <- 1
   names(coords)[which(names(coords) == "x")] <- "longitude"
   names(coords)[which(names(coords) == "y")] <- "latitude"
@@ -649,18 +671,17 @@
 
   coords[["dates"]] <- as.POSIXct(coords[["dates"]],
                                   origin = "1970-01-01",
-                                  tz = "UTC")
+                                  tz = "UTC",
+                                  format = "%Y-%m-%d %H:%M:%S")
 
   if (one_dim) {
-    dates <- matrix(as.POSIXct(grid_dates$forecast_date,
-                               origin = "1970-01-01", tz = "UTC"),
-                    nrow = length(unique(grid_dates$sdate)),
+    dates <- matrix(grid_dates$forecast_date,
+                    nrow = length(coords[["sdate"]]),
                     ncol = length(leadtime_month),
                     byrow = FALSE)
   } else {
-    dates <- matrix(as.POSIXct(grid_dates$forecast_date,
-                               origin = "1970-01-01", tz = "UTC"),
-                    nrow = length(unique(grid_dates$sdate)),
+    dates <- matrix(grid_dates$forecast_date,
+                    nrow = length(coords[["sdate"]]),
                     byrow = TRUE)
     dates <- dates[, colSums(is.na(dates)) != nrow(dates)]
   }
@@ -677,31 +698,15 @@
   } else {
     coords[["time"]] <- seq_len(ncol(dates))
   }
-  data_array <- array(NA_real_,
-                      dim = c(dataset = 1,
-                              var = 1,
-                              sdate = dim(dates)[["sdate"]],
-                              time  = dim(dates)[["time"]],
-                              ensemble = length(coords[["ensemble"]]),
-                              latitude = length(coords[["latitude"]]),
-                              longitude = length(coords[["longitude"]])))
-  date_index <- match(grid_dates$forecast_date, date_vals)
-  dims <- names(dim(x[[1]]))
-  reordered <- match(dims, c("y", "x", "valid_time"))
-  x[[1]] <- aperm(x[[1]], reordered)
-  # fill by indexing along valid_time
-  for (i in seq_len(nrow(grid_dates))) {
-    s <- which(dates[, 1] == grid_dates$sdate[i])
-    t <- grid_dates$time[i]
-    v <- date_index[i]  # index in arr_x valid_time
-    data_array[1, 1, s, t, 1, , ] <- x[[1]][, , v]
-  }
+
+  data_array <- .index_and_fill(x, grid_dates, date_vals, dates, coords)
 
   coords <- coords[c("dataset", "var", "sdate", "time",
                      "ensemble", "latitude", "longitude")]
 
-  # case 1: leadtime_month = 1
-  if (length(leadtime_month) == 1 && any(leadtime_month == 1) && timeseries) {
+  # case 1: data should be stored in one dimension and
+  # time is stored in time dimension
+  if (one_dim && timeseries) {
     # rename sdate and time dimensions so time is stored in time dimension
     # and sdate is always 1
     data_array <- aperm(data_array, c(1, 2, 4, 3, 5, 6, 7))
@@ -744,6 +749,8 @@
                                      date_vals,
                                      year, month, day,
                                      file_list, var, units) {
+  date_vals <- as.POSIXct(date_vals, format = "%Y-%m-%d",
+                          origin = "1970-01-01", tz = "UTC")
   if (any(leadtime_month == "all")) {
     timeseries <- TRUE
   } else {
@@ -793,36 +800,40 @@
   }
 
   start_dates <- unique(sort(c(grid_dates$forecast_date)))
-  if (!(any(as.POSIXct(date_vals, origin = "1970-01-01",
-                       tz = "UTC", format = "%Y-%m-%d") %in% start_dates))) {
+  if (!(any(date_vals %in% start_dates))) {
     stop(paste0("No matching dates found for the specified year, month,",
-                " day, and time. Dates found in data lie in the range: ",
-                paste0(range(as.POSIXct(date_vals, origin = "1970-01-01",
-                                        tz = "UTC", format = "%Y-%m-%d")),
-                       collapse = " - "),
+                " day, and hour of day (time). Dates found in data lie in the ",
+                "range: ", paste0(range(date_vals), collapse = " - "),
                 ". Please adjust the date selection accordingly."))
   }
-  if (!(all(as.POSIXct(date_vals, origin = "1970-01-01",
-                       tz = "UTC", format = "%Y-%m-%d") %in% start_dates))) {
-    filter_indx <- as.POSIXct(stars::st_get_dimension_values(x, "valid_time"),
-                              origin = "1970-01-01",
-                              tz = "UTC", format = "%Y-%m-%d") %in% start_dates
+  if (!(all(date_vals %in% start_dates))) {
+    filter_indx <- date_vals %in% start_dates
     filter_indx <- which(filter_indx)
-    x <-  .slice_stars_dimname(x, "valid_time", filter_indx)
+    x <- .slice_stars_dimname(x, "valid_time", filter_indx)
+    date_vals <- date_vals[filter_indx]
   }
 
   dims <- stars::st_dimensions(x)
-  date_vals <- as.POSIXct(stars::st_get_dimension_values(x, "valid_time"),
-                          origin = "1970-01-01", tz = "UTC")
+
   if (one_dim) {
     grid_dates <- grid_dates[grid_dates$forecast_date %in% date_vals, ]
   }
 
   coords <- list()
   for (dim in names(dims)) {
-    coords[[dim]] <- as.vector(stars::st_get_dimension_values(x, dim))
+    if (dim != "valid_time") {
+      coords[[dim]] <- as.vector(stars::st_get_dimension_values(x, dim))
+    } else {
+      coords[[dim]] <- date_vals
+    }
   }
-  coords[["sdate"]] <- seq_along(unique(grid_dates$sdate))
+
+  if (one_dim) {
+    coords[["sdate"]] <- seq_along(unique(grid_dates$sdate))
+  } else {
+    coords[["sdate"]] <- seq_along(unique(paste0(grid_dates$sdate,
+                                                 grid_dates$day)))
+  }
   coords[["ensemble"]] <- 1
   names(coords)[which(names(coords) == "x")] <- "longitude"
   names(coords)[which(names(coords) == "y")] <- "latitude"
@@ -833,13 +844,13 @@
   if (one_dim) {
     dates <- matrix(as.POSIXct(grid_dates$forecast_date,
                                origin = "1970-01-01", tz = "UTC"),
-                    nrow = length(unique(grid_dates$sdate)),
+                    nrow = length(coords[["sdate"]]),
                     ncol = length(leadtime_month),
                     byrow = FALSE)
   } else {
     dates <- matrix(as.POSIXct(grid_dates$forecast_date,
                                origin = "1970-01-01", tz = "UTC"),
-                    nrow = length(unique(grid_dates$sdate)),
+                    nrow = length(coords[["sdate"]]),
                     byrow = TRUE)
     dates <- dates[, colSums(is.na(dates)) != nrow(dates)]
   }
@@ -855,31 +866,14 @@
   } else {
     coords[["time"]] <- seq_len(ncol(dates))
   }
-  data_array <- array(NA_real_,
-                      dim = c(dataset = 1,
-                              var = 1,
-                              sdate = dim(dates)[["sdate"]],
-                              time  = dim(dates)[["time"]],
-                              ensemble = length(coords[["ensemble"]]),
-                              latitude = length(coords[["latitude"]]),
-                              longitude = length(coords[["longitude"]])))
-  date_index <- match(grid_dates$forecast_date, date_vals)
-  dims <- names(dim(x[[1]]))
-  reordered <- match(dims, c("y", "x", "valid_time"))
-  x[[1]] <- aperm(x[[1]], reordered)
-  # fill by indexing along valid_time
-  for (i in seq_len(nrow(grid_dates))) {
-    s <- which(dates[, 1] == grid_dates$sdate[i])
-    t <- grid_dates$time[i]
-    v <- date_index[i]  # index in arr_x valid_time
-    data_array[1, 1, s, t, 1, , ] <- x[[1]][, , v]
-  }
+
+  data_array <- .index_and_fill(x, grid_dates, date_vals, dates, coords)
 
   coords <- coords[c("dataset", "var", "sdate", "time",
                      "ensemble", "latitude", "longitude")]
 
   # case 1: leadtime_month = 1
-  if (length(leadtime_month) == 1 && any(leadtime_month == 1) && timeseries) {
+  if (one_dim && timeseries) {
     # rename sdate and time dimensions so time is stored in time dimension
     # and sdate is always 1
     data_array <- aperm(data_array, c(1, 2, 4, 3, 5, 6, 7))
@@ -923,6 +917,8 @@
                                        date_vals,
                                        year, month, day,
                                        file_list, var, units) {
+  date_vals <- as.POSIXct(date_vals, format = "%Y-%m-%d",
+                          origin = "1970-01-01", tz = "UTC")
   if (any(leadtime_month == "all")) {
     timeseries <- TRUE
   } else {
@@ -968,31 +964,25 @@
                  format = "%Y-%m-%d", origin = "1970-01-01")
   }
   start_dates <- unique(sort(c(grid_dates$forecast_date)))
-  if (!(any(as.POSIXct(date_vals, tz = "UTC", origin = "1970-01-01",
-                       format = "%Y-%m-%d") %in% start_dates))) {
+  if (!(any(date_vals %in% start_dates))) {
     stop(paste0("No matching dates found for the specified year, month,",
-                " day, and time. Dates found in data lie in the range: ",
-                paste0(range(as.POSIXct(date_vals, tz = "UTC", 
-                                        origin = "1970-01-01",
-                                        format = "%Y-%m-%d")),
-                       collapse = " - "),
+                " day, and hour of day (time). Dates found in data lie in the ",
+                "range: ", paste0(range(date_vals), collapse = " - "),
                 ". Please adjust the date selection accordingly."))
   }
-  if (!(all(as.POSIXct(date_vals, tz = "UTC", origin = "1970-01-01",
-                       format = "%Y-%m-%d") %in% start_dates))) {
-    filter_indx <- as.POSIXct(stars::st_get_dimension_values(x, "valid_time"),
-                              origin = "1970-01-01", tz = "UTC",
-                              format = "%Y-%m-%d") %in% start_dates
+  if (!(all(date_vals %in% start_dates))) {
+    filter_indx <- date_vals %in% start_dates
     filter_indx <- which(filter_indx)
-    x <-  .slice_stars_dimname(x, "valid_time", filter_indx)
+    x <- .slice_stars_dimname(x, "valid_time", filter_indx)
+    date_vals <- date_vals[filter_indx]
   }
+
   dims <- stars::st_dimensions(x)
-  date_vals <- as.POSIXct(stars::st_get_dimension_values(x, "valid_time"),
-                          origin = "1970-01-01", tz = "UTC",
-                          format = "%Y-%m-%d")
+
   if (one_dim) {
     grid_dates <- grid_dates[grid_dates$forecast_date %in% date_vals, ]
   }
+
   sdate_date <- as.POSIXct(grid_dates$sdate, origin = "1970-01-01", tz = "UTC",
                            format = "%Y-%m-%d")
   fdate_date <- as.POSIXct(grid_dates$forecast_date, origin = "1970-01-01",
@@ -1001,8 +991,13 @@
                              fdate_date %in% date_vals, ]
   coords <- list()
   for (dim in names(dims)) {
-    coords[[dim]] <- as.vector(stars::st_get_dimension_values(x, dim))
+    if (dim != "valid_time") {
+      coords[[dim]] <- as.vector(stars::st_get_dimension_values(x, dim))
+    } else {
+      coords[[dim]] <- date_vals
+    }
   }
+
   coords[["sdate"]] <- seq_along(unique(grid_dates$sdate))
   coords[["ensemble"]] <- 1
   names(coords)[which(names(coords) == "x")] <- "longitude"
@@ -1034,29 +1029,13 @@
   } else {
     coords[["time"]] <- seq_len(ncol(dates))
   }
-  data_array <- array(NA_real_,
-                      dim = c(dataset = 1,
-                              var = 1,
-                              sdate = dim(dates)[["sdate"]],
-                              time  = dim(dates)[["time"]],
-                              ensemble = length(coords[["ensemble"]]),
-                              latitude = length(coords[["latitude"]]),
-                              longitude = length(coords[["longitude"]])))
-  date_index <- match(grid_dates$forecast_date, date_vals)
-  dims <- names(dim(x[[1]]))
-  reordered <- match(dims, c("y", "x", "valid_time"))
-  x[[1]] <- aperm(x[[1]], reordered)
-  # fill by indexing along valid_time
-  for (i in seq_len(nrow(grid_dates))) {
-    s <- which(dates[, 1] == grid_dates$sdate[i])
-    t <- grid_dates$time[i]
-    v <- date_index[i]  # index in arr_x valid_time
-    data_array[1, 1, s, t, 1, , ] <- x[[1]][, , v]
-  }
+
+  data_array <- .index_and_fill(x, grid_dates, date_vals, dates, coords)
+
   coords <- coords[c("dataset", "var", "sdate", "time",
                      "ensemble", "latitude", "longitude")]
-  # case 1: leadtime_month = 1
-  if (length(leadtime_month) == 1 && any(leadtime_month == 1) && timeseries) {
+  # case 1: loading all along the time dimension
+  if (one_dim && timeseries) {
     # rename sdate and time dimensions so time is stored in time dimension
     # and sdate is always 1
     data_array <- aperm(data_array, c(1, 2, 4, 3, 5, 6, 7))
@@ -1099,6 +1078,9 @@
                            date_vals,
                            year, month, day,
                            file_list, var, units) {
+  date_vals <- as.POSIXct(date_vals, format = "%Y-%m-%d",
+                          origin = "1970-01-01", tz = "UTC")
+  # drop unnecessary lead times
   if (!any(leadtime_month == "all")) {
     filter_indx <-
       stars::st_get_dimension_values(x, "forecastMonth") %in% leadtime_month
@@ -1110,18 +1092,22 @@
   start_dates <- as.POSIXct(start_dates, tz = "UTC", format = "%Y-%m-%d")
 
   if (!(all(date_vals %in% start_dates))) {
-    filter_indx <-
-      as.POSIXct(stars::st_get_dimension_values(x,
-                                                "forecast_reference_time"),
-                 origin = "1970-01-01", tz = "UTC") %in% start_dates
+    filter_indx <- date_vals %in% start_dates
     filter_indx <- which(filter_indx)
     x <-  .slice_stars_dimname(x, "forecast_reference_time", filter_indx)
+    date_vals <- date_vals[filter_indx]
   }
+
   dims <- stars::st_dimensions(x)
 
-  coords <-
-    lapply(names(dims),
-           function(dim) as.vector(stars::st_get_dimension_values(x, dim)))
+  coords <- list()
+  for (dim in names(dims)) {
+    if (dim == "forecast_reference_time") {
+      coords[[dim]] <- date_vals
+    } else {
+      coords[[dim]] <- as.vector(stars::st_get_dimension_values(x, dim))
+    }
+  }
   names(coords) <- names(dims)  # set names explicitly
 
   # Rename coordinates
@@ -1245,4 +1231,42 @@
     }
   }
   return(file_list)
+}
+
+#' .index_and_fill
+#'
+#' Reorder dimensions of stars object and fill data array by indexing
+#'
+#' @param x stars object
+#' @param grid_dates A data frame containing the sdates and forecast_dates.
+#' @param date_vals A vector of date values in POSIXct format.
+#' @param dates A matrix of forecast_dates with dimensions sdate and time.
+#' @param coords A list of coordinate vectors for the coordinates of the data
+#' array.
+#'
+#' @returns data_array, an array populated with data from x, reordered and
+#' indexed according to grid_dates,
+#' @noRd
+.index_and_fill <- function(x, grid_dates, date_vals, dates, coords) {
+  data_array <- array(NA_real_,
+                      dim = c(dataset = 1,
+                              var = 1,
+                              sdate = dim(dates)[["sdate"]],
+                              time  = dim(dates)[["time"]],
+                              ensemble = length(coords[["ensemble"]]),
+                              latitude = length(coords[["latitude"]]),
+                              longitude = length(coords[["longitude"]])))
+  date_index <- match(grid_dates$forecast_date, date_vals)
+  dims <- names(dim(x[[1]]))
+  reordered <- match(dims, c("y", "x", "valid_time"))
+  x[[1]] <- aperm(x[[1]], reordered)
+  # fill by indexing along valid_time
+  s_index <- match(grid_dates$sdate, dates[, 1])
+  for (i in seq_len(nrow(grid_dates))) {
+    s <- s_index[i]
+    t <- grid_dates$time[i]
+    v <- date_index[i]  # index in arr_x valid_time
+    data_array[1, 1, s, t, 1, , ] <- x[[1]][, , v]
+  }
+  data_array
 }
