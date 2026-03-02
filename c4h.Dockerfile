@@ -3,7 +3,8 @@
 # Pre-installs R, system deps, CRAN packages, covr, testthat
 # --------------------------------------------------------
 
-FROM r-base:latest
+# FROM r-base:latest
+FROM r-base:4.5.1
 
 # Avoid prompts in apt
 ENV DEBIAN_FRONTEND=noninteractive
@@ -11,7 +12,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 # --------------------------------------------------------
 # System dependencies for R packages
 # --------------------------------------------------------
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
     build-essential \
     libcurl4-openssl-dev \
     libssl-dev \
@@ -26,6 +28,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     pandoc \
     qpdf \
     wget \
+    cdo \
+    nco \
     && rm -rf /var/lib/apt/lists/*
 
 # --------------------------------------------------------
