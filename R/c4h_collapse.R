@@ -96,10 +96,10 @@ c4h_collapse <- function(data,
   # Update Dates attribute
   if (dim == "time") {
     attr_agg$Dates <- data$attrs$Dates[, 1, drop = FALSE]
-    dim(attr_agg$Dates) <- c(sdate = dims_aggr["sdate"], time = 1)
+    dim(attr_agg$Dates) <- c(sdate = dims_aggr[["sdate"]], time = 1)
   } else if (dim == "sdate") {
     attr_agg$Dates <- data$attrs$Dates[1, , drop = FALSE]
-    dim(attr_agg$Dates) <- c(sdate = 1, time = dims_aggr["time"])
+    dim(attr_agg$Dates) <- c(sdate = 1, time = dims_aggr[["time"]])
   }
 
   # Create results s2dv
