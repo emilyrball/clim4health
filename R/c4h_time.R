@@ -84,7 +84,12 @@ c4h_time <- function(data,
     dim_fix <- "time"
   }
   dim_fix_pos <- which(names(dim(time)) == dim_fix)
-  time_zone <- attr(time, "tzone")
+
+  if (!is.null(attr(time, "tzone"))) {
+    time_zone <- attr(time, "tzone")
+  } else {
+    time_zone <- "UTC"
+  }
 
   # Temporal aggregation ----
 
