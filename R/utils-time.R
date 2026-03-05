@@ -5,10 +5,12 @@
 #' @param aggregated_data_i data array to be padded
 #' @param dates_i vector of dates corresponding to the data
 #' @param dim_aggregation dimension along which to aggregate
+#' @param time_zone time zone to use for date handling
 #'
 #' @returns padded data array
 #' @noRd
-.pad_array <- function(aggregated_data_i, dates_i, dim_aggregation = "time") {
+.pad_array <- function(aggregated_data_i, dates_i,
+                       dim_aggregation = "time", time_zone = "UTC") {
 
   # Identify dim_aggregation
   dims     <- dim(aggregated_data_i)
@@ -57,7 +59,8 @@
     )
     # Build padded date labels
     padded_labels <- rep(NA_character_, 31)
-    padded_labels[block_days] <- format(dates_i[old_idx], "%Y-%m-%d UTC")
+    padded_labels[block_days] <- format(dates_i[old_idx],
+                                        paste0("%Y-%m-%d ", tz = time_zone))
     dates_blocks[[k]] <- padded_labels
   }
 
@@ -73,8 +76,10 @@
 #'
 #' @param y vector to be aggregated
 #' @param fun aggregation function
+#' @param threshold numeric between 0 and 1 indicating the minimum proportion of
+#' non-NA values required to compute the aggregation. Defaults to 0.7 (70%).
 #' @returns aggregated value or NA if more than 70% of values are NA
 #' @noRd
-.aggregate_temporally <- function(y, fun) {
-  return(if ((sum(is.na(y)) / length(y)) > 0.7) NA else fun(y, na.rm = TRUE))
+.aggregate_temporally <- function(y, fun, threshold = 0.7) {
+  if ((sum(is.na(y)) / length(y)) > threshold) NA else fun(y, na.rm = TRUE)
 }
