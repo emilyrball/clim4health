@@ -12,23 +12,34 @@
 #' "mean", "sum", "max", "min". Defaults to "mean".
 #' @param week_start for weekly aggregation, specify the starting weekday from
 #' "Monday" to "Sunday".
+#' @param threshold numeric between 0 and 1 indicating the minimum proportion of
+#' non-NA values required to compute the aggregation. Defaults to 0.7 (70%).
 #'
 #' @returns an s2dv_cube object with the temporally aggregated climate data.
 #' @export
 #'
 #' @examples
-#' # Monthly aggregation of reanalysis data
-#' obs_path <- system.file("extdata", "reanalysis", package = "clim4health")
-#' obs <- c4h_load(obs_path, variable = "t2m",
-#'                 year = 2010, month = 1, ext = "nc")
-#' obs_month <- c4h_time(obs, time_aggregation = "monthly",
-#'                       dim_aggregation = "time")
-#' dim(obs_month$data)
+#' # Load station data
+#' station_path <- system.file("extdata", "stations", package = "clim4health")
+#' station_timeseries <- c4h_load(station_path, variable = "temp_mean",
+#'                                ext = "csv")
+#' stat_week <- c4h_time(station_timeseries, time_aggregation = "weekly",
+#'                       dim_aggregation = "time", week_start = "Monday")
+#' dim(stat_week$data)
+#'
+#' # Load station data with sdate dimension
+#' station_data <- c4h_load(station_path, variable = "temp_mean", ext = "csv",
+#'                          month = 1, leadtime_month = 1:12)
+#' # Aggregate to monthly max across sdate dimension
+#' stat_month <- c4h_time(station_data, time_aggregation = "monthly",
+#'                        dim_aggregation = "sdate", fun = "max")
+#' dim(stat_month$data)
 c4h_time <- function(data,
                      time_aggregation,
                      dim_aggregation,
                      fun = "mean",
-                     week_start = NULL) {
+                     week_start = NULL,
+                     threshold = 0.7) {
 
   # Input checks ----
 
@@ -74,6 +85,11 @@ c4h_time <- function(data,
   }
   dim_fix_pos <- which(names(dim(time)) == dim_fix)
 
+  if (!is.null(attr(time, "tzone"))) {
+    time_zone <- attr(time, "tzone")
+  } else {
+    time_zone <- "UTC"
+  }
 
   # Temporal aggregation ----
 
@@ -96,19 +112,19 @@ c4h_time <- function(data,
     # dates_i: resulting time stamps to be used after aggregation
     time_groups <- if (time_aggregation == "yearly") {
       dates_i <- as.POSIXct(paste0(unique(lubridate::year(time_i)),
-                                   "-01-01"), tz = "UTC")
+                                   "-01-01"), tz = time_zone)
       lubridate::year(time_i)
 
     } else if (time_aggregation == "monthly") {
       # Extract year-month as groups
       dates_i <- unique(as.POSIXct(paste(format(time_i, "%Y-%m"),
-                                         "01", sep = "-"), tz = "UTC"))
+                                         "01", sep = "-"), tz = time_zone))
       paste(format(time_i, "%Y-%m"), "01", sep = "-")
 
     } else if (time_aggregation == "daily") {
       # Extract daily as groups
-      dates_i <- unique(as.POSIXct(format(time_i, "%Y-%m-%d"), tz = "UTC"))
-      as.POSIXct(format(time_i, "%Y-%m-%d"), tz = "UTC")
+      dates_i <- unique(as.POSIXct(format(time_i, "%Y-%m-%d"), tz = time_zone))
+      as.POSIXct(format(time_i, "%Y-%m-%d"), tz = time_zone)
 
     } else if (time_aggregation == "weekly") {
       # Epidemiological weeks and years
@@ -144,7 +160,7 @@ c4h_time <- function(data,
             seq(dims_i)[-agg_dim_idx], # all dimensions but dim_aggregation
             function(x) {
               tapply(x, time_groups,
-                     .aggregate_temporally, fun)
+                     .aggregate_temporally, fun = fun, threshold = threshold)
             })
 
     # Fix dimensions ----
@@ -184,9 +200,10 @@ c4h_time <- function(data,
 
     # Formatting the dates attribute: format and dimensions
     if (time_aggregation == "daily") {
-      aggregated_data_i$attrs$Dates <- as.POSIXct(dates_i, tz = "UTC")
+      aggregated_data_i$attrs$Dates <- as.POSIXct(dates_i, tz = time_zone)
     } else if (time_aggregation == "weekly") {
-      aggregated_data_i$attrs$Dates <- as.Date(dates_i, format = "%Y-%m-%d")
+      aggregated_data_i$attrs$Dates <- as.POSIXct(dates_i, format = "%Y-%m-%d",
+                                                  tz = time_zone)
     } else {
       aggregated_data_i$attrs$Dates <- dates_i
     }
@@ -205,7 +222,8 @@ c4h_time <- function(data,
     # Across the fixed dimension
     if (i == 1) {
       aggregated_data <- aggregated_data_i
-      dates <- aggregated_data_i$attrs$Dates
+      ## can be removed?
+      #dates <- aggregated_data_i$attrs$Dates
     } else {
       aggregated_data <- CSTools::CST_BindDim(x = list(aggregated_data,
                                                        aggregated_data_i),
@@ -215,7 +233,7 @@ c4h_time <- function(data,
       if (time_aggregation == "daily") {
         aggregated_data$attrs$Dates <- as.POSIXct(aggregated_data$attrs$Dates,
                                                   origin = "1970-01-01",
-                                                  tz = "UTC")
+                                                  tz = time_zone)
       }
     }
 
