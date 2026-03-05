@@ -45,7 +45,7 @@ c4h_convert_units <- function(data,
 
   # Check existing relevant variable
   if (!is.null(variable) && !is.null(data$attrs$Variable$varName) &&
-        !any(variable %in% data$attrs$Variable$varName)) {
+        !all(variable %in% data$attrs$Variable$varName)) {
     stop("'data' does not contain the specified variable. Variables are: ",
          paste(data$attrs$Variable$varName, collapse = ", "))
   } else if (!all(is.null(variable)) && !is.null(data$attrs$Variable$varName) &&
@@ -126,7 +126,12 @@ c4h_convert_units <- function(data,
   }
 
   # Update variable units
-  data$attrs$Variable$metadata$units[var_idx] <- to
+  if (!is.null(data$attrs$Variable$metadata$units)) {
+    data$attrs$Variable$metadata$units[var_idx] <- to
+  } else {
+    data$attrs$Variable$metadata$units <-
+      setNames(to, data$attrs$Variable$varName[var_idx])
+  }
 
   # Replace data
   data$data <- data_out
