@@ -45,15 +45,15 @@
 #' # stations <- c4h_load(station_path, variable = "temp_mean", ext = 'csv')
 #' # out <- c4h_convert(stations,
 #' #                    "csv")
-c4h_convert <- function(data_object,
+c4h_convert <- function(data,
                         output_format) {
   if (output_format == "terra") {
-    .s2dv_to_terra(data_object) ### REVIEW crs argument unused
+    .s2dv_to_terra(data) ### REVIEW crs argument unused
 
   } else if (output_format == "csv") {
-    .s2dv_to_csv(data_object) ### REVIEW file argument unused
+    .s2dv_to_csv(data) ### REVIEW file argument unused
 
   } else if (output_format == "polygons") {
-    .s2dv_to_polygons(data_object) ### REVIEW crs argument unused
+    .s2dv_to_polygons(data) ### REVIEW crs argument unused
   }
 }
