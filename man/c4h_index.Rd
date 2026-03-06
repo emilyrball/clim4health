@@ -27,7 +27,7 @@ cells below that value will be masked out.}
 cells above that value will be masked out.}
 
 \item{closed}{Boolean. If TRUE (default), closed intervals including
-the threshold values. If TRUE, itnervals are open.}
+the threshold values. If FALSE, intervals are open.}
 }
 \value{
 A s2dv_cube with the values masked or the mask (depending on
