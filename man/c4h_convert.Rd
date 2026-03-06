@@ -4,13 +4,13 @@
 \alias{c4h_convert}
 \title{c4h_convert}
 \usage{
-c4h_convert(data_object, output_format)
+c4h_convert(data, output_format)
 }
 \arguments{
+\item{data}{The object to transform}
+
 \item{output_format}{A string specifying the desired output format.
 Valid options are 's2dv', 'terra', 'csv' or 'polygons'}
-
-\item{data}{The object to transform}
 }
 \value{
 An R object of type terra SpatRaster, data.frame or sf polygons.
