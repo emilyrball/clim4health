@@ -285,8 +285,9 @@
                              coords = coords,
                              varName = variable,
                              Dates = dates,
-                             metadata = list(source_files = file_list,
-                                             units = NULL))
+                             metadata = list(variable = variable,
+                                             units = NULL,
+                                             source_files = file_list))
 
   if (!is.null(metadata)) {
     data$attrs$Variable$metadata$header <- metadata

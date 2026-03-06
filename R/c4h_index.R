@@ -10,7 +10,7 @@
 #' @param upper_threshold Numeric. Optional upper threshold of the mask. All
 #' cells above that value will be masked out.
 #' @param closed Boolean. If TRUE (default), closed intervals including
-#' the threshold values. If TRUE, itnervals are open.
+#' the threshold values. If FALSE, intervals are open.
 #'
 #' @returns A s2dv_cube with the values masked or the mask (depending on
 #' `return_mask`).
