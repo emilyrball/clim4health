@@ -130,12 +130,78 @@ make_mock_location_cube <- function(
   cube
 }
 
+make_mock_area_cube <- function(
+    nd   = 1,   # datasets
+    nv   = 1,   # variables
+    ns   = 1,   # start dates
+    nt   = 3,   # lead times
+    nm   = 51,  # ensemble members
+    nloc = 5,
+    start_date = as.Date("2025-01-01"),
+    area_id = NULL
+) {
+
+  dims <- c(
+    dataset   = nd,
+    var       = nv,
+    sdate     = ns,
+    time      = nt,
+    ensemble  = nm,
+    area      = nloc
+  )
+
+  # --- data
+  data <- array(
+    runif(prod(dims), min = 298, max = 300),
+    dim = dims
+  )
+
+  # --- coords
+  coords <- list(
+    dataset   = if (nd == 1) 1 else seq_len(nd),
+    var       = if (nv == 1) "t2m" else paste0("var", seq_len(nv)),
+    sdate     = if (ns == 1) 1 else seq_len(ns),
+    time      = seq_len(nt),
+    ensemble  = 0:(nm - 1),        # real fcst starts at 0
+    area      = seq_len(nloc)   # <-- index, not lat/lon
+  )
+
+  if (!is.null(area_id)) {
+    coords$area <- paste0("Area_", seq_len(nloc))
+  }
+
+  # --- Dates
+  # Always a matrix: rows = sdate, cols = time
+  Dates <- outer(
+    start_date + seq_len(ns) - 1,
+    seq_len(nt) - 1,
+    `+`
+  )
+  Dates <- as.POSIXct(Dates, origin = "1970-01-01")
+
+  cube <- list(
+    data = data,
+    dims = dims,
+    coords = coords,
+    attrs = list(
+      Dates = Dates,
+      area = list(
+        geom = NULL
+      ),
+      Variable = list(varName = coords$var[1])
+    )
+  )
+
+  class(cube) <- "s2dv_cube"
+  cube
+}
+
 # --- Happy path tests ----
 test_that("1. Happy path .s2dv_to_terra", {
   cube <- make_mock_fcst_cube()
-  
+
   r <- .s2dv_to_terra(cube)
-  
+
   # Returns SpatRaster
   expect_s4_class(r, "SpatRaster")
   # Produces correct spatial extent
@@ -167,9 +233,9 @@ test_that("1. Happy path .s2dv_to_terra", {
 
 test_that("2 Happy path .s2dv_to_csv", {
   cube <- make_mock_fcst_cube()
-  
+
   df <- .s2dv_to_csv(cube)
-  
+
   # Returns data.frame
   expect_s3_class(df, "data.frame")
   # Correct number of rows
@@ -191,9 +257,9 @@ test_that("2 Happy path .s2dv_to_csv", {
 
 test_that("3 Happy path .s2dv_to_polygons", {
   cube <- make_mock_fcst_cube(ns = 1, nt = 2, nm = 2)
-  
+
   sf_obj <- .s2dv_to_polygons(cube)
-  
+
   # Returns sf object
   expect_s3_class(sf_obj, "sf")
   # Columns include at least the first layer value
@@ -202,17 +268,17 @@ test_that("3 Happy path .s2dv_to_polygons", {
   expect_true("geometry" %in% names(sf_obj))
 })
 
- # --- Failures (validation) ----
+# --- Failures (validation) ----
 test_that("4. Validation fails when cube is invalid", {
   # Not a cube
   expect_error(.validate_s2dv_cube(42))
-  
+
   # Missing data
   cube <- make_mock_fcst_cube()
   cube$data <- NULL
   error_message <-  "`cube\\$data` must be a multidimensional array"
   expect_error(.validate_s2dv_cube(cube), error_message)
-  
+
   # Missing dims
   cube <- make_mock_fcst_cube()
   cube$dims <- cube$dims[!names(cube$dims) %in% c("dataset", "var", "sdate")]
@@ -230,7 +296,8 @@ test_that("5. Validation fails with missing coords or wrong spatial dims", {
   cube <- make_mock_fcst_cube()
   cube$dims <- cube$dims[!names(cube$dims) %in% c("latitude")]
   cube$coords <- cube$coords[!names(cube$coords) %in% c("latitude")]
-  error_message <- "Cube must contain either \\(latitude & longitude\\) or location dimension."
+  error_message <- paste0("Cube must contain either \\(latitude & longitude\\)",
+                          ", location, or area dimension.")
   expect_error(.validate_s2dv_cube(cube), error_message)
 
   cube <- make_mock_fcst_cube()
@@ -241,17 +308,22 @@ test_that("5. Validation fails with missing coords or wrong spatial dims", {
   cube$coords$latitude <- cube$coords$latitude[-1]
   error_message <- "Latitude length does not match data dimension"
   expect_error(.validate_s2dv_cube(cube), error_message)
-  
+
   cube <- make_mock_fcst_cube()
   cube$coords$longitude <- cube$coords$longitude[-1]
   error_message <- "Longitude length does not match data dimension"
   expect_error(.validate_s2dv_cube(cube), error_message)
-  
+
   cube <- make_mock_location_cube()
   cube$coords$location <- cube$coords$location[-1]
   error_message <- "Location length does not match data dimension."
   expect_error(.validate_s2dv_cube(cube), error_message)
-  
+
+  cube <- make_mock_area_cube()
+  cube$coords$area <- cube$coords$area[-1]
+  error_message <- "Area length does not match data dimension."
+  expect_error(.validate_s2dv_cube(cube), error_message)
+
   cube <- make_mock_location_cube()
   cube$attrs$location <- cube$attrs$location[!names(cube$attrs$location) %in% c("latitude")]
   error_message <- "must contain latitude and longitude."
@@ -266,7 +338,7 @@ test_that("6 Validation fails if Dates is invalid", {
 
   cube <- make_mock_fcst_cube(ns = 2, nt = 2)
   cube$attrs$Dates <- matrix(as.POSIXct("2010-01-01"), nrow = 1, ncol = 1)
-  error_message <- "`attrs\\$Dates` must have at least \\[sdate, time\\] dimensions."
+  error_message <- "`attrs\\$Dates` must have \\[sdate, time\\] dimensions."
   expect_error(.validate_s2dv_cube(cube), error_message)
 })
 

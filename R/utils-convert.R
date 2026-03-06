@@ -33,7 +33,8 @@
   nm <- .get_dim(d, "ensemble")
 
   # terra is composed of rows(x/latitude), columns(y/longitude) and layers(z)
-  # create one layer to each combination of dataset, var, sdate, time, and ensemble
+  # create one layer to each combination of dataset, var, sdate, time, and
+  # ensemble
   layers <- list()
   k <- 1
 
@@ -244,18 +245,20 @@
   missing_core <- setdiff(core_dims, dim_names)
   if (length(missing_core) > 0)
     stop(
-      "Missing required core dimension(s): ", paste(missing_core, collapse = ", ")
+      "Missing required core dimension(s): ",
+      paste(missing_core, collapse = ", ")
     )
-  
+
   # Spatial validation
   has_latlon  <- all(c("latitude", "longitude") %in% dim_names)
   has_location <- "location" %in% dim_names
-  
-  if (!has_latlon && !has_location)
-    stop(
-      "Cube must contain either (latitude & longitude) or location dimension."
+  has_area <- "area" %in% dim_names
+
+  if (!has_latlon && !has_location && !has_area)
+    stop(paste0("Cube must contain either (latitude & longitude),",
+                " location, or area dimension.")
     )
-  
+
   # If lat/lon grid
   if (has_latlon) {
     if (length(cube$coords$latitude)  != dim(cube$data)[6])
@@ -263,7 +266,7 @@
     if (length(cube$coords$longitude) != dim(cube$data)[7])
       stop("Longitude length does not match data dimension.")
   }
-  
+
   # If location index
   if (has_location) {
     if (length(cube$coords$location) != dim(cube$data)[6])
@@ -273,16 +276,23 @@
         stop("`attrs$location` must contain latitude and longitude.")
     }
   }
-  
+
+  # If area index
+  if (has_area) {
+    if (length(cube$coords$area) != dim(cube$data)[6]) {
+      stop("Area length does not match data dimension.")
+    }
+  }
+
   # Dates validation
   if (!is.null(cube$attrs$Dates)) {
     if (!is.matrix(cube$attrs$Dates))
       stop("`attrs$Dates` must be a matrix.")
 
     if (nrow(cube$attrs$Dates) < dim(cube$data)[3] ||
-        ncol(cube$attrs$Dates) < dim(cube$data)[4]) {
+          ncol(cube$attrs$Dates) < dim(cube$data)[4]) {
       stop(
-        "`attrs$Dates` must have at least [sdate, time] dimensions."
+        "`attrs$Dates` must have [sdate, time] dimensions."
       )
     }
   }

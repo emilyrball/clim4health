@@ -130,7 +130,7 @@ c4h_convert_units <- function(data,
     data$attrs$Variable$metadata$units[var_idx] <- to
   } else {
     data$attrs$Variable$metadata$units <-
-      setNames(to, data$attrs$Variable$varName[var_idx])
+      stats::setNames(to, data$attrs$Variable$varName[var_idx])
   }
 
   # Replace data
