@@ -37,23 +37,23 @@ c4h_space <- function(data,
                       fun = "mean",
                       weighting = "none",
                       areas_id = NULL) {
-  
+
   # read areas from file or sf object
-  if (any(class(areas) == "character") | inherits(areas, "sf")) {
+  if (any(class(areas) == "character") || inherits(areas, "sf")) {
     poly <- terra::vect(areas)
   } else {
     poly <- areas
   }
-  
+
   if (!is.null(areas_id) && !(areas_id %in% names(poly))) {
     stop("'areas_id' not found in the 'areas' object.")
   }
-  
+
   # read metadata
   coords <- data$coords
   lat <- coords$latitude
   lon <- coords$longitude
-  
+
   if (lat[1] > lat[length(lat)]) {
     # if latitude is stored north to south, reverse it
     lat <- rev(lat)
@@ -62,16 +62,16 @@ c4h_space <- function(data,
     idx[[lat_dim]] <- rev(idx[[lat_dim]])
     data$data <- do.call(`[`, c(list(data$data), idx, drop = FALSE))
   }
-  
+
   # transform array to raster stack
   out <- NULL
   out_dt <- NULL
   columns_index <- c()
-  
+
   # Manage CRS, we aggregate in WGS84
   poly <- terra::project(poly, "EPSG:4326")
   ref  <- terra::crs(poly, describe = TRUE)$code
-  
+
   # Get dimensions and indices of data and coordinates
   dims <- dim(data$data)
   dim_names <- names(dims)
@@ -80,7 +80,7 @@ c4h_space <- function(data,
   spatial_dims <- c(idx_lat, idx_lon)
   non_spatial_dims <- seq_along(dims)[-spatial_dims]
   names(non_spatial_dims) <- names(seq_along(dims)[-spatial_dims])
-  
+
   # create a grid of indices for the non-spatial dimensions
   index_grid <- expand.grid(
     lapply(dims[non_spatial_dims], function(x) seq_len(x)),
@@ -106,7 +106,7 @@ c4h_space <- function(data,
       index_grid
     )
   )
-  
+
   out <- terra::rast(out_list)
 
   columns_index <- do.call(
@@ -121,27 +121,26 @@ c4h_space <- function(data,
       index_grid
     )
   )
-  
+
   # extract area data (for all areas in poly) with terra::extract
-  if(weighting == "none"| fun != "mean"){
+  if (weighting == "none" || fun != "mean") {
     out_dt <- terra::extract(out, poly, fun = fun, na.rm = TRUE)
-    
-  }else if(weighting == "approx"){
+
+  } else if (weighting == "approx") {
     out_dt <- terra::extract(out, poly, fun = fun, na.rm = TRUE, weights = TRUE)
-    
-  }else if(weighting == "exact"){
+
+  } else if (weighting == "exact") {
     out_dt <- terra::extract(out, poly, fun = fun, na.rm = TRUE, exact = TRUE)
-    
   }
-  
+
   if ("ID" %in% names(out_dt)) {
-    out_dt <- out_dt[ , -which(names(out_dt) == "ID"), drop = FALSE]
+    out_dt <- out_dt[, -which(names(out_dt) == "ID"), drop = FALSE]
   }
-  
+
   # transform to array
   final_dims <- c(dims[non_spatial_dims], area = nrow(out_dt))
   result <- array(NA_real_, dim = final_dims)
-  
+
   index <- strsplit(columns_index, "_")
   for (cc in seq_along(columns_index)) {
     idx <- as.integer(index[[cc]])
@@ -149,32 +148,34 @@ c4h_space <- function(data,
     result <- do.call(`[<-`, c(list(result), result_idx,
                                list(value = out_dt[[cc]])))
   }
-  
+
   # format to s2dv_cube
   replacement_dims <- dim(result)
   names(replacement_dims) <- c(dim_names[non_spatial_dims], "area")
   replacement_attrs <- data$attrs
-  replacement_coords <- coords[setdiff(names(coords), c("latitude", "longitude"))]
-  
+  replacement_coords <- coords[setdiff(names(coords),
+                                       c("latitude", "longitude"))]
+
   # Manage IDs
   if (is.null(areas_id)) {
     areas_id <- "area"
     replacement_coords[["area"]] <- seq_len(nrow(poly))
   } else {
-    replacement_coords[["area"]] <- poly[[areas_id]]
+    replacement_coords[["area"]] <- as.vector(poly[[areas_id]][[areas_id]])
     replacement_attrs[["area_id"]] <- areas_id
   }
-  
+
   # Store geometries
-  replacement_attrs[["area"]] <- list(geom = sf::st_geometry(sf::st_as_sf(poly)))
-  
+  replacement_attrs[["area"]] <-
+    list(geom = sf::st_geometry(sf::st_as_sf(poly)))
+
   # create final s2dv_cube object
   data <- list(data = result,
                coords = replacement_coords,
                dims = replacement_dims,
                attrs = replacement_attrs)
   attr(data, "class") <- "s2dv_cube"
-  
+
   return(data)
 }
 

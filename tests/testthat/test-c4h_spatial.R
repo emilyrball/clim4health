@@ -53,8 +53,10 @@ make_test_areas_sf <- function() {
   library(terra)
 
   # Define extent within the cube's range (-80 to -70, -10 to 0)
-  poly1 <- st_as_sfc(st_bbox(c(xmin = -78, xmax = -75, ymin = -8, ymax = -6), crs = st_crs(4326)))
-  poly2 <- st_as_sfc(st_bbox(c(xmin = -74, xmax = -72, ymin = -4, ymax = -2), crs = st_crs(4326)))
+  poly1 <- st_as_sfc(st_bbox(c(xmin = -78, xmax = -75, ymin = -8, ymax = -6),
+                             crs = st_crs(4326)))
+  poly2 <- st_as_sfc(st_bbox(c(xmin = -74, xmax = -72, ymin = -4, ymax = -2),
+                             crs = st_crs(4326)))
 
   areas_sf <- st_sf(
     munip_code = c("Area_A", "Area_B"),
@@ -105,7 +107,7 @@ test_that("2. Happy path with correct spatial aggregation", {
   expect_true("area" %in% names(obs_agg$dims))
   expect_equal(as.numeric(obs_agg$dims["area"]), 2)
   expect_equal(drop(obs_agg$data), c(287, 294), tolerance = 1e-2)
-  expect_equal(obs_agg$coords$area$munip_code, c("Area_A", "Area_B"))
+  expect_equal(obs_agg$coords$area, c("Area_A", "Area_B"))
 })
 
 test_that("3. Handling latitude stored north to south", {
@@ -128,7 +130,7 @@ test_that("3. Handling latitude stored north to south", {
   expect_true("area" %in% names(obs_agg$dims))
   expect_equal(as.numeric(obs_agg$dims["area"]), 2)
   expect_equal(drop(obs_agg$data), c(287, 294), tolerance = 1e-2)
-  expect_equal(obs_agg$coords$area$munip_code, c("Area_A", "Area_B"))
+  expect_equal(obs_agg$coords$area, c("Area_A", "Area_B"))
 })
 
 test_that("4. Identical results for sf, terra and path areas", {
