@@ -12,8 +12,9 @@
 #' "mean", "sum", "max", "min". Defaults to "mean".
 #' @param week_start for weekly aggregation, specify the starting weekday from
 #' "Monday" to "Sunday".
-#' @param threshold numeric between 0 and 1 indicating the minimum proportion of
-#' non-NA values required to compute the aggregation. Defaults to 0.7 (70%).
+#' @param min_valid integer specifying the minimum number of valid (non-NA) 
+#' values desired in a group to return a non-NA aggregated value. Defaults to 
+#' 1, so that any group with at least one valid value will be aggregated.
 #'
 #' @returns an s2dv_cube object with the temporally aggregated climate data.
 #' @export
@@ -24,7 +25,8 @@
 #' station_timeseries <- c4h_load(station_path, variable = "temp_mean",
 #'                                ext = "csv")
 #' stat_week <- c4h_time(station_timeseries, time_aggregation = "weekly",
-#'                       dim_aggregation = "time", week_start = "Monday")
+#'                       dim_aggregation = "time", week_start = "Monday",
+#'                       min_valid = 5)
 #' dim(stat_week$data)
 #'
 #' # Load station data with sdate dimension
@@ -32,14 +34,15 @@
 #'                          month = 1, leadtime_month = 1:12)
 #' # Aggregate to monthly max across sdate dimension
 #' stat_month <- c4h_time(station_data, time_aggregation = "monthly",
-#'                        dim_aggregation = "sdate", fun = "max")
+#'                        dim_aggregation = "sdate", fun = "max",
+#'                        min_valid = 20)
 #' dim(stat_month$data)
 c4h_time <- function(data,
                      time_aggregation,
                      dim_aggregation,
                      fun = "mean",
                      week_start = NULL,
-                     threshold = 0.7) {
+                     min_valid = 1) {
 
   # Input checks ----
 
@@ -160,7 +163,7 @@ c4h_time <- function(data,
             seq(dims_i)[-agg_dim_idx], # all dimensions but dim_aggregation
             function(x) {
               tapply(x, time_groups,
-                     .aggregate_temporally, fun = fun, threshold = threshold)
+                     .aggregate_temporally, fun = fun, min_valid = min_valid)
             })
 
     # Fix dimensions ----
@@ -222,8 +225,6 @@ c4h_time <- function(data,
     # Across the fixed dimension
     if (i == 1) {
       aggregated_data <- aggregated_data_i
-      ## can be removed?
-      #dates <- aggregated_data_i$attrs$Dates
     } else {
       aggregated_data <- CSTools::CST_BindDim(x = list(aggregated_data,
                                                        aggregated_data_i),

@@ -10,7 +10,7 @@ c4h_time(
   dim_aggregation,
   fun = "mean",
   week_start = NULL,
-  threshold = 0.7
+  min_valid = 1
 )
 }
 \arguments{
@@ -29,8 +29,9 @@ aggregation should be performed. Options are "sdate" and "time".}
 \item{week_start}{for weekly aggregation, specify the starting weekday from
 "Monday" to "Sunday".}
 
-\item{threshold}{numeric between 0 and 1 indicating the minimum proportion of
-non-NA values required to compute the aggregation. Defaults to 0.7 (70\%).}
+\item{min_valid}{integer specifying the minimum number of valid (non-NA)
+values desired in a group to return a non-NA aggregated value. Defaults to
+1, so that any group with at least one valid value will be aggregated.}
 }
 \value{
 an s2dv_cube object with the temporally aggregated climate data.
@@ -44,7 +45,8 @@ station_path <- system.file("extdata", "stations", package = "clim4health")
 station_timeseries <- c4h_load(station_path, variable = "temp_mean",
                                ext = "csv")
 stat_week <- c4h_time(station_timeseries, time_aggregation = "weekly",
-                      dim_aggregation = "time", week_start = "Monday")
+                      dim_aggregation = "time", week_start = "Monday",
+                      min_valid = 5)
 dim(stat_week$data)
 
 # Load station data with sdate dimension
@@ -52,6 +54,7 @@ station_data <- c4h_load(station_path, variable = "temp_mean", ext = "csv",
                          month = 1, leadtime_month = 1:12)
 # Aggregate to monthly max across sdate dimension
 stat_month <- c4h_time(station_data, time_aggregation = "monthly",
-                       dim_aggregation = "sdate", fun = "max")
+                       dim_aggregation = "sdate", fun = "max",
+                       min_valid = 20)
 dim(stat_month$data)
 }
