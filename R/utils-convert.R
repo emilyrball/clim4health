@@ -170,6 +170,14 @@
     df$longitude <- cube$attrs$location$longitude[df$location]
   }
 
+  # ---- if s2dv_cube contains area ----
+  if ("area" %in% names(cube$coords)) {
+    df$area <- as.character(cube$coords$area[df$area])
+    if (!is.null(cube$attrs$area_id)) {
+      names(df)[names(df) == "area"] <- cube$attrs$area_id
+    }
+  }
+
   if (!is.null(file)) utils::write.csv(df, file = file, row.names = FALSE)
   return(df)
 }
