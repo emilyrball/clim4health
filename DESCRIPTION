@@ -32,7 +32,6 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
 Imports:
     CSTools,
-    dplyr,
     ecmwfr,
     ggplot2,
     GHRexplore,
