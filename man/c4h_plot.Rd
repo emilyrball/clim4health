@@ -27,11 +27,11 @@ c4h_plot(
 \arguments{
 \item{data}{\emph{s2dv_cube} object with the climate data to be plotted.}
 
-\item{var}{Numerical index of the variable to be plotted.
+\item{var}{Numerical index or name of the variable to be plotted.
 Only required if more than one variable is available.}
 
-\item{sdate}{Numerical index of the forecast starting time to be plotted. Defaults
-to NULL (all starting dates).}
+\item{sdate}{Numerical index of the forecast starting time to be plotted.
+Defaults to NULL (all starting dates).}
 
 \item{time}{Numerical index of the time to be plotted. Defaults to NULL (all
 times).}
@@ -65,11 +65,11 @@ NULL (no centering).}
 \item{bins}{Number of bins for categorization of numerical variables.
 Defaults to NULL (no binning).}
 
-\item{bins_method}{Method to compute the bins, only used when \code{bins} is not NULL.
-Possible values are "quantile" and "equal" (default).}
+\item{bins_method}{Method to compute the bins, only used when \code{bins} is no
+NULL. Possible values are "quantile" and "equal" (default).}
 
-\item{bins_label}{Optional labels for the bins. They must have the same length
-as the number of bins. Defaults to NULL (default interval labels).}
+\item{bins_label}{Optional labels for the bins. They must have the same
+length as the number of bins. Defaults to NULL (default interval labels).}
 
 \item{coordgrid}{If TRUE, display coordinate grids on the map.}
 
