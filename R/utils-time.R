@@ -76,10 +76,10 @@
 #'
 #' @param y vector to be aggregated
 #' @param fun aggregation function
-#' @param threshold numeric between 0 and 1 indicating the minimum proportion of
-#' non-NA values required to compute the aggregation. Defaults to 0.7 (70%).
-#' @returns aggregated value or NA if more than 70% of values are NA
+#' @param min_valid minimum number of valid (non-NA) values required to return 
+#' a non-NA result
+#' @returns aggregated value or NA if not enough valid values
 #' @noRd
-.aggregate_temporally <- function(y, fun, threshold = 0.7) {
-  if ((sum(is.na(y)) / length(y)) > threshold) NA else fun(y, na.rm = TRUE)
+.aggregate_temporally <- function(y, fun, min_valid) {
+  if (sum(!is.na(y)) < min_valid) NA else fun(y, na.rm = TRUE)
 }
