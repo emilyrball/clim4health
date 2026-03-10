@@ -160,7 +160,6 @@ c4h_space <- function(data,
   if (is.null(areas_id)) {
     areas_id <- "area"
     replacement_coords[["area"]] <- seq_len(nrow(poly))
-    replacement_attrs[["area_id"]] <- areas_id
   } else {
     replacement_coords[["area"]] <- as.vector(poly[[areas_id]][[areas_id]])
     replacement_attrs[["area_id"]] <- areas_id
