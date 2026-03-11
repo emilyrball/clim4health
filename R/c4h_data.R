@@ -15,20 +15,20 @@
 #' (2025).
 #'
 #' @section Climate forecasts:
-#' - `forecast/t2m_*.nc`: 3-month seasonal forecasts (XXX product) including
-#' 2-metre temperature (K, 51 ensemble members, 1º spatial resolution) issued
-#' in January 2025.
+#' - `forecast/t2m_20250101.nc`: 3-month monthly-averaged seasonal forecast
+#' (ECMWF SEAS5.1 seasonal forecast) including 2-metre temperature (K, 51
+#' ensemble members, 1º spatial resolution) issued in January 2025.
 #' The spatial extent covers the "Valle del Cauca" department in Colombia.
 #'
 #' @section Climate hindcasts:
-#' - `hindcast/t2m_*.nc`: 3-month seasonal hindcast (XXX product) including
-#' 2-metre temperature (K, 24 ensemble members, 1º spatial resolution) issued
-#' in January 2010-2012.
+#' - `hindcast/t2m_*.nc`: 3-month monthly-averaged seasonal hindcast
+#' (ECMWF SEAS5.1 seasonal forecast) including 2-metre temperature (K, 25
+#' ensemble members, 1º spatial resolution)) issued in January 2010-2012.
 #' The spatial extent covers the "Valle del Cauca" department in Colombia.
 #'
 #' @section Climate reanalysis:
-#' - `reanalysis/t2m_*.nc`: monthly ERA5land reanalysis product including
-#' 2-metre temperature (K, 0.1º spatial resolution) for the months of
+#' - `reanalysis/t2m_*.nc`: monthly-averaged ERA5-Land reanalysis product
+#' including 2-metre temperature (K, 0.1º spatial resolution) for the months of
 #' January, February and March 2010-2012.
 #' The spatial extent covers the "Valle del Cauca" department in Colombia.
 #'
