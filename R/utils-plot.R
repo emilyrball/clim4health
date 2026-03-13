@@ -20,3 +20,17 @@
 
   do.call(`[`, c(list(x), index_list, list(drop = FALSE)))
 }
+
+#' .abs_labels
+#'
+#' paste the absolute value of the input with a "-" prefix if the input is 
+#' negative, otherwise just the absolute value. This is used for axis labels
+#' to remove the ordinal N/W/S/E.
+#'
+#' @param x Numeric vector of values for which to create labels.
+#'
+#' @returns Character vector of formatted labels.
+#' @noRd
+.abs_labels <- function(x) {
+  paste0(ifelse(x < 0, "-", ""), abs(x))
+}

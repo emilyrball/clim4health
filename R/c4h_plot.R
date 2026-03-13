@@ -100,7 +100,7 @@ c4h_plot <- function(
     dims_data <- data$dims
     plot_data <- data$data
   } else {
-    stop("'data' must be an s2dv array.")
+    stop("'data' must be an s2dv_cube.")
   }
 
   # Requirements: var
@@ -160,7 +160,7 @@ c4h_plot <- function(
   ) {
     stop(paste0(
       "A wrong 'ensemble' has been selected (possible range: 1 - ",
-      dims_data["time"],
+      dims_data["ensemble"],
       ")."
     ))
   } else if (is.null(ensemble)) {
@@ -425,12 +425,8 @@ c4h_plot <- function(
           ylim = sf::st_bbox(plot_data)[c("ymin", "ymax")],
           expand = TRUE
         ) +
-        ggplot2::scale_x_continuous(labels = function(x) {
-          paste0(ifelse(x < 0, "-", ""), abs(x))
-        }) +
-        ggplot2::scale_y_continuous(labels = function(y) {
-          paste0(ifelse(y < 0, "-", ""), abs(y))
-        })
+        ggplot2::scale_x_continuous(labels = .abs_labels) +
+        ggplot2::scale_y_continuous(labels = .abs_labels)
     } else {
       p <- ggplot2::ggplot() +
         ggplot2::geom_sf(
@@ -438,12 +434,8 @@ c4h_plot <- function(
           ggplot2::aes(colour = .data[[varname]]),
           ...
         ) +
-        ggplot2::scale_x_continuous(labels = function(x) {
-          paste0(ifelse(x < 0, "-", ""), abs(x))
-        }) +
-        ggplot2::scale_y_continuous(labels = function(y) {
-          paste0(ifelse(y < 0, "-", ""), abs(y))
-        })
+        ggplot2::scale_x_continuous(labels = .abs_labels) +
+        ggplot2::scale_y_continuous(labels = .abs_labels)
     }
   } else if ("area" %in% names(dims_data)) {
     # Polygon data
@@ -467,12 +459,8 @@ c4h_plot <- function(
           ylim = sf::st_bbox(plot_data)[c("ymin", "ymax")],
           expand = TRUE
         ) +
-        ggplot2::scale_x_continuous(labels = function(x) {
-          paste0(ifelse(x < 0, "-", ""), abs(x))
-        }) +
-        ggplot2::scale_y_continuous(labels = function(y) {
-          paste0(ifelse(y < 0, "-", ""), abs(y))
-        })
+        ggplot2::scale_x_continuous(labels = .abs_labels) +
+        ggplot2::scale_y_continuous(labels = .abs_labels)
     } else {
       p <- ggplot2::ggplot() +
         ggplot2::geom_sf(
@@ -480,12 +468,8 @@ c4h_plot <- function(
           ggplot2::aes(fill = .data[[varname]]),
           ...
         ) +
-        ggplot2::scale_x_continuous(labels = function(x) {
-          paste0(ifelse(x < 0, "-", ""), abs(x))
-        }) +
-        ggplot2::scale_y_continuous(labels = function(y) {
-          paste0(ifelse(y < 0, "-", ""), abs(y))
-        })
+        ggplot2::scale_x_continuous(labels = .abs_labels) +
+        ggplot2::scale_y_continuous(labels = .abs_labels)
     }
   }
 
@@ -617,12 +601,8 @@ c4h_plot <- function(
           ylim = sf::st_bbox(plot_data)[c("ymin", "ymax")],
           expand = TRUE
         ) +
-        ggplot2::scale_x_continuous(labels = function(x) {
-          paste0(ifelse(x < 0, "-", ""), abs(x))
-        }) +
-        ggplot2::scale_y_continuous(labels = function(y) {
-          paste0(ifelse(y < 0, "-", ""), abs(y))
-        })
+        ggplot2::scale_x_continuous(labels = .abs_labels) +
+        ggplot2::scale_y_continuous(labels = .abs_labels)
     )
   }
 
@@ -651,7 +631,7 @@ c4h_plot <- function(
     if (!isTRUE(coordgrid)) {
       p <- p +
         ggplot2::theme(strip.text.y = ggplot2::element_text(angle = 90))
-    }
+    } # REVIEW this condition can never be met
   } else {
     p <- p +
       ggplot2::theme_void() +
