@@ -88,10 +88,16 @@ c4h_time <- function(data,
   }
   dim_fix_pos <- which(names(dim(time)) == dim_fix)
 
-  if (!is.null(attr(time, "tzone"))) {
-    time_zone <- attr(time, "tzone")
-  } else {
+  if (is.null(attr(time, "tzone"))) {
     time_zone <- "UTC"
+    message("Time zone not specified in the input data. Assuming UTC.")
+  } else if (attr(time, "tzone") == "") {
+    time_zone <- Sys.timezone()
+    message(paste0("Time zone in the input data is empty. Assuming",
+                   " system timezone: ", time_zone))
+  } else {
+    time_zone <- attr(time, "tzone")
+    message(paste0("Time zone in the input data is: ", time_zone))
   }
 
   # Temporal aggregation ----
