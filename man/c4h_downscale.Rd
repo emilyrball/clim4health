@@ -17,7 +17,7 @@ c4h_downscale(
   points = NULL,
   method_point_interp = NULL,
   lr_method = NULL,
-  loocv = FALSE,
+  loocv = TRUE,
   ...
 )
 }
@@ -87,7 +87,7 @@ regression model is then built using the principal components that explain
 process. The default value is NULL.}
 
 \item{loocv}{a logical indicating whether to apply leave-one-out
-cross-validation when applying the bias correction. Default to FALSE.}
+cross-validation when applying the bias correction. Default to TRUE.}
 
 \item{...}{additional arguments to be passed to the CSDownscale function.}
 }
@@ -116,8 +116,9 @@ obs <- c4h_load(system.file("extdata", "reanalysis",
                          min(lats), max(lons)),
                 ext = "nc")
 ### Example with gridded data
-dwn <- c4h_downscale("Interpolation", exp = hcst, obs = obs,
+dwn <- c4h_downscale("Intbc", exp = hcst, obs = obs,
                      method_remap = "bilinear",
+                     bc_method = "qm",
                      target_grid = system.file("extdata",
                                                "reanalysis/t2m_201001.nc",
                                                package = "clim4health"))

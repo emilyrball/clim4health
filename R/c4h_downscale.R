@@ -55,7 +55,7 @@
 #' 95% of the variance. The '9nn' method does not require a pre-interpolation
 #' process. The default value is NULL.
 #' @param loocv a logical indicating whether to apply leave-one-out
-#' cross-validation when applying the bias correction. Default to FALSE.
+#' cross-validation when applying the bias correction. Default to TRUE.
 #' @param ... additional arguments to be passed to the CSDownscale function.
 #' @returns A list of statistically downscaled data as s2dv_cube objects.
 #' @export
@@ -79,8 +79,9 @@
 #'                          min(lats), max(lons)),
 #'                 ext = "nc")
 #' ### Example with gridded data
-#' dwn <- c4h_downscale("Interpolation", exp = hcst, obs = obs,
+#' dwn <- c4h_downscale("Intbc", exp = hcst, obs = obs,
 #'                      method_remap = "bilinear",
+#'                      bc_method = "qm",
 #'                      target_grid = system.file("extdata",
 #'                                                "reanalysis/t2m_201001.nc",
 #'                                                package = "clim4health"))
@@ -124,7 +125,7 @@ c4h_downscale <- function(downscale_function,
                           bc_method = NULL, method_remap = NULL, points = NULL,
                           method_point_interp = NULL,
                           lr_method = NULL,
-                          loocv = FALSE,
+                          loocv = TRUE,
                           ...) {
 
   # clim4health s2dv_cube objects will have the following dimensions
