@@ -29,8 +29,8 @@ c4h_postprocess(
   dat_dim = NULL,
   na.rm = FALSE,
   sig_method.type = NULL,
-  sign = FALSE,
-  pval = TRUE,
+  sign = TRUE,
+  pval = FALSE,
   sig_method = "one-sided Fisher"
 )
 }
@@ -146,10 +146,10 @@ The default for "BSS", "RPSS", and "AbsBiasSS" applied is 'two.sided.approx'.}
 
 \item{sign}{A logical value indicating whether to compute or not the
 statistical significance of the test Ho: (R)MSSS = 0. The default value is
-FALSE. Only relevant if "MSSS" or "RMSSS" is in 'metrics'.}
+TRUE. Only relevant if "MSSS" or "RMSSS" is in 'metrics'.}
 
 \item{pval}{A logical value indicating whether to compute or not the p-value
-of the test Ho: (R)MSSS = 0. The default value is TRUE. Only relevant if
+of the test Ho: (R)MSSS = 0. The default value is FALSE. Only relevant if
 "MSSS" or "RMSSS" is in 'metrics'.}
 
 \item{sig_method}{A character string indicating the significance method. The
@@ -206,26 +206,26 @@ skill <- c4h_postprocess(exp = hcst,
                          obs = obs,
                          metrics = c("BSS", "CRPSS"),
                          brier_thresholds = c(0.1, 0.9))
-## Example with station data
-# point_locs <- clim4health::c4h_load(system.file("extdata",
-#                                                "stations",
-#                                                package = "clim4health"),
-#                                     ext = "csv",
-#                                     year = 2010:2012,
-#                                     month = 1,
-#                                     leadtime_month = 1:3,
-#                                     variable = "temp_mean")
-# points <- list(latitude = point_locs$attrs$location$latitude,
-#                longitude = point_locs$attrs$location$longitude)
-# point_locs <- c4h_time(point_locs,
-#                        time_aggregation = "monthly",
-#                        dim_aggregation = "sdate",
-#                        fun = "mean")
-#
-# dwn <- c4h_downscale("Interpolation", exp = hcst,
-#                      points = points, method_point_interp = "bilinear")
-# hcst_dwn <- dwn$exp
-# skill <- c4h_postprocess(exp = hcst_dwn,
-#                          obs = point_locs,
-#                          metrics = c("RMSE"))
+# Example with station data
+point_locs <- clim4health::c4h_load(system.file("extdata",
+                                               "stations",
+                                               package = "clim4health"),
+                                    ext = "csv",
+                                    year = 2010:2012,
+                                    month = 1,
+                                    leadtime_month = 1:3,
+                                    variable = "temp_mean")
+points <- list(latitude = point_locs$attrs$location$latitude,
+               longitude = point_locs$attrs$location$longitude)
+point_locs <- c4h_time(point_locs,
+                       time_aggregation = "monthly",
+                       dim_aggregation = "sdate",
+                       fun = "mean")
+
+dwn <- c4h_downscale("Interpolation", exp = hcst,
+                     points = points, method_point_interp = "bilinear")
+hcst_dwn <- dwn$exp
+skill <- c4h_postprocess(exp = hcst_dwn,
+                         obs = point_locs,
+                         metrics = c("RMSE", "RMSSS"))
 }
