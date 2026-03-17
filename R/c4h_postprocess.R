@@ -120,31 +120,31 @@
 #'                          min(lats), max(lons)),
 #'                 ext = "nc")
 #' ### Example with gridded data
-#' # dwn <- c4h_downscale("Interpolation", exp = hcst, obs = obs,
-#' #                      method_remap = "bilinear",
-#' #                      target_grid = system.file("extdata",
-#' #                                                "reanalysis/t2m_201001.nc",
-#' #                                                package = "clim4health"))
-#' # hcst_dwn <- dwn$exp
-#' # skill <- c4h_postprocess(exp = hcst_dwn,
-#' #                          obs = obs,
-#' #                          metrics = c("RMSE"))
+#' dwn <- c4h_downscale("Interpolation", exp = hcst, obs = obs,
+#'                      method_remap = "bilinear",
+#'                      target_grid = system.file("extdata",
+#'                                                "reanalysis/t2m_201001.nc",
+#'                                                package = "clim4health"))
+#' hcst_dwn <- dwn$exp
+#' skill <- c4h_postprocess(exp = hcst_dwn,
+#'                          obs = obs,
+#'                          metrics = c("RMSE"))
 #' ## Example with polygon data
 #' shp_path <- system.file("extdata", "areas", "munip_vallecauca.gpkg",
 #'                         package = "clim4health")
-#' obs <- c4h_space(obs,
-#'                  areas = shp_path,
-#'                  fun = "mean",
-#'                  areas_id = "munip_code")
-#' hcst <- c4h_space(hcst,
-#'                   areas = shp_path,
-#'                   fun = "mean",
-#'                   areas_id = "munip_code")
-#' skill <- c4h_postprocess(exp = hcst,
-#'                          obs = obs,
+#' obs_areas <- c4h_space(obs,
+#'                        areas = shp_path,
+#'                        fun = "mean",
+#'                        areas_id = "munip_code")
+#' hcst_areas <- c4h_space(hcst,
+#'                         areas = shp_path,
+#'                         fun = "mean",
+#'                         areas_id = "munip_code")
+#' skill <- c4h_postprocess(exp = hcst_areas,
+#'                          obs = obs_areas,
 #'                          metrics = c("BSS", "CRPSS"),
 #'                          brier_thresholds = c(0.1, 0.9))
-#'# Example with station data
+#' # Example with station data
 #' point_locs <- clim4health::c4h_load(system.file("extdata",
 #'                                                "stations",
 #'                                                package = "clim4health"),
