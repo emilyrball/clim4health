@@ -632,20 +632,6 @@ c4h_plot <- function(
       ) +
       ggplot2::xlab("") +
       ggplot2::ylab("")
-<<<<<<< HEAD
-
-    if (!isTRUE(coordgrid)) {
-      p <- p +
-        ggplot2::theme(strip.text.y = ggplot2::element_text(angle = 90))
-    } # REVIEW this condition can never be met
-||||||| f02dc82
-
-    if (!isTRUE(coordgrid)) {
-      p <- p +
-        ggplot2::theme(strip.text.y = ggplot2::element_text(angle = 90))
-    }
-=======
->>>>>>> develop-plot
   } else {
     p <- p +
       ggplot2::theme_void() +
