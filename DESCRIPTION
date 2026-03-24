@@ -44,7 +44,8 @@ Imports:
     units,
     CSDownscale,
     ncdf4,
-    ggpattern
+    ggpattern,
+    rlang
 Suggests: 
     testthat (>= 3.0.0),
     spData,

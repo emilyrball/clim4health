@@ -40,6 +40,11 @@
 #' @returns A plot
 #' @export
 #'
+#' @importFrom rlang .data
+#'
+#' @seealso [c4h_plotskill()] for plotting forecast skill metrics from
+#' [c4h_postprocess()]
+#'
 #' @examples
 #' library("sf")
 #'
@@ -647,11 +652,6 @@ c4h_plot <- function(
       ) +
       ggplot2::xlab("") +
       ggplot2::ylab("")
-
-    if (!isTRUE(coordgrid)) {
-      p <- p +
-        ggplot2::theme(strip.text.y = ggplot2::element_text(angle = 90))
-    }
   } else {
     p <- p +
       ggplot2::theme_void() +
