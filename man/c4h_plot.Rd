@@ -118,3 +118,7 @@ fcst_aggr <- c4h_space(fcst, mun)
 c4h_plot(fcst_aggr, ensemble = 1:5, lwd = 0.1,
          title = "Temp. by municipality", coordgrid = TRUE)
 }
+\seealso{
+\code{\link[=c4h_plotskill]{c4h_plotskill()}} for plotting forecast skill metrics from
+\code{\link[=c4h_postprocess]{c4h_postprocess()}}
+}

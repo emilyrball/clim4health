@@ -161,5 +161,6 @@ c4h_plotskill(skill = skill_point$BSS10$rpss,
               boundaries = areas)
 }
 \seealso{
-\code{\link[=c4h_postprocess]{c4h_postprocess()}},  \code{\link[=c4h_plot]{c4h_plot()}}
+\code{\link[=c4h_postprocess]{c4h_postprocess()}} for calculating forcast skill and \code{\link[=c4h_plot]{c4h_plot()}}
+for general plotting of \code{s2dv} objects.
 }

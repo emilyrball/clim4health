@@ -33,7 +33,11 @@
 #' @returns A plot
 #' @export
 #'
-#' @seealso [c4h_postprocess()],  [c4h_plot()]
+#' @importFrom rlang .data
+#'
+#' @seealso [c4h_postprocess()] for calculating forcast skill and [c4h_plot()]
+#' for general plotting of `s2dv` objects.
+#'
 #' @examples
 #' # DISCLAIMER: The purpose of these examples is to show the functionality
 #' # of the different functions. To perform postprocessing, a much larger time
