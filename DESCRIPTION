@@ -53,4 +53,5 @@ Suggests:
     knitr,
     rmarkdown
 Config/testthat/edition: 3
+VignetteBuilder: knitr
 SystemRequirements: CDO (Climate Data Operators, https://code.mpimet.mpg.de/projects/cdo)
