@@ -139,7 +139,7 @@ c4h_plotskill <- function(
   coordgrid = FALSE,
   ...
 ) {
-  # 1. Data checks ---- # nolint: indentation_linter.
+  # 1. Data checks ----
 
   # Get skill array info
   if (inherits(skill, "s2dv_cube")) {
@@ -562,6 +562,7 @@ c4h_plotskill <- function(
         ggplot2::geom_sf(
           data = plot_skill,
           ggplot2::aes(fill = .data[[varname]]),
+          show.legend = TRUE,
           ...
         )
     }
@@ -675,8 +676,8 @@ c4h_plotskill <- function(
           linewidth = 0.1
         ),
         panel.grid.minor = ggplot2::element_blank(),
-        panel.grid.major = ggplot2::element_line(linewidth = 0.2),
-        axis.ticks = ggplot2::element_line(linewidth = 0.3, color = "grey50"),
+        panel.grid.major = ggplot2::element_line(linewidth = 0.3),
+        axis.ticks = ggplot2::element_line(linewidth = 0.3, color = "grey40"),
         axis.text = ggplot2::element_text(size = 7, color = "grey30"),
         strip.text.y = ggplot2::element_text(margin = ggplot2::margin(b = 0)),
         strip.text.x = ggplot2::element_text(margin = ggplot2::margin(b = 0))
