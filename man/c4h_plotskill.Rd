@@ -7,15 +7,13 @@
 c4h_plotskill(
   skill,
   sign = NULL,
-  sdate = NULL,
   time = NULL,
-  ensemble = NULL,
   boundaries = NULL,
   mask_boundaries = FALSE,
   title = NULL,
   legend = NULL,
-  palette = "-Green",
-  noskillcol = "#D0C1F5",
+  palette = "SunsetDark",
+  noskillcol = "#b7d6ff",
   coordgrid = FALSE,
   ...
 )
@@ -26,14 +24,8 @@ c4h_plotskill(
 \item{sign}{An additional optional binary \emph{s2dv_cube} indicating
 significance.}
 
-\item{sdate}{Numerical index of the forecast starting time to be plotted.
-Defaults to NULL (all starting dates).}
-
 \item{time}{Numerical index of the time to be plotted. Defaults to NULL (all
 times).}
-
-\item{ensemble}{Numerical index of the ensemble member to be plotted.
-Defaults to NULL (all ensemble members).}
 
 \item{boundaries}{Polygon boundaries to add to the map.  Set to NULL for no
 boundaries (default), otherwise supply a polygon \code{sf} object or set to
@@ -57,7 +49,7 @@ climatologies.}
 \item{coordgrid}{If TRUE, display coordinate grids on the map.}
 
 \item{...}{Extra arguments indicating fixed aesthetics to be passed to
-\code{stars::geom_stars}, including \code{lwd}, \code{alpha} and \code{colour}.}
+\code{stars::geom_stars}, including \code{lwd}, \code{alpha}, \code{size} and \code{colour}.}
 }
 \value{
 A plot
