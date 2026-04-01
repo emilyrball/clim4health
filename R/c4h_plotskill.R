@@ -511,7 +511,7 @@ c4h_plotskill <- function(
             )
             skill_polys_ij[f1] <- dim_f1[i]
           }
-          skill_polys_ij <- skill_polys_ij[skill_polys_ij$sign, ]
+          skill_polys_ij <- skill_polys_ij[skill_polys_ij$sign == 1, ]
           skill_polys <- rbind(skill_polys, skill_polys_ij)
         }
       }
@@ -537,8 +537,8 @@ c4h_plotskill <- function(
               order = 2,
               override.aes = list(
                 fill = "white",
-                pattern_density = 0.2,
-                pattern_spacing = 0.01,
+                pattern_density = 0.15,
+                pattern_spacing = 0.02,
                 lwd = 0.2
               )
             )
