@@ -14,11 +14,6 @@ check:
   script:
     - R CMD build .
     - R CMD check --as-cran --no-manual clim4health_*.tar.gz
-  artifacts:
-    when: on_failure
-    paths:
-      - clim4health.Rcheck/00check.log
-    expire_in: 1 day
 
 unit-test:
   stage: test
@@ -26,7 +21,7 @@ unit-test:
     - ghrexplore_runner
   image: rnunesro/clim4health:latest
   script:
-    - R -e "remotes::install_local('.', dependencies = TRUE)"
+    - R -e "remotes::install_local('.', dependencies = FALSE, upgrade = 'never')"
     - R -e "testthat::test_dir('tests')"
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
@@ -38,7 +33,6 @@ coverage:
     - ghrexplore_runner
   image: rnunesro/clim4health:latest
   script:
-    - R -e 'remotes::install_deps(dependencies = TRUE)'
     - >
       R -e "
       cov <- covr::package_coverage();
