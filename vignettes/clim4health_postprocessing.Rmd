@@ -1,0 +1,229 @@
+---
+title: "clim4health postprocess"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{clim4health postprocess}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.align = "center",
+  warning = FALSE,
+  message = FALSE,
+  eval = FALSE
+)
+```
+
+# Overview
+
+This vignette provides an introduction to the `c4h_postprocess()` function, used for forecast verification. The different verification metrics are described, and examples of how to use the function are provided.
+
+# 0. Load the package and sample data
+
+First, let's load the package.
+
+```{r load_package}
+library(clim4health)
+```
+
+Let's load some sample data that we can use to demonstrate the verification methods.
+
+```{r eval = FALSE}
+hcst_path <- system.file("extdata/hindcast/", package = "clim4health")
+hcst_path <- paste0(hcst_path, "/")
+hcst <- c4h_load(hcst_path,
+                 variable = "t2m",
+                 year = 2010:2012,
+                 month = 1,
+                 leadtime_month = "all",
+                 ext = "nc")
+
+obs_path <- system.file("extdata/reanalysis/", package = "clim4health")
+obs_path <- paste0(obs_path, "/")
+obs <- c4h_load(obs_path,
+                variable = "t2m",
+                year = 2010:2012,
+                month = 1,
+                leadtime_month = 1:3,
+                ext = "nc")
+```
+
+Look at the dimensions of the observed and hindcast datasets (recall we can use `dim(obs$data)` or `obs$dims`). We can see that `obs` has more latitude and longitude points, despite covering the same area - it has *higher spatial resolution.* We can also see this by comparing the values of the latitude/longitude coordinates - notice that `obs` has 0.1º resolution, but `hcst` has 1º.
+
+```{r eval = FALSE}
+print(obs$dims)
+print(hcst$dims)
+
+print(obs$coords$latitude)
+print(hcst$coords$latitude)
+
+# Hindcast data
+c4h_plot(hcst, ensemble = TRUE, coordgrid = TRUE)
+
+# Observations
+c4h_plot(obs, ensemble = TRUE, coordgrid = TRUE)
+```
+
+# 1. c4h_postprocess arguments
+
+`c4h_postprocess()` takes many input parameters depending on the skill metrics to be performed.
+
+1.  `exp`: an `s2dv_cube` object containing the experimental data.
+2.  `obs`: an `s2dv_cube` object containing the observational data.
+3.  `metrics`: a character vector identifying the verification metrics to be calculated.
+
+Depending on the metrics chosen, additional optional arguments may be selected.
+
+```{r c4h_postprocess_parameters,fig.width=10, fig.height=10, fig.align='center', out.width='100%', echo= FALSE, fig.cap="Structure of the c4h_postprocess function, outlining its key arguments and general functionality."}
+
+knitr::include_graphics("https://gitlab.earth.bsc.es/ghr/clim4health/-/blob/develop-vignette/man/figures/clim4health_postprocess_parameters.svg?ref_type=heads")
+### REVIEW - update link to main once merged
+```
+
+------------------------------------------------------------------------
+
+# 2. Verification metrics
+
+There are many widely-used metrics to assess the quality of a forecast product. We compare the hindcasts and observations to see when the hindcast makes accurate predictions. The following are optional metrics to be included within `c4h_postprocess()` within the `metrics` parameter.
+
+## `"BSS"` - Brier Skill Score
+
+This is a skill score for binary or categorical outcomes (for example, does a forecast successfully predict above normal temperatures?). The **Brier Score (BS)** measures the mean squared error between forecast probabilities and actual outcomes, and the associated **skill score (BSS)** compares the forecast's BS to a reference forecast BS (often the climatology). A forecast is *more skillful* than the reference if BSS~forecast~ \> 0.
+
+In the example of predicting above normal temperatures in a given month:
+
+1.  A "normal temperature" for a given month is the average temperature across all the years of the observations.
+2.  The climatology by definition correctly categorises temperatures as "above normal" 50% of the time (because half of the values will be above the mean).
+3.  Comparing the Brier Scores of the forecast compared to a reference:
+    -   BSS~forecast~ = 1: the forecast correctly predicts above normal temperatures every time
+    -   BSS~forecast~ = 0: the forecast correctly predicts above normal temperatures 50% of the time (and has no added skill compared to the climatology)
+    -   BSS~forecast~ \< 0: the forecast correctly predicts above normal temperatures less than 50% of the time (and performs worse than the climatology).
+
+Two commonly used thresholds for BSS are BSS10 and BSS90: these define the categories as the 10th and 90th percentiles respectively. They are useful to assess whether the forecast correctly predicts extremes.
+
+For example, BSS90 assesses whether the forecast can correctly predict when temperatures exceed the 90th percentile:
+
+1.  The climatology correctly categorises temperatures above the 90th percentile 10% of the time (because only 10% of the values will be above this threshold).
+2.  Comparing the Brier Scores of the forecast compared to a reference:
+    -   BSS~forecast~ = 1: the forecast correctly predicts temperatures above the 90th percentile every time
+    -   BSS~forecast~ = 0: the forecast correctly predicts temperatures above the 90th percentile 10% of the time (and has no added skill compared to the climatology)
+    -   BSS~forecast~ \< 0: the forecast correctly predicts temperatures above the 90th percentile less than 10% of the time (and performs worse than the climatology).
+
+## `"RPSS"` - Ranked Probability Skill Score
+
+This skill score is based on the **Ranked Probability Score (RPS)**, which extends the Brier Skill to multiple ordered categories. For example, you may wish to assess a forecast's ability to predict below-normal, near-normal and above-normal temperatures, where above-normal corresponds to temperatures over the 66th percentile, and below-normal to those below the 33rd.
+
+1.  The climatology by definition correctly categorises temperatures as "above normal" 33% of the time, "near normal" 33% of the time, and "below normal" 33% of the time.
+2.  Comparing the Brier Scores of the forecast compared to a reference:
+    -   RPSS~forecast~ = 1: the forecast correctly predicts the temperature category every time
+    -   RPSS~forecast~ = 0: the forecast correctly predicts the temperature category on average as often as the climatology (and has no added skill compared to the climatology)
+    -   RPSS~forecast~ \< 0: the forecast correctly predicts the temperature category on average less often than the climatology (and performs worse than the climatology).
+
+## `"CRPSS"` - Continuous Ranked Probability Skill Score
+
+The **Continuous Ranked Probability Score (CRPS)** measures the difference between the cumulative distribution functions (CDFs) of the forecast probability distribution and of the observations. It differs from the BS and the RPS in that it considers the continuous probability distribution and not discrete categories. The **Continuous Ranked Probability Skill Score (CRPSS)** again compares the CRPS of a forecast to that of a reference (often the climatology).
+
+1.  CRPSS values:
+    -   CRPSS~forecast~ = 1: a perfect forecast
+    -   CRPSS~forecast~ = 0: the forecast performs as well as the climatology with no additional skill
+    -   CRPSS~forecast~ \< 0: the forecast performs worse than the climatology.
+
+## `"AbsBiasSS"` - Absolute Bias Skill Score
+
+**Absolute bias (AbsBias)** calculates the absolute value of the error between forecast and observation, and its associate skill score **(AbsBiasSS)** compares the forecast AbsBias with that of a climatology.
+
+## `"MSE"` - Mean Squared Error
+
+The average of the squared differences between forecast and observation values. The lower the value, the smaller the errors. Large errors contribute more to the MSE because of the squared nature.
+
+## `"MSSS"` - Mean Squared Error Skill Score
+
+The skill score associated with the MSE.
+
+1.  Again, MSSS values for a forecast when compared to a reference (climatology):
+    -   MSSS~forecast~ = 1: a perfect forecast
+    -   MSSS~forecast~ = 0: the forecast performs as well as the climatology with no additional skill
+    -   MSSS~forecast~ \< 0: the forecast performs worse than the climatology.
+
+## `"RMSE"` - Root Mean Squared Error
+
+The square root of the average of the squared differences between forecast and observation values. The lower the value, the smaller the errors. Large errors contribute more to the RMSE because of its squared nature initially.
+
+## `"RMSSS"` - Root Mean Square Skill Score
+
+The skill score associated with the Root Mean Squared Error (RMSE), which is the square root of the MSE.
+
+## `"ROCSS"` - Relative Operating Characteristic Skill Score
+
+The **Relative Operating Characteristic Skill Score (ROCSS)** assesses the discriminatory ability of a forecast. It is based on the ROC curve, which plots the Hit Rate (positive prediction of an event that did occur) against the False Alarm Rate (positive prediction of an event that did NOT occur).
+
+For a binary event such as "temperature above normal" and a probabilistic forecast, you can consider multiple probability thresholds and calculate the Hit Rate/False Alarm Rate for each threshold. The ROC curve is then plotted comparing these values, with an example below.
+
+```{r c4h_postprocess_ROC,fig.width=10, fig.height=10, fig.align='center', out.width='100%', echo= FALSE, fig.cap="For the two temperature events (temperature in the upper quintile category, red; temperature in the lower quintile category, blue) the hit rates and false alarm rates associated with a range of 'trigger' thresholds (triangles) are plotted. The vertical axis gives the hit rate, defined as the number of times the event was forecast (with probability above a certain threshold) and later observed to occur. Source: UK Met Office."}
+
+knitr::include_graphics("https://gitlab.earth.bsc.es/ghr/clim4health/-/blob/develop-vignette/man/figures/metofficegovuk_xsmall.gif?ref_type=heads")
+### REVIEW - update link to main once merged
+```
+
+-   A "good" forecast has a high hit rate and low false alarm rate, so lies above the diagonal
+
+-   A random forecast has hit rate and false alarm rate rising in equal measure, so lies on the diagonal
+
+-   A "bad" forecast has a higher false alarm rate than hit rate, so lies below the diagonal.
+
+To calculate the ROCSS, we calculate the area under the curve (AUC), which ranges from 0 to 1 and a higher value indicates better discrimination. Then the **ROCSS = 2\*AUC - 1** indicates a similar skill score as previous metrics, where:
+
+-   ROCSS = 1: perfect discrimination
+
+-   ROCSS = 0: no discrimination
+
+-   ROCSS \< 0: worse than random.
+
+------------------------------------------------------------------------
+
+# 3. Example skill assessment
+
+First, we need to downscale the hindcast to the same spatial resolution as the observations.
+
+```{r eval = FALSE}
+dwn <- c4h_downscale("Intbc", exp = hcst, obs = obs,
+                     method_remap = "bilinear", bc_method = "evmos",
+                     target_grid = obs$attrs$source_files[1])
+```
+
+In this example, we have only loaded 3 years of data for each leadtime, which means that we do not have a lot of information to assess whether the hindcast is skillful or not. However, the general process is (for gridded data):
+
+```{r eval = FALSE}
+skill <- c4h_postprocess(exp = dwn$exp, 
+                         obs = obs,
+                         metrics = c("BSS", "CRPSS"),
+                         brier_thresholds = c(0.1, 0.9))
+```
+
+The output of `c4h_postprocess` is a list of metrics and their significance. In the above, we calculated the Brier Skill Score (BSS) at the 10th and 90th percentiles and Continuous Ranked Probability Skill Score (CRPSS), so we can find them in the list as:
+
+```{r eval = FALSE}
+names(skill)
+```
+
+Within each metric, we save the value and the significance (by default alpha = 0.05). Looking at the dimensions of the outputs, note that the sdate dimension will now always have length 1, because the skill is calculated by assessing statistical relationships across the start dates.
+
+```{r eval = FALSE}
+names(skill$BSS10)
+
+print(skill$BSS10$rpss$dims)
+```
+
+> 💡 **Note**: Because we have loaded so little data, the significance of all our metrics is FALSE - hopefully if we load more data, we would find that our hindcast has skill in some locations or dates.
+
+Each value and significance is an `s2dv_cube` object. They can be plotted using `c4h_plotskill()`.
+
+```{r eval = FALSE}
+c4h_plotskill(skill$BSS10$rpss, skill$BSS10$sign, ensemble = TRUE, boundaries = "countries")
+```
