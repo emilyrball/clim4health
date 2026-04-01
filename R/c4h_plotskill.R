@@ -277,7 +277,7 @@ c4h_plotskill <- function(
     plot_skill <- stars::st_set_dimensions(
       plot_skill,
       "time",
-      values = c(skill$attrs$Date)[time]
+      values = c(skill$attrs$Dates)[time]
     )
     sf::st_crs(plot_skill) <- 4326
 
@@ -318,7 +318,7 @@ c4h_plotskill <- function(
         dataset = c(skill$coords$dataset),
         var = c(skill$coords$var),
         sdate = c(skill$coords$sdate),
-        time = c(skill$attrs$Date)[time],
+        time = c(skill$attrs$Dates)[time],
         ensemble = c(skill$coords$ensemble),
         location = point_geom
       )
@@ -352,7 +352,7 @@ c4h_plotskill <- function(
         dataset = c(skill$coords$dataset),
         var = c(skill$coords$var),
         sdate = c(skill$coords$sdate),
-        time = c(skill$attrs$Date)[time],
+        time = c(skill$attrs$Dates)[time],
         ensemble = c(skill$coords$ensemble),
         area = skill$attrs$area$geom
       )
@@ -453,12 +453,8 @@ c4h_plotskill <- function(
               )
             )
           ) +
-          ggplot2::scale_x_continuous(labels = function(x) {
-            paste0(ifelse(x < 0, "-", ""), abs(x))
-          }) +
-          ggplot2::scale_y_continuous(labels = function(y) {
-            paste0(ifelse(y < 0, "-", ""), abs(y))
-          })
+          ggplot2::scale_x_continuous(labels = .abs_labels) +
+          ggplot2::scale_y_continuous(labels = .abs_labels)
       })
     }
   } else if ("location" %in% names(dims_skill)) {
@@ -528,12 +524,8 @@ c4h_plotskill <- function(
         ylim = sf::st_bbox(plot_skill)[c("ymin", "ymax")],
         expand = TRUE
       ) +
-      ggplot2::scale_x_continuous(labels = function(x) {
-        paste0(ifelse(x < 0, "-", ""), abs(x))
-      }) +
-      ggplot2::scale_y_continuous(labels = function(y) {
-        paste0(ifelse(y < 0, "-", ""), abs(y))
-      })
+      ggplot2::scale_x_continuous(labels = .abs_labels) +
+      ggplot2::scale_y_continuous(labels = .abs_labels)
   } else if ("area" %in% names(dims_skill)) {
     # Polygon data ----
     if (!is.null(boundaries)) {
@@ -567,12 +559,8 @@ c4h_plotskill <- function(
         )
     }
     p <- p +
-      ggplot2::scale_x_continuous(labels = function(x) {
-        paste0(ifelse(x < 0, "-", ""), abs(x))
-      }) +
-      ggplot2::scale_y_continuous(labels = function(y) {
-        paste0(ifelse(y < 0, "-", ""), abs(y))
-      })
+      ggplot2::scale_x_continuous(labels = .abs_labels) +
+      ggplot2::scale_y_continuous(labels = .abs_labels)
     # Skill hatching
     if (!is.null(sign)) {
       p <- p +
@@ -655,12 +643,8 @@ c4h_plotskill <- function(
           ylim = sf::st_bbox(plot_skill)[c("ymin", "ymax")],
           expand = TRUE
         ) +
-        ggplot2::scale_x_continuous(labels = function(x) {
-          paste0(ifelse(x < 0, "-", ""), abs(x))
-        }) +
-        ggplot2::scale_y_continuous(labels = function(y) {
-          paste0(ifelse(y < 0, "-", ""), abs(y))
-        })
+        ggplot2::scale_x_continuous(labels = .abs_labels) +
+        ggplot2::scale_y_continuous(labels = .abs_labels)
     )
   }
 
