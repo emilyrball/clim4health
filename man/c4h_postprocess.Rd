@@ -159,37 +159,86 @@ as s2dv_cube objects.
 Quality assessment of climate forecasts
 }
 \examples{
-hcst <- c4h_load(system.file("extdata", "hindcast", package = "clim4health"),
-                 variable = "t2m",
-                 year = 2010:2012,
-                 month = 1,
-                 leadtime_month = 1:3,
-                 ext = "nc")
+# DISCLAIMER: The purpose of these examples is to show the functionality
+# of the different functions. To perform postprocessing, a much larger time
+# series is required.
+# Load data
+hcst <- c4h_load(
+  system.file("extdata", "hindcast", package = "clim4health"),
+  variable = "t2m",
+  year = 2010:2012,
+  month = 1,
+  leadtime_month = 1:3,
+  ext = "nc"
+)
 lats <- hcst$coords$latitude
 lons <- hcst$coords$longitude
-obs <- c4h_load(system.file("extdata", "reanalysis",
-                package = "clim4health"),
-                variable = "t2m",
-                year = 2010:2012,
-                month = 1,
-                leadtime_month = 1:3,
-                bbox = c(max(lats), min(lons),
-                         min(lats), max(lons)),
-                ext = "nc")
+obs <- c4h_load(
+  system.file("extdata", "reanalysis", package = "clim4health"),
+  variable = "t2m",
+  year = 2010:2012,
+  month = 1,
+  leadtime_month = 1:3,
+  bbox = c(max(lats), min(lons), min(lats), max(lons)),
+  ext = "nc"
+)
 
-## Example with polygon data
-shp_path <- system.file("extdata", "areas", "munip_vallecauca.gpkg",
-                        package = "clim4health")
-obs_areas <- c4h_space(obs,
-                       areas = shp_path,
+# Example with gridded data
+dwn <- c4h_downscale(
+  "Interpolation",
+  exp = hcst,
+  obs = obs,
+  method_remap = "bilinear",
+  target_grid = system.file(
+    "extdata",
+    "reanalysis/t2m_201001.nc",
+    package = "clim4health"
+  )
+)
+hcst_dwn <- dwn$exp
+skill_grid <- c4h_postprocess(exp = hcst_dwn, obs = obs, metrics = "BSS")
+c4h_plotskill(skill_grid$BSS10$rpss, skill_grid$BSS10$sign)
+
+# Example with polygon data
+areas <- sf::read_sf(system.file("extdata", "areas", "munip_vallecauca.gpkg",
+                                 package = "clim4health"))
+obs_area <- c4h_space(obs,
+                      areas = areas,
+                      fun = "mean",
+                      areas_id = "munip_code")
+hcst_area <- c4h_space(hcst,
+                       areas = areas,
                        fun = "mean",
                        areas_id = "munip_code")
-hcst_areas <- c4h_space(hcst,
-                        areas = shp_path,
-                        fun = "mean",
-                        areas_id = "munip_code")
-skill <- c4h_postprocess(exp = hcst_areas,
-                         obs = obs_areas,
-                         metrics = c("BSS", "CRPSS", "RMSSS", "RMSE"),
-                         brier_thresholds = c(0.1, 0.9))
+skill_area <- c4h_postprocess(exp = hcst_area,
+                              obs = obs_area,
+                              metrics = "CRPSS",
+                              brier_thresholds = c(0.1, 0.9))
+c4h_plotskill(skill_area$CRPSS$crpss, skill_area$CRPSS$sign)
+
+# Example with station data
+point_locs <- clim4health::c4h_load(system.file("extdata",
+                                               "stations",
+                                               package = "clim4health"),
+                                    ext = "csv",
+                                    year = 2010:2012,
+                                    month = 1,
+                                    leadtime_month = 1:3,
+                                    variable = "temp_mean")
+points <- list(latitude = point_locs$attrs$location$latitude,
+               longitude = point_locs$attrs$location$longitude)
+point_locs <- c4h_time(point_locs,
+                       time_aggregation = "monthly",
+                       dim_aggregation = "sdate",
+                       fun = "mean")
+dwn <- c4h_downscale("Interpolation", exp = hcst,
+                     points = points, method_point_interp = "bilinear")
+hcst_dwn <- dwn$exp
+skill_point <- c4h_postprocess(exp = hcst_dwn,
+                               obs = point_locs,
+                               metrics = "BSS")
+c4h_plotskill(skill = skill_point$BSS10$rpss, boundaries = areas)
+}
+\seealso{
+\code{\link[=c4h_plotskill]{c4h_plotskill()}} for visualizing the forecast skill.
 }
