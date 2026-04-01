@@ -32,7 +32,7 @@ This vignette provides an overview of the **clim4health** package methodology, t
 
 The **clim4health** package is currently in development and is not yet available on CRAN. To install the latest version, you can use the `devtools` package. ## REVIEW - install from CRAN when possible
 
-```{r setup, results='hide', eval = FALSE}
+```{r setup, results='hide'}
 ## Install from CRAN
 #install.packages("clim4health") 
 
@@ -419,7 +419,7 @@ Since we have not specified any desired dates in our `c4h_load()` function, all 
 
 We can use `c4h_time()` to aggregate the data to obtain weekly mean daily-mean temperatures, by applying the mean function across the `time` dimension.
 
-```{r temporal_aggregation, eval = FALSE}
+```{r temporal_aggregation}
 weekly_data <- c4h_time(data = station_data,
                         time_aggregation = "weekly",
                         dim_aggregation = "time",
@@ -465,7 +465,7 @@ We now have our climatology data, which has one value for each month.
 
 Once all the desired processing has been done, you can convert the data from an s2dv_cube to a different data type using `c4h_convert()`. It takes an s2dv_cube as input, and a string containing the desired output type - raster objects (`terra`), data frames (`csv`), or polygon objects(`polygons`).
 
-```{r convert_data_type, eval = FALSE}
+```{r convert_data_type}
 csv_out <- c4h_convert(data = climatology, output_format = "csv")
 
 terra_out <- c4h_convert(data = cal$exp, output_format = "terra")
@@ -477,6 +477,6 @@ polygons_out <- c4h_convert(data = cal$exp, output_format = "polygons")
 
 Finally, you can save the data using `c4h_save()`. This function allows you to save the processed data, either as a netCDF (if the data is still in s2dv_cube format), or as a csv, raster, or polygon file if the data has been converted to a different data type using `c4h_convert()`.
 
-```{r eval = FALSE}
+```{r }
 c4h_save(csv_out, format = "csv", path = "path_to_file.csv")
 ```

@@ -34,7 +34,7 @@ library(clim4health)
 
 Let's load some sample data that we can use to demonstrate the verification methods.
 
-```{r eval = FALSE}
+```{r }
 hcst_path <- system.file("extdata/hindcast/", package = "clim4health")
 hcst_path <- paste0(hcst_path, "/")
 hcst <- c4h_load(hcst_path,
@@ -56,7 +56,7 @@ obs <- c4h_load(obs_path,
 
 Look at the dimensions of the observed and hindcast datasets (recall we can use `dim(obs$data)` or `obs$dims`). We can see that `obs` has more latitude and longitude points, despite covering the same area - it has *higher spatial resolution.* We can also see this by comparing the values of the latitude/longitude coordinates - notice that `obs` has 0.1º resolution, but `hcst` has 1º.
 
-```{r eval = FALSE}
+```{r }
 print(obs$dims)
 print(hcst$dims)
 
@@ -191,7 +191,7 @@ To calculate the ROCSS, we calculate the area under the curve (AUC), which range
 
 First, we need to downscale the hindcast to the same spatial resolution as the observations.
 
-```{r eval = FALSE}
+```{r }
 dwn <- c4h_downscale("Intbc", exp = hcst, obs = obs,
                      method_remap = "bilinear", bc_method = "evmos",
                      target_grid = obs$attrs$source_files[1])
@@ -199,7 +199,7 @@ dwn <- c4h_downscale("Intbc", exp = hcst, obs = obs,
 
 In this example, we have only loaded 3 years of data for each leadtime, which means that we do not have a lot of information to assess whether the hindcast is skillful or not. However, the general process is (for gridded data):
 
-```{r eval = FALSE}
+```{r }
 skill <- c4h_postprocess(exp = dwn$exp, 
                          obs = obs,
                          metrics = c("BSS", "CRPSS"),
@@ -208,13 +208,13 @@ skill <- c4h_postprocess(exp = dwn$exp,
 
 The output of `c4h_postprocess` is a list of metrics and their significance. In the above, we calculated the Brier Skill Score (BSS) at the 10th and 90th percentiles and Continuous Ranked Probability Skill Score (CRPSS), so we can find them in the list as:
 
-```{r eval = FALSE}
+```{r }
 names(skill)
 ```
 
 Within each metric, we save the value and the significance (by default alpha = 0.05). Looking at the dimensions of the outputs, note that the sdate dimension will now always have length 1, because the skill is calculated by assessing statistical relationships across the start dates.
 
-```{r eval = FALSE}
+```{r }
 names(skill$BSS10)
 
 print(skill$BSS10$rpss$dims)
@@ -224,6 +224,6 @@ print(skill$BSS10$rpss$dims)
 
 Each value and significance is an `s2dv_cube` object. They can be plotted using `c4h_plotskill()`.
 
-```{r eval = FALSE}
+```{r }
 c4h_plotskill(skill$BSS10$rpss, skill$BSS10$sign, ensemble = TRUE, boundaries = "countries")
 ```

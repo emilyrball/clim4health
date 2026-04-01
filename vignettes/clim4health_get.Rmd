@@ -84,7 +84,7 @@ c4h_get_help(dataset = "reanalysis-era5-land", parameter = "variable")
 
 There are multiple arguments to specify the time range you would like to download. Parameters `year`, `month`, `day`, and `time` take vector inputs to determine the years, months, days and times of day of interest. For example, to download hourly reanalysis data from 2011 to 2025 in February and March:
 
-```{r eval = FALSE}
+```{r }
 c4h_get(dataset = "reanalysis-era5-land", # data type
         year = 2011:2025,                 # load multiple years
         month = c(2,3),                   # load February and March
@@ -93,7 +93,7 @@ c4h_get(dataset = "reanalysis-era5-land", # data type
 
 Additionally, the argument `leadtime_month` specifies the forecast months to download if relevant. For example, to download leadtime months of February and March for a seasonal forecast initialised in February 2025, we would specify:
 
-```{r eval = FALSE}
+```{r }
 c4h_get(dataset = "seasonal-monthly-single-levels", # data type
         year = c(2025),                             # year of initialisation
         month = c(2),                               # month of initialisation
@@ -110,7 +110,7 @@ c4h_get_help("reanalysis-era5-land", "bbox")
 
 We can select a box in latitude and longitude coordinates using the parameter `bbox` within `c4h_get()` . For example, to select latitudes between -4 and 4, and longitudes between -73, -70, we specify the box in order of its North, West, South, East boundaries.
 
-```{r eval = FALSE}
+```{r }
 c4h_get(dataset = "reanalysis-era5-land", # data type
         bbox = c(4, -73, -4, -70))        # bounding box in order N, W, S, E
 ```
@@ -125,7 +125,7 @@ c4h_get_help("reanalysis-era5-land", "variable")
 
 For example, to download temperature at 2m from ERA5Land, we would specify:
 
-```{r eval = FALSE}
+```{r }
 c4h_get(dataset = "reanalysis-era5-land", # data type
         variable = "2m_temperature")      # variable name
 ```
@@ -134,7 +134,7 @@ c4h_get(dataset = "reanalysis-era5-land", # data type
 
 By default, `c4h_get()` will download data to your current working directory. However, you may wish to specify a different directory using `outpath`, and change the name of the file you are downloading. For example:
 
-```{r eval = FALSE}
+```{r }
 c4h_get(dataset = "reanalysis-era5-land",         # data type
         variable = "2m_temperature",              # variable name
         outpath = "/path/to/dir/",                # directory to save data
@@ -169,7 +169,7 @@ Once you know your PAT, the dataset you would like to download, and the required
 
 This example would download monthly mean 2m temperature from the ERA5-Land reanalysis for April and May of 2010, 2011, and 2012. The data would be downloaded for the box defined by latitudes 33 and -23, and longitudes -93 and -17. The files would be saved in the specified directory with the name "era5land" followed by the year and month of the data (e.g. "/path/to/dir/era5land_201004.nc"). The names of the files where the data is saved will be printed in the console.
 
-```{r eval = FALSE}
+```{r }
 # Download reanalysis data
 c4h_get(pat = pat_api,
         dataset = "reanalysis-era5-land-monthly-means",
@@ -186,7 +186,7 @@ c4h_get(pat = pat_api,
 
 This example would download monthly mean 2m temperature, 2m dewpoint temperature, and total precipitation from the seasonal monthly single levels dataset for the ECMWF system 51 prediction system. The data will be downloaded for the forecasts issued in April 2010, 2011, and 2012, for leadtime months of April and May. The data will be downloaded for the same bounding box. The files will be saved in the specified directory with the name "hindcast" followed by the years and months of the data (e.g. "/path/to/dir/hindcast_201004.nc"). The names of the files where the data is saved will be printed in the console.
 
-```{r eval = FALSE}
+```{r }
 # Download hindcast data
 c4h_get(pat = pat_api,
         dataset = "seasonal-monthly-single-levels",
@@ -207,7 +207,7 @@ c4h_get(pat = pat_api,
 
 This example would download the data in the same format as above, except only for precipitation, and for the forecast issued in April 2025. The file would be saved in "/path/to/dir/forecast_202504.nc".
 
-```{r eval = FALSE}
+```{r }
 # Download forecast data
 c4h_get(pat = pat_api,
         dataset = "seasonal-monthly-single-levels",
