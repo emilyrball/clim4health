@@ -140,8 +140,8 @@ c4h_plotskill <- function(
   mask_boundaries = FALSE,
   title = NULL,
   legend = NULL,
-  palette = "-Green",
-  noskillcol = "#D0C1F5",
+  palette = "SunsetDark",
+  noskillcol = "#b7d6ff",
   coordgrid = FALSE,
   ...
 ) {
