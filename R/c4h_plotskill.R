@@ -146,7 +146,7 @@ c4h_plotskill <- function(
     dims_skill <- skill$dims
     plot_skill <- skill$data
   } else {
-    stop("'skill' must be an s2dv array.")
+    stop("'skill' must be an s2dv_cube.")
   }
 
   # Requirements: sdate and ensemble
@@ -171,7 +171,7 @@ c4h_plotskill <- function(
       dims_sign <- sign$dims
       plot_sign <- sign$data
     } else {
-      stop("'sign' must be an s2dv array.")
+      stop("'sign' must be an s2dv_cube.")
     }
     if (!is.logical(plot_sign)) {
       stop("'sign' data must be of type logical (TRUE/FALSE).")
@@ -684,11 +684,6 @@ c4h_plotskill <- function(
       ) +
       ggplot2::xlab("") +
       ggplot2::ylab("")
-
-    if (!isTRUE(coordgrid)) {
-      p <- p +
-        ggplot2::theme(strip.text.y = ggplot2::element_text(angle = 90))
-    }
   } else {
     p <- p +
       ggplot2::theme_void() +
