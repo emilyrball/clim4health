@@ -36,7 +36,7 @@ different R and Python libraries tailored for health, climate, environmental,
 and socioeconomic data acquisition, harmonisation, and visualization.
 
 The package is currently under development and its expected release date 
-is **February 2026**.
+is **April 2026**.
 
 ## Developers
 
@@ -45,7 +45,7 @@ is **February 2026**.
 Barcelona Supercomputing Center\
 Climate Services
 
-**[Alba Llabrés, PhD](https://www.bsc.es/llabres-alba)**
+**Alba Llabrés, PhD**
 <a href="https://orcid.org/0000-0003-2144-675X" style="margin-left: 15px;"><img src="https://orcid.org/sites/default/files/images/orcid_16x16.png" alt="ORCID" style="width: 16px; height: 16px;" /></a>\
 Barcelona Supercomputing Center\
 Climate Services

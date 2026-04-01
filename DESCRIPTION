@@ -1,5 +1,5 @@
 Package: clim4health
-Title: Post-processing Of Climate Data For Health Applications
+Title: Post-Processing of Climate Data for Health Applications
 Version: 0.0.0.9000
 Authors@R: c(
     person("Emily", "Ball", role = c("aut"),
@@ -49,6 +49,9 @@ Imports:
 Suggests: 
     testthat (>= 3.0.0),
     spData,
-    cubelyr
+    cubelyr,
+    knitr,
+    rmarkdown
 Config/testthat/edition: 3
+VignetteBuilder: knitr
 SystemRequirements: CDO (Climate Data Operators, https://code.mpimet.mpg.de/projects/cdo)
