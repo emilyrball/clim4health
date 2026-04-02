@@ -588,6 +588,11 @@ c4h_plotskill <- function(
               lwd = 0.2
             )
           )
+        ) +
+        ggplot2::coord_sf(
+          xlim = sf::st_bbox(plot_skill)[c("xmin", "xmax")],
+          ylim = sf::st_bbox(plot_skill)[c("ymin", "ymax")],
+          expand = TRUE
         )
     }
   }
