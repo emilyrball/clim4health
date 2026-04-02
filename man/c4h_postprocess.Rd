@@ -186,7 +186,7 @@ dwn <- c4h_downscale(
 )
 hcst_dwn <- dwn$exp
 skill_grid <- c4h_postprocess(exp = hcst_dwn, obs = obs, metrics = "BSS")
-c4h_plotskill(skill_grid$BSS10$rpss, skill_grid$BSS10$sign)
+c4h_plotskill(skill_grid$BSS10$bss, skill_grid$BSS10$sign)
 
 # Example with polygon data
 areas <- sf::read_sf(system.file("extdata", "areas", "munip_vallecauca.gpkg",
@@ -226,7 +226,7 @@ hcst_dwn <- dwn$exp
 skill_point <- c4h_postprocess(exp = hcst_dwn,
                                obs = point_locs,
                                metrics = "BSS")
-c4h_plotskill(skill = skill_point$BSS10$rpss, boundaries = areas)
+c4h_plotskill(skill = skill_point$BSS10$bss, boundaries = areas)
 }
 \seealso{
 \code{\link[=c4h_plotskill]{c4h_plotskill()}} for visualizing the forecast skill.
