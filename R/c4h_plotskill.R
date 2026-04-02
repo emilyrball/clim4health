@@ -73,10 +73,10 @@
 #' )
 #' hcst_dwn <- dwn$exp
 #' skill_grid <- c4h_postprocess(exp = hcst_dwn, obs = obs, metrics = "BSS")
-#' c4h_plotskill(skill_grid$BSS10$rpss, skill_grid$BSS10$sign)
+#' c4h_plotskill(skill_grid$BSS10$bss, skill_grid$BSS10$sign)
 #' # Make some artificial significance for testing
 #' skill_grid$BSS10$sign$data[,,,,, 3:8, 15:25] <- TRUE
-#' c4h_plotskill(skill = skill_grid$BSS10$rpss, sign = skill_grid$BSS10$sign)
+#' c4h_plotskill(skill = skill_grid$BSS10$bss, sign = skill_grid$BSS10$sign)
 #'
 #' # Example with polygon data
 #' areas <- sf::read_sf(system.file("extdata", "areas", "munip_vallecauca.gpkg",
@@ -119,10 +119,10 @@
 #' skill_point <- c4h_postprocess(exp = hcst_dwn,
 #'                                obs = point_locs,
 #'                                metrics = "BSS")
-#' c4h_plotskill(skill = skill_point$BSS10$rpss, boundaries = areas)
+#' c4h_plotskill(skill = skill_point$BSS10$bss, boundaries = areas)
 #' # Make some artificial significance for testing
 #' skill_point$BSS10$sign$data[1, 1, 1, 1:3, 1, 4:6] <- TRUE
-#' c4h_plotskill(skill = skill_point$BSS10$rpss,
+#' c4h_plotskill(skill = skill_point$BSS10$bss,
 #'               sign = skill_point$BSS10$sign,
 #'               boundaries = areas)
 
@@ -142,6 +142,9 @@ c4h_plotskill <- function(
   # 1. Data checks ----
 
   # Get skill array info
+  print(class(skill))
+  print(inherits(skill, "s2dv_cube"))
+  print(names(skill))
   if (inherits(skill, "s2dv_cube")) {
     dims_skill <- skill$dims
     plot_skill <- skill$data

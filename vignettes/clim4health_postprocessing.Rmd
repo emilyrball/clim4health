@@ -217,7 +217,7 @@ Within each metric, we save the value and the significance (by default alpha = 0
 ```{r }
 names(skill$BSS10)
 
-print(skill$BSS10$rpss$dims)
+print(skill$BSS10$bss$dims)
 ```
 
 > 💡 **Note**: Because we have loaded so little data, the significance of all our metrics is FALSE - hopefully if we load more data, we would find that our hindcast has skill in some locations or dates.
@@ -225,5 +225,5 @@ print(skill$BSS10$rpss$dims)
 Each value and significance is an `s2dv_cube` object. They can be plotted using `c4h_plotskill()`.
 
 ```{r }
-c4h_plotskill(skill$BSS10$rpss, skill$BSS10$sign, ensemble = TRUE, boundaries = "countries")
+c4h_plotskill(skill$BSS10$bss, skill$BSS10$sign, ensemble = TRUE, boundaries = "countries")
 ```
