@@ -142,9 +142,6 @@ c4h_plotskill <- function(
   # 1. Data checks ----
 
   # Get skill array info
-  print(class(skill))
-  print(inherits(skill, "s2dv_cube"))
-  print(names(skill))
   if (inherits(skill, "s2dv_cube")) {
     dims_skill <- skill$dims
     plot_skill <- skill$data
