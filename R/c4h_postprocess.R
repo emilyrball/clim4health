@@ -17,8 +17,9 @@
 #' Brier Skill Score (BSS) calculation. The default is c(0.1, 0.9). Only
 #' applicable if "BSS" is in 'metrics'.
 #' @param prob_thresholds Optional numeric vector of thresholds for the
-#' Ranked Probability Skill Score (RPSS) calculation. The default is c(1/3,
-#' 2/3). Only applicable if "RPSS" is in 'metrics'.
+#' Ranked Probability Skill Score (RPSS) calculation, and for the Relative
+#' Operating Characteristic Skill Score (ROCSS). The default is c(1/3,
+#' 2/3). Only applicable if "RPSS" or "ROCSS" is in 'metrics'.
 #' @param alpha A numeric of the significance level to be used in the
 #' statistical significance test. The default value is 0.05. Relevant for all
 #' metrics except "ROCSS".
@@ -42,23 +43,11 @@
 #' @param cross.val A logical indicating whether to compute the thresholds
 #' between probabilistics categories in cross-validation. The default value is
 #' FALSE. Only relevant if "BSS", "RPSS", or "ROCSS" is in 'metrics'.
-#' @param cat_dim A character string indicating the name of the category
-#' dimension that is needed when exp, obs, and ref are probabilities. The
-#' default value is NULL, which means that the data are not probabilities.
-#' Relevant if "BSS", "RPSS", or "ROCSS" is in 'metrics'.
 #' @param clim.cross.val A logical indicating whether to build the
 #' climatological forecast in cross-validation (i.e. excluding the observed
 #' value of the time step when building the probabilistic distribution function
 #' for that particular time step). The default value is TRUE. Only used if 'ref'
 #' is NULL and "CRPSS" is in 'metrics'.
-#' @param nmemb A numeric value indicating the number of members used to compute
-#' the probabilities. This parameter is necessary when calculating FairRPS from
-#' probabilities. Default is NULL. Only relevant if "BSS" or "RPSS" is in
-#' 'metrics' and 'Fair' is TRUE.
-#' @param nmemb_ref A numeric value indicating the number of members of the
-#' reference forecast 'ref'. If 'ref' is NULL and uses the climatology,
-#' 'nmemb_ref' should be the number of years used to compute the climatology.
-#' Default is NULL. Only relevant if "BSS" or "RPSS" is in 'metrics'.
 #' @param weights_exp  A named numerical array of the forecast ensemble weights
 #' for probability calculation. The dimensions should include 'ensemble',
 #' 'time', and 'dataset' if there are multiple datasets. All dimension
@@ -93,6 +82,10 @@
 #' @param sig_method A character string indicating the significance method. The
 #' options are "one-sided Fisher" (default) and "Random Walk". Only relevant if
 #' "MSSS" or "RMSSS" is in 'metrics'.
+#' @param rocss_cat An integer indicating the category to be returned when
+#' "ROCSS" is in 'metrics'. The default value is 1, which means that the ROCSS
+#' for the first probability category (i.e. the lowest category) will be
+#' returned.
 #'
 #' @returns a list of lists with the calculated metrics and their significances
 #' as s2dv_cube objects.
@@ -195,10 +188,7 @@ c4h_postprocess <- function(
   Fair = FALSE,
   indices_for_clim = NULL,
   cross.val = FALSE,
-  cat_dim = NULL,
   clim.cross.val = TRUE,
-  nmemb = NULL,
-  nmemb_ref = NULL,
   weights_exp = NULL,
   weights_ref = NULL,
   comp_dim = NULL,
@@ -208,7 +198,8 @@ c4h_postprocess <- function(
   sig_method.type = NULL,
   sign = TRUE,
   pval = FALSE,
-  sig_method = "one-sided Fisher"
+  sig_method = "one-sided Fisher",
+  rocss_cat = 1
 ) {
   if (is.null(exp) || is.null(obs)) {
     stop(
@@ -325,12 +316,10 @@ c4h_postprocess <- function(
           ref = ref,
           time_dim = time_dim,
           memb_dim = memb_dim,
-          cat_dim = cat_dim,
           dat_dim = NULL,
           prob_thresholds = threshold,
           indices_for_clim = indices_for_clim,
           Fair = Fair,
-          #nmemb = nmemb, nmemb_ref = nmemb_ref,
           weights_exp = weights_exp,
           weights_ref = weights_ref,
           cross.val = cross.val,
@@ -366,12 +355,10 @@ c4h_postprocess <- function(
         ref = ref,
         time_dim = time_dim,
         memb_dim = memb_dim,
-        cat_dim = cat_dim,
         dat_dim = NULL,
         prob_thresholds = prob_thresholds,
         indices_for_clim = indices_for_clim,
         Fair = Fair,
-        #nmemb = nmemb, nmemb_ref = nmemb_ref,
         weights_exp = weights_exp,
         weights_ref = weights_ref,
         cross.val = cross.val,
@@ -637,28 +624,22 @@ c4h_postprocess <- function(
       ref = ref,
       time_dim = time_dim,
       memb_dim = memb_dim,
-      cat_dim = cat_dim,
       dat_dim = NULL,
       prob_thresholds = prob_thresholds,
       indices_for_clim = indices_for_clim,
       cross.val = cross.val,
       ncores = ncores
     )
+    temp <- .subset_array_named(temp, cat = rocss_cat)
+    names(dim(temp))[which(names(dim(temp)) == "cat")] <- "ensemble"
     rpss <- .format_output(
-      data = temp$rpss,
-      out_dims = out_dims,
-      out_coords = out_coords,
-      out_attrs = out_attrs
-    )
-    signif <- .format_output(
-      data = temp$sign,
+      data = temp,
       out_dims = out_dims,
       out_coords = out_coords,
       out_attrs = out_attrs
     )
     rpss$attrs$Variable$varName <- "ROCSS"
-    signif$attrs$Variable$varName <- "ROCSS"
-    temp <- list(rpss = rpss, sign = signif)
+    temp <- list(rocss = rpss)
     data[["ROCSS"]] <- temp
   }
   return(data)

@@ -17,10 +17,7 @@ c4h_postprocess(
   Fair = FALSE,
   indices_for_clim = NULL,
   cross.val = FALSE,
-  cat_dim = NULL,
   clim.cross.val = TRUE,
-  nmemb = NULL,
-  nmemb_ref = NULL,
   weights_exp = NULL,
   weights_ref = NULL,
   comp_dim = NULL,
@@ -30,7 +27,8 @@ c4h_postprocess(
   sig_method.type = NULL,
   sign = TRUE,
   pval = FALSE,
-  sig_method = "one-sided Fisher"
+  sig_method = "one-sided Fisher",
+  rocss_cat = 1
 )
 }
 \arguments{
@@ -54,8 +52,9 @@ Brier Skill Score (BSS) calculation. The default is c(0.1, 0.9). Only
 applicable if "BSS" is in 'metrics'.}
 
 \item{prob_thresholds}{Optional numeric vector of thresholds for the
-Ranked Probability Skill Score (RPSS) calculation. The default is c(1/3,
-2/3). Only applicable if "RPSS" is in 'metrics'.}
+Ranked Probability Skill Score (RPSS) calculation, and for the Relative
+Operating Characteristic Skill Score (ROCSS). The default is c(1/3,
+2/3). Only applicable if "RPSS" or "ROCSS" is in 'metrics'.}
 
 \item{alpha}{A numeric of the significance level to be used in the
 statistical significance test. The default value is 0.05. Relevant for all
@@ -86,26 +85,11 @@ the whole period is used. The default value is NULL. Only relevant if "BSS",
 between probabilistics categories in cross-validation. The default value is
 FALSE. Only relevant if "BSS", "RPSS", or "ROCSS" is in 'metrics'.}
 
-\item{cat_dim}{A character string indicating the name of the category
-dimension that is needed when exp, obs, and ref are probabilities. The
-default value is NULL, which means that the data are not probabilities.
-Relevant if "BSS", "RPSS", or "ROCSS" is in 'metrics'.}
-
 \item{clim.cross.val}{A logical indicating whether to build the
 climatological forecast in cross-validation (i.e. excluding the observed
 value of the time step when building the probabilistic distribution function
 for that particular time step). The default value is TRUE. Only used if 'ref'
 is NULL and "CRPSS" is in 'metrics'.}
-
-\item{nmemb}{A numeric value indicating the number of members used to compute
-the probabilities. This parameter is necessary when calculating FairRPS from
-probabilities. Default is NULL. Only relevant if "BSS" or "RPSS" is in
-'metrics' and 'Fair' is TRUE.}
-
-\item{nmemb_ref}{A numeric value indicating the number of members of the
-reference forecast 'ref'. If 'ref' is NULL and uses the climatology,
-'nmemb_ref' should be the number of years used to compute the climatology.
-Default is NULL. Only relevant if "BSS" or "RPSS" is in 'metrics'.}
 
 \item{weights_exp}{A named numerical array of the forecast ensemble weights
 for probability calculation. The dimensions should include 'ensemble',
@@ -150,6 +134,11 @@ of the test Ho: (R)MSSS = 0. The default value is FALSE. Only relevant if
 \item{sig_method}{A character string indicating the significance method. The
 options are "one-sided Fisher" (default) and "Random Walk". Only relevant if
 "MSSS" or "RMSSS" is in 'metrics'.}
+
+\item{rocss_cat}{An integer indicating the category to be returned when
+"ROCSS" is in 'metrics'. The default value is 1, which means that the ROCSS
+for the first probability category (i.e. the lowest category) will be
+returned.}
 }
 \value{
 a list of lists with the calculated metrics and their significances
