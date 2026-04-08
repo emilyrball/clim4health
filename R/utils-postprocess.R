@@ -9,8 +9,6 @@
     out <- data$data
   } else if (inherits(data, "array")) {
     out <- data
-  } else {
-    stop("data must be an s2dv_cube or an array")
   }
   return(out)
 }
@@ -27,15 +25,21 @@
 .format_output <- function(data, out_dims, out_coords, out_attrs) {
   for (dim in names(out_dims)) {
     if (!(dim %in% names(dim(data)))) {
-      data <- s2dv::InsertDim(data,
-                              posdim = which(names(out_dims) == dim),
-                              lendim = 1,
-                              name = dim)
+      data <- s2dv::InsertDim(
+        data,
+        posdim = which(names(out_dims) == dim),
+        lendim = 1,
+        name = dim
+      )
     }
   }
   data <- s2dv::Reorder(data, order = names(out_dims))
-  out <- list(data = data, dims = out_dims,
-              coords = out_coords, attrs = out_attrs)
+  out <- list(
+    data = data,
+    dims = out_dims,
+    coords = out_coords,
+    attrs = out_attrs
+  )
   class(out) <- "s2dv_cube"
 
   return(out)

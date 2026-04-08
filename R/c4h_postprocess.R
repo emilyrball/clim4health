@@ -208,6 +208,11 @@ c4h_postprocess <- function(
       "s2dv_cube objects that have been loaded and transformed using",
       "clim4health functions."
     )
+  } else if (
+    (!inherits(exp, "s2dv_cube") && (!inherits(exp, "array"))) ||
+      (!inherits(obs, "s2dv_cube") && (!inherits(obs, "array")))
+  ) {
+    stop("Both 'exp' and 'obs' must be of class 's2dv_cube' or 'array'.")
   }
 
   if (

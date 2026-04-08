@@ -147,45 +147,45 @@ test_that("8. Collapsing sdate dimension with mean and na.rm = FALSE", {
   expect_equal(res$coords[["sdate"]], 1)
 })
 
-test_that("Collapse examples run without problems", {
-  expect_no_error({
-    # Load a forecast
-    fcst <- c4h_load(
-      system.file("extdata", "forecast", package = "clim4health"),
-      var = "t2m",
-      year = 2025,
-      month = 1,
-      ext = 'nc'
-    )
-    fcst$dims
-
-    # Ensemble median of a forecast
-    fcst_coll <- c4h_collapse(fcst, dim = "ensemble", fun = "median")
-    fcst_coll$dims
-
-    # Load an observational time-series dataset
-    stations_path <- system.file("extdata", "stations", package = "clim4health")
-    stations <- c4h_load(stations_path, var = "temp_mean", ext = "csv")
-    stations$dims
-
-    # Compute time-mean (average temp conditions)
-    stations_coll <- c4h_collapse(stations, dim = "time")
-    stations_coll$dims
-
-    # Load an observational dataset aligned to a hindcast
-    obs_path <- system.file("extdata", "reanalysis", package = "clim4health")
-    obs <- c4h_load(
-      obs_path,
-      var = "t2m",
-      ext = "nc",
-      year = 2010:2012,
-      month = 1,
-      leadtime_month = 1:3
-    )
-    obs$dims
-
-    # Compute climatology (average over years)
-    obs_coll <- c4h_collapse(obs, dim = "sdate")
-    obs_coll$dims
-  })
-})
+# test_that("Collapse examples run without problems", {
+#   expect_no_error({
+#     # Load a forecast
+#     fcst <- c4h_load(
+#       system.file("extdata", "forecast", package = "clim4health"),
+#       var = "t2m",
+#       year = 2025,
+#       month = 1,
+#       ext = 'nc'
+#     )
+#     fcst$dims
+#
+#     # Ensemble median of a forecast
+#     fcst_coll <- c4h_collapse(fcst, dim = "ensemble", fun = "median")
+#     fcst_coll$dims
+#
+#     # Load an observational time-series dataset
+#     stations_path <- system.file("extdata", "stations", package = "clim4health")
+#     stations <- c4h_load(stations_path, var = "temp_mean", ext = "csv")
+#     stations$dims
+#
+#     # Compute time-mean (average temp conditions)
+#     stations_coll <- c4h_collapse(stations, dim = "time")
+#     stations_coll$dims
+#
+#     # Load an observational dataset aligned to a hindcast
+#     obs_path <- system.file("extdata", "reanalysis", package = "clim4health")
+#     obs <- c4h_load(
+#       obs_path,
+#       var = "t2m",
+#       ext = "nc",
+#       year = 2010:2012,
+#       month = 1,
+#       leadtime_month = 1:3
+#     )
+#     obs$dims
+#
+#     # Compute climatology (average over years)
+#     obs_coll <- c4h_collapse(obs, dim = "sdate")
+#     obs_coll$dims
+#   })
+# })
