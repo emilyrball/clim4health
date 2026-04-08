@@ -95,6 +95,7 @@
 #' @export
 #'
 #' @examples
+#' \donttest{
 #' # DISCLAIMER: The purpose of these examples is to show the functionality
 #' # of the different functions. To perform postprocessing, a much larger time
 #' # series is required.
@@ -174,7 +175,7 @@
 #'                                obs = point_locs,
 #'                                metrics = "BSS")
 #' c4h_plotskill(skill = skill_point$BSS10$bss, boundaries = areas)
-
+#' }
 c4h_postprocess <- function(
   exp,
   obs,

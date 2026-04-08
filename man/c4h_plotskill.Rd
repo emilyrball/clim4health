@@ -61,6 +61,7 @@ It is used for the following statistics: BSS, RPSS, CRPSS, AbsBiasSS,
 MSSS, RMSSS and ROCSS. For MSE and RMSE, please use the function \code{c4h_plot}.
 }
 \examples{
+\donttest{
 # DISCLAIMER: The purpose of these examples is to show the functionality
 # of the different functions. To perform postprocessing, a much larger time
 # series is required.
@@ -151,6 +152,7 @@ skill_point$BSS10$sign$data[1, 1, 1, 1:3, 1, 4:6] <- TRUE
 c4h_plotskill(skill = skill_point$BSS10$bss,
               sign = skill_point$BSS10$sign,
               boundaries = areas)
+}
 }
 \seealso{
 \code{\link[=c4h_postprocess]{c4h_postprocess()}} for calculating forcast skill and \code{\link[=c4h_plot]{c4h_plot()}}

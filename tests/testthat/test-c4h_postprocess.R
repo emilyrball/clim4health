@@ -334,25 +334,132 @@ test_that("Default RMSSS gridded", {
   expect_named(res$RMSSS, c("rmsss", "p.val", "sign"))
 })
 
-# test_that("Default ROCSS gridded", {
-#   exp <- mock_s2dv_grid(nt = 4, ns = 4)
-#   obs <- mock_s2dv_grid(nt = 4, ns = 4)
-#
-#   res <- c4h_postprocess(
-#     exp,
-#     obs,
-#     ref = exp,
-#     metrics = "ROCSS"
-#   )
-#
-#   expect_true("ROCSS" %in% names(res))
-#   expect_named(res$ROCSS, c("rocss", "p.val", "sign"))
-# })
+test_that("Default ROCSS gridded", {
+  exp <- mock_s2dv_grid(nt = 4, ns = 4)
+  obs <- mock_s2dv_grid(nt = 4, ns = 4)
 
-# Areal ----
+  res <- c4h_postprocess(
+    exp,
+    obs,
+    ref = exp,
+    metrics = "ROCSS"
+  )
 
-# Pending, play with the optional parameters
+  expect_true("ROCSS" %in% names(res))
+  expect_named(res$ROCSS, "rocss")
+})
 
-# Points ----
+# Examples in documentation ----
+test_that("Examples in the documentation work (+plotskill+downscale)", {
+  expect_no_error({
+    # Load data
+    hcst <- c4h_load(
+      system.file("extdata", "hindcast", package = "clim4health"),
+      variable = "t2m",
+      year = 2010:2012,
+      month = 1,
+      leadtime_month = 1:3,
+      ext = "nc"
+    )
+    lats <- hcst$coords$latitude
+    lons <- hcst$coords$longitude
+    obs <- c4h_load(
+      system.file("extdata", "reanalysis", package = "clim4health"),
+      variable = "t2m",
+      year = 2010:2012,
+      month = 1,
+      leadtime_month = 1:3,
+      bbox = c(max(lats), min(lons), min(lats), max(lons)),
+      ext = "nc"
+    )
 
-# Pending, do many metrics at once
+    # Example with gridded data
+    dwn <- c4h_downscale(
+      "Interpolation",
+      exp = hcst,
+      obs = obs,
+      method_remap = "bilinear",
+      target_grid = system.file(
+        "extdata",
+        "reanalysis/t2m_201001.nc",
+        package = "clim4health"
+      )
+    )
+    hcst_dwn <- dwn$exp
+    skill_grid <- c4h_postprocess(exp = hcst_dwn, obs = obs, metrics = "BSS")
+    c4h_plotskill(skill_grid$BSS10$bss, skill_grid$BSS10$sign)
+    # Make some artificial significance for testing
+    skill_grid$BSS10$sign$data[,,,,, 3:8, 15:25] <- TRUE
+    c4h_plotskill(skill = skill_grid$BSS10$bss, sign = skill_grid$BSS10$sign)
+
+    # Example with polygon data
+    areas <- sf::read_sf(system.file(
+      "extdata",
+      "areas",
+      "munip_vallecauca.gpkg",
+      package = "clim4health"
+    ))
+    obs_area <- c4h_space(
+      obs,
+      areas = areas,
+      fun = "mean",
+      areas_id = "munip_code"
+    )
+    hcst_area <- c4h_space(
+      hcst,
+      areas = areas,
+      fun = "mean",
+      areas_id = "munip_code"
+    )
+    skill_area <- c4h_postprocess(
+      exp = hcst_area,
+      obs = obs_area,
+      metrics = "CRPSS",
+      brier_thresholds = c(0.1, 0.9)
+    )
+    c4h_plotskill(skill_area$CRPSS$crpss, skill_area$CRPSS$sign)
+    # Make some artificial significance for testing
+    skill_area$CRPSS$sign$data[1, 1, 1, 1:3, 1, sample(1:42, 10)] <- TRUE
+    c4h_plotskill(skill = skill_area$CRPSS$crpss, sign = skill_area$CRPSS$sign)
+
+    # Example with station data
+    point_locs <- clim4health::c4h_load(
+      system.file("extdata", "stations", package = "clim4health"),
+      ext = "csv",
+      year = 2010:2012,
+      month = 1,
+      leadtime_month = 1:3,
+      variable = "temp_mean"
+    )
+    points <- list(
+      latitude = point_locs$attrs$location$latitude,
+      longitude = point_locs$attrs$location$longitude
+    )
+    point_locs <- c4h_time(
+      point_locs,
+      time_aggregation = "monthly",
+      dim_aggregation = "sdate",
+      fun = "mean"
+    )
+    dwn <- c4h_downscale(
+      "Interpolation",
+      exp = hcst,
+      points = points,
+      method_point_interp = "bilinear"
+    )
+    hcst_dwn <- dwn$exp
+    skill_point <- c4h_postprocess(
+      exp = hcst_dwn,
+      obs = point_locs,
+      metrics = "BSS"
+    )
+    c4h_plotskill(skill = skill_point$BSS10$bss, boundaries = areas)
+    # Make some artificial significance for testing
+    skill_point$BSS10$sign$data[1, 1, 1, 1:3, 1, 4:6] <- TRUE
+    c4h_plotskill(
+      skill = skill_point$BSS10$bss,
+      sign = skill_point$BSS10$sign,
+      boundaries = areas
+    )
+  })
+})

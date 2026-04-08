@@ -35,6 +35,7 @@
 #' for general plotting of `s2dv` objects.
 #'
 #' @examples
+#' \donttest{
 #' # DISCLAIMER: The purpose of these examples is to show the functionality
 #' # of the different functions. To perform postprocessing, a much larger time
 #' # series is required.
@@ -125,6 +126,7 @@
 #' c4h_plotskill(skill = skill_point$BSS10$bss,
 #'               sign = skill_point$BSS10$sign,
 #'               boundaries = areas)
+#' }
 
 c4h_plotskill <- function(
   skill,

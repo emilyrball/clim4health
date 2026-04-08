@@ -46,6 +46,7 @@
 #' [c4h_postprocess()]
 #'
 #' @examples
+#' \donttest{
 #' library("sf")
 #'
 #' # Region municipalities
@@ -79,6 +80,7 @@
 #' fcst_aggr <- c4h_space(fcst, mun)
 #' c4h_plot(fcst_aggr, ensemble = 1:5, lwd = 0.1,
 #'          title = "Temp. by municipality", coordgrid = TRUE)
+#' }
 c4h_plot <- function(
   data,
   var = NULL,
