@@ -25,6 +25,7 @@
 #' @export
 #'
 #' @examples
+#' \donttest{
 #' # Load a forecast
 #' fcst <- c4h_load(system.file("extdata", "forecast", package = "clim4health"),
 #'                  var = "t2m",
@@ -55,11 +56,8 @@
 #' # Compute climatology (average over years)
 #' obs_coll <- c4h_collapse(obs, dim = "sdate")
 #' obs_coll$dims
-c4h_collapse <- function(data,
-                         dim,
-                         fun = "mean",
-                         na.rm = TRUE) {
-
+#' }
+c4h_collapse <- function(data, dim, fun = "mean", na.rm = TRUE) {
   # Input checks ----
 
   # Check class type
@@ -69,8 +67,10 @@ c4h_collapse <- function(data,
 
   # Check collapsing dimension
   if (!dim %in% c("ensemble", "time", "sdate")) {
-    stop("c4h_collapse can only collapse the 'ensemble', 'sdate'",
-         "and 'time' dimensions.")
+    stop(
+      "c4h_collapse can only collapse the 'ensemble', 'sdate'",
+      "and 'time' dimensions."
+    )
   } else if (!dim %in% names(data$dims)) {
     stop(paste0("The data doesn't have a ", dim, " dimension."))
   } else if (data$dims[dim] <= 1) {
@@ -103,10 +103,12 @@ c4h_collapse <- function(data,
   }
 
   # Create results s2dv
-  out <- list(data = data_aggr,
-              coords = coords_aggr,
-              dims = dims_aggr,
-              attrs = attr_agg)
+  out <- list(
+    data = data_aggr,
+    coords = coords_aggr,
+    dims = dims_aggr,
+    attrs = attr_agg
+  )
   attr(out, "class") <- "s2dv_cube"
 
   return(out)
@@ -122,11 +124,7 @@ c4h_collapse <- function(data,
 #'
 #' @returns The collapsed array with the same number of dimensions as the input.
 #' @noRd
-.apply_keepdim <- function(data,
-                           margins,
-                           fun,
-                           na.rm) {
-
+.apply_keepdim <- function(data, margins, fun, na.rm) {
   out <- apply(data, margins, fun, na.rm = na.rm)
   d <- dim(data)
   newdim <- rep(1, length(d))

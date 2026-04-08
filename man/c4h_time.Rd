@@ -40,6 +40,7 @@ an s2dv_cube object with the temporally aggregated climate data.
 Temporal aggregation of climate products.
 }
 \examples{
+\donttest{
 # Load station data
 station_path <- system.file("extdata", "stations", package = "clim4health")
 station_timeseries <- c4h_load(station_path, variable = "temp_mean",
@@ -57,4 +58,5 @@ stat_month <- c4h_time(station_data, time_aggregation = "monthly",
                        dim_aggregation = "sdate", fun = "max",
                        min_valid = 20)
 dim(stat_month$data)
+}
 }
