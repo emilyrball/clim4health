@@ -17,7 +17,7 @@
 #' \donttest{
 #' # Load example forecast data
 #' fcst_path <- system.file("extdata", "forecast", package = "clim4health")
-#' fcst <- c4h_load(fcst_path, variable = "t2m", ext = 'nc')
+#' fcst <- c4h_load(fcst_path, variable = "t2m", leadtime_month = 1, ext = 'nc')
 #'
 #' ### Convert gridded data into terra
 #' out <- c4h_convert(fcst,
@@ -35,6 +35,7 @@
 #' munip_path <- system.file("extdata", "areas", "munip_vallecauca.gpkg",
 #'                           package = "clim4health")
 #' munip <- read_sf(munip_path)
+#' munip <- munip[1:2, ]
 #' fcst_aggr <- c4h_space(fcst, munip)
 #'
 #' # s2dv polygon to csv
