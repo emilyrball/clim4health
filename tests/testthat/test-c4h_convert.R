@@ -241,12 +241,12 @@ test_that("4. Error if gridded or polygon data is required but not present", {
 
 test_that("5. c4h_convert dispatches to .s2dv_to_terra", {
   cube <- make_mock_fcst_cube()
-  mock_terra <- function(x, crs) "terra_result"
+  mock_terra <- function(x, crs, drop) "terra_result"
 
   with_mocked_bindings(
     .s2dv_to_terra = mock_terra,
     {
-      out <- c4h_convert(cube, "terra", crs = "EPSG:4326")
+      out <- c4h_convert(cube, "terra", crs = "EPSG:4326", drop = FALSE)
       expect_equal(out, "terra_result")
     }
   )
@@ -254,13 +254,13 @@ test_that("5. c4h_convert dispatches to .s2dv_to_terra", {
 
 test_that("6. c4h_convert dispatches to .s2dv_to_csv", {
   cube <- make_mock_fcst_cube()
-  mock_csv <- function(x) "csv_result"
+  mock_csv <- function(x, drop) "csv_result"
 
 
   with_mocked_bindings(
     .s2dv_to_csv = mock_csv,
     {
-      out <- c4h_convert(cube, "csv")
+      out <- c4h_convert(cube, "csv", drop = FALSE)
       expect_equal(out, "csv_result")
     }
   )
@@ -268,12 +268,12 @@ test_that("6. c4h_convert dispatches to .s2dv_to_csv", {
 
 test_that("7. c4h_convert dispatches to .s2dv_to_polygons", {
   cube <- make_mock_fcst_cube()
-  mock_polygons <- function(x, crs) "polygon_result"
+  mock_polygons <- function(x, crs, drop) "polygon_result"
 
   with_mocked_bindings(
     .s2dv_to_polygons = mock_polygons,
     {
-      out <- c4h_convert(cube, "polygons", crs = "EPSG:4326")
+      out <- c4h_convert(cube, "polygons", crs = "EPSG:4326", drop = FALSE)
       expect_equal(out, "polygon_result")
     }
   )
@@ -290,4 +290,12 @@ test_that("8. Message if 'crs' is NULL", {
   expect_message(c4h_convert(area_cube, "polygons", crs = NULL),
                  paste0("'crs' is not provided. Taking CRS from",
                         "the input data if available."))
+})
+
+test_that("9. failure if drop is invalid", {
+  cube <- make_mock_fcst_cube()
+  expect_error(c4h_convert(cube, "terra", drop = "not_logical"),
+               "'drop' must be a single logical value.")
+  expect_error(c4h_convert(cube, "terra", drop = c(TRUE, FALSE)),
+               "'drop' must be a single logical value.")
 })

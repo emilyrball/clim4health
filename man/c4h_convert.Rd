@@ -4,7 +4,7 @@
 \alias{c4h_convert}
 \title{c4h_convert}
 \usage{
-c4h_convert(data, output_format, crs = NULL)
+c4h_convert(data, output_format, crs = NULL, drop = FALSE)
 }
 \arguments{
 \item{data}{The object to transform}
@@ -16,6 +16,9 @@ Valid options are 'terra', 'csv' or 'polygons'}
 'polygons'. The default is NULL, in which case the CRS will be taken from
 the input data if available, or assumed to be WGS 84 (EPSG:4326) for gridded
 data.}
+
+\item{drop}{Logical. If TRUE, dimensions with only one value will be dropped
+when converting to the desired format. Default is FALSE.}
 }
 \value{
 An R object of type terra SpatRaster, data.frame or sf polygons.
