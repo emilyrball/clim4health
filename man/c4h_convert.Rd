@@ -29,17 +29,19 @@ Convert objects between formats including s2dv, terra, csv, polygons.
 fcst_path <- system.file("extdata", "forecast", package = "clim4health")
 fcst <- c4h_load(fcst_path, variable = "t2m", leadtime_month = 1, ext = 'nc')
 
-### Convert gridded data into terra
+############################
+### Convert gridded data
+## to terra
 out <- c4h_convert(fcst,
                    "terra", crs = "EPSG:4326")
-### Convert gridded data into csv
+## to csv
 out <- c4h_convert(fcst,
                    "csv")
-### Convert gridded data into polygons
+## to polygons
 out <- c4h_convert(fcst,
                    "polygons", crs = "EPSG:4326")
-
-### Polygon examples
+#############################
+##### load polygon data #####
 library(sf)
 # Region municipalities
 munip_path <- system.file("extdata", "areas", "munip_vallecauca.gpkg",
@@ -48,17 +50,21 @@ munip <- read_sf(munip_path)
 munip <- munip[1:2, ]
 fcst_aggr <- c4h_space(fcst, munip)
 
-# s2dv polygon to csv
+### Convert polygon data
+## to csv
 out <- c4h_convert(fcst_aggr,
                    "csv")
-# s2dv polygon to polygons
+## to polygons
 out <- c4h_convert(fcst_aggr, "polygons", crs = "EPSG:4326")
 
-### Station data example
+#############################
+##### load station data #####
 station_path <- system.file("extdata", "stations", "temp_vallecauca.csv",
                             package = "clim4health")
 stations <- c4h_load(station_path, variable = "temp_mean", ext = 'csv')
-out <- c4h_convert(stations,
-                   "csv")
+
+### Convert location data
+## to csv
+out <- c4h_convert(stations, "csv")
 }
 }

@@ -1,5 +1,5 @@
-testthat::skip_on_covr()
-testthat::skip_on_cran()  # optional if they are heavy
+#testthat::skip_on_covr()
+#testthat::skip_on_cran()  # optional if they are heavy
 
 test_that("c4h_convert: terra integration works", {
   fcst_path <- system.file("extdata", "forecast", package = "clim4health")
