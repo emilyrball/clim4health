@@ -70,26 +70,22 @@
                           lat_selection = "all",
                           lon_selection = "all") {
 
-  data <- data.table::fread(file_list)
+  tryCatch(
+    {
+      data <- data.table::fread(file_list)
 
-  # skip up to 10 lines of header
-  if (ncol(data) == 1) {
-    found_header <- FALSE
-    for (i in 1:10) {
-      if (ncol(data.table::fread(file_list, skip = i)) > 1) {
-        found_header <- TRUE
-        break
+      # fread automatically skip irregular header lines
+      if (ncol(data) == 1) {
+        stop("Error reading the CSV file list. Header must have number of columns greater than 1.
+               Example: \nlat, lon, date, variable_name\n3.41, -76.12, 2010-01-01, 16.65")
+      } else {
+        metadata <- NULL
       }
+    },
+    error = function(msg) {
+      stop("Error reading the CSV file list: ", msg)
     }
-    if (!found_header) {
-      stop("Currently cannot handle >10 header lines in file.")
-    } else {
-      data <- data.table::fread(file_list, skip = i)
-      metadata <- utils::head(data.table::fread(file_list), i - 1)
-    }
-  } else {
-    metadata <- NULL
-  }
+  )
 
   # read headers
   headers <- colnames(data)
@@ -167,10 +163,11 @@
     start_dates <- .paste_outer(start_dates,
                                 sprintf(" %02d:00:00", time))
   }
-
+  # TODO: REVIEW - warning because of invalid dates
   start_dates_tmp <-
-    lubridate::parse_date_time(start_dates, orders =
-                               c("Ymd HMS", "Ymd"))### REVIEW - tz = "UTC"
+    suppressWarnings(lubridate::parse_date_time(start_dates, orders =
+                               c("Ymd HMS", "Ymd")))### REVIEW - tz = "UTC"
+  # remove invalid dates
   start_dates <- unique(start_dates_tmp[!is.na(start_dates_tmp)])
 
   if (identical(leadtime_month, "all")) {
@@ -241,7 +238,7 @@
   s_index <- match(grid_dates$sdate, dates[, 1])
   for (i in seq_len(nrow(grid_dates))) {
     s <- s_index[i]
-    if (length(s) == 0) {
+    if (is.na(s)) {
       next
     }
     t <- as.integer(grid_dates$time[i]) - min(leadtime_month) + 1
@@ -292,7 +289,6 @@
   if (!is.null(metadata)) {
     data$attrs$Variable$metadata$header <- metadata
   }
-
   data$attrs$location <- list(longitude = lon,
                               latitude = lat)
   data
@@ -918,6 +914,7 @@
                                        date_vals,
                                        year, month, day,
                                        file_list, var, units) {
+  # TODO: REVIEW - code repetition in load_daily, load_hourly, load_monthly
   date_vals <- as.POSIXct(date_vals, format = "%Y-%m-%d",
                           origin = "1970-01-01", tz = "UTC")
   if (any(leadtime_month == "all")) {
@@ -1265,6 +1262,9 @@
   s_index <- match(grid_dates$sdate, dates[, 1])
   for (i in seq_len(nrow(grid_dates))) {
     s <- s_index[i]
+    if (is.na(s)) {
+      next
+    }
     t <- grid_dates$time[i]
     v <- date_index[i]  # index in arr_x valid_time
     data_array[1, 1, s, t, 1, , ] <- x[[1]][, , v]

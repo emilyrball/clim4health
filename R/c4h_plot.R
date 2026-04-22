@@ -4,22 +4,22 @@
 #' `clim4health` functions.
 #'
 #' @param data *s2dv_cube* object with the climate data to be plotted.
-#' @param var Numerical index of the variable to be plotted.
+#' @param var Numerical index or name of the variable to be plotted.
 #' Only required if more than one variable is available.
-#' @param sdate Numerical index of the forecast starting time to be plotted. Defaults
-#' to NULL (all starting dates).
+#' @param sdate Numerical index of the forecast starting time to be plotted.
+#' Defaults to NULL (all starting dates).
 #' @param time Numerical index of the time to be plotted. Defaults to NULL (all
 #' times).
 #' @param ensemble Numerical index of the ensemble member to be plotted. If
 #' set to TRUE, it aggregates all the ensemble members. Defaults to NULL (all
 #' ensemble members).
+#' @param ensemble_fun Aggregation function used when ensemble = TRUE.
+#' Defaults to the mean.
 #' @param boundaries Polygon boundaries to add to the map.  Set to NULL for no
 #' boundaries (default), otherwise supply a polygon `sf` object or set to
 #' "countries" for coarse country boundaries.
 #' @param mask_boundaries If TRUE (default), mask the data to the provided
 #' boundaries.
-#' @param ensemble_fun Aggregation function used when ensemble = TRUE.
-#' Defaults to the mean.
 #' @param title Optional plot title.
 #' @param legend Optional legend title. If NULL (default), it uses the variable
 #' names.
@@ -30,17 +30,23 @@
 #' NULL (no centering).
 #' @param bins Number of bins for categorization of numerical variables.
 #' Defaults to NULL (no binning).
-#' @param bins_method Method to compute the bins, only used when `bins` is not NULL.
-#' Possible values are "quantile" and "equal" (default).
-#' @param bins_label Optional labels for the bins. They must have the same length
-#' as the number of bins. Defaults to NULL (default interval labels).
+#' @param bins_method Method to compute the bins, only used when `bins` is no
+#' NULL. Possible values are "quantile" and "equal" (default).
+#' @param bins_label Optional labels for the bins. They must have the same
+#' length as the number of bins. Defaults to NULL (default interval labels).
 #' @param coordgrid If TRUE, display coordinate grids on the map.
 #' @param ... Extra arguments indicating fixed aesthetics to be passed to
 #'`stars::geom_stars`, including `lwd`, `alpha` and `colour`.
 #' @returns A plot
 #' @export
 #'
+#' @importFrom rlang .data
+#'
+#' @seealso [c4h_plotskill()] for plotting forecast skill metrics from
+#' [c4h_postprocess()]
+#'
 #' @examples
+#' \donttest{
 #' library("sf")
 #'
 #' # Region municipalities
@@ -74,6 +80,7 @@
 #' fcst_aggr <- c4h_space(fcst, mun)
 #' c4h_plot(fcst_aggr, ensemble = 1:5, lwd = 0.1,
 #'          title = "Temp. by municipality", coordgrid = TRUE)
+#' }
 c4h_plot <- function(
   data,
   var = NULL,
@@ -100,7 +107,7 @@ c4h_plot <- function(
     dims_data <- data$dims
     plot_data <- data$data
   } else {
-    stop("'data' must be an s2dv array.")
+    stop("'data' must be an s2dv_cube.")
   }
 
   # Requirements: var
@@ -109,6 +116,14 @@ c4h_plot <- function(
   } else if (!is.null(var) && length(var) > 1) {
     stop("Only one 'var' is possible.")
   } else if (!is.null(var)) {
+    if (is.character(var)) {
+      if (var %in% data$coords$var) {
+        var <- which(var %in% data$coords$var)
+      } else {
+        stop(paste0("'var' not found in the data: ", var))
+      }
+    }
+
     .subset_array_named(plot_data, var = var)
 
     data$attrs$Variable$varName <- data$attrs$Variable$varName[var]
@@ -152,7 +167,7 @@ c4h_plot <- function(
   ) {
     stop(paste0(
       "A wrong 'ensemble' has been selected (possible range: 1 - ",
-      dims_data["time"],
+      dims_data["ensemble"],
       ")."
     ))
   } else if (is.null(ensemble)) {
@@ -180,7 +195,8 @@ c4h_plot <- function(
     if (!inherits(boundaries, "sf")) {
       if (boundaries != "countries") {
         stop(
-          "'boundaries' must be set to either 'countries' or be a polygon 'sf' object."
+          "'boundaries' must be set to either 'countries' ",
+          "or be a polygon 'sf' object."
         )
       }
     }
@@ -338,7 +354,6 @@ c4h_plot <- function(
     )
     names(plot_data) <- varname
     plot_data <- sf::st_as_sf(plot_data, long = TRUE)
-    # plot_data <- plot_data[!is.na(sf::st_drop_geometry(plot_data)[,varname]),] # drop missing?
   } else if ("area" %in% names(dims_data)) {
     # Polygon data
 
@@ -417,12 +432,8 @@ c4h_plot <- function(
           ylim = sf::st_bbox(plot_data)[c("ymin", "ymax")],
           expand = TRUE
         ) +
-        ggplot2::scale_x_continuous(labels = function(x) {
-          paste0(ifelse(x < 0, "-", ""), abs(x))
-        }) +
-        ggplot2::scale_y_continuous(labels = function(y) {
-          paste0(ifelse(y < 0, "-", ""), abs(y))
-        })
+        ggplot2::scale_x_continuous(labels = .abs_labels) +
+        ggplot2::scale_y_continuous(labels = .abs_labels)
     } else {
       p <- ggplot2::ggplot() +
         ggplot2::geom_sf(
@@ -430,12 +441,8 @@ c4h_plot <- function(
           ggplot2::aes(colour = .data[[varname]]),
           ...
         ) +
-        ggplot2::scale_x_continuous(labels = function(x) {
-          paste0(ifelse(x < 0, "-", ""), abs(x))
-        }) +
-        ggplot2::scale_y_continuous(labels = function(y) {
-          paste0(ifelse(y < 0, "-", ""), abs(y))
-        })
+        ggplot2::scale_x_continuous(labels = .abs_labels) +
+        ggplot2::scale_y_continuous(labels = .abs_labels)
     }
   } else if ("area" %in% names(dims_data)) {
     # Polygon data
@@ -459,12 +466,8 @@ c4h_plot <- function(
           ylim = sf::st_bbox(plot_data)[c("ymin", "ymax")],
           expand = TRUE
         ) +
-        ggplot2::scale_x_continuous(labels = function(x) {
-          paste0(ifelse(x < 0, "-", ""), abs(x))
-        }) +
-        ggplot2::scale_y_continuous(labels = function(y) {
-          paste0(ifelse(y < 0, "-", ""), abs(y))
-        })
+        ggplot2::scale_x_continuous(labels = .abs_labels) +
+        ggplot2::scale_y_continuous(labels = .abs_labels)
     } else {
       p <- ggplot2::ggplot() +
         ggplot2::geom_sf(
@@ -472,12 +475,8 @@ c4h_plot <- function(
           ggplot2::aes(fill = .data[[varname]]),
           ...
         ) +
-        ggplot2::scale_x_continuous(labels = function(x) {
-          paste0(ifelse(x < 0, "-", ""), abs(x))
-        }) +
-        ggplot2::scale_y_continuous(labels = function(y) {
-          paste0(ifelse(y < 0, "-", ""), abs(y))
-        })
+        ggplot2::scale_x_continuous(labels = .abs_labels) +
+        ggplot2::scale_y_continuous(labels = .abs_labels)
     }
   }
 
@@ -609,12 +608,8 @@ c4h_plot <- function(
           ylim = sf::st_bbox(plot_data)[c("ymin", "ymax")],
           expand = TRUE
         ) +
-        ggplot2::scale_x_continuous(labels = function(x) {
-          paste0(ifelse(x < 0, "-", ""), abs(x))
-        }) +
-        ggplot2::scale_y_continuous(labels = function(y) {
-          paste0(ifelse(y < 0, "-", ""), abs(y))
-        })
+        ggplot2::scale_x_continuous(labels = .abs_labels) +
+        ggplot2::scale_y_continuous(labels = .abs_labels)
     )
   }
 
@@ -639,11 +634,6 @@ c4h_plot <- function(
       ) +
       ggplot2::xlab("") +
       ggplot2::ylab("")
-
-    if (!isTRUE(coordgrid)) {
-      p <- p +
-        ggplot2::theme(strip.text.y = ggplot2::element_text(angle = 90))
-    }
   } else {
     p <- p +
       ggplot2::theme_void() +

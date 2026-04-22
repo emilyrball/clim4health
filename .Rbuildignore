@@ -3,3 +3,7 @@
 ^LICENSE\.md$
 ^\.vscode$
 ^[.]?air[.]toml$
+.gitlab-ci.yml
+Dockerfile
+inst/extdata/cleandata.R
+tutorials/.

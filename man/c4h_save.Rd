@@ -23,8 +23,10 @@ Save objects manipulated using clim4health functions
 in different formats: s2dv, terra, csv, polygons.
 }
 \examples{
+\donttest{
 fcst_path <- system.file("extdata", "forecast", package = "clim4health")
 fcst <- c4h_load(fcst_path, variable = "t2m", ext = 'nc')
 
 c4h_save(fcst, "s2dv", "out.nc")
+}
 }

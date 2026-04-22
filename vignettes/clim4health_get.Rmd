@@ -1,0 +1,224 @@
+---
+title: "clim4health get"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{clim4health get}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.align = "center",
+  warning = FALSE,
+  message = FALSE,
+  eval = FALSE
+)
+```
+
+# Overview
+
+This vignette provides an introduction to the `c4h_get()` function, used for downloading climate data from the Copernicus Climate Data Store (CDS). It also covers the helper function `c4h_get_help()`, which allows you to explore the available datasets and their required parameters before downloading.
+
+# 0. Load the package
+
+First, let's load the package.
+
+```{r load_package}
+library(clim4health)
+```
+
+# 1. c4h_get arguments
+
+`c4h_get()` takes the following arguments:
+
+1.  `pat`: a string containing your Personal Access Token for the CDS (details below).
+2.  `dataset`: the name of the dataset you want to download. Available datasets can be found via c4h_get_datasets().
+3.  `product_type`: the name of the product type you want to download. Available variables can be found via c4h_get_product_types(). For example, if downloading monthly mean data, this parameter tells the CDS API whether to download the full monthly mean, or the monthly mean of a specified hour (e.g. the monthly mean of temperature at 18:00)
+4.  `variable`: a string containing the long name of the variable to be downloaded.
+5.  `year`: a vector of years to download.
+6.  `month`: a vector of months to download. The default is all months (e.g. 1-12).
+7.  `day`: a vector of days to download. The default will download days 1-31 if the data is hourly or daily.
+8.  `time`: a vector of hours to load. The default will load hours 0-23 if the data is hourly.
+9.  `bbox`: a vector of coordinates specifying the boundary box to download, in order `c(N, W, S, E)`.
+10. `leadtime_month`: a vector of leadtimes to download for seasonal forecast data.
+11. `originating_centre`: forecasting centre responsible for producing the hindcast/forecast data.
+12. `system`: the forecast model system for a given originating centre.
+13. `outname`: file stem to save file. It will be appended by the data year and month.
+14. `outpath`: path to save file. The default is the current working directory.
+
+The key idea is to specify:
+
+1.  The data type and source
+2.  The temporal range of the data
+3.  The spatial extent: by specifying latitudes and longitudes
+4.  The file path to save the data
+
+# 2. c4h_get_help
+
+There are many types of climate data available on the CDS. To know what data is available to download from the CDS using **clim4health**, you can use the function `c4h_get_help()`. If the function is run without any input parameters, it will return the datasets that are currently available to download within **clim4health**.
+
+```{r}
+c4h_get_help()
+```
+
+Once you have decided the type of data you wish to download, you can further explore the required parameters for that dataset by running `c4h_get_help()` with the dataset name as an input parameter. For example, to explore the parameters required to download reanalysis data from ERA5-Land, we would run:
+
+```{r}
+c4h_get_help(dataset = "reanalysis-era5-land")
+```
+
+This tells us the required parameters to use in `c4h_get()` to download this particular dataset. We can explore options for some of these parameters using `c4h_get_help()` with the dataset name and parameter name as input parameters. For example, to explore the available variables for ERA5-Land, we would run:
+
+```{r}
+c4h_get_help(dataset = "reanalysis-era5-land", parameter = "variable")
+```
+
+# 3. Specifying arguments in c4h_get()
+
+## Specifying temporal range
+
+There are multiple arguments to specify the time range you would like to download. Parameters `year`, `month`, `day`, and `time` take vector inputs to determine the years, months, days and times of day of interest. For example, to download hourly reanalysis data from 2011 to 2025 in February and March:
+
+```{r }
+c4h_get(dataset = "reanalysis-era5-land", # data type
+        year = 2011:2025,                 # load multiple years
+        month = c(2,3),                   # load February and March
+        time = 1:23)                      # load all hours of the day
+```
+
+Additionally, the argument `leadtime_month` specifies the forecast months to download if relevant. For example, to download leadtime months of February and March for a seasonal forecast initialised in February 2025, we would specify:
+
+```{r }
+c4h_get(dataset = "seasonal-monthly-single-levels", # data type
+        year = c(2025),                             # year of initialisation
+        month = c(2),                               # month of initialisation
+        leadtime_month = c(1, 2))                   # leadtime months
+```
+
+## Specifying spatial extent
+
+You can explore how to specify the spatial extent (bounding box) for each dataset using `c4h_get_help()`:
+
+```{r}
+c4h_get_help("reanalysis-era5-land", "bbox")
+```
+
+We can select a box in latitude and longitude coordinates using the parameter `bbox` within `c4h_get()` . For example, to select latitudes between -4 and 4, and longitudes between -73, -70, we specify the box in order of its North, West, South, East boundaries.
+
+```{r }
+c4h_get(dataset = "reanalysis-era5-land", # data type
+        bbox = c(4, -73, -4, -70))        # bounding box in order N, W, S, E
+```
+
+## Specifying variables
+
+You can check the available variables for a given dataset as follows.
+
+```{r}
+c4h_get_help("reanalysis-era5-land", "variable")
+```
+
+For example, to download temperature at 2m from ERA5Land, we would specify:
+
+```{r }
+c4h_get(dataset = "reanalysis-era5-land", # data type
+        variable = "2m_temperature")      # variable name
+```
+
+## Specifying the file path and name
+
+By default, `c4h_get()` will download data to your current working directory. However, you may wish to specify a different directory using `outpath`, and change the name of the file you are downloading. For example:
+
+```{r }
+c4h_get(dataset = "reanalysis-era5-land",         # data type
+        variable = "2m_temperature",              # variable name
+        outpath = "/path/to/dir/",                # directory to save data
+        outname = "era5land_t2m")                 # file name stem
+```
+
+In the final name of the downloaded file, the parameter `outname` will be followed by the relevant year and month of the downloaded data. When downloading data, `c4h_get()` will print the name of the file where the data is saved.
+
+------------------------------------------------------------------------
+
+# 3. Obtain your Personal Access Token (PAT)
+
+To download data from the CDS, you will need a (free) account with the ECMWF. If you don't already have an ECMWF account, you can go to the [ECMWF page](https://www.ecmwf.int/) and create a new account by clicking "*Log in*" in the top right corner of the webpage.
+
+With these credentials you can now log into the [CDS](https://cds.climate.copernicus.eu/).
+
+Click in your user (top right corner of the webpage). Under the "[Your profile](https://cds.climate.copernicus.eu/profile?tab=profile)" tab, you can find your API key (PAT). Copy and paste to save it in your R session, as you will need it later when downloading the data.
+
+```{r}
+pat_api <- "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+```
+
+To download the data in this tutorial, you will also need to accept additional licenses. Under the "[Licences](https://cds.climate.copernicus.eu/profile?tab=licences)" tab in your profile, please check "Additional licence to use non European contributions" and "Licence to use Copernicus Products". You can click on each of the licences to find out more information.
+
+------------------------------------------------------------------------
+
+# 4. Example downloads
+
+Once you know your PAT, the dataset you would like to download, and the required parameters, you can call `c4h_get()` as below. In these 3 examples, we download reanalysis data from ERA5Land, and seasonal monthly forecasts, once as hindcast and once as forecast.
+
+### 4.1. ERA5Land data
+
+This example would download monthly mean 2m temperature from the ERA5-Land reanalysis for April and May of 2010, 2011, and 2012. The data would be downloaded for the box defined by latitudes 33 and -23, and longitudes -93 and -17. The files would be saved in the specified directory with the name "era5land" followed by the year and month of the data (e.g. "/path/to/dir/era5land_201004.nc"). The names of the files where the data is saved will be printed in the console.
+
+```{r }
+# Download reanalysis data
+c4h_get(pat = pat_api,
+        dataset = "reanalysis-era5-land-monthly-means",
+        product_type = "monthly_averaged_reanalysis",
+        variable = "2m_temperature",
+        year = c(2010, 2011, 2012),
+        month = c(4, 5),
+        bbox = c(33, -93, -23, -17),
+        outpath = "/path/to/dir/",
+        outname = "era5land")
+```
+
+### 4.2. Hindcast data
+
+This example would download monthly mean 2m temperature, 2m dewpoint temperature, and total precipitation from the seasonal monthly single levels dataset for the ECMWF system 51 prediction system. The data will be downloaded for the forecasts issued in April 2010, 2011, and 2012, for leadtime months of April and May. The data will be downloaded for the same bounding box. The files will be saved in the specified directory with the name "hindcast" followed by the years and months of the data (e.g. "/path/to/dir/hindcast_201004.nc"). The names of the files where the data is saved will be printed in the console.
+
+```{r }
+# Download hindcast data
+c4h_get(pat = pat_api,
+        dataset = "seasonal-monthly-single-levels",
+        originating_centre = c("ecmwf"),
+        system = c("51"),
+        variable = c("2m_temperature",
+                     "2m_dewpoint_temperature",
+                     "total_precipitation"),
+        product_type = c("monthly_mean"),
+        year = c(2010, 2011, 2012), month = c(4),
+        leadtime_month = c(1, 2),
+        bbox = c(33, -93, -23, -17),
+        outpath = "/path/to/dir/",
+        outname = "hindcast")
+```
+
+### 4.3. Forecast data
+
+This example would download the data in the same format as above, except only for precipitation, and for the forecast issued in April 2025. The file would be saved in "/path/to/dir/forecast_202504.nc".
+
+```{r }
+# Download forecast data
+c4h_get(pat = pat_api,
+        dataset = "seasonal-monthly-single-levels",
+        originating_centre = c("ecmwf"),
+        system = c("51"),
+        variable = c("total_precipitation"),
+        product_type = c("monthly_mean"),
+        year = c(2025),
+        month = c(4),
+        leadtime_month = c(1, 2),
+        bbox = c(33, -93, -23, -17),
+        outpath = "/path/to/dir/",
+        outname = "forecast")
+```

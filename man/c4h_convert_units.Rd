@@ -4,7 +4,7 @@
 \alias{c4h_convert_units}
 \title{c4h_convert_units}
 \usage{
-c4h_convert_units(data, to = NULL, variable = NULL, from = NULL)
+c4h_convert_units(data, to = NULL, var = NULL, from = NULL)
 }
 \arguments{
 \item{data}{an s2dv_cube object containing the data to be converted.}
@@ -13,7 +13,7 @@ c4h_convert_units(data, to = NULL, variable = NULL, from = NULL)
 NULL, no conversion will be performed and the current units will be
 displayed. The default is NULL.}
 
-\item{variable}{a character string specifying the variable to convert.
+\item{var}{a character string specifying the variable to convert.
 If NULL, all variables will be converted. The default is NULL.}
 
 \item{from}{a character string specifying the current units of the variable.
@@ -33,17 +33,17 @@ fcst_path <- paste0(fcst_path, "/")
 
 # Load the forecast data
 fcst <- c4h_load(fcst_path,
-                 variable = "t2m",
+                 var = "t2m",
                  year = 2025,
                  month = 1,
                  ext = 'nc')
 
 # Display the current units
-c4h_convert_units(fcst, variable = "t2m")
+c4h_convert_units(fcst, var = "t2m")
 
 # Convert from Kelvin to Celsius
 fcst_celsius <- c4h_convert_units(fcst,
                                   to = "celsius",
-                                  variable = "t2m",
+                                  var = "t2m",
                                   from = "K")
 }
