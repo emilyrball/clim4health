@@ -45,6 +45,7 @@ Imports:
     CSDownscale,
     ncdf4,
     ggpattern,
+    startR,
     rlang
 Suggests: 
     testthat (>= 3.0.0),

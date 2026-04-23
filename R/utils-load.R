@@ -1271,3 +1271,157 @@
   }
   data_array
 }
+
+#' .c4h_load_esarchive
+#'
+#' Load data from a list of netCDF files using the stars package. Specifically
+#' designed to load data stored within esarchive. For internal BSC use.
+#'
+#' @param path A character string containing the path to the files.
+#' @param variable A character string specifying the variable to load.
+#' @param year A numeric vector specifying the years to load. Default is "all".
+#' @param month A numeric vector specifying the month to load. Default is "all".
+#' @param day A numeric vector specifying the day to load. Default is "all".
+#' @param time A numeric vector specifying the time of day to load. Default is
+#' "all".
+#' @param leadtime_month A numeric vector specifying the lead time in months.
+#' Default is "all".
+#' @param lat_selection A numeric vector specifying the latitude selection
+#' derived from bbox.
+#' @param lon_selection A numeric vector specifying the longitude selection
+#' derived from bbox.
+#'
+#' @returns An s2dv_cube object containing the loaded data.
+#' @noRd
+.c4h_load_esarchive <- function(path,
+                                variable = NULL,
+                                year = "all",
+                                month = "all",
+                                day = "all",
+                                time = "all",
+                                leadtime_month = "all",
+                                lat_selection = "all",
+                                lon_selection = "all") {
+  # stop if not directory
+  if (!dir.exists(path) || length(path) != 1) {
+    stop("To load data from esarchive, please provide a single directory path.")
+  }
+  # stop if not monthly mean
+  if (!any(grep("monthly", path))) {
+    stop("Only able to load monthly mean data from esarchive at this time.")
+  }
+
+  if (length(variable) != 1) {
+    stop("Currently only able to load one variable at a time from esarchive.")
+  }
+  if (year == "all") {
+    stop("Please specify the range of years to load from esarchive.")
+  }
+
+  if (any(grep("system51c3s", path))) {
+    type <- "forecast"
+  } else if (any(grep("era5/", path)) || any(grep("era5land/", path))) {
+    type <- "observation"
+  } else {
+    stop(paste0("Currently, only ERA5, ERA5Land, and SEAS5.1 are supported for",
+                " loading from esarchive."))
+  }
+
+  # date handling for StartR
+  if (identical(month, "all")) {
+    month <- 1:12
+  }
+  if (identical(leadtime_month, "all") && type == "forecast") {
+    leadtime_month <- 1:8
+  }
+  if (identical(leadtime_month, "all") && type == "observation") {
+    leadtime_month <- 1
+    timeseries <- TRUE
+  } else {
+    timeseries <- FALSE
+  }
+  start_dates <- as.Date(paste0(.paste_outer(year,
+                                             sprintf("-%02d", month)), "-01"))
+  if (type == "observation") {
+    dates <- array(NA, dim = c(sdate = length(start_dates),
+                               time = length(leadtime_month)))
+    for (tt in leadtime_month) {
+      dates[, tt] <- substr(gsub("-", "", as.character(
+        lubridate::add_with_rollback(lubridate::ymd(start_dates),
+                                     months(tt - 1)))),
+      1, 6)
+    }
+  } else {
+    dates <- substr(gsub("-", "", as.character(start_dates)), 1, 6)
+    dim(dates) <- c(sdate = length(dates))
+  }
+
+  # lat/lon handling for StartR
+  if (identical(lat_selection, "all")) {
+    lats <- "all"
+  } else {
+    lats <- startR::values(list(min(lat_selection), max(lat_selection)))
+  }
+  if (identical(lon_selection, "all")) {
+    lons <- "all"
+  } else {
+    lons <- startR::values(list(min(lon_selection), max(lon_selection)))
+  }
+
+  if (type == "forecast") {
+    path <- paste0(path, "$var$_$sdate$01.nc")
+    data <- list(dataset = list(list(name = "dataset", path = path)),
+                 pattern_dims = c("dataset"),
+                 latitude_var = "latitude",
+                 longitude_var = "longitude",
+                 var = variable,
+                 sdate = dates,
+                 time = leadtime_month,
+                 ensemble = "all",
+                 latitude = lats,
+                 latitude_reorder = startR::Sort(decreasing = TRUE),
+                 longitude = lons,
+                 longitude_reorder = startR::CircularSort(-180, 180),
+                 synonims = list(latitude = c("lat", "latitude"),
+                                 longitude = c("lon", "longitude"),
+                                 ensemble = c("ensemble",
+                                              "member", "lev")),
+                 return_vars = list(latitude = "dataset",
+                                    longitude = "dataset",
+                                    time = "sdate"),
+                 retrieve = TRUE,
+                 silent = TRUE)
+  } else if (type == "observation") {
+    path <- paste0(path, "$var$_$sdate$.nc")
+    data <- list(dataset = list(list(name = "dataset", path = path)),
+                 var = variable,
+                 sdate = dates,
+                 latitude = lats,
+                 latitude_reorder = startR::Sort(decreasing = TRUE),
+                 longitude = lons,
+                 longitude_reorder = startR::CircularSort(-180, 180),
+                 synonims = list(latitude = c("lat", "latitude"),
+                                 longitude = c("lon", "longitude")),
+                 return_vars = list(latitude = "dataset",
+                                    longitude = "dataset",
+                                    time = "sdate"),
+                 split_multiselected_dims = TRUE,
+                 retrieve = TRUE,
+                 silent = TRUE)
+  }
+
+  data <- do.call(CSTools::CST_Start, data)
+  if (!("ensemble" %in% names(data$dims))) {
+    data <- CSTools::CST_InsertDim(data, 1, 1, "ensemble")
+  }
+
+  if (timeseries) {
+    data <- CSTools::CST_ChangeDimNames(data, "time", "sdate_tmp")
+    data <- CSTools::CST_ChangeDimNames(data, "sdate", "time")
+    data <- CSTools::CST_ChangeDimNames(data, "sdate_tmp", "sdate")
+  }
+
+  data <- CSTools::CST_ReorderDims(data, c("dataset", "var", "sdate", "time",
+                                           "ensemble", "latitude", "longitude"))
+  return(data)
+}
