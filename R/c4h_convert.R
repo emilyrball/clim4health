@@ -9,6 +9,8 @@
 #' 'polygons'. The default is NULL, in which case the CRS will be taken from
 #' the input data if available, or assumed to be WGS 84 (EPSG:4326) for gridded
 #' data.
+#' @param drop Logical. If TRUE, dimensions with only one value will be dropped
+#' when converting to the desired format. Default is FALSE.
 #'
 #' @returns An R object of type terra SpatRaster, data.frame or sf polygons.
 #' @export
@@ -59,16 +61,19 @@
 #' }
 c4h_convert <- function(data,
                         output_format,
-                        crs = NULL) {
+                        crs = NULL, drop = FALSE) {
   if (!output_format %in% c("terra", "csv", "polygons")) {
     stop("Invalid output format. Choose 'terra', 'csv' or 'polygons'.")
+  }
+
+  if (!inherits(drop, "logical") || length(drop) != 1) {
+    stop("'drop' must be a single logical value.")
   }
 
   if (inherits(data, "s2dv_cube")) {
     # Spatial coords
     dim_names <- names(data$dims)
     has_latlon  <- all(c("latitude", "longitude") %in% dim_names)
-    has_location <- "location" %in% dim_names
     has_area <- "area" %in% dim_names
   } else {
     stop("'data' must be an s2dv_cube.")
@@ -96,12 +101,12 @@ c4h_convert <- function(data,
   }
 
   if (output_format == "terra") {
-    .s2dv_to_terra(data, crs = crs)
+    .s2dv_to_terra(data, crs = crs, drop = drop)
 
   } else if (output_format == "csv") {
-    .s2dv_to_csv(data)
+    .s2dv_to_csv(data, drop = drop)
 
   } else if (output_format == "polygons") {
-    .s2dv_to_polygons(data, crs = crs)
+    .s2dv_to_polygons(data, crs = crs, drop = drop)
   }
 }

@@ -461,3 +461,92 @@ test_that("12. Happy .s2dv_to_polygons with area cube", {
   # Geometry exists
   expect_true("geometry" %in% names(sf_obj))
 })
+
+
+# --- Happy path tests ----
+test_that("13. Happy drop .s2dv_to_terra", {
+  cube <- make_mock_fcst_cube()
+
+  r <- .s2dv_to_terra(cube, drop = TRUE)
+
+  # Returns SpatRaster
+  expect_s4_class(r, "SpatRaster")
+  # Produces correct spatial extent
+  expect_equal(terra::xmin(r), min(cube$coords$longitude), tolerance = 0.5)
+  expect_equal(terra::xmax(r), max(cube$coords$longitude), tolerance = 0.5)
+  expect_equal(terra::ymin(r), min(cube$coords$latitude), tolerance = 0.5)
+  expect_equal(terra::ymax(r), max(cube$coords$latitude), tolerance = 0.5)
+  # Creates expected number of layers
+  expected_layers <- 1 * 3 * 51
+  expect_equal(terra::nlyr(r), expected_layers)
+  # Names layers correctly
+  expect_true(
+    all(c(
+      "sdate_20250101_time_20250101_ensemble_0",
+      "sdate_20250101_time_20250102_ensemble_0",
+      "sdate_20250101_time_20250103_ensemble_0",
+      "sdate_20250101_time_20250101_ensemble_50",
+      "sdate_20250101_time_20250102_ensemble_50",
+      "sdate_20250101_time_20250103_ensemble_50"
+    ) %in% names(r))
+  )
+  # Preserves data value
+  expect_equal(
+    as.vector(terra::values(r[[1]])),
+    as.vector(cube$data[1, 1, 1, 1, 1, , ]),
+    tolerance = 1e-2
+  )
+})
+
+test_that("14. Happy drop .s2dv_to_polygons", {
+  cube <- make_mock_fcst_cube(ns = 1, nt = 2, nm = 1)
+
+  sf_obj <- .s2dv_to_polygons(cube, drop = TRUE)
+
+  # Returns sf object
+  expect_s3_class(sf_obj, "sf")
+  # Columns include at least the first layer value
+  expect_true("sdate_20250101_time_20250101" %in%
+                names(sf_obj))
+  # Geometry exists
+  expect_true("geometry" %in% names(sf_obj))
+
+  cube <- make_mock_area_cube(nm = 1)
+  cube$attrs$area$geom <- make_test_areas_sf()$geometry
+
+  sf_obj <- .s2dv_to_polygons(cube, drop = TRUE)
+
+  # Returns sf object
+  expect_s3_class(sf_obj, "sf")
+  # Columns include at least the first layer value
+  expect_true("layer" %in%
+                names(sf_obj))
+  # Geometry exists
+  expect_true("geometry" %in% names(sf_obj))
+})
+
+
+test_that("15. Happy drop .s2dv_to_csv", {
+  cube <- make_mock_fcst_cube()
+
+  df <- .s2dv_to_csv(cube, drop = TRUE)
+
+  # Returns data.frame
+  expect_s3_class(df, "data.frame")
+  # Correct number of rows
+  expected_rows <- 1 * 1 * 1 * 3 * 51 * 5 * 5
+  expect_equal(nrow(df), expected_rows)
+  # Contains expected columns
+  expect_true(all(c(
+    "sdate", "time", "ensemble",
+    "latitude", "longitude", "value",
+    "date", "ensemble_value"
+  ) %in% names(df)) &&
+    !any(c("dataset", "var", "var_names") %in% names(df)))
+  # Data preserved
+  expect_equal(
+    df$value[1],
+    as.vector(cube$data)[1],
+    tolerance = 1e-6
+  )
+})

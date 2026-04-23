@@ -5,10 +5,12 @@
 #' @param cube The s2dv_cube object to be transformed.
 #' @param crs Coordinate Reference System of the s2dv_cube. The default is
 #' "EPSG:4326".
+#' @param drop Logical. If TRUE, dimensions with only one value will be dropped
+#' when converting to the desired format. Default is FALSE.
 #'
 #' @returns A terra::SpatRaster object.
 #' @noRd
-.s2dv_to_terra <- function(cube, crs = "EPSG:4326") {
+.s2dv_to_terra <- function(cube, crs = "EPSG:4326", drop = FALSE) {
   .validate_s2dv_cube(cube)
 
   lon <- as.vector(cube$coords$longitude)
@@ -41,10 +43,10 @@
   # REVIEW - nested loops
   for (d in seq_len(nd)) {
     d_lab <- .get_label(cube$coords$dataset, d, "dataset")
-
+    if (nd == 1 && isTRUE(drop)) d_lab <- NULL
     for (v in seq_len(nv)) {
       v_lab <- .get_label(cube$coords$var, v, "var")
-
+      if (nv == 1 && isTRUE(drop)) v_lab <- NULL
       for (s in seq_len(ns)) {
         s_lab <- if (!is.null(cube$attrs$Dates) &&
                        length(cube$attrs$Dates[, 1]) >= s) {
@@ -71,7 +73,14 @@
             r <- terra::rast(xyz, type = "xyz", crs = crs)
 
             m_lab <- .get_label(cube$coords$ensemble, m, "ensemble")
-            names(r) <- paste(d_lab, v_lab, s_lab, t_lab, m_lab, sep = "_")
+            if (nm == 1 && isTRUE(drop)) m_lab <- NULL
+
+            parts <- list(d_lab, v_lab, s_lab, t_lab, m_lab)
+            parts <- parts[!vapply(parts,
+                                   function(x) is.null(x) || x == "",
+                                   logical(1))]
+
+            names(r) <- paste(parts, collapse = "_")
 
             layers[[k]] <- r
             k <- k + 1
@@ -91,9 +100,11 @@
 #' Transform s2dv into csv
 #'
 #' @param cube The s2dv_cube object to be transformed.
+#' @param drop Logical. If TRUE, dimensions with only one value will be dropped
+#' when converting to the desired format. Default is FALSE.
 #' @returns A data.frame
 #' @noRd
-.s2dv_to_csv <- function(cube) {
+.s2dv_to_csv <- function(cube, drop = FALSE) {
   .validate_s2dv_cube(cube)
 
   d  <- dim(cube$data)
@@ -134,6 +145,14 @@
 
   df$value <- as.vector(cube$data)
 
+  if (isTRUE(drop)) {
+    for (dimn in c("dataset", "var", "ensemble")) {
+      if (length(unique(df[[dimn]])) == 1) {
+        df[[dimn]] <- NULL
+      }
+    }
+  }
+
   # ---- assign dates ----
   if (!is.null(dates)) {
     if (ns > 1 && nt > 1) {
@@ -153,12 +172,16 @@
   # ---- assign variable names ----
   var_names <- tryCatch(as.vector(cube$coords$var), error = function(e) NULL)
   if (!is.null(var_names) && nv == length(var_names)) {
-    df$var_name <- var_names[df$var]
+    if (nv > 1 || !isTRUE(drop)) {
+      df$var_name <- var_names[df$var]
+    }
   }
 
   # ---- assign ensemble values ----
   if (!is.null(ens) && length(ens) == nm) {
-    df$ensemble_value <- ens[df$ensemble]
+    if (nm > 1 || !isTRUE(drop)) {
+      df$ensemble_value <- ens[df$ensemble]
+    }
   }
 
   # ---- if s2dv_cube contains location ----
@@ -184,9 +207,11 @@
 #'
 #' @param cube The s2dv_cube object to be transformed.
 #' @param crs Coordinate Reference System (default: "EPSG:4326").
+#' @param drop Logical. If TRUE, dimensions with only one value will be dropped
+#' when converting to the desired format. Default is FALSE.
 #' @returns An sf object with polygons.
 #' @noRd
-.s2dv_to_polygons <- function(cube, crs = "EPSG:4326") {
+.s2dv_to_polygons <- function(cube, crs = "EPSG:4326", drop = FALSE) {
   # Validate cube first
   .validate_s2dv_cube(cube)
 
@@ -197,7 +222,7 @@
 
   # handle gridded case
   if (has_latlon) {
-    rstack <- .s2dv_to_terra(cube, crs = crs)
+    rstack <- .s2dv_to_terra(cube, crs = crs, drop = drop)
     pv <- terra::as.polygons(rstack, dissolve = FALSE,
                              values = TRUE, na.rm = FALSE)
     sf_obj <- sf::st_as_sf(pv)
@@ -217,8 +242,10 @@
 
     for (d in seq_len(nd)) {
       d_lab <- .get_label(cube$coords$dataset, d, "dataset")
+      if (nd == 1 && isTRUE(drop)) d_lab <- NULL
       for (v in seq_len(nv)) {
         v_lab <- .get_label(cube$coords$var, v, "var")
+        if (nv == 1 && isTRUE(drop)) v_lab <- NULL
         for (s in seq_len(ns)) {
           s_lab <- if (!is.null(cube$attrs$Dates) &&
                          length(cube$attrs$Dates[, 1]) >= s) {
@@ -235,7 +262,14 @@
             }
             for (m in seq_len(nm)) {
               m_lab <- .get_label(cube$coords$ensemble, m, "ensemble")
-              layer_name <- paste(d_lab, v_lab, s_lab, t_lab, m_lab, sep = "_")
+              if (nm == 1 && isTRUE(drop)) m_lab <- NULL
+
+              parts <- list(d_lab, v_lab, s_lab, t_lab, m_lab)
+              parts <- parts[!vapply(parts,
+                                     function(x) is.null(x) || x == "",
+                                     logical(1))]
+
+              layer_name <- paste(parts, collapse = "_")
 
               # Extract values for all areas at this combination
               vals <- as.vector(cube$data[d, v, s, t, m, ])
