@@ -1314,7 +1314,7 @@
   if (length(variable) != 1) {
     stop("Currently only able to load one variable at a time from esarchive.")
   }
-  if (year == "all") {
+  if (identical(year, "all")) {
     stop("Please specify the range of years to load from esarchive.")
   }
 
@@ -1379,7 +1379,7 @@
                  time = leadtime_month,
                  ensemble = "all",
                  latitude = lats,
-                 latitude_reorder = startR::Sort(decreasing = TRUE),
+                 latitude_reorder = startR::Sort(decreasing = FALSE),
                  longitude = lons,
                  longitude_reorder = startR::CircularSort(-180, 180),
                  synonims = list(latitude = c("lat", "latitude"),
@@ -1394,10 +1394,13 @@
   } else if (type == "observation") {
     path <- paste0(path, "$var$_$sdate$.nc")
     data <- list(dataset = list(list(name = "dataset", path = path)),
+                 pattern_dims = c("dataset"),
+                 latitude_var = "latitude",
+                 longitude_var = "longitude",
                  var = variable,
                  sdate = dates,
                  latitude = lats,
-                 latitude_reorder = startR::Sort(decreasing = TRUE),
+                 latitude_reorder = startR::Sort(decreasing = FALSE),
                  longitude = lons,
                  longitude_reorder = startR::CircularSort(-180, 180),
                  synonims = list(latitude = c("lat", "latitude"),
@@ -1412,7 +1415,7 @@
 
   data <- do.call(CSTools::CST_Start, data)
   if (!("ensemble" %in% names(data$dims))) {
-    data <- CSTools::CST_InsertDim(data, 1, 1, "ensemble")
+    data <- CSTools::CST_InsertDim(data, 1, 1, "ensemble", values = 1)
   }
 
   if (timeseries) {
@@ -1423,5 +1426,17 @@
 
   data <- CSTools::CST_ReorderDims(data, c("dataset", "var", "sdate", "time",
                                            "ensemble", "latitude", "longitude"))
+  data$attrs$Datasets <- NULL
+  data$attrs$load_parameters <- NULL
+
+  if (inherits(data$coords$sdate, "character")) {
+    data$coords$sdate <- seq_along(data$coords$sdate)
+  }
+
+  data$coords$longitude <-
+    round(data$coords$longitude[seq_along(data$coords$longitude)], 4)
+  data$coords$latitude <-
+    round(data$coords$latitude[seq_along(data$coords$latitude)], 4)
+
   return(data)
 }
