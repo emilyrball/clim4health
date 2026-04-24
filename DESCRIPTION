@@ -52,6 +52,7 @@ Suggests:
     spData,
     cubelyr,
     knitr,
+    withr,
     rmarkdown
 Config/testthat/edition: 3
 VignetteBuilder: knitr
