@@ -15,7 +15,8 @@
   target_file <- source_file
   if (length(file_dims) > 4) {
     dims_to_reduce <- names(file_dims[!names(file_dims) %in%
-                                        c("latitude", "longitude")])
+                                        c("latitude", "longitude",
+                                          "lon", "lat")])
     target_file <- paste0("tmp_", format(Sys.time(), "%Y%m%d%H%M"),
                           ".nc")
 
@@ -44,6 +45,19 @@
   data <- .add_dim(data, req_dims)
   data$data <- s2dv::Reorder(data$data, order = req_dims)
   data$dims <- dim(data$data)
+
+  # longitude circular sort should be preserved
+  if ("longitude" %in% req_dims) {
+    if (any(data$coords$longitude > 180)) {
+      data$coords$longitude <- ifelse(data$coords$longitude > 180,
+                                      data$coords$longitude - 360,
+                                      data$coords$longitude)
+    }
+    data$coords$longitude <- round(data$coords$longitude, 4)
+  }
+  if ("latitude" %in% req_dims) {
+    data$coords$latitude <- round(data$coords$latitude, 4)
+  }
   return(data)
 }
 
