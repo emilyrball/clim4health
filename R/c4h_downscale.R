@@ -392,15 +392,15 @@ c4h_downscale <- function(
   } else {
     if (
       !(length(bbox) == 4 &&
-        is.numeric(bbox) &&
-        all(bbox[c(1, 3)] > -90) ||
-        all(bbox[c(1, 3)] < 90) &&
+          is.numeric(bbox) &&
           all(bbox[c(1, 3)] > -90) ||
-        all(bbox[c(1, 3)] < 90) &&
-          all(bbox[c(2, 4)] > -180) ||
-        all(bbox[c(1, 3)] < 180) &&
-          all(bbox[c(2, 4)] > -180) ||
-        all(bbox[c(1, 3)] < 180))
+          all(bbox[c(1, 3)] < 90) &&
+            all(bbox[c(1, 3)] > -90) ||
+          all(bbox[c(1, 3)] < 90) &&
+            all(bbox[c(2, 4)] > -180) ||
+          all(bbox[c(1, 3)] < 180) &&
+            all(bbox[c(2, 4)] > -180) ||
+          all(bbox[c(1, 3)] < 180))
     ) {
       stop(
         "'bbox' coordinates are out of bound. N,W,S,E coordinates,
@@ -422,6 +422,14 @@ c4h_downscale <- function(
     source_file_exp <- exp$attrs$source_files[1]
 
     tmp_file_exp <- .reduce_source_file(source_file_exp)
+    if (grepl("esarchive", source_file_exp)) {
+      # if source file is in esarchive, lon is 0-360 in source file
+      tmp_file_exp2 <- gsub(".nc", "_lon360.nc", tmp_file_exp)
+      system(paste0("cdo sellonlatbox,-180,180,-90,90 ",
+                    tmp_file_exp, " ", tmp_file_exp2))
+      system(paste0("rm ", tmp_file_exp))
+      tmp_file_exp <- tmp_file_exp2
+    }
     exp$attrs$source_files[1] <- tmp_file_exp
 
     if (!is.null(obs)) {
