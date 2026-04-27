@@ -130,6 +130,19 @@ c4h_load <- function(path,
     lon_selection <- c(bbox[2], bbox[4])
   }
 
+  if (any(grep("esarchive/recon", path)) || any(grep("esarchive/exp", path))) {
+    data <- .c4h_load_esarchive(path = path,
+                                variable = variable,
+                                year = year,
+                                month = month,
+                                day = day,
+                                time = time,
+                                leadtime_month = leadtime_month,
+                                lat_selection = lat_selection,
+                                lon_selection = lon_selection)
+    return(data)
+  }
+
   # obtain files to load
   if (length(path) == 1) {
     # case: path is a single directory or file
