@@ -29,10 +29,10 @@
 .get_csv_dims <- function(headers, data, names) {
   if (any(names %in% headers)) {
     col <- which(headers %in% names)
-    val <- data[, col]
+    val <- data[, which(headers %in% names), with = FALSE]
   } else {
     col <- NULL
-    val <- rep(1, length(data[, 1]))
+    val <- rep(1, nrow(data))
   }
   list(val = val, col = col)
 }
@@ -129,11 +129,11 @@
     stop(paste0("Please specify the variable name. Possible names are: ",
                 paste(headers, collapse = ", ")))
   }
-  vars$val <- data[, vars$col]
 
   # datetime management
   # get time columns
-  possible_time_names <- c("year", "month", "week", "day", "date", "time")
+  possible_time_names <- c("year", "month", "week", "day",
+                           "dates", "date", "times", "time")
   times <- .get_csv_dims(headers, data, possible_time_names)
 
   dates_all <- lubridate::parse_date_time(
@@ -250,7 +250,8 @@
       idxs <- Reduce(intersect, list(lnx, llx, d))
       if (length(idxs) > 0) {
         for (v in seq_along(vars$col)) {
-          data_array[, v, s, t, , loc] <- data[idxs, vars$col[v]]
+          data_array[, v, s, t, , loc] <- as.matrix(data[idxs, vars$col[v],
+                                                         with = FALSE])
         }
       } else {
         data_array[, , s, t, , loc] <- rep(NA, length(vars$col))
@@ -1274,7 +1275,7 @@
 
 #' .c4h_load_esarchive
 #'
-#' Load data from a list of netCDF files using the stars package. Specifically
+#' Load data from a list of netCDF files stored in esarchive. Specifically
 #' designed to load data stored within esarchive. For internal BSC use.
 #'
 #' @param path A character string containing the path to the files.
@@ -1303,7 +1304,7 @@
                                 lat_selection = "all",
                                 lon_selection = "all") {
   # stop if not directory
-  if (!dir.exists(path) || length(path) != 1) {
+  if (!any(dir.exists(path)) || length(path) != 1) {
     stop("To load data from esarchive, please provide a single directory path.")
   }
   # stop if not monthly mean
