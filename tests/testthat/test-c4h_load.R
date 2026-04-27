@@ -69,43 +69,50 @@ create_nc <- function(filename,
 # Test cases ----
 
 test_that("Failure due to invalid parameter", {
-    # ext parameter
-    error_message <- "file extension using the 'ext' parameter."
-    expect_error(c4h_load(), error_message)
-    expect_error(c4h_load(ext = "txt"), error_message)
+  # ext parameter
+  error_message <- "file extension using the 'ext' parameter."
+  expect_error(c4h_load(), error_message)
+  expect_error(c4h_load(ext = "txt"), error_message)
 
-    # bbox
-    error_message <- "'bbox' must be a numeric vector of length 4"
-    expect_error(c4h_load(ext = "csv", bbox = c(1,2,3)), error_message)
+  # bbox
+  error_message <- "'bbox' must be a numeric vector of length 4"
+  expect_error(c4h_load(ext = "csv", bbox = c(1,2,3)), error_message)
 
-    # path single directory is empty
-    error_message <- "No files found in the specified 'path'."
-    expect_error(c4h_load(path = tempdir(), ext = "csv"), error_message)
+  # path single directory is empty
+  error_message <- "No files found in the specified 'path'."
+  expect_error(c4h_load(path = withr::local_tempdir(), ext = "csv"),
+               error_message)
 
-    # path doesnt exist
-    error_message <- "does not exist"
-    expect_error(c4h_load(path = "dummy", ext = "csv"), error_message)
+  # path doesnt exist
+  error_message <- "does not exist"
+  expect_error(c4h_load(path = "dummy", ext = "csv"), error_message)
 
-    # path is list of files, but a file doesnt exist
-    tmp_file <- tempfile(fileext = ".csv")
-    lines <- c(
-      paste(c("station_code", "date", "temp_mean", "temp_min", "temp_max"), collapse = ","),
-      paste(c(26055100, "2010-01-01 00:00:01", 16.625, 13.4, 23.4), collapse = ",")
-    )
-    writeLines(lines, tmp_file)
+  # path is list of files, but a file doesnt exist
+  tmp_file <- tempfile(fileext = ".csv")
+  lines <- c(
+    paste(c("station_code", "date", "temp_mean", "temp_min", "temp_max"),
+          collapse = ","),
+    paste(c(26055100, "2010-01-01 00:00:01", 16.625, 13.4, 23.4),
+          collapse = ",")
+  )
+  writeLines(lines, tmp_file)
 
-    error_message <- "do not exist: dummy, dummy1"
-    expect_error(c4h_load(path = c("dummy", "dummy1"), ext = "csv"), error_message)
-    error_message <- "do not exist: dummy"
-    expect_error(c4h_load(path = c(tmp_file, "dummy"), ext = "csv"), error_message)
+  error_message <- "do not exist: dummy, dummy1"
+  expect_error(c4h_load(path = c("dummy", "dummy1"), ext = "csv"),
+               error_message)
+  error_message <- "do not exist: dummy"
+  expect_error(c4h_load(path = c(tmp_file, "dummy"), ext = "csv"),
+               error_message)
 })
 
 test_that("Success loading CSV", {
   tmp_file <- tempfile(fileext = ".csv")
   tmp_file2 <- tempfile(fileext = ".csv")
   lines <- c(
-    paste(c("station_code", "date", "temp_mean", "temp_min", "temp_max"), collapse = ","),
-    paste(c(26055100, "2010-01-01 00:00:01", 16.625, 13.4, 23.4), collapse = ",")
+    paste(c("station_code", "date", "temp_mean", "temp_min", "temp_max"),
+          collapse = ","),
+    paste(c(26055100, "2010-01-01 00:00:01", 16.625, 13.4, 23.4),
+          collapse = ",")
   )
   writeLines(lines, tmp_file)
   writeLines(lines, tmp_file2)
@@ -143,7 +150,7 @@ test_that("Success loading CSV", {
   with_mocked_bindings(
     .c4h_load_csv = mock_cube,
     {
-      out <- c4h_load(path = tmp_file, ext = "csv", bbox = c(1,2,3,4))
+      out <- c4h_load(path = tmp_file, ext = "csv", bbox = c(1, 2, 3, 4))
       expect_equal(out, "cube_result")
     }
   )
@@ -154,8 +161,8 @@ test_that("Success loading NetCDF", {
   lat <- seq(40, 50, length.out = 4)
 
   time <- seq(
-    as.POSIXct("2020-01-01 00:00", tz="UTC"),
-    as.POSIXct("2020-01-02 23:00", tz="UTC"),
+    as.POSIXct("2020-01-01 00:00", tz = "UTC"),
+    as.POSIXct("2020-01-02 23:00", tz = "UTC"),
     by = "1 hour"
   )
 
@@ -273,4 +280,37 @@ test_that("10. Happy path csv", {
   expect_true(all(res$attrs$location$longitude >= -78))
   expect_true(all(res$attrs$location$longitude <= -76))
 
+})
+
+test_that("11. esarchive path dispatches to .c4h_load_esarchive", {
+  path <- "esarchive/recon/some_file.nc"
+  mock_esarchive <- function(...) "esarchive_result"
+  with_mocked_bindings(
+    .c4h_load_esarchive = mock_esarchive,
+    {
+      out <- c4h_load(path = path, ext = "nc")
+      expect_equal(out, "esarchive_result")
+    }
+  )
+
+  path <- "esarchive/exp/some_file.nc"
+  with_mocked_bindings(
+    .c4h_load_esarchive = mock_esarchive,
+    {
+      out <- c4h_load(path = path, ext = "nc")
+      expect_equal(out, "esarchive_result")
+    }
+  )
+
+  path <- "esarchive/not_recon_or_exp/some_file.nc"
+  esarchive <- FALSE
+  mock_esarchive <- function(...) esarchive <<- TRUE
+  with_mocked_bindings(
+    .c4h_load_esarchive = mock_esarchive,
+    {
+      expect_error(c4h_load(path = path, ext = "nc"),
+                   "The specified 'path' does not exist.")
+      expect_false(esarchive)
+    }
+  )
 })
