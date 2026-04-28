@@ -196,7 +196,7 @@ dwn <- c4h_downscale("Intlr", exp = hcst, obs = obs,
                      target_grid = paste0(obs_path, "t2m_201001.nc"))
 ```
 
-Again, we can visualise the downscaled data. Note that in this case, the downscaled forecast data is returned (not the hindcast).
+Again, we can visualise the downscaled data. Note that in this case, the downscaled forecast data is returned in `dwn$exp` (not the hindcast).
 
 ```{r }
 c4h_plot(dwn$exp, ensemble = TRUE)
@@ -292,8 +292,8 @@ We can plot the raw hindcast data, the calibrated hindcast data, and the observa
 
 ```{r }
 c4h_plot(hcst_aggr, ensemble = TRUE, boundaries = "countries")
-c4h_plot(cal$exp, ensemble = TRUE, boundaries = "countries")
-c4h_plot(obs_aggr, ensemble = TRUE, boundaries = "countries")
+c4h_plot(cal$exp,   ensemble = TRUE, boundaries = "countries")
+c4h_plot(obs_aggr,  ensemble = TRUE, boundaries = "countries")
 ```
 
 > 💡 **Note**: In this case, because we have only used 3 years of data, there was not enough information to calibrate the data and only NA values were returned for the calibrated output.
@@ -319,3 +319,11 @@ The choice of parameters for your downscaling is important, and can vary between
 ⚠️ When using the Analogs method, use daily data (not monthly) to search for the closest matches.
 
 **You need at least 20 years of data to perform a robust statistical downscaling.** The longer the timeseries available, the better. This can result in a heavier computational cost.
+
+## Parameter selection
+
+`c4h_downscale` has many optional parameters. The diagram below can be used as a guide to select the appropriate parameters, depending on the `downscale_function` chosen and the type of data being downscaled (gridded, point, polygon).
+
+```{r c4h_downscale_flowchart,fig.width=10, fig.height=10, fig.align='center', out.width='100%', echo= FALSE, fig.cap="Flowchart for selecting downscaling parameters. Dashed lines indicate optional arguments."}
+knitr::include_graphics("https://gitlab.earth.bsc.es/ghr/clim4health/-/blob/develop-vignettes/man/figures/c4h_downscale.png?ref_type=heads")
+```
