@@ -55,12 +55,16 @@
 #' 95% of the variance. The '9nn' method does not require a pre-interpolation
 #' process. The default value is NULL.
 #' @param loocv a logical indicating whether to apply leave-one-out
-#' cross-validation when applying the bias correction. Default to TRUE.
+#' cross-validation when applying the bias correction. Defaults to TRUE.
 #' @param ... additional arguments to be passed to the CSDownscale function.
 #' @returns A list of statistically downscaled data as s2dv_cube objects.
 #' @export
 #'
 #' @examples
+#' \donttest{
+#' # DISCLAIMER: The purpose of these examples is to show the functionality
+#' # of the different functions. To perform downscaling and calibration, a
+#' # much larger time series is required.
 #' \donttest{
 #' hcst <- c4h_load(system.file("extdata", "hindcast", package = "clim4health"),
 #'                  variable = "t2m",
@@ -80,9 +84,8 @@
 #'                          min(lats), max(lons)),
 #'                 ext = "nc")
 #' ### Example with gridded data
-#' dwn <- c4h_downscale("Intbc", exp = hcst, obs = obs,
+#' dwn <- c4h_downscale("Interpolation", exp = hcst, obs = obs,
 #'                      method_remap = "bilinear",
-#'                      bc_method = "qm",
 #'                      target_grid = system.file("extdata",
 #'                                                "reanalysis/t2m_201001.nc",
 #'                                                package = "clim4health"))
@@ -120,6 +123,7 @@
 #' dwn <- c4h_downscale("Interpolation", exp = hcst,
 #'                      points = points, method_point_interp = "bilinear")
 #' }
+
 c4h_downscale <- function(
   downscale_function,
   exp,
@@ -133,7 +137,7 @@ c4h_downscale <- function(
   points = NULL,
   method_point_interp = NULL,
   lr_method = NULL,
-  loocv = FALSE,
+  loocv = TRUE,
   ...
 ) {
   # clim4health s2dv_cube objects will have the following dimensions
@@ -393,15 +397,15 @@ c4h_downscale <- function(
   } else {
     if (
       !(length(bbox) == 4 &&
-          is.numeric(bbox) &&
+        is.numeric(bbox) &&
+        all(bbox[c(1, 3)] > -90) ||
+        all(bbox[c(1, 3)] < 90) &&
           all(bbox[c(1, 3)] > -90) ||
-          all(bbox[c(1, 3)] < 90) &&
-            all(bbox[c(1, 3)] > -90) ||
-          all(bbox[c(1, 3)] < 90) &&
-            all(bbox[c(2, 4)] > -180) ||
-          all(bbox[c(1, 3)] < 180) &&
-            all(bbox[c(2, 4)] > -180) ||
-          all(bbox[c(1, 3)] < 180))
+        all(bbox[c(1, 3)] < 90) &&
+          all(bbox[c(2, 4)] > -180) ||
+        all(bbox[c(1, 3)] < 180) &&
+          all(bbox[c(2, 4)] > -180) ||
+        all(bbox[c(1, 3)] < 180))
     ) {
       stop(
         "'bbox' coordinates are out of bound. N,W,S,E coordinates,
@@ -426,8 +430,12 @@ c4h_downscale <- function(
     if (grepl("esarchive", source_file_exp)) {
       # if source file is in esarchive, lon is 0-360 in source file
       tmp_file_exp2 <- gsub(".nc", "_lon360.nc", tmp_file_exp)
-      system(paste0("cdo sellonlatbox,-180,180,-90,90 ",
-                    tmp_file_exp, " ", tmp_file_exp2))
+      system(paste0(
+        "cdo sellonlatbox,-180,180,-90,90 ",
+        tmp_file_exp,
+        " ",
+        tmp_file_exp2
+      ))
       system(paste0("rm ", tmp_file_exp))
       tmp_file_exp <- tmp_file_exp2
     }
