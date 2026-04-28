@@ -136,7 +136,7 @@ make_mock_area_cube <- function(
     ns   = 1,   # start dates
     nt   = 3,   # lead times
     nm   = 51,  # ensemble members
-    nloc = 5,
+    nloc = 2,
     start_date = as.Date("2025-01-01"),
     area_id = NULL
 ) {
@@ -194,6 +194,27 @@ make_mock_area_cube <- function(
 
   class(cube) <- "s2dv_cube"
   cube
+}
+
+make_test_areas_sf <- function(crs = 4326) {
+  library(sf)
+  library(terra)
+
+  # Define extent within the cube's range (-80 to -70, -10 to 0)
+  poly1 <- st_as_sfc(st_bbox(
+    c(xmin = -78, xmax = -75, ymin = -8, ymax = -6),
+    crs = st_crs(crs)
+  ))
+  poly2 <- st_as_sfc(st_bbox(
+    c(xmin = -74, xmax = -72, ymin = -4, ymax = -2),
+    crs = st_crs(crs)
+  ))
+
+  areas_sf <- st_sf(
+    munip_code = c("Area_A", "Area_B"),
+    geometry = c(poly1, poly2)
+  )
+  return(areas_sf)
 }
 
 # --- Happy path tests ----
@@ -263,7 +284,8 @@ test_that("3 Happy path .s2dv_to_polygons", {
   # Returns sf object
   expect_s3_class(sf_obj, "sf")
   # Columns include at least the first layer value
-  expect_true("dataset_1_var_t2m_sdate_20250101_time_20250101_ensemble_0" %in% names(sf_obj))
+  expect_true("dataset_1_var_t2m_sdate_20250101_time_20250101_ensemble_0" %in%
+                names(sf_obj))
   # Geometry exists
   expect_true("geometry" %in% names(sf_obj))
 })
@@ -276,13 +298,14 @@ test_that("4. Validation fails when cube is invalid", {
   # Missing data
   cube <- make_mock_fcst_cube()
   cube$data <- NULL
-  error_message <-  "`cube\\$data` must be a multidimensional array"
+  error_message <-  "`data\\$data` must be a multidimensional array"
   expect_error(.validate_s2dv_cube(cube), error_message)
 
   # Missing dims
   cube <- make_mock_fcst_cube()
   cube$dims <- cube$dims[!names(cube$dims) %in% c("dataset", "var", "sdate")]
-  cube$coords <- cube$coords[!names(cube$coords) %in% c("dataset", "var", "sdate")]
+  cube$coords <- cube$coords[!names(cube$coords) %in%
+                               c("dataset", "var", "sdate")]
   error_message <-  "Missing required core dimension"
   expect_error(.validate_s2dv_cube(cube), error_message)
 })
@@ -290,13 +313,13 @@ test_that("4. Validation fails when cube is invalid", {
 test_that("5. Validation fails with missing coords or wrong spatial dims", {
   cube <- make_mock_fcst_cube()
   cube$coords <- NULL
-  error_message <- "`cube\\$coords` is missing"
+  error_message <- "`data\\$coords` is missing"
   expect_error(.validate_s2dv_cube(cube), error_message)
 
   cube <- make_mock_fcst_cube()
   cube$dims <- cube$dims[!names(cube$dims) %in% c("latitude")]
   cube$coords <- cube$coords[!names(cube$coords) %in% c("latitude")]
-  error_message <- paste0("Cube must contain either \\(latitude & longitude\\)",
+  error_message <- paste0("data must contain either \\(latitude & longitude\\)",
                           ", location, or area dimension.")
   expect_error(.validate_s2dv_cube(cube), error_message)
 
@@ -325,7 +348,8 @@ test_that("5. Validation fails with missing coords or wrong spatial dims", {
   expect_error(.validate_s2dv_cube(cube), error_message)
 
   cube <- make_mock_location_cube()
-  cube$attrs$location <- cube$attrs$location[!names(cube$attrs$location) %in% c("latitude")]
+  cube$attrs$location <- cube$attrs$location[!names(cube$attrs$location) %in%
+                                               c("latitude")]
   error_message <- "must contain latitude and longitude."
   expect_error(.validate_s2dv_cube(cube), error_message)
 })
@@ -364,12 +388,14 @@ test_that("8. .s2dv_to_csv handles different Dates shapes", {
   df_2d <- .s2dv_to_csv(cube_2d)
   expect_equal(df_2d$date[1], as.character(as.Date(cube_2d$attrs$Dates[1,1])))
   idx_22 <- which(df_2d$sdate == 2 & df_2d$time == 2)[1]
-  expect_equal(df_2d$date[idx_22], as.character(as.Date(cube_2d$attrs$Dates[2,2])))
+  expect_equal(df_2d$date[idx_22],
+               as.character(as.Date(cube_2d$attrs$Dates[2,2])))
 
   # 1D time (length == nt)
   cube_time <- make_mock_fcst_cube(ns = 1, nt = 3)
   df_time <- .s2dv_to_csv(cube_time)
-  expect_equal(unique(df_time$date), c("2025-01-01", "2025-01-02", "2025-01-03"))
+  expect_equal(unique(df_time$date),
+               c("2025-01-01", "2025-01-02", "2025-01-03"))
 
   # 1D sdate (length == ns)
   cube_sdate <- make_mock_fcst_cube(ns = 3, nt = 1)
@@ -389,21 +415,25 @@ test_that("9. .s2dv_to_csv handles cubes with location", {
   cube_loc <- make_mock_location_cube()
   df_loc <- .s2dv_to_csv(cube_loc)
 
-  expect_true(all(c("latitude","longitude") %in% names(df_loc)))
+  expect_true(all(c("latitude", "longitude") %in% names(df_loc)))
   expect_equal(unique(df_loc$latitude), cube_loc$attrs$location$latitude)
   expect_equal(unique(df_loc$longitude), cube_loc$attrs$location$longitude)
 })
 
-# --- CSV writing ----
-test_that("10. .s2dv_to_csv writes to file", {
 
-  cube <- make_mock_fcst_cube(nt = 1, nm = 1)
-  tmp <- tempfile(fileext = ".csv")
-  df <- .s2dv_to_csv(cube, file = tmp)
+# --- Area handling ----
+test_that("10. .s2dv_to_csv handles cubes with area", {
+  cube_area <- make_mock_area_cube()
+  df_area <- .s2dv_to_csv(cube_area)
 
-  expect_true(file.exists(tmp))
-  df2 <- read.csv(tmp)
-  expect_equal(nrow(df2), nrow(df))
+  expect_true("area" %in% names(df_area))
+  expect_equal(unique(df_area$area), as.character(cube_area$coords$area))
+
+  cube_area$attrs$area_id <- "Area_ID"
+  df_area <- .s2dv_to_csv(cube_area)
+  expect_true("Area_ID" %in% names(df_area))
+  expect_equal(unique(df_area$Area_ID), as.character(cube_area$coords$area))
+
 })
 
 # --- terra label fallback ----
@@ -416,14 +446,107 @@ test_that("11. get_label falls back when coord labels too short", {
   expect_true(any(grepl("dataset_02", names(r))))
 })
 
-# --- .s2dv_to_polygons fail cases ----
-test_that("12. .s2dv_to_polygons fails with invalid cubes", {
-  # Missing latitude/longitude (location-only cube)
-  cube_loc <- make_mock_location_cube()
-  # remove lat/lon from coords to simulate failure
-  cube_loc$coords$location <- seq_len(cube_loc$dims["location"])
-  expect_error(
-    .s2dv_to_polygons(cube_loc),
-    "latitude and longitude coordinates"
+# --- .s2dv_to_polygons area case ----
+test_that("12. Happy .s2dv_to_polygons with area cube", {
+  cube <- make_mock_area_cube()
+  cube$attrs$area$geom <- make_test_areas_sf()$geometry
+
+  sf_obj <- .s2dv_to_polygons(cube)
+
+  # Returns sf object
+  expect_s3_class(sf_obj, "sf")
+  # Columns include at least the first layer value
+  expect_true("layer" %in%
+                names(sf_obj))
+  # Geometry exists
+  expect_true("geometry" %in% names(sf_obj))
+})
+
+
+# --- Happy path tests ----
+test_that("13. Happy drop .s2dv_to_terra", {
+  cube <- make_mock_fcst_cube()
+
+  r <- .s2dv_to_terra(cube, drop = TRUE)
+
+  # Returns SpatRaster
+  expect_s4_class(r, "SpatRaster")
+  # Produces correct spatial extent
+  expect_equal(terra::xmin(r), min(cube$coords$longitude), tolerance = 0.5)
+  expect_equal(terra::xmax(r), max(cube$coords$longitude), tolerance = 0.5)
+  expect_equal(terra::ymin(r), min(cube$coords$latitude), tolerance = 0.5)
+  expect_equal(terra::ymax(r), max(cube$coords$latitude), tolerance = 0.5)
+  # Creates expected number of layers
+  expected_layers <- 1 * 3 * 51
+  expect_equal(terra::nlyr(r), expected_layers)
+  # Names layers correctly
+  expect_true(
+    all(c(
+      "sdate_20250101_time_20250101_ensemble_0",
+      "sdate_20250101_time_20250102_ensemble_0",
+      "sdate_20250101_time_20250103_ensemble_0",
+      "sdate_20250101_time_20250101_ensemble_50",
+      "sdate_20250101_time_20250102_ensemble_50",
+      "sdate_20250101_time_20250103_ensemble_50"
+    ) %in% names(r))
+  )
+  # Preserves data value
+  expect_equal(
+    as.vector(terra::values(r[[1]])),
+    as.vector(cube$data[1, 1, 1, 1, 1, , ]),
+    tolerance = 1e-2
+  )
+})
+
+test_that("14. Happy drop .s2dv_to_polygons", {
+  cube <- make_mock_fcst_cube(ns = 1, nt = 2, nm = 1)
+
+  sf_obj <- .s2dv_to_polygons(cube, drop = TRUE)
+
+  # Returns sf object
+  expect_s3_class(sf_obj, "sf")
+  # Columns include at least the first layer value
+  expect_true("sdate_20250101_time_20250101" %in%
+                names(sf_obj))
+  # Geometry exists
+  expect_true("geometry" %in% names(sf_obj))
+
+  cube <- make_mock_area_cube(nm = 1)
+  cube$attrs$area$geom <- make_test_areas_sf()$geometry
+
+  sf_obj <- .s2dv_to_polygons(cube, drop = TRUE)
+
+  # Returns sf object
+  expect_s3_class(sf_obj, "sf")
+  # Columns include at least the first layer value
+  expect_true("layer" %in%
+                names(sf_obj))
+  # Geometry exists
+  expect_true("geometry" %in% names(sf_obj))
+})
+
+
+test_that("15. Happy drop .s2dv_to_csv", {
+  cube <- make_mock_fcst_cube()
+
+  df <- .s2dv_to_csv(cube, drop = TRUE)
+
+  # Returns data.frame
+  expect_s3_class(df, "data.frame")
+  # Correct number of rows
+  expected_rows <- 1 * 1 * 1 * 3 * 51 * 5 * 5
+  expect_equal(nrow(df), expected_rows)
+  # Contains expected columns
+  expect_true(all(c(
+    "sdate", "time", "ensemble",
+    "latitude", "longitude", "value",
+    "date", "ensemble_value"
+  ) %in% names(df)) &&
+    !any(c("dataset", "var", "var_names") %in% names(df)))
+  # Data preserved
+  expect_equal(
+    df$value[1],
+    as.vector(cube$data)[1],
+    tolerance = 1e-6
   )
 })

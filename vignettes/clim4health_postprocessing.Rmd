@@ -227,3 +227,71 @@ Each value and significance is an `s2dv_cube` object. They can be plotted using 
 ```{r }
 c4h_plotskill(skill$BSS10$bss, skill$BSS10$sign, ensemble = TRUE, boundaries = "countries")
 ```
+
+## Choosing arguments in c4h_postprocess
+
+There are many optional arguments in `c4h_postprocess()` that the user can specify to tailor their skill assessment. Currently, we recommend using the default values for most of these, but here we provide some guidance on how to choose them.
+
+> 💡 **Note**: Currently, `c4h_postprocess` applies arguments across all metrics (except for a minority of cases, explained below). This is why it is recommended to use the default values. In future, it will be possible to specify arguments for specific metrics.
+
+### `ref`
+
+This argument should include an optional s2dv_cube containing a reference forecast to be used in the skill score calculations. If not provided, the climatological forecast is used as the reference forecast. In this case, the skill scores are then calculated by comparing the forecast provided in `exp` to the climatology of a forecast provided in `ref` - you would thus expect the skill scores to be 0 everywhere if using the same forecast in `exp` and `ref`.
+
+### `brier_thresholds`
+
+This argument is only relevant if "BSS" is included in `metrics`. It is a numeric vector of thresholds to be applied to calculate different Brier Skill Scores. The default is c(0.1, 0.9), which corresponds to the BSS10 and BSS90 respectively. You could specify other thresholds, for example c(0.33, 0.66) to calculate the BSS33 and BSS66, which would correspond to the 33rd and 66th percentiles respectively. In this case, you would then be assessing the forecast's ability to predict below-normal and above-normal values respectively.
+
+### `prob_thresholds`
+
+`prob_thresholds` acts similarly to `brier_thresholds`, but it is used when "RPSS" or "ROCSS" is in `metrics`. The default is c(1/3, 2/3), which corresponds to assessing the ability of the forecast to predict below-normal, normal, and above-normal values simultaneously. You could specify other thresholds, such as c(0.2, 0.4, 0.6, 0.8) to assess the forecast's ability to predict values in the 5 categories defined by the quintiles.
+
+### `sig_method` and `sig_method.type`
+
+`sig_method` indicates the method used to calculate significance. The default is different for different metrics. For "BSS", "RPSS", "CRPSS", and "AbsBiasSS", the default is "RandomWalk". For "MSSS" and "RMSSS", the default is "one-sided Fisher". In future, it will also be possible to use "Diebold-Mariano" for "RPSS" and "BSS".
+
+`sig_method.type` indicates the type of test to be applied if using a Random Walk `sig_method`. The default is "two.sided.approx", which assesses whether `exp` and `ref` are significantly different in skill with a two-sided test using an approximation. Other options include "two.sided", which uses and exact two-sided test, and "greater" or "less". "greater" assesses whether `exp` shows significantly better skill than `ref` with a one-sided test for negatively-oriented scores (scores where lower values are better), while "less" assesses whether `exp` shows significantly better skill than `ref` with a one-sided test for positively-oriented scores (scores where higher values are better). Examples of negatively-oriented scores are "RPS" and "RMSE", and examples of positively-oriented scores are "ROC". Thus, if you wish to assess skill using a one-sided test, you could set `sig_method.type = "greater"` for calculating "RPSS" and "RMSSS", and `sig_method.type = "less"` for calculating "ROCSS". More details can be found in the documentation of `s2dv::RandomWalkTest()`.
+
+### `alpha`
+
+This is the significance level to be applied in the significance testing of the skill scores. The default is 0.05. This value is applied across all metrics, but in some specific cases, the value will be incompatible with a chosen significance test, and the default will be applied. In such cases, a warning is issued!
+
+### `ncores`
+
+This is the number of cores to be used in the parallelisation of the skill score calculations. The default is 1, so no parallelisation is applied. If you have a large dataset and want to speed up the calculations, you can increase this value. An error will be returned if you specify a value higher than the number of cores available on your machine.
+
+### `N.eff`
+
+This argument specifies the effective sample size to use in the significance testing for metrics "BSS", "RPSS", "CRPSS", or "RMSSS". The default is NA, which uses the effective number of independent observations calculated from the data using s2dv::Eno().
+
+### `indices_for_clim`
+
+This is a vector of the indices to be taken along the 'sdate' dimension for computing the thresholds between probabilistic categories. If NULL (default), the whole time period is used. If you wanted to specify the probability thresholds based only on the first 10 years of the data, you could set `indices_for_clim = 1:10`. This argument is only relevant if "BSS", "RPSS", "CRPSS", or "ROCSS" is in `metrics`.
+
+### `cross.val` and `clim.cross.val`
+
+These arguments are logical values (TRUE/FALSE) that indicate whether to apply cross-validation (i.e. excluding values) in the calculation of the probability categories. It is recommend to use their default values.
+
+### `weights_exp` and `weights_ref`
+
+This is an array to use to weight the forecast/reference ensemble members in the probability category calculations. The default is NULL, which means that no weighting is applied. This is recommended.
+
+### `comp_dim` and `limits`
+
+`comp_dim` refers to the dimension along which to only take into account complete data. That is to say, data is removed along `comp_dim` if there is at least one NA between `limits`, where `limits` specifies the range of indices along `comp_dim` to be considered. It is recommend to use the default values for these arguments, which means that no data is removed.
+
+### `conf`
+
+If "MSE" or "RMSE" is in `metrics`, `conf` specifies whether or not to return the confidence intervals. By default, they are returned (`conf = TRUE`).
+
+### `na.rm`
+
+By default, this is FALSE, meaning that NA values are not removed in the calculations of "BSS", "RPSS", or "AbsBiasSS". If any 'NA' value is present, then the function will return 'NA' there.
+
+### `sign` and `pval`
+
+For the metrics "MSSS" and "RMSSS", `sign` and `pval` specify whether or not to compute the statistical significance and p-values of the test Ho: (R)MSSS = 0. By default, `sign` is TRUE and `pval` is FALSE. The default is that the significance is returned (TRUE/FALSE), but the p-values used to calculated this are not).
+
+### `rocss_cat`
+
+This argument should be an integer indicating the category to be return when calculating "ROCSS". The default is 1, which corresponds to the first category defined by `prob_thresholds`. With the default `prob_thresholds = c(1/3, 2/3)`, this corresponds to the first category (i.e. below normal). If you wanted to calculate the ROCSS for the second category (i.e. normal), you would set `rocss_cat = 2`.
