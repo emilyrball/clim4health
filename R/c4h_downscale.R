@@ -26,9 +26,9 @@
 #' 'dynamical_bias', 'bias', 'evmos', 'mse_min', 'crps_min', 'rpc-based'. The
 #' abbreviations 'dbc','qm' can also be used. The default value is NULL.
 #' @param method_remap a character vector indicating the regridding method to
-#' be passed to CDORemap. Accepted methods are "con", "bil", "bic", "nn",
-#' "con2". If "nn" method is to be used, CDO_1.9.8 or newer version is required.
-#' The default value is NULL.
+#' be passed to CDORemap. Accepted methods are "con", "bil" (or "bilinear"),
+#' "bic", "nn", "con2". If "nn" method is to be used, CDO_1.9.8 or newer
+#' version is required. The default value is NULL.
 #' @param points a list of two elements containing the point latitudes and
 #' longitudes of the locations to downscale the model data. The list must
 #' contain the two elements named as 'latitude' and 'longitude'. If the
@@ -57,7 +57,12 @@
 #' @param loocv a logical indicating whether to apply leave-one-out
 #' cross-validation when applying the bias correction. Defaults to TRUE.
 #' @param ... additional arguments to be passed to the CSDownscale function.
+#'
 #' @returns A list of statistically downscaled data as s2dv_cube objects.
+#'
+#' @note See clim4health_postprocessing.Rmd in the package vignettes for a
+#' detailed tutorial on function arguments and usage.
+#'
 #' @export
 #'
 #' @examples
@@ -65,7 +70,6 @@
 #' # DISCLAIMER: The purpose of these examples is to show the functionality
 #' # of the different functions. To perform downscaling and calibration, a
 #' # much larger time series is required.
-#' \donttest{
 #' hcst <- c4h_load(system.file("extdata", "hindcast", package = "clim4health"),
 #'                  variable = "t2m",
 #'                  year = 2010:2012,
@@ -166,7 +170,7 @@ c4h_downscale <- function(
   if (!all(c("latitude", "longitude") %in% names(exp$dims))) {
     if (!("area" %in% names(exp$dims))) {
       stop(
-        "The 'exp' s2dv_cube object must have 'latitude' and 'longitude'",
+        "The 'exp' s2dv_cube object must have 'latitude' and 'longitude' ",
         "or 'area' dimensions."
       )
     } else {
@@ -326,12 +330,18 @@ c4h_downscale <- function(
     }
   }
 
-  if (length(method_remap) > 1) {
-    # case: if more than one method_remap is provided, stop
-    stop(
-      "'method_remap' must be a single character string. Accepted values",
-      " are 'con', 'bil', 'bic', 'nn', 'con2'."
-    )
+  if (!is.null(method_remap)) {
+    if (length(method_remap) > 1) {
+      # case: if more than one method_remap is provided, stop
+      stop("'method_remap' must be a single character string")
+    } else if (
+      !method_remap %in% c("con", "bil", "bilinear", "bic", "nn", "con2")
+    ) {
+      stop(
+        "Accepted values for 'method_remap' are ",
+        "'con', 'bil', 'bilinear', 'bic', 'nn', 'con2'."
+      )
+    }
   }
 
   # catch missing arguments for each downscaling function
