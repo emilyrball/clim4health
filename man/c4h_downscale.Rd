@@ -98,6 +98,7 @@ A list of statistically downscaled data as s2dv_cube objects.
 Downscale and calibrate climate data.
 }
 \examples{
+\donttest{
 hcst <- c4h_load(system.file("extdata", "hindcast", package = "clim4health"),
                  variable = "t2m",
                  year = 2010:2012,
@@ -155,4 +156,5 @@ point_locs <- c4h_time(point_locs,
 
 dwn <- c4h_downscale("Interpolation", exp = hcst,
                      points = points, method_point_interp = "bilinear")
+}
 }

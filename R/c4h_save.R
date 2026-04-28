@@ -13,10 +13,12 @@
 #' @export
 #'
 #' @examples
+#' \donttest{
 #' fcst_path <- system.file("extdata", "forecast", package = "clim4health")
 #' fcst <- c4h_load(fcst_path, variable = "t2m", ext = 'nc')
 #'
 #' c4h_save(fcst, "s2dv", "out.nc")
+#' }
 c4h_save <- function(data, format, path) {
   if (format == "s2dv") {
     .save_s2dv(data, path)
@@ -39,7 +41,6 @@ c4h_save <- function(data, format, path) {
 #' @returns None
 #' @noRd
 .save_s2dv <- function(cube, path = "out.nc") {
-
   # Detect longitude / latitude dims
   ### REVIEW - should not require latitude and longitude dimensions?
   ### REVIEW - multivariate data
@@ -54,7 +55,7 @@ c4h_save <- function(data, format, path) {
   nlon <- length(lon)
   nlat <- length(lat)
   nband <- prod(dim_arr) / (nlon * nlat)
-  arr3 <- array(arr, dim = c(nlon, nlat, nband))  # [lon, lat, band]
+  arr3 <- array(arr, dim = c(nlon, nlat, nband)) # [lon, lat, band]
 
   # Build stars object
   dims <- stars::st_dimensions(

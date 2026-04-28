@@ -17,21 +17,18 @@ c4h_postprocess(
   Fair = FALSE,
   indices_for_clim = NULL,
   cross.val = FALSE,
-  cat_dim = NULL,
   clim.cross.val = TRUE,
-  nmemb = NULL,
-  nmemb_ref = NULL,
   weights_exp = NULL,
   weights_ref = NULL,
   comp_dim = NULL,
   limits = NULL,
   conf = TRUE,
-  dat_dim = NULL,
   na.rm = FALSE,
   sig_method.type = NULL,
-  sign = FALSE,
-  pval = TRUE,
-  sig_method = "one-sided Fisher"
+  sign = TRUE,
+  pval = FALSE,
+  sig_method = "one-sided Fisher",
+  rocss_cat = 1
 )
 }
 \arguments{
@@ -46,17 +43,18 @@ calculated. Valid options are: "BSS", "RPSS", "CRPSS", "AbsBiasSS", "MSE",
 "MSSS", "RMSE", "RMSSS", "ROCSS".}
 
 \item{ref}{An optional s2dv_cube object of reference data with at least the
-'sdate' and 'member' dimensions. The dimensions must be the same as 'exp'
-except 'memb_dim' and 'dat_dim'. If 'ref' is NULL, the climatological
+'sdate' and 'ensemble' dimensions. The dimensions must be the same as 'exp'
+except 'ensemble'. If 'ref' is NULL, the climatological
 forecast is used as reference forecast. The default value is NULL.}
 
 \item{brier_thresholds}{Optional numeric vector of thresholds for the
 Brier Skill Score (BSS) calculation. The default is c(0.1, 0.9). Only
-applicable if "bss" is in 'metrics'.}
+applicable if "BSS" is in 'metrics'.}
 
 \item{prob_thresholds}{Optional numeric vector of thresholds for the
-Ranked Probability Skill Score (RPSS) calculation. The default is c(1/3,
-2/3). Only applicable if "rpss" is in 'metrics'.}
+Ranked Probability Skill Score (RPSS) calculation, and for the Relative
+Operating Characteristic Skill Score (ROCSS). The default is c(1/3,
+2/3). Only applicable if "RPSS" or "ROCSS" is in 'metrics'.}
 
 \item{alpha}{A numeric of the significance level to be used in the
 statistical significance test. The default value is 0.05. Relevant for all
@@ -67,9 +65,9 @@ computation. The default value is NULL.}
 
 \item{N.eff}{Effective sample size to be used in the statistical significance
 test. It can be NA (and it will be computed with the s2dv:::.Eno), FALSE (and
-it will use the length of "obs" along "time_dim", so the autocorrelation is
+it will use the length of "obs" along "time", so the autocorrelation is
 not taken into account), a numeric (which is used for all cases), or an array
-with the same dimensions as "obs" except "time_dim" (for a particular N.eff
+with the same dimensions as "obs" except "time" (for a particular N.eff
 to be used for each case). The default value is NA. Only relevant if "BSS",
 "RPSS", "CRPSS", or "RMSSS" is in 'metrics'.}
 
@@ -78,7 +76,7 @@ to be used for each case). The default value is NA. Only relevant if "BSS",
 ensemble size). The default value is FALSE. Only relevant if "BSS",
 "RPSS", or "CRPSS" is in 'metrics'.}
 
-\item{indices_for_clim}{A vector of the indices to be taken along 'time_dim'
+\item{indices_for_clim}{A vector of the indices to be taken along 'time'
 for computing the thresholds between the probabilistic categories. If NULL,
 the whole period is used. The default value is NULL. Only relevant if "BSS",
 "RPSS", or "ROCSS" is in 'metrics'.}
@@ -87,30 +85,15 @@ the whole period is used. The default value is NULL. Only relevant if "BSS",
 between probabilistics categories in cross-validation. The default value is
 FALSE. Only relevant if "BSS", "RPSS", or "ROCSS" is in 'metrics'.}
 
-\item{cat_dim}{A character string indicating the name of the category
-dimension that is needed when exp, obs, and ref are probabilities. The
-default value is NULL, which means that the data are not probabilities.
-Relevant if "BSS", "RPSS", or "ROCSS" is in 'metrics'.}
-
 \item{clim.cross.val}{A logical indicating whether to build the
 climatological forecast in cross-validation (i.e. excluding the observed
 value of the time step when building the probabilistic distribution function
 for that particular time step). The default value is TRUE. Only used if 'ref'
 is NULL and "CRPSS" is in 'metrics'.}
 
-\item{nmemb}{A numeric value indicating the number of members used to compute
-the probabilities. This parameter is necessary when calculating FairRPS from
-probabilities. Default is NULL. Only relevant if "BSS" or "RPSS" is in
-'metrics' and 'Fair' is TRUE.}
-
-\item{nmemb_ref}{A numeric value indicating the number of members of the
-reference forecast 'ref'. If 'ref' is NULL and uses the climatology,
-'nmemb_ref' should be the number of years used to compute the climatology.
-Default is NULL. Only relevant if "BSS" or "RPSS" is in 'metrics'.}
-
 \item{weights_exp}{A named numerical array of the forecast ensemble weights
-for probability calculation. The dimension should include 'memb_dim',
-'time_dim' and 'dat_dim' if there are multiple datasets. All dimension
+for probability calculation. The dimensions should include 'ensemble',
+'time', and 'dataset' if there are multiple datasets. All dimension
 lengths must be equal to 'exp' dimension lengths. The default value is NULL,
 which means no weighting is applied. The ensemble should have at least 70
 members or span at least 10 time steps and have more than 45 members if
@@ -131,10 +114,6 @@ relevant if "MSE" or "RMSE" is in 'metrics'.}
 intervals or not. The default value is TRUE. Only relevant if "MSE" or "RMSE"
 is in 'metrics'.}
 
-\item{dat_dim}{A character string indicating the name of dataset dimension.
-The length of this dimension can be different between 'exp' and 'obs'.
-The default value is NULL.}
-
 \item{na.rm}{A logical. FALSE means that NA values will not be removed, and
 the function will return 'NA' if they are present. TRUE means that NA values
 will be removed before computation. The default value is FALSE. Only
@@ -142,19 +121,24 @@ relevant if "BSS", "RPSS", or "AbsBiasSS" is in 'metrics'.}
 
 \item{sig_method.type}{A character string indicating the test type of the
 significance method. For "MSSS" and "RMSSS", the default applied is NULL.
-The default for "BSS", "RPSS", and "AbsBiasSS" applied is 'two.sided.approx'.}
+The default applied for "BSS", "RPSS", and "AbsBiasSS" is 'two.sided.approx'.}
 
 \item{sign}{A logical value indicating whether to compute or not the
 statistical significance of the test Ho: (R)MSSS = 0. The default value is
-FALSE. Only relevant if "MSSS" or "RMSSS" is in 'metrics'.}
+TRUE. Only relevant if "MSSS" or "RMSSS" is in 'metrics'.}
 
 \item{pval}{A logical value indicating whether to compute or not the p-value
-of the test Ho: (R)MSSS = 0. The default value is TRUE. Only relevant if
+of the test Ho: (R)MSSS = 0. The default value is FALSE. Only relevant if
 "MSSS" or "RMSSS" is in 'metrics'.}
 
 \item{sig_method}{A character string indicating the significance method. The
 options are "one-sided Fisher" (default) and "Random Walk". Only relevant if
 "MSSS" or "RMSSS" is in 'metrics'.}
+
+\item{rocss_cat}{An integer indicating the category to be returned when
+"ROCSS" is in 'metrics'. The default value is 1, which means that the ROCSS
+for the first probability category (i.e. the lowest category) will be
+returned.}
 }
 \value{
 a list of lists with the calculated metrics and their significances
@@ -164,68 +148,88 @@ as s2dv_cube objects.
 Quality assessment of climate forecasts
 }
 \examples{
-hcst <- c4h_load(system.file("extdata", "hindcast", package = "clim4health"),
-                 variable = "t2m",
-                 year = 2010:2012,
-                 month = 1,
-                 leadtime_month = 1:3,
-                 ext = "nc")
+\donttest{
+# DISCLAIMER: The purpose of these examples is to show the functionality
+# of the different functions. To perform postprocessing, a much larger time
+# series is required.
+# Load data
+hcst <- c4h_load(
+  system.file("extdata", "hindcast", package = "clim4health"),
+  variable = "t2m",
+  year = 2010:2012,
+  month = 1,
+  leadtime_month = 1:3,
+  ext = "nc"
+)
 lats <- hcst$coords$latitude
 lons <- hcst$coords$longitude
-obs <- c4h_load(system.file("extdata", "reanalysis",
-                package = "clim4health"),
-                variable = "t2m",
-                year = 2010:2012,
-                month = 1,
-                leadtime_month = 1:3,
-                bbox = c(max(lats), min(lons),
-                         min(lats), max(lons)),
-                ext = "nc")
-### Example with gridded data
-# dwn <- c4h_downscale("Interpolation", exp = hcst, obs = obs,
-#                      method_remap = "bilinear",
-#                      target_grid = system.file("extdata",
-#                                                "reanalysis/t2m_201001.nc",
-#                                                package = "clim4health"))
-# hcst_dwn <- dwn$exp
-# skill <- c4h_postprocess(exp = hcst_dwn,
-#                          obs = obs,
-#                          metrics = c("RMSE"))
-## Example with polygon data
-shp_path <- system.file("extdata", "areas", "munip_vallecauca.gpkg",
-                        package = "clim4health")
-obs <- c4h_space(obs,
-                 areas = shp_path,
-                 fun = "mean",
-                 areas_id = "munip_code")
-hcst <- c4h_space(hcst,
-                  areas = shp_path,
-                  fun = "mean",
-                  areas_id = "munip_code")
-skill <- c4h_postprocess(exp = hcst,
-                         obs = obs,
-                         metrics = c("BSS", "CRPSS"),
-                         brier_thresholds = c(0.1, 0.9))
-## Example with station data
-# point_locs <- clim4health::c4h_load(system.file("extdata",
-#                                                "stations",
-#                                                package = "clim4health"),
-#                                     ext = "csv",
-#                                     year = 2010:2012,
-#                                     month = 1,
-#                                     leadtime_month = 1:3,
-#                                     variable = "temp_mean")
-# points <- list(latitude = point_locs$attrs$location$latitude,
-#                longitude = point_locs$attrs$location$longitude)
-# point_locs <- c4h_time(point_locs,
-#                        time_aggregation = "monthly",
-#                        dim_aggregation = "sdate",
-#                        fun = "mean")
-#
-# dwn <- c4h_downscale("Interpolation", exp = hcst,
-#                      points = points, method_point_interp = "bilinear")
-# hcst_dwn <- dwn$exp
-# skill <- c4h_postprocess(exp = hcst_dwn,
-#                          obs = point_locs,
-#                          metrics = c("RMSE"))
+obs <- c4h_load(
+  system.file("extdata", "reanalysis", package = "clim4health"),
+  variable = "t2m",
+  year = 2010:2012,
+  month = 1,
+  leadtime_month = 1:3,
+  bbox = c(max(lats), min(lons), min(lats), max(lons)),
+  ext = "nc"
+)
+
+# Example with gridded data
+dwn <- c4h_downscale(
+  "Interpolation",
+  exp = hcst,
+  obs = obs,
+  method_remap = "bilinear",
+  target_grid = system.file(
+    "extdata",
+    "reanalysis/t2m_201001.nc",
+    package = "clim4health"
+  )
+)
+hcst_dwn <- dwn$exp
+skill_grid <- c4h_postprocess(exp = hcst_dwn, obs = obs, metrics = "BSS")
+c4h_plotskill(skill_grid$BSS10$bss, skill_grid$BSS10$sign)
+
+# Example with polygon data
+areas <- sf::read_sf(system.file("extdata", "areas", "munip_vallecauca.gpkg",
+                                 package = "clim4health"))
+obs_area <- c4h_space(obs,
+                      areas = areas,
+                      fun = "mean",
+                      areas_id = "munip_code")
+hcst_area <- c4h_space(hcst,
+                       areas = areas,
+                       fun = "mean",
+                       areas_id = "munip_code")
+skill_area <- c4h_postprocess(exp = hcst_area,
+                              obs = obs_area,
+                              metrics = "CRPSS",
+                              brier_thresholds = c(0.1, 0.9))
+c4h_plotskill(skill_area$CRPSS$crpss, skill_area$CRPSS$sign)
+
+# Example with station data
+point_locs <- clim4health::c4h_load(system.file("extdata",
+                                               "stations",
+                                               package = "clim4health"),
+                                    ext = "csv",
+                                    year = 2010:2012,
+                                    month = 1,
+                                    leadtime_month = 1:3,
+                                    variable = "temp_mean")
+points <- list(latitude = point_locs$attrs$location$latitude,
+               longitude = point_locs$attrs$location$longitude)
+point_locs <- c4h_time(point_locs,
+                       time_aggregation = "monthly",
+                       dim_aggregation = "sdate",
+                       fun = "mean")
+dwn <- c4h_downscale("Interpolation", exp = hcst,
+                     points = points, method_point_interp = "bilinear")
+hcst_dwn <- dwn$exp
+skill_point <- c4h_postprocess(exp = hcst_dwn,
+                               obs = point_locs,
+                               metrics = "BSS")
+c4h_plotskill(skill = skill_point$BSS10$bss, boundaries = areas)
+}
+}
+\seealso{
+\code{\link[=c4h_plotskill]{c4h_plotskill()}} for visualizing the forecast skill.
 }

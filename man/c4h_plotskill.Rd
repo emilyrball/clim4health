@@ -7,15 +7,13 @@
 c4h_plotskill(
   skill,
   sign = NULL,
-  sdate = NULL,
   time = NULL,
-  ensemble = NULL,
   boundaries = NULL,
   mask_boundaries = FALSE,
   title = NULL,
   legend = NULL,
-  palette = "-Green",
-  noskillcol = "#D0C1F5",
+  palette = "SunsetDark",
+  noskillcol = "#b7d6ff",
   coordgrid = FALSE,
   ...
 )
@@ -26,14 +24,8 @@ c4h_plotskill(
 \item{sign}{An additional optional binary \emph{s2dv_cube} indicating
 significance.}
 
-\item{sdate}{Numerical index of the forecast starting time to be plotted.
-Defaults to NULL (all starting dates).}
-
 \item{time}{Numerical index of the time to be plotted. Defaults to NULL (all
 times).}
-
-\item{ensemble}{Numerical index of the ensemble member to be plotted.
-Defaults to NULL (all ensemble members).}
 
 \item{boundaries}{Polygon boundaries to add to the map.  Set to NULL for no
 boundaries (default), otherwise supply a polygon \code{sf} object or set to
@@ -57,7 +49,7 @@ climatologies.}
 \item{coordgrid}{If TRUE, display coordinate grids on the map.}
 
 \item{...}{Extra arguments indicating fixed aesthetics to be passed to
-\code{stars::geom_stars}, including \code{lwd}, \code{alpha} and \code{colour}.}
+\code{stars::geom_stars}, including \code{lwd}, \code{alpha}, \code{size} and \code{colour}.}
 }
 \value{
 A plot
@@ -69,6 +61,7 @@ It is used for the following statistics: BSS, RPSS, CRPSS, AbsBiasSS,
 MSSS, RMSSS and ROCSS. For MSE and RMSE, please use the function \code{c4h_plot}.
 }
 \examples{
+\donttest{
 # DISCLAIMER: The purpose of these examples is to show the functionality
 # of the different functions. To perform postprocessing, a much larger time
 # series is required.
@@ -107,10 +100,10 @@ dwn <- c4h_downscale(
 )
 hcst_dwn <- dwn$exp
 skill_grid <- c4h_postprocess(exp = hcst_dwn, obs = obs, metrics = "BSS")
-c4h_plotskill(skill_grid$BSS10$rpss, skill_grid$BSS10$sign)
+c4h_plotskill(skill_grid$BSS10$bss, skill_grid$BSS10$sign)
 # Make some artificial significance for testing
 skill_grid$BSS10$sign$data[,,,,, 3:8, 15:25] <- TRUE
-c4h_plotskill(skill = skill_grid$BSS10$rpss, sign = skill_grid$BSS10$sign)
+c4h_plotskill(skill = skill_grid$BSS10$bss, sign = skill_grid$BSS10$sign)
 
 # Example with polygon data
 areas <- sf::read_sf(system.file("extdata", "areas", "munip_vallecauca.gpkg",
@@ -153,13 +146,15 @@ hcst_dwn <- dwn$exp
 skill_point <- c4h_postprocess(exp = hcst_dwn,
                                obs = point_locs,
                                metrics = "BSS")
-c4h_plotskill(skill = skill_point$BSS10$rpss, boundaries = areas)
+c4h_plotskill(skill = skill_point$BSS10$bss, boundaries = areas)
 # Make some artificial significance for testing
 skill_point$BSS10$sign$data[1, 1, 1, 1:3, 1, 4:6] <- TRUE
-c4h_plotskill(skill = skill_point$BSS10$rpss,
+c4h_plotskill(skill = skill_point$BSS10$bss,
               sign = skill_point$BSS10$sign,
               boundaries = areas)
 }
+}
 \seealso{
-\code{\link[=c4h_postprocess]{c4h_postprocess()}},  \code{\link[=c4h_plot]{c4h_plot()}}
+\code{\link[=c4h_postprocess]{c4h_postprocess()}} for calculating forcast skill and \code{\link[=c4h_plot]{c4h_plot()}}
+for general plotting of \code{s2dv} objects.
 }

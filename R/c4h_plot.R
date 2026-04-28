@@ -40,7 +40,13 @@
 #' @returns A plot
 #' @export
 #'
+#' @importFrom rlang .data
+#'
+#' @seealso [c4h_plotskill()] for plotting forecast skill metrics from
+#' [c4h_postprocess()]
+#'
 #' @examples
+#' \donttest{
 #' library("sf")
 #'
 #' # Region municipalities
@@ -74,6 +80,7 @@
 #' fcst_aggr <- c4h_space(fcst, mun)
 #' c4h_plot(fcst_aggr, ensemble = 1:5, lwd = 0.1,
 #'          title = "Temp. by municipality", coordgrid = TRUE)
+#' }
 c4h_plot <- function(
   data,
   var = NULL,
@@ -627,11 +634,6 @@ c4h_plot <- function(
       ) +
       ggplot2::xlab("") +
       ggplot2::ylab("")
-
-    if (!isTRUE(coordgrid)) {
-      p <- p +
-        ggplot2::theme(strip.text.y = ggplot2::element_text(angle = 90))
-    } # REVIEW this condition can never be met
   } else {
     p <- p +
       ggplot2::theme_void() +

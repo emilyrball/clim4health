@@ -37,6 +37,7 @@ as the new s2dv sdate coordinate.
 }
 }
 \examples{
+\donttest{
 # Load a forecast
 fcst <- c4h_load(system.file("extdata", "forecast", package = "clim4health"),
                  var = "t2m",
@@ -67,4 +68,5 @@ obs$dims
 # Compute climatology (average over years)
 obs_coll <- c4h_collapse(obs, dim = "sdate")
 obs_coll$dims
+}
 }

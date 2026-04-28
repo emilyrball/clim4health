@@ -8,12 +8,8 @@
 #' @param skill *s2dv_cube* object with the skill data to be plotted.
 #' @param sign An additional optional binary *s2dv_cube* indicating
 #' significance.
-#' @param sdate Numerical index of the forecast starting time to be plotted.
-#' Defaults to NULL (all starting dates).
 #' @param time Numerical index of the time to be plotted. Defaults to NULL (all
 #' times).
-#' @param ensemble Numerical index of the ensemble member to be plotted.
-#' Defaults to NULL (all ensemble members).
 #' @param boundaries Polygon boundaries to add to the map.  Set to NULL for no
 #' boundaries (default), otherwise supply a polygon `sf` object or set to
 #' "countries" for coarse country boundaries.
@@ -29,12 +25,17 @@
 #' climatologies.
 #' @param coordgrid If TRUE, display coordinate grids on the map.
 #' @param ... Extra arguments indicating fixed aesthetics to be passed to
-#'`stars::geom_stars`, including `lwd`, `alpha` and `colour`.
+#'`stars::geom_stars`, including `lwd`, `alpha`, `size` and `colour`.
 #' @returns A plot
 #' @export
 #'
-#' @seealso [c4h_postprocess()],  [c4h_plot()]
+#' @importFrom rlang .data
+#'
+#' @seealso [c4h_postprocess()] for calculating forcast skill and [c4h_plot()]
+#' for general plotting of `s2dv` objects.
+#'
 #' @examples
+#' \donttest{
 #' # DISCLAIMER: The purpose of these examples is to show the functionality
 #' # of the different functions. To perform postprocessing, a much larger time
 #' # series is required.
@@ -73,10 +74,10 @@
 #' )
 #' hcst_dwn <- dwn$exp
 #' skill_grid <- c4h_postprocess(exp = hcst_dwn, obs = obs, metrics = "BSS")
-#' c4h_plotskill(skill_grid$BSS10$rpss, skill_grid$BSS10$sign)
+#' c4h_plotskill(skill_grid$BSS10$bss, skill_grid$BSS10$sign)
 #' # Make some artificial significance for testing
 #' skill_grid$BSS10$sign$data[,,,,, 3:8, 15:25] <- TRUE
-#' c4h_plotskill(skill = skill_grid$BSS10$rpss, sign = skill_grid$BSS10$sign)
+#' c4h_plotskill(skill = skill_grid$BSS10$bss, sign = skill_grid$BSS10$sign)
 #'
 #' # Example with polygon data
 #' areas <- sf::read_sf(system.file("extdata", "areas", "munip_vallecauca.gpkg",
@@ -119,36 +120,43 @@
 #' skill_point <- c4h_postprocess(exp = hcst_dwn,
 #'                                obs = point_locs,
 #'                                metrics = "BSS")
-#' c4h_plotskill(skill = skill_point$BSS10$rpss, boundaries = areas)
+#' c4h_plotskill(skill = skill_point$BSS10$bss, boundaries = areas)
 #' # Make some artificial significance for testing
 #' skill_point$BSS10$sign$data[1, 1, 1, 1:3, 1, 4:6] <- TRUE
-#' c4h_plotskill(skill = skill_point$BSS10$rpss,
+#' c4h_plotskill(skill = skill_point$BSS10$bss,
 #'               sign = skill_point$BSS10$sign,
 #'               boundaries = areas)
+#' }
 
 c4h_plotskill <- function(
   skill,
   sign = NULL,
-  sdate = NULL,
   time = NULL,
-  ensemble = NULL,
   boundaries = NULL,
   mask_boundaries = FALSE,
   title = NULL,
   legend = NULL,
-  palette = "-Green",
-  noskillcol = "#D0C1F5",
+  palette = "SunsetDark",
+  noskillcol = "#b7d6ff",
   coordgrid = FALSE,
   ...
 ) {
-  # 1. Data checks ---- # nolint: indentation_linter.
+  # 1. Data checks ----
 
   # Get skill array info
   if (inherits(skill, "s2dv_cube")) {
     dims_skill <- skill$dims
     plot_skill <- skill$data
   } else {
-    stop("'skill' must be an s2dv array.")
+    stop("'skill' must be an s2dv_cube.")
+  }
+
+  # Requirements: sdate and ensemble
+  if (dims_skill["sdate"] != 1 || dims_skill["ensemble"] != 1) {
+    stop(
+      "'sdate' and 'ensemble' dimensions must have a length of one. ",
+      "Please verify you are plotting the output of c4h_postprocess()"
+    )
   }
 
   # Requirements: skill data
@@ -165,7 +173,7 @@ c4h_plotskill <- function(
       dims_sign <- sign$dims
       plot_sign <- sign$data
     } else {
-      stop("'sign' must be an s2dv array.")
+      stop("'sign' must be an s2dv_cube.")
     }
     if (!is.logical(plot_sign)) {
       stop("'sign' data must be of type logical (TRUE/FALSE).")
@@ -173,19 +181,6 @@ c4h_plotskill <- function(
     if (!identical(dims_skill, dims_sign)) {
       stop("The dimensions of 'skill' and 'sign' must be identical.")
     }
-  }
-
-  # Requirements: sdate
-  if (!is.null(sdate) && !is.numeric(sdate)) {
-    stop("'sdate' must be of type numeric.")
-  } else if (!is.null(sdate) && any(sdate > dims_skill["sdate"])) {
-    stop(paste0(
-      "A wrong 'sdate' has been selected (possible range: 1 - ",
-      dims_skill["sdate"],
-      ")."
-    ))
-  } else if (is.null(sdate)) {
-    sdate <- 1:dims_skill["sdate"]
   }
 
   # Requirements: time
@@ -201,39 +196,6 @@ c4h_plotskill <- function(
     time <- 1:dims_skill["time"]
   }
 
-  # Requirements: ensemble
-  if (!is.null(ensemble) && !isTRUE(ensemble) && !is.numeric(ensemble)) {
-    stop("'ensemble' must be either TRUE, NULL, or of type numeric.")
-  } else if (
-    !is.null(ensemble) &&
-      !isTRUE(ensemble) &&
-      any(ensemble > dims_skill["ensemble"])
-  ) {
-    stop(paste0(
-      "A wrong 'ensemble' has been selected (possible range: 1 - ",
-      dims_skill["time"],
-      ")."
-    ))
-  } else if (is.null(ensemble)) {
-    ensemble <- 1:dims_skill["ensemble"]
-  }
-
-  # Only two dimensions can have length > 1
-  if (length(sdate) > 1 && length(time) > 1 && length(ensemble) > 1) {
-    stop(paste0(
-      "Only two out of 'sdate', 'time' and 'ensemble' can have a ",
-      "length larger than one."
-    ))
-  } else {
-    # Faceting requirements
-    facet_vars <- list(sdate = sdate, time = time, ensemble = ensemble)
-    facet_vars <- names(facet_vars)[sapply(facet_vars, function(x) {
-      length(x) > 1
-    })]
-    f1 <- if (length(facet_vars) >= 1) facet_vars[1] else NULL
-    f2 <- if (length(facet_vars) >= 2) facet_vars[2] else NULL
-  }
-
   # Requirements: boundaries
   if (!is.null(boundaries)) {
     if (!inherits(boundaries, "sf")) {
@@ -247,45 +209,20 @@ c4h_plotskill <- function(
   }
 
   # Number of panels
-  if (length(time) * length(sdate) * length(ensemble) > 30) {
+  if (length(time) > 30) {
     warning(paste0(
       "The number of panels is very large, consider selecting a ",
-      "smaller set of times/ensemble members/start dates."
+      "smaller set of times."
     ))
   }
 
   # 2. Data preprocessing ----
-
-  # Identify reanalysis/stations/areas and transform 'time' dimension if needed
-  if (dims_skill["sdate"] == 1) {
-    skill$coords$time <- skill$attrs$Dates
-    if (!is.null(sign)) sign$coords$time <- sign$attrs$Dates
-  } else {
-    skill$coords$sdate <- skill$attrs$Dates[, 1]
-    if (!is.null(sign)) sign$coords$sdate <- sign$attrs$Dates[, 1]
-  }
-
-  # Select 'sdate' if needed
-  if (all(sdate %in% 1:dims_skill["sdate"])) {
-    plot_skill <- .subset_array_named(plot_skill, sdate = sdate)
-    if (!is.null(sign)) {
-      plot_sign <- .subset_array_named(plot_sign, sdate = sdate)
-    }
-  }
 
   # Select 'time' if needed
   if (all(time %in% 1:dims_skill["time"])) {
     plot_skill <- .subset_array_named(plot_skill, time = time)
     if (!is.null(sign)) {
       plot_sign <- .subset_array_named(plot_sign, time = time)
-    }
-  }
-
-  # Select ensemble member if needed
-  if (all(ensemble %in% 1:dims_skill["ensemble"])) {
-    plot_skill <- .subset_array_named(plot_skill, ensemble = ensemble)
-    if (!is.null(sign)) {
-      plot_sign <- .subset_array_named(plot_sign, ensemble = ensemble)
     }
   }
 
@@ -332,17 +269,17 @@ c4h_plotskill <- function(
     plot_skill <- stars::st_set_dimensions(
       plot_skill,
       "sdate",
-      values = c(skill$coords$sdate)[sdate]
+      values = c(skill$coords$sdate)
     )
     plot_skill <- stars::st_set_dimensions(
       plot_skill,
       "ensemble",
-      values = c(skill$coords$ensemble)[ensemble]
+      values = c(skill$coords$ensemble)
     )
     plot_skill <- stars::st_set_dimensions(
       plot_skill,
       "time",
-      values = c(skill$coords$time)[time]
+      values = c(skill$attrs$Dates)[time]
     )
     sf::st_crs(plot_skill) <- 4326
 
@@ -382,9 +319,9 @@ c4h_plotskill <- function(
       dimensions = stars::st_dimensions(
         dataset = c(skill$coords$dataset),
         var = c(skill$coords$var),
-        sdate = c(skill$coords$sdate)[sdate],
-        time = c(skill$coords$time)[time],
-        ensemble = c(skill$coords$ensemble)[ensemble],
+        sdate = c(skill$coords$sdate),
+        time = c(skill$attrs$Dates)[time],
+        ensemble = c(skill$coords$ensemble),
         location = point_geom
       )
     )
@@ -416,9 +353,9 @@ c4h_plotskill <- function(
       dimensions = stars::st_dimensions(
         dataset = c(skill$coords$dataset),
         var = c(skill$coords$var),
-        sdate = c(skill$coords$sdate)[sdate],
-        time = c(skill$coords$time)[time],
-        ensemble = c(skill$coords$ensemble)[ensemble],
+        sdate = c(skill$coords$sdate),
+        time = c(skill$attrs$Dates)[time],
+        ensemble = c(skill$coords$ensemble),
         area = skill$attrs$area$geom
       )
     )
@@ -473,43 +410,22 @@ c4h_plotskill <- function(
       # Skill hatching
       skill_simple <- plot_skill[2, drop = TRUE]
 
-      if (is.null(f1)) {
-        # No dimension other than lon/lat
-        skill_polys <- sf::st_as_sf(skill_simple, long = TRUE, merge = TRUE)
-        skill_polys <- skill_polys[skill_polys$sign, ]
-      } else if (!is.null(f1)) {
-        # Valid 1st faceting variable - we need to loop
-        skill_polys <- sf::st_sf(geom = sf::st_sfc())
-        sf::st_crs(skill_polys) <- 4326 # Empty object to append to
-        dim_f1 <- stars::st_get_dimension_values(skill_simple, f1)
-        for (i in seq_along(dim_f1)) {
-          skill_simple_i <- .slice_stars_dimname(skill_simple, f1, i)
-          skill_simple_i <- skill_simple_i[, drop = TRUE]
-          if (!is.null(f2)) {
-            # Valid 2nd faceting variable - loop again
-            dim_f2 <- stars::st_get_dimension_values(skill_simple_i, f2)
-            for (j in dim_f2) {
-              skill_simple_ij <- .slice_stars_dimname(skill_simple_i, f2, j)
-              skill_simple_ij <- skill_simple_ij[, drop = TRUE]
-              skill_polys_ij <- sf::st_as_sf(
-                skill_simple_ij,
-                long = TRUE,
-                merge = TRUE
-              )
-              skill_polys_ij[f1] <- dim_f1[i]
-              skill_polys_ij[f2] <- dim_f2[j]
-            }
-          } else {
-            skill_polys_ij <- sf::st_as_sf(
-              skill_simple_i,
-              long = TRUE,
-              merge = TRUE
-            )
-            skill_polys_ij[f1] <- dim_f1[i]
-          }
-          skill_polys_ij <- skill_polys_ij[skill_polys_ij$sign, ]
-          skill_polys <- rbind(skill_polys, skill_polys_ij)
-        }
+      # Loop through time
+      skill_polys <- sf::st_sf(geom = sf::st_sfc())
+      sf::st_crs(skill_polys) <- 4326 # Empty object to append to
+      dim_f1 <- stars::st_get_dimension_values(skill_simple, "time")
+      for (i in seq_along(dim_f1)) {
+        skill_simple_i <- .slice_stars_dimname(skill_simple, "time", i)
+        skill_simple_i <- skill_simple_i[, drop = TRUE]
+
+        skill_polys_i <- sf::st_as_sf(
+          skill_simple_i,
+          long = TRUE,
+          merge = TRUE
+        )
+        skill_polys_i["time"] <- dim_f1[i]
+        skill_polys_i <- skill_polys_i[skill_polys_i$sign == 1, ]
+        skill_polys <- rbind(skill_polys, skill_polys_i)
       }
 
       suppressMessages({
@@ -533,18 +449,14 @@ c4h_plotskill <- function(
               order = 2,
               override.aes = list(
                 fill = "white",
-                pattern_density = 0.2,
-                pattern_spacing = 0.01,
+                pattern_density = 0.15,
+                pattern_spacing = 0.02,
                 lwd = 0.2
               )
             )
           ) +
-          ggplot2::scale_x_continuous(labels = function(x) {
-            paste0(ifelse(x < 0, "-", ""), abs(x))
-          }) +
-          ggplot2::scale_y_continuous(labels = function(y) {
-            paste0(ifelse(y < 0, "-", ""), abs(y))
-          })
+          ggplot2::scale_x_continuous(labels = .abs_labels) +
+          ggplot2::scale_y_continuous(labels = .abs_labels)
       })
     }
   } else if ("location" %in% names(dims_skill)) {
@@ -614,12 +526,8 @@ c4h_plotskill <- function(
         ylim = sf::st_bbox(plot_skill)[c("ymin", "ymax")],
         expand = TRUE
       ) +
-      ggplot2::scale_x_continuous(labels = function(x) {
-        paste0(ifelse(x < 0, "-", ""), abs(x))
-      }) +
-      ggplot2::scale_y_continuous(labels = function(y) {
-        paste0(ifelse(y < 0, "-", ""), abs(y))
-      })
+      ggplot2::scale_x_continuous(labels = .abs_labels) +
+      ggplot2::scale_y_continuous(labels = .abs_labels)
   } else if ("area" %in% names(dims_skill)) {
     # Polygon data ----
     if (!is.null(boundaries)) {
@@ -648,16 +556,13 @@ c4h_plotskill <- function(
         ggplot2::geom_sf(
           data = plot_skill,
           ggplot2::aes(fill = .data[[varname]]),
+          show.legend = TRUE,
           ...
         )
     }
     p <- p +
-      ggplot2::scale_x_continuous(labels = function(x) {
-        paste0(ifelse(x < 0, "-", ""), abs(x))
-      }) +
-      ggplot2::scale_y_continuous(labels = function(y) {
-        paste0(ifelse(y < 0, "-", ""), abs(y))
-      })
+      ggplot2::scale_x_continuous(labels = .abs_labels) +
+      ggplot2::scale_y_continuous(labels = .abs_labels)
     # Skill hatching
     if (!is.null(sign)) {
       p <- p +
@@ -685,35 +590,18 @@ c4h_plotskill <- function(
               lwd = 0.2
             )
           )
+        ) +
+        ggplot2::coord_sf(
+          xlim = sf::st_bbox(plot_skill)[c("xmin", "xmax")],
+          ylim = sf::st_bbox(plot_skill)[c("ymin", "ymax")],
+          expand = TRUE
         )
     }
   }
 
-  # Faceting
-  if (!is.null(f1) && is.null(f2)) {
-    # Wrap
-    p <- p +
-      ggplot2::facet_wrap(
-        stats::as.formula(paste("~", f1)),
-        labeller = "label_both"
-      )
-  } else if (!is.null(f1) && !is.null(f2)) {
-    # Grid
-    if (!isTRUE(coordgrid)) {
-      p <- p +
-        ggplot2::facet_grid(
-          stats::as.formula(paste(f1, "~", f2)),
-          labeller = "label_both",
-          switch = "y"
-        )
-    } else {
-      p <- p +
-        ggplot2::facet_grid(
-          stats::as.formula(paste(f1, "~", f2)),
-          labeller = "label_both"
-        )
-    }
-  }
+  # Wrap
+  p <- p +
+    ggplot2::facet_wrap(stats::as.formula("~time"), labeller = "label_both")
 
   # Palette ----
   level_names <- levels(plot_skill[[varname]])
@@ -762,12 +650,8 @@ c4h_plotskill <- function(
           ylim = sf::st_bbox(plot_skill)[c("ymin", "ymax")],
           expand = TRUE
         ) +
-        ggplot2::scale_x_continuous(labels = function(x) {
-          paste0(ifelse(x < 0, "-", ""), abs(x))
-        }) +
-        ggplot2::scale_y_continuous(labels = function(y) {
-          paste0(ifelse(y < 0, "-", ""), abs(y))
-        })
+        ggplot2::scale_x_continuous(labels = .abs_labels) +
+        ggplot2::scale_y_continuous(labels = .abs_labels)
     )
   }
 
@@ -783,19 +667,14 @@ c4h_plotskill <- function(
           linewidth = 0.1
         ),
         panel.grid.minor = ggplot2::element_blank(),
-        panel.grid.major = ggplot2::element_line(linewidth = 0.2),
-        axis.ticks = ggplot2::element_line(linewidth = 0.3, color = "grey50"),
+        panel.grid.major = ggplot2::element_line(linewidth = 0.3),
+        axis.ticks = ggplot2::element_line(linewidth = 0.3, color = "grey40"),
         axis.text = ggplot2::element_text(size = 7, color = "grey30"),
         strip.text.y = ggplot2::element_text(margin = ggplot2::margin(b = 0)),
         strip.text.x = ggplot2::element_text(margin = ggplot2::margin(b = 0))
       ) +
       ggplot2::xlab("") +
       ggplot2::ylab("")
-
-    if (!isTRUE(coordgrid)) {
-      p <- p +
-        ggplot2::theme(strip.text.y = ggplot2::element_text(angle = 90))
-    }
   } else {
     p <- p +
       ggplot2::theme_void() +
@@ -824,24 +703,6 @@ c4h_plotskill <- function(
     } else {
       p <- p + ggplot2::labs(col = legend)
     }
-  }
-
-  # Fix labels when time is numeric
-  if (
-    (!"sdate" %in% c(f1, f2)) &&
-      ("time" %in% c(f1, f2)) &&
-      is.numeric(skill$coords$time)
-  ) {
-    if ("longitude" %in% names(dims_skill)) {
-      subtitle <- paste0(
-        "Start date: ",
-        stars::st_get_dimension_values(plot_skill, "sdate")
-      )
-    } else {
-      subtitle <- paste0("Start date: ", plot_skill$sdate[1])
-    }
-    p <- p +
-      ggplot2::labs(subtitle = subtitle)
   }
 
   return(p)
