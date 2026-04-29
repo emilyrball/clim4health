@@ -1439,5 +1439,14 @@
   data$coords$latitude <-
     round(data$coords$latitude[seq_along(data$coords$latitude)], 4)
 
+  units <- data$attrs$Variable$metadata[[variable]]$units
+  names(units) <- variable
+
+  metadata <- list(variable = variable,
+                   units = units,
+                   source_files = data$attrs$Variable$metadata$source_files)
+
+  data$attrs$Variable$metadata <- metadata
+
   return(data)
 }
