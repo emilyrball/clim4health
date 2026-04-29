@@ -17,7 +17,7 @@ c4h_downscale(
   points = NULL,
   method_point_interp = NULL,
   lr_method = NULL,
-  loocv = FALSE,
+  loocv = TRUE,
   ...
 )
 }
@@ -54,9 +54,9 @@ be applied after an interpolation. Accepted methods are 'quantile_mapping',
 abbreviations 'dbc','qm' can also be used. The default value is NULL.}
 
 \item{method_remap}{a character vector indicating the regridding method to
-be passed to CDORemap. Accepted methods are "con", "bil", "bic", "nn",
-"con2". If "nn" method is to be used, CDO_1.9.8 or newer version is required.
-The default value is NULL.}
+be passed to CDORemap. Accepted methods are "con", "bil" (or "bilinear"),
+"bic", "nn", "con2". If "nn" method is to be used, CDO_1.9.8 or newer
+version is required. The default value is NULL.}
 
 \item{points}{a list of two elements containing the point latitudes and
 longitudes of the locations to downscale the model data. The list must
@@ -87,7 +87,7 @@ regression model is then built using the principal components that explain
 process. The default value is NULL.}
 
 \item{loocv}{a logical indicating whether to apply leave-one-out
-cross-validation when applying the bias correction. Default to FALSE.}
+cross-validation when applying the bias correction. Defaults to TRUE.}
 
 \item{...}{additional arguments to be passed to the CSDownscale function.}
 }
@@ -97,8 +97,15 @@ A list of statistically downscaled data as s2dv_cube objects.
 \description{
 Downscale and calibrate climate data.
 }
+\note{
+See clim4health_postprocessing.Rmd in the package vignettes for a
+detailed tutorial on function arguments and usage.
+}
 \examples{
 \donttest{
+# DISCLAIMER: The purpose of these examples is to show the functionality
+# of the different functions. To perform downscaling and calibration, a
+# much larger time series is required.
 hcst <- c4h_load(system.file("extdata", "hindcast", package = "clim4health"),
                  variable = "t2m",
                  year = 2010:2012,
