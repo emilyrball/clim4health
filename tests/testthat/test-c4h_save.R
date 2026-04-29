@@ -240,12 +240,12 @@ test_that("2. failure if s2dv_cube missing lat/lon dims for s2dv format", {
 
 test_that("3. c4h_save dispatches to .save_s2dv", {
   cube <- make_mock_fcst_cube()
-  mock_s2dv <- function(x, crs) "s2dv_result"
+  mock_s2dv <- function(x, crs, drop) "s2dv_result"
 
   with_mocked_bindings(
     .save_s2dv = mock_s2dv,
     {
-      out <- c4h_save(cube, "s2dv", "dummy_path.nc")
+      out <- c4h_save(cube, "s2dv", "dummy_path.nc", drop = TRUE)
       expect_equal(out, "s2dv_result")
     }
   )
