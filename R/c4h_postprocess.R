@@ -315,7 +315,6 @@ c4h_postprocess <- function(
     sig_method_rmsss <- "one-sided Fisher"
   } else {
     sig_method_brier <- sig_method_rmsss <- sig_method
-
   }
   if (sig_method_rmsss == "RandomWalk") {
     sig_method_rmsss <- "Random Walk"
