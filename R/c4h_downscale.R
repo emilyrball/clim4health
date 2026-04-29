@@ -289,8 +289,7 @@ c4h_downscale <- function(
           " specified, downscaling is to a grid and ",
           "'method_remap' must be specified. 'method_remap'",
           " must be a character vector indicating the regridding ",
-          "method. Accepted methods are",
-          " 'con', 'bil', 'bic', 'nn', 'con2'."
+          "method. "
         ))
       }
       if (downscale_function == "Interpolation") {
@@ -305,17 +304,6 @@ c4h_downscale <- function(
           " passed to CDO, and it must be a grid recognised by CDO."
         ))
       } else {
-        # case: 'Intbc' or 'Intlr' downscaling to a grid
-        if (is.null(obs)) {
-          # case: 'Intbc' or 'Intlr' downscaling to a grid requires 'obs'
-          stop(paste0(
-            "If using '",
-            downscale_function,
-            "', 'obs' must be ",
-            "specified. It must be an s2dv_cube object loaded and ",
-            "transformed using clim4health functions."
-          ))
-        }
         # case: 'Intbc' or 'Intlr' downscaling to a grid requires 'target_grid'
         message(paste0(
           "Note: If using '",
@@ -335,11 +323,12 @@ c4h_downscale <- function(
       # case: if more than one method_remap is provided, stop
       stop("'method_remap' must be a single character string")
     } else if (
-      !method_remap %in% c("con", "bil", "bilinear", "bic", "nn", "con2")
+      !method_remap %in%
+        c("con", "bil", "bilinear", "bic", "bicubic", "nn", "con2")
     ) {
       stop(
         "Accepted values for 'method_remap' are ",
-        "'con', 'bil', 'bilinear', 'bic', 'nn', 'con2'."
+        "'con', 'bil', 'bilinear', 'bic', 'bicubic', 'nn', 'con2'."
       )
     }
   }

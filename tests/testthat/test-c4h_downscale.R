@@ -199,14 +199,7 @@ test_that("'Interpolation' without points or grid", {
     "'target_grid' must be specified"
   )
 })
-test_that("'Intbc' or 'Intlr' downscaling to a grid requires 'obs'", {
-  exp <- mock_s2dv_grid()
-  expect_error(
-    c4h_downscale("Intbc", exp, method_remap = "nn"),
-    "If using 'Intbc', 'obs' must be specified"
-  )
-})
-test_that("'Analogs' downscaling to a grid requires 'obs'", {
+test_that("'Downscaling to a grid requires 'obs'", {
   exp <- mock_s2dv_grid()
   expect_error(
     c4h_downscale("Analogs", exp, method_remap = "nn"),
@@ -264,4 +257,146 @@ test_that("NULL bc method for areal data", {
   bctest <- c4h_downscale("Intbc", exp, obs, bc_method = "bias")
   expect_equal(names(bctest), c("obs", "exp"))
   expect_true(inherits(bctest$obs, "s2dv_cube"))
+})
+
+
+# Analogs with no grid ----
+test_that("Analogs with no grid", {
+  hcst <- c4h_load(
+    system.file("extdata", "hindcast", package = "clim4health"),
+    variable = "t2m",
+    year = 2010:2012,
+    month = 1,
+    leadtime_month = 1:3,
+    ext = "nc"
+  )
+  lats <- hcst$coords$latitude
+  lons <- hcst$coords$longitude
+  obs <- c4h_load(
+    system.file("extdata", "reanalysis", package = "clim4health"),
+    variable = "t2m",
+    year = 2010:2012,
+    month = 1,
+    leadtime_month = 1:3,
+    bbox = c(max(lats), min(lons), min(lats), max(lons)),
+    ext = "nc"
+  )
+  expect_message(
+    {
+      suppressWarnings({
+        dwn <- c4h_downscale(
+          "Analogs",
+          exp = hcst,
+          obs = obs,
+          method_remap = "bilinear"
+        )
+      })
+    },
+    "c4h_downscale will use the grid of 'exp' as the coarse grid"
+  )
+
+  expect_true(all(names(dwn) %in% c("obs", "exp")))
+  expect_true(inherits(dwn$obs, "s2dv_cube"))
+})
+
+# Interpolation with points ----
+test_that("Interpolation with points", {
+  hcst <- c4h_load(
+    system.file("extdata", "hindcast", package = "clim4health"),
+    variable = "t2m",
+    year = 2010:2012,
+    month = 1,
+    leadtime_month = 1:3,
+    ext = "nc"
+  )
+  lats <- hcst$coords$latitude
+  lons <- hcst$coords$longitude
+  obs <- c4h_load(
+    system.file("extdata", "reanalysis", package = "clim4health"),
+    variable = "t2m",
+    year = 2010:2012,
+    month = 1,
+    leadtime_month = 1:3,
+    bbox = c(max(lats), min(lons), min(lats), max(lons)),
+    ext = "nc"
+  )
+  points <- list(longitude = -76, latitude = 4)
+  dwn <- c4h_downscale(
+    "Interpolation",
+    exp = hcst,
+    obs = obs,
+    points = points,
+    method_point_interp = "bilinear"
+  )
+  expect_true(all(names(dwn) %in% c("obs", "exp")))
+  expect_true(inherits(dwn$exp, "s2dv_cube"))
+})
+
+# Intbc with bbox  ----
+test_that("Intbc with bbox", {
+  hcst <- c4h_load(
+    system.file("extdata", "hindcast", package = "clim4health"),
+    variable = "t2m",
+    year = 2010:2012,
+    month = 1,
+    leadtime_month = 1:3,
+    ext = "nc"
+  )
+  lats <- hcst$coords$latitude
+  lons <- hcst$coords$longitude
+  obs <- c4h_load(
+    system.file("extdata", "reanalysis", package = "clim4health"),
+    variable = "t2m",
+    year = 2010:2012,
+    month = 1,
+    leadtime_month = 1:3,
+    bbox = c(max(lats), min(lons), min(lats), max(lons)),
+    ext = "nc"
+  )
+  dwn <- c4h_downscale(
+    "Intbc",
+    exp = hcst,
+    obs = obs,
+    method_remap = "bic",
+    bc_method = "bias",
+    bbox = c(max(lats), min(lons), min(lats), max(lons))
+  )
+
+  expect_true(all(names(dwn) %in% c("obs", "exp")))
+  expect_true(inherits(dwn$exp, "s2dv_cube"))
+})
+
+# Intlr with bbox  ----
+test_that("Intlr with bbox", {
+  hcst <- c4h_load(
+    system.file("extdata", "hindcast", package = "clim4health"),
+    variable = "t2m",
+    year = 2010:2012,
+    month = 1,
+    leadtime_month = 1:3,
+    ext = "nc"
+  )
+  lats <- hcst$coords$latitude
+  lons <- hcst$coords$longitude
+  obs <- c4h_load(
+    system.file("extdata", "reanalysis", package = "clim4health"),
+    variable = "t2m",
+    year = 2010:2012,
+    month = 1,
+    leadtime_month = 1:3,
+    bbox = c(max(lats), min(lons), min(lats), max(lons)),
+    ext = "nc"
+  )
+  dwn <- c4h_downscale(
+    "Intlr",
+    exp = hcst,
+    obs = obs,
+    method_remap = "bic",
+    bc_method = "bias",
+    lr_method = "basic",
+    bbox = c(4, -77, 3, -76)
+  )
+
+  expect_true(all(names(dwn) %in% c("obs", "exp")))
+  expect_true(inherits(dwn$exp, "s2dv_cube"))
 })
