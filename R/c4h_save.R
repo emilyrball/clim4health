@@ -8,6 +8,10 @@
 #' @param format A string indicating the format of the object you want to save.
 #' Options are: "s2dv", "terra", "csv" or "polygons"
 #' @param path A string indicating the path to save the file.
+#' @param drop Logical. Only relevant for "s2dv" format. For other data formats,
+#' please use the drop parameter in c4h_convert. If TRUE, dimensions
+#' with only one value will be dropped when saving. If FALSE, they will be
+#' retained. Default is FALSE.
 #'
 #' @returns None
 #' @export
@@ -19,7 +23,7 @@
 #'
 #' c4h_save(fcst, "s2dv", "out.nc")
 #' }
-c4h_save <- function(data, format, path) {
+c4h_save <- function(data, format, path, drop = FALSE) {
   # checks
   if (!inherits(data, "s2dv_cube") && format == "s2dv") {
     stop("Data must be an s2dv_cube for format 's2dv'.")
@@ -38,7 +42,7 @@ c4h_save <- function(data, format, path) {
   }
 
   if (format == "s2dv") {
-    .save_s2dv(data, path)
+    .save_s2dv(data, path, drop = drop)
   } else if (format == "terra") {
     .save_terra(data, path)
   } else if (format == "csv") {
