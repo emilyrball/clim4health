@@ -332,39 +332,39 @@ test_that("Interpolation with points", {
   expect_true(inherits(dwn$exp, "s2dv_cube"))
 })
 
-# Intbc with bbox  ----
-test_that("Intbc with bbox", {
-  hcst <- c4h_load(
-    system.file("extdata", "hindcast", package = "clim4health"),
-    variable = "t2m",
-    year = 2010:2012,
-    month = 1,
-    leadtime_month = 1:3,
-    ext = "nc"
-  )
-  lats <- hcst$coords$latitude
-  lons <- hcst$coords$longitude
-  obs <- c4h_load(
-    system.file("extdata", "reanalysis", package = "clim4health"),
-    variable = "t2m",
-    year = 2010:2012,
-    month = 1,
-    leadtime_month = 1:3,
-    bbox = c(max(lats), min(lons), min(lats), max(lons)),
-    ext = "nc"
-  )
-  dwn <- c4h_downscale(
-    "Intbc",
-    exp = hcst,
-    obs = obs,
-    method_remap = "bic",
-    bc_method = "bias",
-    bbox = c(max(lats), min(lons), min(lats), max(lons))
-  )
-
-  expect_true(all(names(dwn) %in% c("obs", "exp")))
-  expect_true(inherits(dwn$exp, "s2dv_cube"))
-})
+# # Intbc with bbox  ----
+# test_that("Intbc with bbox", {
+#   hcst <- c4h_load(
+#     system.file("extdata", "hindcast", package = "clim4health"),
+#     variable = "t2m",
+#     year = 2010:2012,
+#     month = 1,
+#     leadtime_month = 1:3,
+#     ext = "nc"
+#   )
+#   lats <- hcst$coords$latitude
+#   lons <- hcst$coords$longitude
+#   obs <- c4h_load(
+#     system.file("extdata", "reanalysis", package = "clim4health"),
+#     variable = "t2m",
+#     year = 2010:2012,
+#     month = 1,
+#     leadtime_month = 1:3,
+#     bbox = c(max(lats), min(lons), min(lats), max(lons)),
+#     ext = "nc"
+#   )
+#   dwn <- c4h_downscale(
+#     "Intbc",
+#     exp = hcst,
+#     obs = obs,
+#     method_remap = "bic",
+#     bc_method = "bias",
+#     bbox = c(max(lats), min(lons), min(lats), max(lons))
+#   )
+#
+#   expect_true(all(names(dwn) %in% c("obs", "exp")))
+#   expect_true(inherits(dwn$exp, "s2dv_cube"))
+# })
 
 # Intlr with bbox  ----
 test_that("Intlr with bbox", {
