@@ -20,15 +20,19 @@ knitr::opts_chunk$set(
 )
 ```
 
-------------------------------------------------------------------------
+## Overview
 
-We can load the package clim4health with the following.
+This vignette provides an introduction to "s2dv_cubes", which are the data format used within **clim4health**. It discusses different types of climate data, why an s2dv_cube object is useful to explore these, and how to construct your own s2dv_cube.
+
+## 0. Load the package
+
+First, let's load the package.
 
 ```{r load_package}
 library(clim4health)
 ```
 
-## Forecasts and hindcasts
+## 1. Forecasts and hindcasts
 
 When using subseasonal to decadal predictions, we use *hindcasts* to assess the skill of the predictions.
 
@@ -43,11 +47,9 @@ To compare the hindcast with the observed conditions, we also need to load the o
 
 > 💡 **Tip**: We can also load our observational data with a **two-dimensional time structure** to align it with the hindcast data.
 
-------------------------------------------------------------------------
+## 2. Climate data in clim4health
 
-## Climate data in clim4health
-
-The data used in **clim4health** is always loaded as an `s2dv_cube` object, which is a type of R object included in the `s2dv` package that can handle the complexity of multi-dimensional climate data. The `s2dv_cube` is the primary R object used within **clim4health** to store and manipulate climate data.
+The data used in **clim4health** is always loaded as an `s2dv_cube` object, which is a type of R object included in clim4health dependencies that can handle the complexity of multi-dimensional climate data. The `s2dv_cube` is the primary R object used within **clim4health** to store and manipulate climate data.
 
 ### Loading multi-dimensional data with **c4h_load**
 
@@ -57,19 +59,19 @@ The loading function in **clim4health** is `c4h_load()`, and takes the following
 
 -   `variable` The variable that you want to load. Required.
 
--   `year` A vector of years, e.g. 1994:2016. Default is all years found in the specified path.
+-   `year` A vector of years, e.g. `1994:2016`. Default is all years found in the specified path.
 
--   `month` A vector of months, e.g. c(1,2) for January and February. Default is all months (1:12).
+-   `month` A vector of months, e.g. `c(1,2)` for January and February. Default is all months (`1:12`).
 
--   `day` A vector of days in the month, e.g. c(1, 2, 3) for the first three days of each month. Default is all days.
+-   `day` A vector of days in the month, e.g. `c(1, 2, 3)` for the first three days of each month. Default is all days.
 
--   `time` A vector of hours (0-23). Only needed when datasets are hourly. Default is all hours.
+-   `time` A vector of hours (`0:23`). Only needed when datasets are hourly. Default is all hours.
 
--   `leadtime_month` A vector of months for the forecast leadtime. e.g. c(1,2) for January and February for data initialized in January. Default is "all". If "all" for hindcast and forecast data, all leadtime months will be loaded. If "all" for reanalysis or station data, data will be loaded as a time series in the time dimension, and the sdate dimension will be set to 1.
+-   `leadtime_month` A vector of months for the forecast leadtime. e.g. `c(1,2)` for January and February for data initialized in January. Default is `"all"`. If `"all"` for hindcast and forecast data, all leadtime months will be loaded. If `"all"` for reanalysis or station data, data will be loaded as a time series in the time dimension, and the sdate dimension will be set to 1.
 
--   `ext` File extension. Options include "nc", ".nc", "csv", and ".csv".
+-   `ext` File extension. Options include `"nc"`, `".nc"`, `"csv"`, and `".csv"`.
 
--   `bbox` A vector of coordinates to subset the data spatially. In order: c(lat_max, lon_min, lat_min, lon_max).
+-   `bbox` A vector of coordinates to subset the data spatially. In order: `c(lat_max, lon_min, lat_min, lon_max)`.
 
 We use the parameters `year`, `month`, `day`, `time`, and `leadtime_month` to specify the time period and time dimensions of the data we want to load.
 
@@ -172,8 +174,6 @@ message("print extended information about the list elements in forecast")
 str(forecast)
 ```
 
-`forecast` is an `s2dv_cube` with several dimensions.
-
 ### Data dimensions in clim4health
 
 s2dv_cube dimensions are consistent throughout **clim4health**. They will always contain:
@@ -225,7 +225,7 @@ print(forecast)
 
 ```{=html}
 <pre lang="markdown">
-│forecast$
+forecast$
 │
 ├── data                    # Array with named dimensions containing the data       
 │
@@ -234,7 +234,8 @@ print(forecast)
 ├── coords$                 # Named list of the coordinates of the data array 
 │   ├── dataset                # Index of the dataset(s) loaded
 │   ├── var                    # Name(s) of the variable(s) loaded
-│   ├── sdate                  # Index of the forecast initialisation or start dates
+│   ├── sdate                  # Index of the forecast initialisation or start
+                                 dates
 │   ├── time                   # Index of the forecast lead time
 │   ├── ensemble               # Index of the model ensemble members
 │   ├── latitude               # Values of the latitude coordinates
@@ -243,24 +244,27 @@ print(forecast)
 └── attrs$                  # Named list of all attributes and metadata
     ├── Dates                  # 2-dimensional array of dates (sdate and time)
     ├── Variable               # Named list of variable information
-    │   ├── varName               # Character vector of variable name(s), equal to coords$var
+    │   ├── varName               # Character vector of variable name(s), equal
+                                    to coords$var
     │   └── metadata              # Named list of metadata for all variables
     │       ├── variable             # Character vector of variable name(s)
     │       ├── units                # Named vector of variable unit(s)
-    │       └── source_files         # Character vector of the source file(s) for each variable
-    └── source_files           # Character vector of all source files used to load the data
+    │       └── source_files         # Character vector of the source file(s)
+                                       for each variable
+    └── source_files           # Character vector of all source files used to
+                                 load the data
 </pre>
 ```
 
 For example, to access the units of a given variable, you can type `forecast$attrs$Variable$metadata$units`. Equivalently, the function `c4h_convert_units()` looks in this location to find the units of the variable(s), so you can access the same information by typing `c4h_convert_units(forecast)`.
 
-# Constructing an s2dv_cube from scratch
+## 3. Constructing an s2dv_cube from scratch
 
 Suppose you have some climate data in csv format, and you want to convert it into an s2dv_cube to be able to use it with the functions in **clim4health**. Given the diverse nature of climate data, there is no one-size-fits-all approach to converting data into an s2dv_cube, but the following steps can be used as a general guide.
 
-## 1. Load the data
+### 1. Load the data
 
-Let's load the example csv file stored in clim4health.
+Let's load the example csv file stored in clim4health using another method.
 
 ```{r load_csv}
 csv_path <- system.file("extdata/stations/", package = "clim4health")
@@ -275,7 +279,9 @@ print(head(data_in))
 
 We see that this data contains columns called `station_code`, `lat`, `lon`, `date`, `temp_mean`, `temp_min`, and `temp_max`.
 
-## 2. Reshape the data
+> 💡 **Tip**: At this point, you could also filter your data by requirements such as relevant dates, latitudes, longitudes, and variables.
+
+### 2. Reshape the data
 
 First, let's extract the coordinates that our data will be stored on.
 
@@ -332,7 +338,7 @@ for (i in seq_along(var)) {
 
 > 💡 **Tip**: Here we loop over dimensions to explicitly show how the new array is filled, but it can be more efficiently filled in case there are more locations or dates. Similarly, we set sdate to have length 1 here, but you can also add a loop over this too.
 
-## 3. Add dimensions, coordinates, and attributes
+### 3. Add dimensions, coordinates, and attributes
 
 Now that we have reshaped the data, we need to add the dimensions, coordinates, and attributes to create the full s2dv_cube object.
 
@@ -367,9 +373,9 @@ dim(new_attrs$Dates) <- c(sdate = 1, time = length(dates))
 
 > 💡 **Warning**: Converting to POSIXct objects can flatten your dates array, so make sure you double check both the values of the dates array and its dimension!
 
-## 4. Create the s2dv_cube object
+### 4. Create the s2dv_cube object
 
-Finally, we can create the s2dv_cube object. There are two ways to do this. The first is simply to manually create the list and set its class, and the second is to use the function `as.s2dv_cube()` from **CSTools**.
+Finally, we can create the s2dv_cube object. There are two ways to do this. The first is simply to manually create the list and set its class, and the second is to use the function `s2dv_cube()` from the package **CSTools**.
 
 ```{r create_s2dv_cube}
 # method 1: manually create the list and set its class
