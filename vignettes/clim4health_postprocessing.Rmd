@@ -186,7 +186,7 @@ To calculate the ROCSS, we calculate the area under the curve (AUC), which range
 First, we need to downscale the hindcast to the same spatial resolution as the observations.
 
 ```{r }
-dwn <- c4h_downscale("Intbc", exp = hcst, obs = obs,
+dwn <- c4h_downscale("Intbc", exp = hcst, obs = obs, loocv = FALSE,
                      method_remap = "bilinear", bc_method = "evmos",
                      target_grid = obs$attrs$source_files[1])
 ```

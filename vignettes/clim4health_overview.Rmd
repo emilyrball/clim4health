@@ -263,7 +263,7 @@ hcst <- c4h_convert_units(hcst, to = "celsius", var = "t2m", from = "K")
 rean <- c4h_convert_units(rean, to = "celsius", var = "t2m", from = "K")
 
 # Display the new units
-c4h_convert_units(fcst, var = "t2m")
+print(c4h_convert_units(fcst, var = "t2m"))
 ```
 
 > 📝 **NOTE**: If you are using monthly mean data from CDS, take care with units, in particular for variables such as precipitation. For example, the precipitation variable to be downloaded from the ERA5-Land monthly mean dataset is called `total_precipitation`, and the data is stored in units of `m`. However, this does not refer to *monthly* total precipitation. Instead, it is the *monthly mean of the daily* total precipitation. In this case, you would also need to perform an additional transformation to obtain the monthly sum precipitation. Unfortunately, **clim4health** cannot differentiate between the identical units of `m`, and so you would have to make this conversion manually (by typing `output_data$data <- output_data$data * 30.44`).
@@ -362,7 +362,8 @@ cal_hcst <- c4h_downscale(downscale_function = "Intbc",
                           obs = rean,
                           exp = hcst,
                           bc_method = "bias",
-                          method_remap = "bilinear")
+                          method_remap = "bilinear",
+                          loocv = FALSE)
 ```
 
 Plot the downscaled forecast and hindcast data to visualize the results of the downscaling.
