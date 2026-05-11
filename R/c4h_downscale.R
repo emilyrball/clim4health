@@ -426,7 +426,8 @@ c4h_downscale <- function(
     source_file_exp <- exp$attrs$source_files[1]
 
     tmp_file_exp <- .reduce_source_file(source_file_exp)
-    if (grepl("esarchive", source_file_exp)) {
+    if (grepl("esarchive/recon", source_file_exp) ||
+          grepl("esarchive/exp", source_file_exp)) {
       # if source file is in esarchive, lon is 0-360 in source file
       tmp_file_exp2 <- gsub(".nc", "_lon360.nc", tmp_file_exp)
       system(paste0(
