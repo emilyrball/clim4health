@@ -23,23 +23,27 @@ unit-test:
   script:
     - R -e "remotes::install_local('.', dependencies = FALSE, upgrade = 'never')"
     - R -e "testthat::test_dir('tests')"
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      # when: manual
+  interruptible: true
 
 coverage:
   stage: coverage
   tags:
     - ghrexplore_runner
   image: rnunesro/clim4health:latest
+  dependencies:
+    - unit-test # Wait for tests to pass
   script:
+    - R -e "install.packages('DT')"
+    - R -e "install.packages('htmltools')"
     - >
       R -e "
       cov <- covr::package_coverage();
       pct <- covr::percent_coverage(cov);
       cat('\nCoverage:', round(pct,2),'%\n');
-      covr::to_cobertura(cov, 'coverage.xml')
+      covr::report(cov, file = 'coverage-report/index.html')
       "
+  when: on_success # Skip if tests fail
   coverage: '/Coverage:\s*([0-9]+(?:\.[0-9]+)?)\s*%/'
-  #rules:
-    #- if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+  artifacts:
+    paths:
+      - coverage-report/

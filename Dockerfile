@@ -22,6 +22,7 @@ RUN apt-get update && \
     libgdal-dev \
     libgeos-dev \
     libproj-dev \
+    libuv1-dev \
     gdal-bin \
     cmake \
     libabsl-dev \
@@ -37,7 +38,7 @@ RUN apt-get update && \
 # --------------------------------------------------------
 RUN R -e "\
     install.packages( \
-      c('colorspace', 'covr', 'cowplot', 'dplyr', \
+      c('fs', 'colorspace', 'covr', 'cowplot', 'dplyr', \
         'ISOweek', 'knitr', 'lubridate', 'RColorBrewer', 'remotes', \
         'rlang', 'rmarkdown', 'roxygen2', 'sf', 'testthat', 'tidyr', \
         'CSTools','png', 'filelock', 'rstudioapi', 'sp', 'gridpattern', \
