@@ -100,7 +100,7 @@ Additionally, arguments `obs` and `exp_cor` are often required.
 The following figure shows the key arguments for `c4h_downscale()` depending on the downscaling method chosen.
 
 ```{r c4h_downscale_parameters,fig.width=10, fig.height=10, fig.align='center', out.width='100%', echo= FALSE, fig.cap="Structure of the c4h_downscale function, outlining its key arguments and general functionality."}
-knitr::include_graphics("https://gitlab.earth.bsc.es/ghr/clim4health/-/blob/main/man/figures/clim4health_downscale_parameters.svg?ref_type=heads")
+knitr::include_graphics("https://gitlab.earth.bsc.es/ghr/clim4health/-/blob/main/inst/figures/clim4health_downscale_parameters.svg?ref_type=heads")
 ```
 
 `c4h_downscale` returns a named list containing two elements, `exp` and `obs`. `exp` is an s2dv_cube object containing the downscaled data, and `obs` is an s2dv_cube object containing the (potentially downscaled) observational data.
@@ -335,5 +335,5 @@ The choice of parameters for your downscaling is important, and can vary between
 `c4h_downscale` has many optional parameters. The diagram below can be used as a guide to select the appropriate parameters, depending on the `downscale_function` chosen and the type of data being downscaled (gridded, point, polygon). Not all arguments are shown!
 
 ```{r c4h_downscale_flowchart,fig.width=10, fig.height=10, fig.align='center', out.width='100%', echo= FALSE, fig.cap="Flowchart for selecting downscaling parameters. Dashed lines indicate optional arguments."}
-knitr::include_graphics("https://gitlab.earth.bsc.es/ghr/clim4health/-/blob/develop-vignettes/man/figures/c4h_downscale.png?ref_type=heads")
+knitr::include_graphics("https://gitlab.earth.bsc.es/ghr/clim4health/-/blob/develop-vignettes/inst/figures/c4h_downscale.png?ref_type=heads")
 ```

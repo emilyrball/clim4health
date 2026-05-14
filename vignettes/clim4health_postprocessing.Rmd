@@ -81,7 +81,7 @@ c4h_plot(obs, ensemble = TRUE, coordgrid = TRUE)
 Depending on the metrics chosen, additional optional arguments may be selected, which will be discussed below.
 
 ```{r c4h_postprocess_parameters,fig.width=10, fig.height=10, fig.align='center', out.width='100%', echo= FALSE, fig.cap="Structure of the c4h_postprocess function, outlining its key arguments and general functionality."}
-knitr::include_graphics("https://gitlab.earth.bsc.es/ghr/clim4health/-/blob/main/man/figures/clim4health_postprocess_parameters.svg?ref_type=heads")
+knitr::include_graphics("https://gitlab.earth.bsc.es/ghr/clim4health/-/blob/main/inst/figures/clim4health_postprocess_parameters.svg?ref_type=heads")
 ```
 
 ## 2. Verification metrics
@@ -162,7 +162,7 @@ The **Relative Operating Characteristic Skill Score (ROCSS)** assesses the discr
 For a binary event such as "temperature above normal" and a probabilistic forecast, you can consider multiple probability thresholds and calculate the Hit Rate/False Alarm Rate for each threshold. The ROC curve is then plotted comparing these values, with an example below.
 
 ```{r c4h_postprocess_ROC,fig.width=10, fig.height=10, fig.align='center', out.width='100%', echo= FALSE, fig.cap="For the two temperature events (temperature in the upper quintile category, red; temperature in the lower quintile category, blue) the hit rates and false alarm rates associated with a range of 'trigger' thresholds (triangles) are plotted. The vertical axis gives the hit rate, defined as the number of times the event was forecast (with probability above a certain threshold) and later observed to occur. Source: UK Met Office."}
-knitr::include_graphics("https://gitlab.earth.bsc.es/ghr/clim4health/-/blob/main/man/figures/metofficegovuk_xsmall.gif?ref_type=heads")
+knitr::include_graphics("https://gitlab.earth.bsc.es/ghr/clim4health/-/blob/main/inst/figures/metofficegovuk_xsmall.gif?ref_type=heads")
 ```
 
 -   A "good" forecast has a high hit rate and low false alarm rate, so lies above the diagonal
