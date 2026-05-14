@@ -1,45 +1,44 @@
 make_mock_fcst_cube <- function(
-    nd   = 1,   # datasets
-    nv   = 1,   # variables
-    ns   = 1,   # start dates
-    nt   = 3,   # lead times
-    nm   = 51,  # ensemble members
-    nlat = 5,
-    nlon = 5,
-    start_date = as.Date("2025-01-01")
+  nd = 1, # datasets
+  nv = 1, # variables
+  ns = 1, # start dates
+  nt = 3, # lead times
+  nm = 51, # ensemble members
+  nlat = 5,
+  nlon = 5,
+  start_date = as.Date("2025-01-01")
 ) {
-  
   # --- spatial coords (match real fcst quirks)
   lon <- seq(-78, -74, length.out = nlon)
-  lat <- seq(6, 2, length.out = nlat)  # descending latitude
-  
+  lat <- seq(6, 2, length.out = nlat) # descending latitude
+
   dims <- c(
-    dataset   = nd,
-    var       = nv,
-    sdate     = ns,
-    time      = nt,
-    ensemble  = nm,
-    latitude  = nlat,
+    dataset = nd,
+    var = nv,
+    sdate = ns,
+    time = nt,
+    ensemble = nm,
+    latitude = nlat,
     longitude = nlon
   )
-  
+
   # --- data
   data <- array(
     runif(prod(dims), min = 298, max = 300),
     dim = dims
   )
-  
+
   # --- coords
   coords <- list(
-    dataset   = if (nd == 1) 1 else seq_len(nd),
-    var       = if (nv == 1) "t2m" else paste0("var", seq_len(nv)),
-    sdate     = if (ns == 1) 1 else seq_len(ns),
-    time      = seq_len(nt),
-    ensemble  = 0:(nm - 1),        # real fcst starts at 0
-    latitude  = lat,
+    dataset = if (nd == 1) 1 else seq_len(nd),
+    var = if (nv == 1) "t2m" else paste0("var", seq_len(nv)),
+    sdate = if (ns == 1) 1 else seq_len(ns),
+    time = seq_len(nt),
+    ensemble = 0:(nm - 1), # real fcst starts at 0
+    latitude = lat,
     longitude = lon
   )
-  
+
   # --- Dates
   # Always a matrix: rows = sdate, cols = time
   Dates <- outer(
@@ -48,7 +47,7 @@ make_mock_fcst_cube <- function(
     `+`
   )
   Dates <- as.POSIXct(Dates, origin = "1970-01-01")
-  
+
   cube <- list(
     data = data,
     dims = dims,
@@ -58,51 +57,49 @@ make_mock_fcst_cube <- function(
       Variable = list(varName = coords$var[1])
     )
   )
-  
+
   class(cube) <- "s2dv_cube"
   cube
 }
 
 make_mock_location_cube <- function(
-    nd   = 1,   # datasets
-    nv   = 1,   # variables
-    ns   = 1,   # start dates
-    nt   = 3,   # lead times
-    nm   = 51,  # ensemble members
-    nloc = 5,
-    start_date = as.Date("2025-01-01")
+  nd = 1, # datasets
+  nv = 1, # variables
+  ns = 1, # start dates
+  nt = 3, # lead times
+  nm = 51, # ensemble members
+  nloc = 5,
+  start_date = as.Date("2025-01-01")
 ) {
-  
   # --- spatial coords (match real fcst quirks)
   lon <- seq(-78, -74, length.out = nloc)
-  lat <- seq(6, 2, length.out = nloc)  # descending latitude
-  
+  lat <- seq(6, 2, length.out = nloc) # descending latitude
+
   dims <- c(
-    dataset   = nd,
-    var       = nv,
-    sdate     = ns,
-    time      = nt,
-    ensemble  = nm,
+    dataset = nd,
+    var = nv,
+    sdate = ns,
+    time = nt,
+    ensemble = nm,
     location = nloc
   )
-  
+
   # --- data
   data <- array(
     runif(prod(dims), min = 298, max = 300),
     dim = dims
   )
-  
-  
+
   # --- coords
   coords <- list(
-    dataset   = if (nd == 1) 1 else seq_len(nd),
-    var       = if (nv == 1) "t2m" else paste0("var", seq_len(nv)),
-    sdate     = if (ns == 1) 1 else seq_len(ns),
-    time      = seq_len(nt),
-    ensemble  = 0:(nm - 1),        # real fcst starts at 0
-    location = seq_len(nloc)   # <-- index, not lat/lon
+    dataset = if (nd == 1) 1 else seq_len(nd),
+    var = if (nv == 1) "t2m" else paste0("var", seq_len(nv)),
+    sdate = if (ns == 1) 1 else seq_len(ns),
+    time = seq_len(nt),
+    ensemble = 0:(nm - 1), # real fcst starts at 0
+    location = seq_len(nloc) # <-- index, not lat/lon
   )
-  
+
   # --- Dates
   # Always a matrix: rows = sdate, cols = time
   Dates <- outer(
@@ -111,7 +108,7 @@ make_mock_location_cube <- function(
     `+`
   )
   Dates <- as.POSIXct(Dates, origin = "1970-01-01")
-  
+
   cube <- list(
     data = data,
     dims = dims,
@@ -119,35 +116,34 @@ make_mock_location_cube <- function(
     attrs = list(
       Dates = Dates,
       location = list(
-        latitude  = lat,
+        latitude = lat,
         longitude = lon
       ),
       Variable = list(varName = coords$var[1])
     )
   )
-  
+
   class(cube) <- "s2dv_cube"
   cube
 }
 
 make_mock_area_cube <- function(
-    nd   = 1,   # datasets
-    nv   = 1,   # variables
-    ns   = 1,   # start dates
-    nt   = 3,   # lead times
-    nm   = 51,  # ensemble members
-    nloc = 2,
-    start_date = as.Date("2025-01-01"),
-    area_id = NULL
+  nd = 1, # datasets
+  nv = 1, # variables
+  ns = 1, # start dates
+  nt = 3, # lead times
+  nm = 51, # ensemble members
+  nloc = 2,
+  start_date = as.Date("2025-01-01"),
+  area_id = NULL
 ) {
-
   dims <- c(
-    dataset   = nd,
-    var       = nv,
-    sdate     = ns,
-    time      = nt,
-    ensemble  = nm,
-    area      = nloc
+    dataset = nd,
+    var = nv,
+    sdate = ns,
+    time = nt,
+    ensemble = nm,
+    area = nloc
   )
 
   # --- data
@@ -158,12 +154,12 @@ make_mock_area_cube <- function(
 
   # --- coords
   coords <- list(
-    dataset   = if (nd == 1) 1 else seq_len(nd),
-    var       = if (nv == 1) "t2m" else paste0("var", seq_len(nv)),
-    sdate     = if (ns == 1) 1 else seq_len(ns),
-    time      = seq_len(nt),
-    ensemble  = 0:(nm - 1),        # real fcst starts at 0
-    area      = seq_len(nloc)   # <-- index, not lat/lon
+    dataset = if (nd == 1) 1 else seq_len(nd),
+    var = if (nv == 1) "t2m" else paste0("var", seq_len(nv)),
+    sdate = if (ns == 1) 1 else seq_len(ns),
+    time = seq_len(nt),
+    ensemble = 0:(nm - 1), # real fcst starts at 0
+    area = seq_len(nloc) # <-- index, not lat/lon
   )
 
   if (!is.null(area_id)) {
@@ -235,14 +231,17 @@ test_that("1. Happy path .s2dv_to_terra", {
   expect_equal(terra::nlyr(r), expected_layers)
   # Names layers correctly
   expect_true(
-    all(c(
-      "dataset_1_var_t2m_sdate_20250101_time_20250101_ensemble_0",
-      "dataset_1_var_t2m_sdate_20250101_time_20250102_ensemble_0",
-      "dataset_1_var_t2m_sdate_20250101_time_20250103_ensemble_0",
-      "dataset_1_var_t2m_sdate_20250101_time_20250101_ensemble_50",
-      "dataset_1_var_t2m_sdate_20250101_time_20250102_ensemble_50",
-      "dataset_1_var_t2m_sdate_20250101_time_20250103_ensemble_50"
-    ) %in% names(r))
+    all(
+      c(
+        "dataset_1_var_t2m_sdate_20250101_time_20250101_ensemble_0",
+        "dataset_1_var_t2m_sdate_20250101_time_20250102_ensemble_0",
+        "dataset_1_var_t2m_sdate_20250101_time_20250103_ensemble_0",
+        "dataset_1_var_t2m_sdate_20250101_time_20250101_ensemble_50",
+        "dataset_1_var_t2m_sdate_20250101_time_20250102_ensemble_50",
+        "dataset_1_var_t2m_sdate_20250101_time_20250103_ensemble_50"
+      ) %in%
+        names(r)
+    )
   )
   # Preserves data value
   expect_equal(
@@ -263,11 +262,22 @@ test_that("2 Happy path .s2dv_to_csv", {
   expected_rows <- 1 * 1 * 1 * 3 * 51 * 5 * 5
   expect_equal(nrow(df), expected_rows)
   # Contains expected columns
-  expect_true(all(c(
-    "dataset", "var", "sdate", "time", "ensemble",
-    "latitude", "longitude", "value",
-    "date", "var_name", "ensemble_value"
-  ) %in% names(df)))
+  expect_true(all(
+    c(
+      "dataset",
+      "var",
+      "sdate",
+      "time",
+      "ensemble",
+      "latitude",
+      "longitude",
+      "value",
+      "date",
+      "var_name",
+      "ensemble_value"
+    ) %in%
+      names(df)
+  ))
   # Data preserved
   expect_equal(
     df$value[1],
@@ -284,8 +294,10 @@ test_that("3 Happy path .s2dv_to_polygons", {
   # Returns sf object
   expect_s3_class(sf_obj, "sf")
   # Columns include at least the first layer value
-  expect_true("dataset_1_var_t2m_sdate_20250101_time_20250101_ensemble_0" %in%
-                names(sf_obj))
+  expect_true(
+    "dataset_1_var_t2m_sdate_20250101_time_20250101_ensemble_0" %in%
+      names(sf_obj)
+  )
   # Geometry exists
   expect_true("geometry" %in% names(sf_obj))
 })
@@ -298,15 +310,17 @@ test_that("4. Validation fails when cube is invalid", {
   # Missing data
   cube <- make_mock_fcst_cube()
   cube$data <- NULL
-  error_message <-  "`data\\$data` must be a multidimensional array"
+  error_message <- "`data\\$data` must be a multidimensional array"
   expect_error(.validate_s2dv_cube(cube), error_message)
 
   # Missing dims
   cube <- make_mock_fcst_cube()
   cube$dims <- cube$dims[!names(cube$dims) %in% c("dataset", "var", "sdate")]
-  cube$coords <- cube$coords[!names(cube$coords) %in%
-                               c("dataset", "var", "sdate")]
-  error_message <-  "Missing required core dimension"
+  cube$coords <- cube$coords[
+    !names(cube$coords) %in%
+      c("dataset", "var", "sdate")
+  ]
+  error_message <- "Missing required core dimension"
   expect_error(.validate_s2dv_cube(cube), error_message)
 })
 
@@ -319,8 +333,10 @@ test_that("5. Validation fails with missing coords or wrong spatial dims", {
   cube <- make_mock_fcst_cube()
   cube$dims <- cube$dims[!names(cube$dims) %in% c("latitude")]
   cube$coords <- cube$coords[!names(cube$coords) %in% c("latitude")]
-  error_message <- paste0("data must contain either \\(latitude & longitude\\)",
-                          ", location, or area dimension.")
+  error_message <- paste0(
+    "data must contain either \\(latitude & longitude\\)",
+    ", location, or area dimension."
+  )
   expect_error(.validate_s2dv_cube(cube), error_message)
 
   cube <- make_mock_fcst_cube()
@@ -348,8 +364,10 @@ test_that("5. Validation fails with missing coords or wrong spatial dims", {
   expect_error(.validate_s2dv_cube(cube), error_message)
 
   cube <- make_mock_location_cube()
-  cube$attrs$location <- cube$attrs$location[!names(cube$attrs$location) %in%
-                                               c("latitude")]
+  cube$attrs$location <- cube$attrs$location[
+    !names(cube$attrs$location) %in%
+      c("latitude")
+  ]
   error_message <- "must contain latitude and longitude."
   expect_error(.validate_s2dv_cube(cube), error_message)
 })
@@ -370,7 +388,11 @@ test_that("6 Validation fails if Dates is invalid", {
 # --- Dates handling ----
 test_that("7. .s2dv_to_terra handles NULL Dates", {
   cube <- make_mock_fcst_cube(
-    nd = 1, nv = 1, ns = 1, nt = 1, nm = 1
+    nd = 1,
+    nv = 1,
+    ns = 1,
+    nt = 1,
+    nm = 1
   )
 
   cube$attrs$Dates <- NULL
@@ -382,20 +404,23 @@ test_that("7. .s2dv_to_terra handles NULL Dates", {
 })
 
 test_that("8. .s2dv_to_csv handles different Dates shapes", {
-
   # 2D Dates (ns > 1 && nt > 1)
   cube_2d <- make_mock_fcst_cube(ns = 2, nt = 2)
   df_2d <- .s2dv_to_csv(cube_2d)
-  expect_equal(df_2d$date[1], as.character(as.Date(cube_2d$attrs$Dates[1,1])))
+  expect_equal(df_2d$date[1], as.character(as.Date(cube_2d$attrs$Dates[1, 1])))
   idx_22 <- which(df_2d$sdate == 2 & df_2d$time == 2)[1]
-  expect_equal(df_2d$date[idx_22],
-               as.character(as.Date(cube_2d$attrs$Dates[2,2])))
+  expect_equal(
+    df_2d$date[idx_22],
+    as.character(as.Date(cube_2d$attrs$Dates[2, 2]))
+  )
 
   # 1D time (length == nt)
   cube_time <- make_mock_fcst_cube(ns = 1, nt = 3)
   df_time <- .s2dv_to_csv(cube_time)
-  expect_equal(unique(df_time$date),
-               c("2025-01-01", "2025-01-02", "2025-01-03"))
+  expect_equal(
+    unique(df_time$date),
+    c("2025-01-01", "2025-01-02", "2025-01-03")
+  )
 
   # 1D sdate (length == ns)
   cube_sdate <- make_mock_fcst_cube(ns = 3, nt = 1)
@@ -433,7 +458,6 @@ test_that("10. .s2dv_to_csv handles cubes with area", {
   df_area <- .s2dv_to_csv(cube_area)
   expect_true("Area_ID" %in% names(df_area))
   expect_equal(unique(df_area$Area_ID), as.character(cube_area$coords$area))
-
 })
 
 # --- terra label fallback ----
@@ -456,8 +480,10 @@ test_that("12. Happy .s2dv_to_polygons with area cube", {
   # Returns sf object
   expect_s3_class(sf_obj, "sf")
   # Columns include at least the first layer value
-  expect_true("layer" %in%
-                names(sf_obj))
+  expect_true(
+    "layer" %in%
+      names(sf_obj)
+  )
   # Geometry exists
   expect_true("geometry" %in% names(sf_obj))
 })
@@ -481,14 +507,17 @@ test_that("13. Happy drop .s2dv_to_terra", {
   expect_equal(terra::nlyr(r), expected_layers)
   # Names layers correctly
   expect_true(
-    all(c(
-      "sdate_20250101_time_20250101_ensemble_0",
-      "sdate_20250101_time_20250102_ensemble_0",
-      "sdate_20250101_time_20250103_ensemble_0",
-      "sdate_20250101_time_20250101_ensemble_50",
-      "sdate_20250101_time_20250102_ensemble_50",
-      "sdate_20250101_time_20250103_ensemble_50"
-    ) %in% names(r))
+    all(
+      c(
+        "sdate_20250101_time_20250101_ensemble_0",
+        "sdate_20250101_time_20250102_ensemble_0",
+        "sdate_20250101_time_20250103_ensemble_0",
+        "sdate_20250101_time_20250101_ensemble_50",
+        "sdate_20250101_time_20250102_ensemble_50",
+        "sdate_20250101_time_20250103_ensemble_50"
+      ) %in%
+        names(r)
+    )
   )
   # Preserves data value
   expect_equal(
@@ -506,8 +535,10 @@ test_that("14. Happy drop .s2dv_to_polygons", {
   # Returns sf object
   expect_s3_class(sf_obj, "sf")
   # Columns include at least the first layer value
-  expect_true("sdate_20250101_time_20250101" %in%
-                names(sf_obj))
+  expect_true(
+    "sdate_20250101_time_20250101" %in%
+      names(sf_obj)
+  )
   # Geometry exists
   expect_true("geometry" %in% names(sf_obj))
 
@@ -519,8 +550,10 @@ test_that("14. Happy drop .s2dv_to_polygons", {
   # Returns sf object
   expect_s3_class(sf_obj, "sf")
   # Columns include at least the first layer value
-  expect_true("layer" %in%
-                names(sf_obj))
+  expect_true(
+    "layer" %in%
+      names(sf_obj)
+  )
   # Geometry exists
   expect_true("geometry" %in% names(sf_obj))
 })
@@ -537,12 +570,22 @@ test_that("15. Happy drop .s2dv_to_csv", {
   expected_rows <- 1 * 1 * 1 * 3 * 51 * 5 * 5
   expect_equal(nrow(df), expected_rows)
   # Contains expected columns
-  expect_true(all(c(
-    "sdate", "time", "ensemble",
-    "latitude", "longitude", "value",
-    "date", "ensemble_value"
-  ) %in% names(df)) &&
-    !any(c("dataset", "var", "var_names") %in% names(df)))
+  expect_true(
+    all(
+      c(
+        "sdate",
+        "time",
+        "ensemble",
+        "latitude",
+        "longitude",
+        "value",
+        "date",
+        "ensemble_value"
+      ) %in%
+        names(df)
+    ) &&
+      !any(c("dataset", "var", "var_names") %in% names(df))
+  )
   # Data preserved
   expect_equal(
     df$value[1],

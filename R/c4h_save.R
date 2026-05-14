@@ -22,6 +22,7 @@
 #' fcst <- c4h_load(fcst_path, variable = "t2m", ext = 'nc')
 #'
 #' c4h_save(fcst, "s2dv", "out.nc")
+#' file.remove("out.nc")
 #' }
 c4h_save <- function(data, format, path, drop = FALSE) {
   # checks
@@ -34,11 +35,18 @@ c4h_save <- function(data, format, path, drop = FALSE) {
   } else if (!inherits(data, "data.frame") && format == "csv") {
     stop("Data must be a data.frame for format 'csv'.")
   }
-  if (format == "s2dv" && !(all(c("longitude", "latitude") %in%
-                                  names(data$dims)))) {
-    stop(paste0("s2dv_cube must have 'longitude' and 'latitude' dimensions to ",
-                "be saved in 's2dv' format. Consider converting to 'terra', ",
-                "'csv', or 'polygons' format using c4h_convert()."))
+  if (
+    format == "s2dv" &&
+      !(all(
+        c("longitude", "latitude") %in%
+          names(data$dims)
+      ))
+  ) {
+    stop(paste0(
+      "s2dv_cube must have 'longitude' and 'latitude' dimensions to ",
+      "be saved in 's2dv' format. Consider converting to 'terra', ",
+      "'csv', or 'polygons' format using c4h_convert()."
+    ))
   }
 
   if (format == "s2dv") {

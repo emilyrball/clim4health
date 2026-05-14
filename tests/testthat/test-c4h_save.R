@@ -215,27 +215,39 @@ make_test_areas_sf <- function(crs = 4326) {
 }
 
 test_that("1. failure if data format not correct", {
-  expect_error(c4h_save(1:10, "s2dv"),
-               "Data must be an s2dv_cube for format 's2dv'.")
+  expect_error(
+    c4h_save(1:10, "s2dv"),
+    "Data must be an s2dv_cube for format 's2dv'."
+  )
 
-  expect_error(c4h_save(1:10, "terra"),
-               "Data must be a SpatRaster for format 'terra'.")
+  expect_error(
+    c4h_save(1:10, "terra"),
+    "Data must be a SpatRaster for format 'terra'."
+  )
 
-  expect_error(c4h_save(1:10, "polygons"),
-               "Data must be an sf object for format 'polygons'.")
+  expect_error(
+    c4h_save(1:10, "polygons"),
+    "Data must be an sf object for format 'polygons'."
+  )
 
-  expect_error(c4h_save(1:10, "csv"),
-               "Data must be a data.frame for format 'csv'.")
+  expect_error(
+    c4h_save(1:10, "csv"),
+    "Data must be a data.frame for format 'csv'."
+  )
 })
 
 test_that("2. failure if s2dv_cube missing lat/lon dims for s2dv format", {
   cube_no_latlon <- make_mock_location_cube()
-  expect_error(c4h_save(cube_no_latlon, "s2dv"),
-               paste0("s2dv_cube must have 'longitude' and ",
-                      "'latitude' dimensions to be saved in ",
-                      "'s2dv' format. Consider converting to ",
-                      "'terra', 'csv', or 'polygons' format ",
-                      "using c4h_convert()."))
+  expect_error(
+    c4h_save(cube_no_latlon, "s2dv"),
+    paste0(
+      "s2dv_cube must have 'longitude' and ",
+      "'latitude' dimensions to be saved in ",
+      "'s2dv' format. Consider converting to ",
+      "'terra', 'csv', or 'polygons' format ",
+      "using c4h_convert()."
+    )
+  )
 })
 
 test_that("3. c4h_save dispatches to .save_s2dv", {

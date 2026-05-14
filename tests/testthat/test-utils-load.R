@@ -14,20 +14,21 @@
 
 # Mock functions ----
 
-create_nc <- function(filename,
-                      lon,
-                      lat,
-                      time,
-                      varname = "var",
-                      units = "unknown") {
-
+create_nc <- function(
+  filename,
+  lon,
+  lat,
+  time,
+  varname = "var",
+  units = "unknown"
+) {
   library(ncdf4)
   file_path <- file.path(tempdir(), filename)
 
   # Generate gradient values (280 → 300) across unique (latitude, time) pairs
   values <- 280 + seq(0, 20, length.out = length(lon) * length(time))
   data <- array(
-    rep(values, each = length(lat)),  # Repeat each value for longitude points
+    rep(values, each = length(lat)), # Repeat each value for longitude points
     dim = c(length(lat), length(lon), length(time))
   )
 
@@ -39,10 +40,14 @@ create_nc <- function(filename,
   time_vals <- as.numeric(time)
 
   # define dimensions
-  dim_lon  <- ncdim_def("x", "degrees_east", vals = lon)
-  dim_lat  <- ncdim_def("y", "degrees_north", vals = lat)
-  dim_time <- ncdim_def("valid_time", time_units,
-                        vals = time_vals, unlim = TRUE)
+  dim_lon <- ncdim_def("x", "degrees_east", vals = lon)
+  dim_lat <- ncdim_def("y", "degrees_north", vals = lat)
+  dim_time <- ncdim_def(
+    "valid_time",
+    time_units,
+    vals = time_vals,
+    unlim = TRUE
+  )
 
   # variable definition
   var_def <- ncvar_def(
@@ -94,8 +99,11 @@ test_that("2. Multiple leadtimes .c4h_load_csv", {
   file_path <- system.file("extdata/stations/", package = "clim4health")
   file_path <- paste0(file_path, "/temp_vallecauca.csv")
 
-  res <- .c4h_load_csv(file_list = file_path,
-                       variable = "temp_mean", leadtime_month = c(2, 3))
+  res <- .c4h_load_csv(
+    file_list = file_path,
+    variable = "temp_mean",
+    leadtime_month = c(2, 3)
+  )
   expect_s3_class(res, "s2dv_cube")
 
   # Check dimensions
@@ -113,10 +121,22 @@ test_that("3. Skip header lines .c4h_load_csv", {
   # Generate 5 header lines + 1 CSV header line + 1 data line
   lines <- c(
     rep("header", 5),
-    paste(c("station_code", "lat", "lon", "date", "temp_mean",
-            "temp_min", "temp_max"), collapse = ","),
-    paste(c(26055100, 3.416055556, -76.6515,
-            "2010-01-01", 16.625, 13.4, 23.4), collapse = ",")
+    paste(
+      c(
+        "station_code",
+        "lat",
+        "lon",
+        "date",
+        "temp_mean",
+        "temp_min",
+        "temp_max"
+      ),
+      collapse = ","
+    ),
+    paste(
+      c(26055100, 3.416055556, -76.6515, "2010-01-01", 16.625, 13.4, 23.4),
+      collapse = ","
+    )
   )
 
   writeLines(lines, tmp_file)
@@ -128,10 +148,14 @@ test_that("4. Fix dates with not exact hour and missing lat and lon", {
   tmp_file <- tempfile(fileext = ".csv")
 
   lines <- c(
-    paste(c("station_code", "date", "temp_mean", "temp_min",
-            "temp_max"), collapse = ","),
-    paste(c(26055100, "2010-01-01 00:00:01",
-            16.625, 13.4, 23.4), collapse = ",")
+    paste(
+      c("station_code", "date", "temp_mean", "temp_min", "temp_max"),
+      collapse = ","
+    ),
+    paste(
+      c(26055100, "2010-01-01 00:00:01", 16.625, 13.4, 23.4),
+      collapse = ","
+    )
   )
 
   writeLines(lines, tmp_file)
@@ -144,8 +168,8 @@ test_that("5. Failure one column data .c4h_load_csv", {
 
   # Generate 11 header lines (non-CSV) and 1 data line
   lines <- c(
-    rep("header", 11),  # 11 header lines (no commas)
-    "data1"             # Data line (non-CSV, will be read as 1 column)
+    rep("header", 11), # 11 header lines (no commas)
+    "data1" # Data line (non-CSV, will be read as 1 column)
   )
 
   # Write to CSV (no commas; each line is 1 column)
@@ -220,8 +244,11 @@ test_that("8. Multiple leadtimes .c4h_load_nc_stars hourly observations", {
     units = "K"
   )
 
-  res <- .c4h_load_nc_stars(file_list = nc_file,
-                            variable = "temperature", leadtime_month = 1:3)
+  res <- .c4h_load_nc_stars(
+    file_list = nc_file,
+    variable = "temperature",
+    leadtime_month = 1:3
+  )
   expect_s3_class(res, "s2dv_cube")
 
   # Check dimensions
@@ -237,7 +264,6 @@ test_that("8. Multiple leadtimes .c4h_load_nc_stars hourly observations", {
 })
 
 test_that("9. Happy path .c4h_load_nc_stars daily observations", {
-
   lon <- seq(-10, 10, length.out = 5)
   lat <- seq(40, 50, length.out = 4)
 
@@ -290,8 +316,11 @@ test_that("10. Multiple leadtimes .c4h_load_nc_stars daily observations", {
     units = "K"
   )
 
-  res <- .c4h_load_nc_stars(file_list = nc_file,
-                            variable = "temperature", leadtime_month = 1:3)
+  res <- .c4h_load_nc_stars(
+    file_list = nc_file,
+    variable = "temperature",
+    leadtime_month = 1:3
+  )
   expect_s3_class(res, "s2dv_cube")
 
   # Check dimensions
@@ -358,8 +387,11 @@ test_that("12. Multiple leadtimes .c4h_load_nc_stars monthly observations", {
     units = "K"
   )
 
-  res <- .c4h_load_nc_stars(file_list = nc_file,
-                            variable = "temperature", leadtime_month = 1:3)
+  res <- .c4h_load_nc_stars(
+    file_list = nc_file,
+    variable = "temperature",
+    leadtime_month = 1:3
+  )
   expect_s3_class(res, "s2dv_cube")
 
   # Check dimensions
@@ -398,8 +430,11 @@ test_that("14. Multiple leadtimes .c4h_load_nc_stars forecast", {
   fcst_path <- system.file("extdata/forecast/", package = "clim4health")
   fcst_path <- paste0(fcst_path, "/t2m_20250101.nc")
 
-  res <- .c4h_load_nc_stars(file_list = fcst_path,
-                            variable = "t2m", leadtime_month = c(1, 2, 3))
+  res <- .c4h_load_nc_stars(
+    file_list = fcst_path,
+    variable = "t2m",
+    leadtime_month = c(1, 2, 3)
+  )
   expect_s3_class(res, "s2dv_cube")
 
   # Check dimensions
@@ -426,9 +461,11 @@ test_that("15. Failure when variable is invalid", {
 ## Helper functions ----
 test_that("get_csv_dims", {
   names <- c("y", "lat", "latitude")
-  data <- data.table::fread("lat, lon, temp
+  data <- data.table::fread(
+    "lat, lon, temp
                        1,2,3
-                      4,5,6")
+                      4,5,6"
+  )
   headers <- colnames(data)
 
   out <- .get_csv_dims(headers, data, names)
@@ -448,8 +485,10 @@ test_that("get_variables_nc", {
 
   expect_message(.get_variables_nc(fcst_path, "t2m"), "Requested variables are")
 
-  expect_error(.get_variables_nc(fcst_path, variable = NULL),
-               "Please specify the variable name")
+  expect_error(
+    .get_variables_nc(fcst_path, variable = NULL),
+    "Please specify the variable name"
+  )
 })
 
 test_that(".subset_file_list", {
@@ -474,18 +513,22 @@ test_that(".subset_file_list", {
   fcst_path <- system.file("extdata/forecast/", package = "clim4health")
   fcst_path <- paste0(fcst_path, "/t2m_20250101.nc")
 
-  res_precipitation <- .subset_file_list(file_list =
-                                           c(nc_file, fcst_path),
-                                         in_var = "precipitation")
+  res_precipitation <- .subset_file_list(
+    file_list = c(nc_file, fcst_path),
+    in_var = "precipitation"
+  )
   expect_contains(basename(res_precipitation), "test_hourly.nc")
 
-  res_temperature <- .subset_file_list(file_list =
-                                         c(nc_file, fcst_path),
-                                       in_var = "temperature")
+  res_temperature <- .subset_file_list(
+    file_list = c(nc_file, fcst_path),
+    in_var = "temperature"
+  )
   expect_contains(basename(res_temperature), "t2m_20250101.nc")
 
-  res <- .subset_file_list(file_list = c(nc_file, fcst_path),
-                           in_var = c("precipitation", "temperature"))
+  res <- .subset_file_list(
+    file_list = c(nc_file, fcst_path),
+    in_var = c("precipitation", "temperature")
+  )
   expect_contains(basename(res), "test_hourly.nc")
   expect_contains(basename(res), "t2m_20250101.nc")
 })
@@ -493,56 +536,78 @@ test_that(".subset_file_list", {
 # test esarchive fail conditions
 test_that("16. Failure with invalid path", {
   # fail if dir does not exist
-  expect_error(.c4h_load_esarchive(path = "invalid_path/"),
-               paste0("To load data from esarchive, please provide",
-                      " a single directory path."))
+  expect_error(
+    .c4h_load_esarchive(path = "invalid_path/"),
+    paste0(
+      "To load data from esarchive, please provide",
+      " a single directory path."
+    )
+  )
   # fail if multiple paths provided
   fcst_path <- system.file("extdata/forecast/", package = "clim4health")
   rean_path <- system.file("extdata/reanalysis/", package = "clim4health")
-  expect_error(.c4h_load_esarchive(path = c(fcst_path, rean_path)),
-               paste0("To load data from esarchive, please provide",
-                      " a single directory path."))
+  expect_error(
+    .c4h_load_esarchive(path = c(fcst_path, rean_path)),
+    paste0(
+      "To load data from esarchive, please provide",
+      " a single directory path."
+    )
+  )
   # fail if not monthly data
-  expect_error(.c4h_load_esarchive(path = fcst_path),
-               paste0("Only able to load monthly mean data from",
-                      " esarchive at this time."))
+  expect_error(
+    .c4h_load_esarchive(path = fcst_path),
+    paste0(
+      "Only able to load monthly mean data from",
+      " esarchive at this time."
+    )
+  )
   # fail if multiple variables requested
   monthly_dir <- withr::local_tempdir(tmpdir = "monthly_mean/")
-  expect_error(.c4h_load_esarchive(path = monthly_dir,
-                                   variable = c("t2m", "prlr")),
-               paste0("Currently only able to load one variable at ",
-                      "a time from esarchive."))
+  expect_error(
+    .c4h_load_esarchive(path = monthly_dir, variable = c("t2m", "prlr")),
+    paste0(
+      "Currently only able to load one variable at ",
+      "a time from esarchive."
+    )
+  )
   # fail if year is not specified
-  expect_error(.c4h_load_esarchive(path = monthly_dir, variable = "t2m"),
-               paste0("Please specify the range of years to ",
-                      "load from esarchive."))
+  expect_error(
+    .c4h_load_esarchive(path = monthly_dir, variable = "t2m"),
+    paste0("Please specify the range of years to ", "load from esarchive.")
+  )
   # fail if not ERA5, ERA5Land or SEAS5.1
-  expect_error(.c4h_load_esarchive(path = monthly_dir, variable = "t2m",
-                                   year = 2010:2012),
-               paste0("Currently, only ERA5, ERA5Land, and SEAS5.1 are ",
-                      "supported for loading from esarchive."))
+  expect_error(
+    .c4h_load_esarchive(path = monthly_dir, variable = "t2m", year = 2010:2012),
+    paste0(
+      "Currently, only ERA5, ERA5Land, and SEAS5.1 are ",
+      "supported for loading from esarchive."
+    )
+  )
 })
 
-create_esarchive_recon <- function(path,
-                                   lon,
-                                   lat,
-                                   times,
-                                   varname = "varname",
-                                   units = "unknown") {
-
+create_esarchive_recon <- function(
+  path,
+  lon,
+  lat,
+  times,
+  varname = "varname",
+  units = "unknown"
+) {
   library(ncdf4)
   library(lubridate)
 
   origin <- as.POSIXct("1850-01-01", tz = "UTC")
-  labs <- paste0(lubridate::year(times),
-                 sprintf("%02d", lubridate::month(times)))
+  labs <- paste0(
+    lubridate::year(times),
+    sprintf("%02d", lubridate::month(times))
+  )
   times <- as.numeric(difftime(times, origin, units = "hours"))
 
   for (t in seq_along(times)) {
     # Generate gradient values (280 → 300) across unique (latitude, time) pairs
     values <- 280 + seq(t, 20, length.out = length(lon) * 1)
     data <- array(
-      rep(values, each = length(lat)),  # Repeat each value for longitude points
+      rep(values, each = length(lat)), # Repeat each value for longitude points
       dim = c(length(lat), length(lon), 1)
     )
 
@@ -555,10 +620,9 @@ create_esarchive_recon <- function(path,
     time_vals <- as.numeric(time)
 
     # define dimensions
-    dim_lon  <- ncdim_def("lon", "degrees_east", vals = lon)
-    dim_lat  <- ncdim_def("lat", "degrees_north", vals = lat)
-    dim_time <- ncdim_def("time", time_units,
-                          vals = time_vals)#, unlim = TRUE)
+    dim_lon <- ncdim_def("lon", "degrees_east", vals = lon)
+    dim_lat <- ncdim_def("lat", "degrees_north", vals = lat)
+    dim_time <- ncdim_def("time", time_units, vals = time_vals) #, unlim = TRUE)
 
     # variable definition
     var_def <- ncvar_def(
@@ -587,7 +651,7 @@ create_esarchive_recon <- function(path,
 }
 
 test_that("17. happy esarchive/recon", {
-  lon <- seq(-10, 10, length.out =  5)
+  lon <- seq(-10, 10, length.out = 5)
   lat <- seq(40, 50, length.out = 10)
 
   times <- seq(
@@ -608,10 +672,15 @@ test_that("17. happy esarchive/recon", {
     units = "K"
   )
 
-  res <- .c4h_load_esarchive(path = nc_file, year = 2018:2020,
-                             variable = "tas", leadtime_month = 1:3,
-                             month = 1, lat_selection = c(42, 48),
-                             lon_selection = c(-8, 8))
+  res <- .c4h_load_esarchive(
+    path = nc_file,
+    year = 2018:2020,
+    variable = "tas",
+    leadtime_month = 1:3,
+    month = 1,
+    lat_selection = c(42, 48),
+    lon_selection = c(-8, 8)
+  )
   expect_s3_class(res, "s2dv_cube")
 
   # Check dimensions
@@ -627,8 +696,7 @@ test_that("17. happy esarchive/recon", {
   expect_gte(min(res$coords$longitude), -8)
 
   # test load timeseries
-  res <- .c4h_load_esarchive(path = nc_file, year = 2018:2020,
-                             variable = "tas")
+  res <- .c4h_load_esarchive(path = nc_file, year = 2018:2020, variable = "tas")
   expect_s3_class(res, "s2dv_cube")
 
   # Check dimensions
@@ -641,25 +709,29 @@ test_that("17. happy esarchive/recon", {
   expect_equal(res$dims[["longitude"]], 5)
 })
 
-create_esarchive_exp <- function(path,
-                                 lon,
-                                 lat,
-                                 sdates,
-                                 varname = "varname",
-                                 units = "unknown") {
-
+create_esarchive_exp <- function(
+  path,
+  lon,
+  lat,
+  sdates,
+  varname = "varname",
+  units = "unknown"
+) {
   library(ncdf4)
   library(lubridate)
 
-  labs <- paste0(lubridate::year(sdates),
-                 sprintf("%02d", lubridate::month(sdates)), "01")
+  labs <- paste0(
+    lubridate::year(sdates),
+    sprintf("%02d", lubridate::month(sdates)),
+    "01"
+  )
 
   for (t in seq_along(sdates)) {
     # Generate gradient values (280 → 300) across unique
     # (latitude, time, ensemble) pairs
     values <- 280 + seq(t, 20, length.out = length(lon) * 8 * 51)
     data <- array(
-      rep(values, each = length(lat)),  # Repeat each value for longitude points
+      rep(values, each = length(lat)), # Repeat each value for longitude points
       dim = c(length(lat), length(lon), 8, 51)
     )
 
@@ -670,20 +742,23 @@ create_esarchive_exp <- function(path,
     time_units <- paste0("hours since ", sdates[t], " 00:00:00")
     time_vals <- seq(
       as.POSIXct(sdates[t], tz = "UTC"),
-      as.POSIXct(lubridate::add_with_rollback(sdates[t],
-                                              months(7)), tz = "UTC"),
+      as.POSIXct(
+        lubridate::add_with_rollback(sdates[t], months(7)),
+        tz = "UTC"
+      ),
       by = "1 month"
     )
 
-    time_vals <- as.numeric(difftime(time_vals, as.POSIXct(sdates[t],
-                                                           tz = "UTC"),
-                                     units = "hours"))
+    time_vals <- as.numeric(difftime(
+      time_vals,
+      as.POSIXct(sdates[t], tz = "UTC"),
+      units = "hours"
+    ))
     # define dimensions
-    dim_lon  <- ncdim_def("lon", "degrees_east", vals = lon)
-    dim_lat  <- ncdim_def("lat", "degrees_north", vals = lat)
-    dim_time <- ncdim_def("time", time_units,
-                          vals = time_vals)#, unlim = TRUE)
-    dim_ens  <- ncdim_def("ensemble", "member", vals = 1:51)
+    dim_lon <- ncdim_def("lon", "degrees_east", vals = lon)
+    dim_lat <- ncdim_def("lat", "degrees_north", vals = lat)
+    dim_time <- ncdim_def("time", time_units, vals = time_vals) #, unlim = TRUE)
+    dim_ens <- ncdim_def("ensemble", "member", vals = 1:51)
 
     # variable definition
     var_def <- ncvar_def(
@@ -712,7 +787,7 @@ create_esarchive_exp <- function(path,
 }
 
 test_that("17. happy esarchive/exp", {
-  lon <- seq(-2, 2, length.out =  5)
+  lon <- seq(-2, 2, length.out = 5)
   lat <- seq(4, 5, length.out = 10)
 
   sdates <- seq(
@@ -721,8 +796,13 @@ test_that("17. happy esarchive/exp", {
     by = "1 year"
   )
   base_tmp <- withr::local_tempdir()
-  nc_dir <- file.path(base_tmp, "esarchive", "exp",
-                      "system51c3s", "monthly_mean/")
+  nc_dir <- file.path(
+    base_tmp,
+    "esarchive",
+    "exp",
+    "system51c3s",
+    "monthly_mean/"
+  )
   dir.create(nc_dir, recursive = TRUE)
 
   nc_file <- create_esarchive_exp(
@@ -734,9 +814,13 @@ test_that("17. happy esarchive/exp", {
     units = "K"
   )
 
-  res <- .c4h_load_esarchive(path = nc_file, year = 2018:2020,
-                             variable = "tas", leadtime_month = 1:3,
-                             month = 1)
+  res <- .c4h_load_esarchive(
+    path = nc_file,
+    year = 2018:2020,
+    variable = "tas",
+    leadtime_month = 1:3,
+    month = 1
+  )
   expect_s3_class(res, "s2dv_cube")
 
   # Check dimensions
@@ -749,8 +833,12 @@ test_that("17. happy esarchive/exp", {
   expect_equal(res$dims[["longitude"]], 5)
 
   # test load timeseries
-  res <- .c4h_load_esarchive(path = nc_file, year = 2018:2020,
-                             variable = "tas", month = 1)
+  res <- .c4h_load_esarchive(
+    path = nc_file,
+    year = 2018:2020,
+    variable = "tas",
+    month = 1
+  )
   expect_s3_class(res, "s2dv_cube")
 
   # Check dimensions

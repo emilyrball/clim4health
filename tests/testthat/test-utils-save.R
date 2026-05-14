@@ -218,8 +218,7 @@ test_that("1. .save_s2dv writes NetCDF", {
   cube <- make_mock_fcst_cube()
   out_path <- tempfile(fileext = ".nc")
 
-  expect_message(c4h_save(cube, "s2dv", out_path),
-                 "Saved NetCDF: ")
+  expect_message(c4h_save(cube, "s2dv", out_path), "Saved NetCDF: ")
 
   # Check that file was created
   expect_true(file.exists(out_path))
