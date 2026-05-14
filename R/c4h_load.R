@@ -136,15 +136,17 @@ c4h_load <- function(
   }
 
   if (any(grep("esarchive/recon", path)) || any(grep("esarchive/exp", path))) {
-    data <- .c4h_load_esarchive(path = path,
-                                variable = variable,
-                                year = year,
-                                month = month,
-                                day = day,
-                                time = time,
-                                leadtime_month = leadtime_month,
-                                lat_selection = lat_selection,
-                                lon_selection = lon_selection)
+    data <- .c4h_load_esarchive(
+      path = path,
+      variable = variable,
+      year = year,
+      month = month,
+      day = day,
+      time = time,
+      leadtime_month = leadtime_month,
+      lat_selection = lat_selection,
+      lon_selection = lon_selection
+    )
     return(data)
   }
 
