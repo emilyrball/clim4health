@@ -65,7 +65,7 @@ Additionally, **clim4health** is able to load climate data stored in a csv forma
 
 ```{r clim4health_structure,fig.width=10, fig.height=10, fig.align='center', out.width='100%', echo= FALSE, fig.cap="Structure of the **clim4health** package, outlining its functions and general functionality."}
 
-knitr::include_graphics("https://gitlab.earth.bsc.es/ghr/clim4health/-/blob/main/man/figures/clim4health_function_order.svg?ref_type=heads")
+knitr::include_graphics("https://gitlab.earth.bsc.es/ghr/clim4health/-/blob/main/inst/figures/clim4health_function_order.svg?ref_type=heads")
 ```
 
 This vignette outlines one full example workflow using the **clim4health** package. The process is organized into three key stages: obtaining input data, transforming and processing the data, and preparing outputs.

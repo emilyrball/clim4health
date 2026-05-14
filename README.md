@@ -1,11 +1,11 @@
-# clim4health  <img src='man/figures/logo_harmonize.png' align="right" width="9%" /> <span> <span> <img src='man/figures/logo_BSC.png' align="right" width="16%" /> 
+# clim4health  <img src='inst/figures/logo_harmonize.png' align="right" width="9%" /> <span> <span> <img src='inst/figures/logo_BSC.png' align="right" width="16%" /> 
 
 <!-- badges: start -->
 [![License](https://img.shields.io/badge/License-AGPL_v3-brightgreen.svg?style=flat)](https://www.gnu.org/licenses/agpl-3.0.html)
 ![coverage](https://gitlab.earth.bsc.es/ghr/clim4health/badges/main/coverage.svg)
 <!-- badges: end -->
 
-<img src='man/figures/clim4health.jpg' align="right" width="14%" />
+<img src='inst/figures/clim4health.jpg' align="right" width="14%" />
 
 ## Overview
 
@@ -24,7 +24,7 @@ provided.
 
 <br>
 <div align="center">
-<img src='man/figures/package_structure.jpg' width="80%" /></center>
+<img src='inst/figures/package_structure.jpg' width="80%" /></center>
 </div>
 <br> 
 

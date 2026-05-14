@@ -1,7 +1,8 @@
 #' Subset arrays by dimension name
 #'
 #' @param x array to be subsetted
-#' @param ...
+#' @param ... Additional arguments including the dimension name and the
+#' corresponding index to subset.
 #'
 #' @returns the aggregated array
 #' @noRd
