@@ -152,17 +152,17 @@ We can compare this to the observations. Now the hindcast spatial resolution has
 c4h_plot(obs)
 ```
 
-> 💡 **Note**: The *Interpolation* method does not involve any bias adjustment, so we have simply increased the spatial resolution of data, without comparing any statistical relationships with the observed values.
+> 💡 **Note**: The *Interpolation* method does not involve any bias adjustment, so we have simply increased the spatial resolution of data, without comparing any statistical relationships with the observed values. No new information (such as high-resolution observations) has been introduced, so the interpolation tends to smooth fields.
 
 ### Method 2: Interpolation plus bias correction
 
 This method relies on an initial *interpolation*, as above.
 
-Following this, a bias adjustment of the interpolated values is performed. Bias adjustment techniques include simple bias correction, calibration or quantile mapping.
+Following this, a bias adjustment of the interpolated values is performed at each grid cell. Bias adjustment techniques include simple bias correction, calibration or quantile mapping.
 
 -   The **simple bias correction** technique assumes the data is well approximated by a Gaussian distribution, and adjusts the mean and standard deviation of the forecast data to match that of the reference.
 
--   The **calibration** (EVMOS) technique similarly obtains predictions with interannual variance equivalent to that of a reference dataset, but further ensures reliable probabilities by performing a variance inflation of the ensemble spread.
+-   The **calibration** (EVMOS — Equal Variance Matching of Observations and Simulations) technique similarly adjusts the mean and variance of the forecast to match that of the reference dataset. It also addresses a common problem in ensemble forecasts known as **underdispersion**, where the spread of ensemble members does not fully capture the uncertainty in the forecast. EVMOS corrects for this by inflating the ensemble spread so that the forecast probabilities are better calibrated — meaning that, for example, a forecast probability of 70% should correspond to the event occurring approximately 70% of the time.
 
 -   The **quantile mapping** approach may take several forms. A commonly used approach, particularly for bias correcting precipitation forecasts, is the Empirical Quantile Mapping (EQM) method, based on the empirical cumulative distribution functions (CDFs) of the forecast and reference data sets. The transfer function from the forecast CDF to the reference CDF is obtained to bias-correct the forecast data; this method can capture the average evolution of, and variability in, precipitation while adjusting all statistical moments.
 
@@ -185,13 +185,11 @@ Note that now, by adjusting the data as well as simply interpolating it, we have
 
 This method relies on an initial *interpolation*, as above.
 
-Following this, a linear-regression with the interpolated values is fitted using the higher-resolution observations as predictands, and then applied with model data to correct the interpolated values. Possible methods of regression are basic, large-scale and a nearest neighbour (or stencil) method.
+Following this, a linear-regression with the interpolated values is fitted using the higher-resolution observations as predictands, and then applied with model data to correct the interpolated values. Possible methods of regression are basic and a nearest neighbour (or stencil) method.
 
--   The **basic method** fits a linear regression using high resolution observations as predictands and the interpolated model data as predictor. The regression equation is applied to the interpolated model data to correct the interpolated values.
+-   The **basic method** fits a linear regression at each grid cell using high resolution observations as predictands and the interpolated model data as predictor. The regression equation is applied to the interpolated model data to correct the interpolated values.
 
--   The **large-scale method** fits a linear regression with large-scale predictors (e.g. [teleconnection indices](https://www.climate.gov/news-features/blogs/enso/what-are-teleconnections-connecting-earths-climate-patterns-global)) as predictors and high-resolution observations as predictands. This equation is then applied to the interpolated model values.
-
--   Finally, the **nearest neighbour method** uses a linear regression with the nine nearest neighbours as predictors and high-resolution observations as predictands. Instead of constructing a regression model using all nine predictors, principal component analysis is applied to the data of neighboring grids to reduce the dimension of the predictors. The linear regression model is then built using the principal components that explain 95% of the variance. The nearest neighbour method does not require a pre-interpolation process.
+-   Finally, the **nearest neighbour method** uses a local linear regression with the nine nearest neighbours as predictors and high-resolution observations as predictands. Instead of constructing a regression model using all nine predictors, principal component analysis is applied to the data of neighboring grids to reduce the dimension of the predictors. The linear regression model is then built using the principal components that explain 95% of the variance. The nearest neighbour method does not require a pre-interpolation process.
 
 We can now try the **Intlr** method. Let's give a conservative regridding and basic linear interpolation a go. To use the *Intlr* method with gridded data, we select `downscaling_method = "Intlr"`, select a regridding method (e.g. `method_remap = "conservative"`), provide a `target_grid` (a netCDF file containing the grid to which we want to downscale), and select a linear regression method (e.g. `lr_method = "basic"`). Suppose this time, we want to downscale the forecast rather than the hindcast - we can provide the forecast as `exp_cor` and the hindcast as `exp`.
 

@@ -39,7 +39,21 @@ When using subseasonal to decadal predictions, we use *hindcasts* to assess the 
 1.  **Forecasts:** a forecast initialized now, using current or recent atmospheric/oceanic initial conditions, with the aim to make predictions about future conditions.
 2.  **Hindcasts:** a forecast which uses initial conditions from the past. This generates a prediction of past climate. We use these to compare how *skillful* the model is at predicting the actual observed values (because we can compare the predictions to the observations).
 
-> 💡 **2-dimensional time?** Consider a seasonal forecast that we issue *today* (say, in early January 2025), for the next three months (January, February, and March 2025). To assess the skill of this forecast, we need to compare how every forecast issued in January of previous years (e.g. 1994 to 2016) performed at predicting the observed conditions in the following three months (January, February, and March of each year). To do this, we need to load the forecasts issued in January of previous years (the hindcasts). To this end, we load the data with a **two-dimensional time structure**, where the first time dimension corresponds to the forecast initialisation date (or start date - so January of each year), and the second time dimension corresponds to the forecast lead time (so January, February and March of the given year).
+> 💡 **2-dimensional time?** Consider a seasonal forecast that we issue *today* (say, in early January 2025), for the next three months (January, February, and March 2025). To assess the skill of this forecast, we need to compare how every forecast issued in January of previous years (e.g. 1994 to 2016) performed at predicting the observed conditions in the following three months (January, February, and March of each year). To do this, we need to load the forecasts issued in January of previous years (the hindcasts). To this end, we load the data with a **two-dimensional time structure**, where the first time dimension corresponds to the forecast initialisation date (or start date - January of each year), and the second time dimension corresponds to the forecast lead time (January, February and March of the given year). A hindcast might look like:
+
+```{r input_functions_table, echo = FALSE, eval = TRUE}
+knitr::kable(
+  data.frame(
+    `Forecast Start Date` = c("Jan 1994", "Jan 1995", "...", "Jan 2016"),
+    `Lead Time 1` = c("Jan 1994", "Jan 1995", "...", "Jan 2016"),
+    `Lead Time 2` = c("Feb 1994", "Feb 1995", "...", "Feb 2016"),
+    `Lead Time 3` = c("Mar 1994", "Mar 1995", "...", "Mar 2016"),
+    check.names = FALSE
+    ),
+  format = "markdown",
+  caption = "Hindcast structure, for forecasts issued in January. Note that Lead Time 1 corresponds to the same month as the forecast initialisation date (the forecast is issued at the beginning of the month, and provides information for that same month)."
+)
+```
 
 To compare the hindcast with the observed conditions, we also need to load the observed data for the same time period. Often, we use *reanalysis* data, which combines direct observations with a climate model to produce a complete and consistent dataset of past climate conditions. We can also use direct observations from weather stations if available, to explore very local climate conditions.
 
@@ -49,7 +63,7 @@ To compare the hindcast with the observed conditions, we also need to load the o
 
 ## 2. Climate data in clim4health
 
-The data used in **clim4health** is always loaded as an `s2dv_cube` object, which is a type of R object included in clim4health dependencies that can handle the complexity of multi-dimensional climate data. The `s2dv_cube` is the primary R object used within **clim4health** to store and manipulate climate data.
+In this section, we introduce the datasets that are used within the **clim4health** package. In **clim4health**, we load and manipulate data using the `s2dv_cube` object, a type of data structure able to handle complex multi-dimensional climate data.
 
 ### Loading multi-dimensional data with **c4h_load**
 
@@ -73,11 +87,11 @@ The loading function in **clim4health** is `c4h_load()`, and takes the following
 
 -   `bbox` A vector of coordinates to subset the data spatially. In order: `c(lat_max, lon_min, lat_min, lon_max)`.
 
-We use the parameters `year`, `month`, `day`, `time`, and `leadtime_month` to specify the time period and time dimensions of the data we want to load.
+We use the parameters `year`, `month`, `day`, `time`, and `leadtime_month` to specify the time period and time dimensions of the data we want to load. To load data in the **sdate** or **time** dimension:
 
 -   **sdate**: `year`, `month`, `day`, and `time` correspond to all the start dates that you want to load. To load data for January and February for the years 2010 to 2016, you would select `year = 2010:2016` and `month = 1:2`.
 
--   **time**: `leadtime_month` corresponds to the forecast lead time and tells clim4health how many months to load in the **time** dimension. To load our hindcast data issued only in January for the forecast months of January, February and March, for the years 1994 to 2016, we would select `year = 1994:2016`, `month = 1`, and `leadtime_month = 1:3`.
+-   **time**: `leadtime_month` corresponds to the forecast lead time and tells clim4health how many months to load in the **time** dimension. To load our hindcast data issued only in January for the forecast months of January, February and March, for the years 1994 to 2016, we would select `year = 1994:2016`, `month = 1`, and `leadtime_month = 1:3`. Note that this exact specification would result in a 2D time structure as given in the table above (Section 1).
 
 ### Loading example data
 
@@ -176,7 +190,7 @@ str(forecast)
 
 ### Data dimensions in clim4health
 
-s2dv_cube dimensions are consistent throughout **clim4health**. They will always contain:
+**clim4health** enforces the following dimensions for its s2dv_cube objects:
 
 -   **dataset** - the datasets that are loaded.
 
@@ -235,7 +249,7 @@ forecast$
 │   ├── dataset                # Index of the dataset(s) loaded
 │   ├── var                    # Name(s) of the variable(s) loaded
 │   ├── sdate                  # Index of the forecast initialisation or start
-                                 dates
+│   │                            dates
 │   ├── time                   # Index of the forecast lead time
 │   ├── ensemble               # Index of the model ensemble members
 │   ├── latitude               # Values of the latitude coordinates
@@ -245,12 +259,12 @@ forecast$
     ├── Dates                  # 2-dimensional array of dates (sdate and time)
     ├── Variable               # Named list of variable information
     │   ├── varName               # Character vector of variable name(s), equal
-                                    to coords$var
+    │   │                           to coords$var
     │   └── metadata              # Named list of metadata for all variables
     │       ├── variable             # Character vector of variable name(s)
     │       ├── units                # Named vector of variable unit(s)
     │       └── source_files         # Character vector of the source file(s)
-                                       for each variable
+    │                                  for each variable
     └── source_files           # Character vector of all source files used to
                                  load the data
 </pre>
