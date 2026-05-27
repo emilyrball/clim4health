@@ -39,14 +39,11 @@
 #' methods are "nearest", "bilinear", "9point", "invdist4nn". Only needed if the
 #' downscaling is to a point location.
 #' @param lr_method a character vector indicating the linear regression method
-#' to be applied. Accepted methods are 'basic', 'large-scale' and '9nn'. The
+#' to be applied. Accepted methods are 'basic' and '9nn'. The
 #' 'basic' method fits a linear regression using high resolution observations as
 #' predictands and the interpolated model data as predictor. Then, the
 #' regression equation is applied to the interpolated model data to correct the
-#' interpolated values. The 'large-scale' method fits a linear regression with
-#' large-scale predictors (e.g. teleconnection indices) as predictors and
-#' high-resolution observations as predictands. This equation is then applied
-#' to the interpolated model values. Finally, the '9nn' method uses a linear
+#' interpolated values. The '9nn' method uses a linear
 #' regression with the nine nearest neighbours as predictors and high-resolution
 #' observations as predictands. Instead of constructing a regression model using
 #' all nine predictors, principal component analysis is applied to the data of
@@ -60,7 +57,7 @@
 #'
 #' @returns A list of statistically downscaled data as s2dv_cube objects.
 #'
-#' @note See clim4health_postprocessing.Rmd in the package vignettes for a
+#' @note See clim4health_downscaling.Rmd in the package vignettes for a
 #' detailed tutorial on function arguments and usage.
 #'
 #' @export
@@ -349,7 +346,7 @@ c4h_downscale <- function(
     if (is.null(lr_method)) {
       stop(
         "If using 'Intlr', 'lr_method' must be specified. Options ",
-        "are: 'basic', 'large-scale' and '9nn'."
+        "are: 'basic' and '9nn'."
       )
     }
   }
