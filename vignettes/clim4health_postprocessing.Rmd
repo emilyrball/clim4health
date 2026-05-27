@@ -22,7 +22,9 @@ knitr::opts_chunk$set(
 
 ## Overview
 
-This vignette provides an introduction to the `c4h_postprocess()` function, used for forecast verification. The different verification metrics are described, and examples of how to use the function are provided.
+This vignette provides an introduction to the `c4h_postprocess()` function, used for forecast verification. Forecast verification is an important step in evaluating the performance of climate forecasts, especially relevant in the development of climate-related early warning systems, since a forecast with poor skill may not provide reliable information to users. Verification involves comparing forecasted values (from a hindcast) to observed values (e.g. from reanalysis) to assess the performance of the prediction system at a given location, time, and leadtime. It is often necessary to *downscale* the hindcast to the same spatial resolution as the observations before performing the verification, which can be done using `c4h_downscale()`.
+
+Within this vignette, the different verification metrics are described, and examples of how to use the function are provided.
 
 ## 0. Load the package and sample data
 
@@ -88,68 +90,71 @@ knitr::include_graphics("https://gitlab.earth.bsc.es/ghr/clim4health/-/blob/main
 
 There are many widely-used metrics to assess the quality of a forecast product. These typically compare the hindcasts and observations to see when the hindcast makes reasonable predictions of the observed values. The following are optional metrics that may be calculated within `c4h_postprocess()` and are selected using the `metrics` parameter.
 
+The metrics are calculated by comparing forecast ensemble member predictions to observations.
+
 #### `"BSS"` - Brier Skill Score
 
 This is a skill score for binary or categorical outcomes (for example, does a forecast successfully predict above normal temperatures?). The **Brier Score (BS)** measures the mean squared error between forecast probabilities and actual outcomes, and the associated **skill score (BSS)** compares the forecast's BS to a reference forecast BS (often the climatology). A forecast is *more skillful* than the reference if BSS~forecast~ \> 0.
 
-**In the example of predicting above normal temperatures in a given month:**
+**In the example of predicting above-mean temperatures in a given month:**
 
-1.  A "normal temperature" for a given month is the average temperature across all the years of the observations.
-2.  The climatology by definition correctly categorises temperatures as "above normal" 50% of the time (because half of the values will be above the mean).
-3.  Comparing the Brier Scores of the forecast compared to a reference:
-    -   BSS~forecast~ = 1: the forecast correctly predicts above normal temperatures every time
-    -   BSS~forecast~ = 0: the forecast correctly predicts above normal temperatures 50% of the time (and has no added skill compared to the climatology)
-    -   BSS~forecast~ \< 0: the forecast correctly predicts above normal temperatures less than 50% of the time (and performs worse than the climatology).
+1.  The mean temperature for a given month is the average temperature across all the years of the observations. Temperatures are classified as "above-mean" if they exceed this average.
+2.  The climatological reference forecast assigns a 50% probability to above-mean temperatures every time (since by definition half of all observed values lie above the mean). The BSS measures how much better the ensemble forecast is compared to always predicting this 50% probability.
+3.  Comparing the Brier Scores of the forecast to the climatological reference:
+    -   BSS~forecast~ = 1: perfect forecast - all ensemble members predict above-mean temperatures on every occasion when the event (observed temperature above the mean) occurs, and no ensemble members predict when it does not
+    -   BSS~forecast~ = 0: no added skill over climatology — the forecast performs no better than always predicting a 50% probability
+    -   BSS~forecast~ \< 0: the forecast performs worse than climatology and provides no useful additional information. For example, for a given observed "above-mean" month, perhaps only 10% of ensemble members predict above-mean temperatures.
 
 Two commonly used thresholds for BSS are BSS10 and BSS90: these define the categories as the 10th and 90th percentiles respectively. They are useful to assess whether the forecast correctly predicts extremes.
 
-For example, BSS90 assesses whether the forecast can correctly predict when temperatures exceed the 90th percentile:
+For example, BSS90 assesses whether the forecast can predict when temperatures exceed the 90th percentile threshold (the 90th percentile is the value that 90% of the observed temperatures fall below). In this case:
 
-1.  The climatology correctly categorises temperatures above the 90th percentile 10% of the time (because only 10% of the values will be above this threshold).
-2.  Comparing the Brier Scores of the forecast compared to a reference:
-    -   BSS~forecast~ = 1: the forecast correctly predicts temperatures above the 90th percentile every time
-    -   BSS~forecast~ = 0: the forecast correctly predicts temperatures above the 90th percentile 10% of the time (and has no added skill compared to the climatology)
-    -   BSS~forecast~ \< 0: the forecast correctly predicts temperatures above the 90th percentile less than 10% of the time (and performs worse than the climatology).
+1.  The 90th percentile temperature for a given month is calculated by considering the observed temperature distribution for that month across all years of the observations. The climatological reference forecast assigns a 10% probability to above-90th-percentile temperatures every time (since by definition only 10% of observed values exceed this threshold). The BSS90 measures how much better the ensemble forecast is compared to always predicting this 10% probability.
+2.  Comparing the Brier Scores of the forecast to the climatological reference:
+    -   BSS~forecast~ = 1: perfect forecast — all ensemble members predict above-90th-percentile temperatures on every occasion when the event occurs, and no ensemble members predict it when it does not
+    -   BSS~forecast~ = 0.5: added skill over climatology - the forecast performs better than always predicting a 10% probability
+    -   BSS~forecast~ = 0: no added skill over climatology — the forecast performs no better than always predicting a 10% probability
+    -   BSS~forecast~ < 0: the forecast performs worse than climatology and provides no useful additional information. For example, for a given observed above-90th-percentile month, perhaps only 2% of ensemble members predict above-90th-percentile temperatures.
 
 #### `"RPSS"` - Ranked Probability Skill Score
 
 This skill score is based on the **Ranked Probability Score (RPS)**, which extends the Brier Skill to multiple ordered categories. For example, you may wish to assess a forecast's ability to predict below-normal, near-normal and above-normal temperatures, where above-normal corresponds to temperatures over the 66th percentile, and below-normal to those below the 33rd.
 
-1.  The climatology by definition correctly categorises temperatures as "above normal" 33% of the time, "near normal" 33% of the time, and "below normal" 33% of the time.
-2.  Comparing the Brier Scores of the forecast compared to a reference:
-    -   RPSS~forecast~ = 1: the forecast correctly predicts the temperature category every time
-    -   RPSS~forecast~ = 0: the forecast correctly predicts the temperature category on average as often as the climatology (and has no added skill compared to the climatology)
-    -   RPSS~forecast~ \< 0: the forecast correctly predicts the temperature category on average less often than the climatology (and performs worse than the climatology).
+1.  The climatology by definition correctly categorises temperatures as "above normal" 33% of the time, "near normal" 33% of the time, and "below normal" 33% of the time. The RPSS measures how much better the ensemble forecast is compared to always predicting this uniform 33%/33%/33% distribution across categories.
+2.  Comparing the Ranked Probability Scores of the forecast to the climatological reference:
+    -   RPSS~forecast~ = 1: perfect forecast — the ensemble assigns 100% probability to the correct temperature category every time (every ensemble member predicts the correct observed category on every occasion)
+    -   RPSS~forecast~ = 0: no added skill over climatology — the forecast performs no better than always predicting an equal probability across all three categories
+    -   RPSS~forecast~ < 0: the forecast performs worse than climatology and provides no useful additional information. For example, the ensemble may systematically assign high probability to the wrong category.
 
 #### `"CRPSS"` - Continuous Ranked Probability Skill Score
 
-The **Continuous Ranked Probability Score (CRPS)** measures the difference between the cumulative distribution functions (CDFs) of the forecast probability distribution and of the observations. It differs from the BS and the RPS in that it considers the continuous probability distribution and not discrete categories. The **Continuous Ranked Probability Skill Score (CRPSS)** again compares the CRPS of a forecast to that of a reference (often the climatology).
+The **Continuous Ranked Probability Score (CRPS)** measures the integrated squared difference between the forecast's cumulative probability distribution and the observed value, represented as a step function. It differs from the BS and RPS in that it considers the full continuous probability distribution rather than discrete categories. The **Continuous Ranked Probability Skill Score (CRPSS)** compares the CRPS of a forecast to that of a reference (often climatology).
 
 1.  CRPSS values:
-    -   CRPSS~forecast~ = 1: a perfect forecast
-    -   CRPSS~forecast~ = 0: the forecast performs as well as the climatology with no additional skill
-    -   CRPSS~forecast~ \< 0: the forecast performs worse than the climatology.
+    -   CRPSS~forecast~ = 1: perfect forecast — the forecast probability distribution perfectly matches the observed value every time (i.e. every ensemble member predicts the observed value on every occasion - a highly unlikely scenario!)
+    -   CRPSS~forecast~ = 0: no added skill over climatology — the forecast performs no better than the climatological probability distribution
+    -   CRPSS~forecast~ < 0: the forecast performs worse than climatology and provides no useful additional information.
 
 #### `"AbsBiasSS"` - Absolute Bias Skill Score
 
-**Absolute bias (AbsBias)** calculates the absolute value of the error between forecast and observation, and its associate skill score **(AbsBiasSS)** compares the forecast AbsBias with that of a climatology.
+**Absolute bias (AbsBias)** measures the absolute difference between the mean forecast value (over ensemble members) and the mean observed value (the climatological mean). Its associated skill score **(AbsBiasSS)** compares the forecast AbsBias with that of a climatological reference.
 
 #### `"MSE"` - Mean Squared Error
 
-The average of the squared differences between forecast and observation values. The lower the value, the smaller the errors. Large errors contribute more to the MSE because of the squared nature.
+The average of the squared differences between forecast ensemble mean and observed values. The lower the value, the smaller the errors. Large errors contribute more to the MSE because of the squared transformation.
 
 #### `"MSSS"` - Mean Squared Error Skill Score
 
 The skill score associated with the MSE.
 
-1.  Again, MSSS values for a forecast when compared to a reference (climatology):
+1.  As before,MSSS values for a forecast when compared to a reference (climatology):
     -   MSSS~forecast~ = 1: a perfect forecast
     -   MSSS~forecast~ = 0: the forecast performs as well as the climatology with no additional skill
     -   MSSS~forecast~ \< 0: the forecast performs worse than the climatology.
 
 #### `"RMSE"` - Root Mean Squared Error
 
-The square root of the average of the squared differences between forecast and observation values. The lower the value, the smaller the errors. Large errors contribute more to the RMSE because of its squared nature initially.
+The square root of the MSE, returned in the same units as the original forecast and observation values. The lower the value, the smaller the errors. Large errors are still weighted more heavily due to the squaring step, but the square root makes the result more interpretable than the MSE.
 
 #### `"RMSSS"` - Root Mean Square Skill Score
 
@@ -157,9 +162,12 @@ The skill score associated with the Root Mean Squared Error (RMSE), which is the
 
 #### `"ROCSS"` - Relative Operating Characteristic Skill Score
 
-The **Relative Operating Characteristic Skill Score (ROCSS)** assesses the discriminatory ability of a forecast. It is based on the ROC curve, which plots the Hit Rate (positive prediction of an event that did occur) against the False Alarm Rate (positive prediction of an event that did NOT occur).
+The **Relative Operating Characteristic Skill Score (ROCSS)** assesses the discriminatory ability of a forecast. It is based on the ROC curve, which plots the Hit Rate against the False Alarm Rate across multiple probability thresholds:
 
-For a binary event such as "temperature above normal" and a probabilistic forecast, you can consider multiple probability thresholds and calculate the Hit Rate/False Alarm Rate for each threshold. The ROC curve is then plotted comparing these values, with an example below.
+-   *Hit Rate*: the forecast predicts the event, and it occurs
+-   *False Alarm Rate*: the forecast predicts the event, but it does not occur
+
+For a binary event such as "temperature above mean" and a probabilistic forecast, a probability threshold is applied to convert the forecast into a binary prediction (e.g. "predict the event if more than 50% of ensemble members predict it"). By varying this threshold, a Hit Rate and False Alarm Rate are calculated at each value, and the ROC curve is plotted comparing these (example below).
 
 ```{r c4h_postprocess_ROC,fig.width=10, fig.height=10, fig.align='center', out.width='100%', echo= FALSE, fig.cap="For the two temperature events (temperature in the upper quintile category, red; temperature in the lower quintile category, blue) the hit rates and false alarm rates associated with a range of 'trigger' thresholds (triangles) are plotted. The vertical axis gives the hit rate, defined as the number of times the event was forecast (with probability above a certain threshold) and later observed to occur. Source: UK Met Office."}
 knitr::include_graphics("https://gitlab.earth.bsc.es/ghr/clim4health/-/blob/main/inst/figures/metofficegovuk_xsmall.gif?ref_type=heads")
@@ -167,17 +175,25 @@ knitr::include_graphics("https://gitlab.earth.bsc.es/ghr/clim4health/-/blob/main
 
 -   A "good" forecast has a high hit rate and low false alarm rate, so lies above the diagonal
 
--   A random forecast has hit rate and false alarm rate rising in equal measure, so lies on the diagonal
+-   A random forecast performs no better than chance, producing equal hit and false alarm rates at every threshold, and so lies on the diagonal
 
 -   A "bad" forecast has a higher false alarm rate than hit rate, so lies below the diagonal.
 
-To calculate the ROCSS, we calculate the area under the curve (AUC), which ranges from 0 to 1 and a higher value indicates better discrimination. Then the **ROCSS = 2\*AUC - 1** indicates a similar skill score as previous metrics, where:
+To calculate the ROCSS, we calculate the area under the curve (AUC), which ranges from 0 to 1 where a higher value indicates better discrimination. The **ROCSS = 2\*AUC - 1**, giving:
 
--   ROCSS = 1: perfect discrimination
+-   ROCSS = 1: perfect discrimination — at some probability threshold, the forecast achieves a hit rate of 100% and a false alarm rate of 0%
 
--   ROCSS = 0: no discrimination
+-   ROCSS = 0: no discrimination — the forecast performs no better than chance
 
--   ROCSS \< 0: worse than random.
+-   ROCSS \< 0: worse than random — the forecast has a higher false alarm rate than hit rate, and would perform better if predictions were reversed.
+
+### Statistical Significance
+For skill scores where significance testing is applicable (BSS, RPSS, CRPSS, MSSS, RMSSS, ROCSS), a p-value is calculated to assess whether the forecast skill is significantly different from zero (i.e. significantly better or worse than climatology). A significance threshold of α = 0.05 is applied by default, meaning that a skill score is considered statistically significant if there is less than a 5% probability that the observed skill arose by chance.
+
+-   A skill score marked as significant (p < 0.05) suggests that the forecast has genuine skill beyond climatology, and the result is unlikely to be due to random variation
+   -   A skill score that is not significant (p ≥ 0.05) does not necessarily mean the forecast has no skill — it may reflect insufficient sample size (e.g. a short hindcast period) rather than a truly unskillful forecast.
+
+Note that significance testing is not typically applied to raw error metrics (MSE, RMSE, AbsBias) since these are not expressed relative to a reference and do not have a natural null hypothesis of zero.
 
 ------------------------------------------------------------------------
 

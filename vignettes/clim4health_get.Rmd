@@ -117,13 +117,7 @@ c4h_get(dataset = "reanalysis-era5-land", # data type
 
 ### Specifying variables
 
-You can check the available variables for a given dataset as follows.
-
-```{r}
-c4h_get_help("reanalysis-era5-land", "variable")
-```
-
-For example, to download temperature at 2m from ERA5Land, we would specify:
+You can check the available variables for a given dataset using `c4h_get_help(parameter = "variable")`, as above. The variable is then specified in `c4h_get()` using the `variable` parameter. For example, to download temperature at 2m from ERA5Land, we would specify:
 
 ```{r }
 c4h_get(dataset = "reanalysis-era5-land", # data type
@@ -152,7 +146,7 @@ To download data from the CDS, you will need a (free) account with the ECMWF. If
 
 With these credentials you can now log into the [CDS](https://cds.climate.copernicus.eu/).
 
-Click in your user (top right corner of the webpage). Under the "[Your profile](https://cds.climate.copernicus.eu/profile?tab=profile)" tab, you can find your API key (PAT). Copy and paste to save it in your R session, as you will need it later when downloading the data.
+Click on your user icon (top right corner of the webpage). Under the "[Your profile](https://cds.climate.copernicus.eu/profile?tab=profile)" tab, you can find your API key (PAT). Copy and paste to save it in your R session, as you will need it later when downloading the data.
 
 ```{r}
 pat_api <- "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
