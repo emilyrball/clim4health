@@ -24,7 +24,7 @@ provided.
 
 <br>
 <div align="center">
-<img src='inst/figures/package_structure.jpg' width="80%" /></center>
+<img src='inst/figures/clim4health_package_structure.svg' width="80%" /></center>
 </div>
 <br> 
 
