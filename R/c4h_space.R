@@ -1,16 +1,16 @@
 #' Spatial aggregation of climate products into areas.
 #'
-#' @param data s2dv_cube object with the climate data to be aggregates, usually 
+#' @param data s2dv_cube object with the climate data to be aggregates, usually
 #' read using `c4h_load`.
-#' @param areas Vector data, either a sf or terra object loaded into memory, or path 
-#' to a vector file to be read. Contains the areal polygon geometries for the spatial 
-#' aggregation.
+#' @param areas Vector data, either a sf or terra object loaded into memory, or
+#' path to a vector file to be read. Contains the areal polygon geometries for
+#' the spatial aggregation.
 #' @param fun String. Method to perform the aggregation, defaults to "mean".
 #' Other possible options include "median", "sum", "min" and "max".
 #' @param weighting String that indicates whether weighted means should be used
-#' when `fun = "mean"` at the cost of increased computation. Options are "none" 
-#' (a simple mean is applied to cells with centroid within the polygon), 
-#' "approx" (for an approximate and fast weighting) and "exact" (for an exact 
+#' when `fun = "mean"` at the cost of increased computation. Options are "none"
+#' (a simple mean is applied to cells with centroid within the polygon),
+#' "approx" (for an approximate and fast weighting) and "exact" (for an exact
 #' weighting). See \code{\link[terra]{extract}} for details.
 #' @param areas_id String. Name of the area identifier in the `areas` object.
 #'
@@ -32,12 +32,13 @@
 #' # Spatial aggregation
 #' fcst_aggr <- c4h_space(fcst, munip)
 #'
-c4h_space <- function(data,
-                      areas,
-                      fun = "mean",
-                      weighting = "none",
-                      areas_id = NULL) {
-
+c4h_space <- function(
+  data,
+  areas,
+  fun = "mean",
+  weighting = "none",
+  areas_id = NULL
+) {
   # read areas from file or sf object
   if (any(class(areas) == "character") || inherits(areas, "sf")) {
     poly <- terra::vect(areas)
@@ -57,7 +58,7 @@ c4h_space <- function(data,
   if (lat[1] > lat[length(lat)]) {
     # if latitude is stored north to south, reverse it
     lat <- rev(lat)
-    lat_dim  <- which(names(dim(data$data)) == "latitude")
+    lat_dim <- which(names(dim(data$data)) == "latitude")
     idx <- lapply(dim(data$data), seq_len)
     idx[[lat_dim]] <- rev(idx[[lat_dim]])
     data$data <- do.call(`[`, c(list(data$data), idx, drop = FALSE))
@@ -69,8 +70,13 @@ c4h_space <- function(data,
   columns_index <- c()
 
   # Manage CRS, we aggregate in WGS84
-  poly <- terra::project(poly, "EPSG:4326")
-  ref  <- terra::crs(poly, describe = TRUE)$code
+  if (terra::crs(poly, describe = TRUE)$code != 4326) {
+    message(
+      "The provided areas are not in WGS84 (EPSG: 4326). They will be ",
+      "transformed into that CRS to perfom the spatial aggregation"
+    )
+    poly <- terra::project(poly, "EPSG:4326")
+  }
 
   # Get dimensions and indices of data and coordinates
   dims <- dim(data$data)
@@ -98,7 +104,7 @@ c4h_space <- function(data,
             lat = lat,
             lon = lon,
             n_spatial = length(spatial_dims),
-            crs_code = ref
+            crs_code = 4326
           )
         },
         SIMPLIFY = FALSE
@@ -125,10 +131,8 @@ c4h_space <- function(data,
   # extract area data (for all areas in poly) with terra::extract
   if (weighting == "none" || fun != "mean") {
     out_dt <- terra::extract(out, poly, fun = fun, na.rm = TRUE)
-
   } else if (weighting == "approx") {
     out_dt <- terra::extract(out, poly, fun = fun, na.rm = TRUE, weights = TRUE)
-
   } else if (weighting == "exact") {
     out_dt <- terra::extract(out, poly, fun = fun, na.rm = TRUE, exact = TRUE)
   }
@@ -145,16 +149,20 @@ c4h_space <- function(data,
   for (cc in seq_along(columns_index)) {
     idx <- as.integer(index[[cc]])
     result_idx <- c(idx, list(seq_len(nrow(out_dt))))
-    result <- do.call(`[<-`, c(list(result), result_idx,
-                               list(value = out_dt[[cc]])))
+    result <- do.call(
+      `[<-`,
+      c(list(result), result_idx, list(value = out_dt[[cc]]))
+    )
   }
 
   # format to s2dv_cube
   replacement_dims <- dim(result)
   names(replacement_dims) <- c(dim_names[non_spatial_dims], "area")
   replacement_attrs <- data$attrs
-  replacement_coords <- coords[setdiff(names(coords),
-                                       c("latitude", "longitude"))]
+  replacement_coords <- coords[setdiff(
+    names(coords),
+    c("latitude", "longitude")
+  )]
 
   # Manage IDs
   if (is.null(areas_id)) {
@@ -170,10 +178,12 @@ c4h_space <- function(data,
     list(geom = sf::st_geometry(sf::st_as_sf(poly)))
 
   # create final s2dv_cube object
-  data <- list(data = result,
-               coords = replacement_coords,
-               dims = replacement_dims,
-               attrs = replacement_attrs)
+  data <- list(
+    data = result,
+    coords = replacement_coords,
+    dims = replacement_dims,
+    attrs = replacement_attrs
+  )
   attr(data, "class") <- "s2dv_cube"
 
   return(data)
@@ -196,16 +206,18 @@ c4h_space <- function(data,
 .make_raster <- function(index_list, data, lat, lon, n_spatial, crs_code) {
   dx <- abs(lon[2] - lon[1])
   dy <- abs(lat[2] - lat[1])
-  
-  full_idx <- c(index_list, rep(list(quote(expr=)), n_spatial))
+
+  full_idx <- c(index_list, rep(list(quote(expr = )), n_spatial))
   slice <- do.call(`[`, c(list(data), full_idx, drop = FALSE))
   slice <- drop(slice)
-  
+
   r <- terra::rast(slice)
-  terra::ext(r) <- terra::ext(c(min(lon) - dx/2,
-                                max(lon) + dx/2,
-                                min(lat) - dy/2,
-                                max(lat) + dy/2))
+  terra::ext(r) <- terra::ext(c(
+    min(lon) - dx / 2,
+    max(lon) + dx / 2,
+    min(lat) - dy / 2,
+    max(lat) + dy / 2
+  ))
   terra::crs(r) <- paste0("EPSG:", crs_code)
   return(r)
 }

@@ -5,10 +5,12 @@
 #' @param cube The s2dv_cube object to be transformed.
 #' @param crs Coordinate Reference System of the s2dv_cube. The default is
 #' "EPSG:4326".
+#' @param drop Logical. If TRUE, dimensions with only one value will be dropped
+#' when converting to the desired format. Default is FALSE.
 #'
 #' @returns A terra::SpatRaster object.
 #' @noRd
-.s2dv_to_terra <- function(cube, crs = "EPSG:4326") {
+.s2dv_to_terra <- function(cube, crs = "EPSG:4326", drop = FALSE) {
   .validate_s2dv_cube(cube)
 
   lon <- as.vector(cube$coords$longitude)
@@ -41,10 +43,10 @@
   # REVIEW - nested loops
   for (d in seq_len(nd)) {
     d_lab <- .get_label(cube$coords$dataset, d, "dataset")
-
+    if (nd == 1 && isTRUE(drop)) d_lab <- NULL
     for (v in seq_len(nv)) {
       v_lab <- .get_label(cube$coords$var, v, "var")
-
+      if (nv == 1 && isTRUE(drop)) v_lab <- NULL
       for (s in seq_len(ns)) {
         s_lab <- if (!is.null(cube$attrs$Dates) &&
                        length(cube$attrs$Dates[, 1]) >= s) {
@@ -71,7 +73,14 @@
             r <- terra::rast(xyz, type = "xyz", crs = crs)
 
             m_lab <- .get_label(cube$coords$ensemble, m, "ensemble")
-            names(r) <- paste(d_lab, v_lab, s_lab, t_lab, m_lab, sep = "_")
+            if (nm == 1 && isTRUE(drop)) m_lab <- NULL
+
+            parts <- list(d_lab, v_lab, s_lab, t_lab, m_lab)
+            parts <- parts[!vapply(parts,
+                                   function(x) is.null(x) || x == "",
+                                   logical(1))]
+
+            names(r) <- paste(parts, collapse = "_")
 
             layers[[k]] <- r
             k <- k + 1
@@ -91,12 +100,11 @@
 #' Transform s2dv into csv
 #'
 #' @param cube The s2dv_cube object to be transformed.
-#' @param file Optional file path to save the CSV. If NULL, the data.frame
-#' is not saved.
-#' @returns A data.frame or writes a CSV file.
+#' @param drop Logical. If TRUE, dimensions with only one value will be dropped
+#' when converting to the desired format. Default is FALSE.
+#' @returns A data.frame
 #' @noRd
-.s2dv_to_csv <- function(cube, file = NULL) {
-  ### REVIEW - argument file is redundant as can be used in c4h_save?
+.s2dv_to_csv <- function(cube, drop = FALSE) {
   .validate_s2dv_cube(cube)
 
   d  <- dim(cube$data)
@@ -137,6 +145,14 @@
 
   df$value <- as.vector(cube$data)
 
+  if (isTRUE(drop)) {
+    for (dimn in c("dataset", "var", "ensemble")) {
+      if (length(unique(df[[dimn]])) == 1) {
+        df[[dimn]] <- NULL
+      }
+    }
+  }
+
   # ---- assign dates ----
   if (!is.null(dates)) {
     if (ns > 1 && nt > 1) {
@@ -156,12 +172,16 @@
   # ---- assign variable names ----
   var_names <- tryCatch(as.vector(cube$coords$var), error = function(e) NULL)
   if (!is.null(var_names) && nv == length(var_names)) {
-    df$var_name <- var_names[df$var]
+    if (nv > 1 || !isTRUE(drop)) {
+      df$var_name <- var_names[df$var]
+    }
   }
 
   # ---- assign ensemble values ----
   if (!is.null(ens) && length(ens) == nm) {
-    df$ensemble_value <- ens[df$ensemble]
+    if (nm > 1 || !isTRUE(drop)) {
+      df$ensemble_value <- ens[df$ensemble]
+    }
   }
 
   # ---- if s2dv_cube contains location ----
@@ -178,7 +198,6 @@
     }
   }
 
-  if (!is.null(file)) utils::write.csv(df, file = file, row.names = FALSE)
   return(df)
 }
 
@@ -188,24 +207,97 @@
 #'
 #' @param cube The s2dv_cube object to be transformed.
 #' @param crs Coordinate Reference System (default: "EPSG:4326").
+#' @param drop Logical. If TRUE, dimensions with only one value will be dropped
+#' when converting to the desired format. Default is FALSE.
 #' @returns An sf object with polygons.
 #' @noRd
-.s2dv_to_polygons <- function(cube, crs = "EPSG:4326") {
-  ### REVIEW - requires lat/lon coordinates, should be able to input
-  ### REVIEW - other s2dv_cube types? in particular area.
-
+.s2dv_to_polygons <- function(cube, crs = "EPSG:4326", drop = FALSE) {
   # Validate cube first
   .validate_s2dv_cube(cube)
 
-  # .s2dv_to_terra requires lat/lon, so make sure they exist
-  if (!all(c("latitude", "longitude") %in% names(cube$coords))) {
-    stop("Cube must have latitude and longitude coordinates for polygons.")
-  }
+  # Spatial coords
+  dim_names <- names(cube$dims)
+  has_latlon  <- all(c("latitude", "longitude") %in% dim_names)
+  has_area <- "area" %in% dim_names
 
-  rstack <- .s2dv_to_terra(cube, crs = crs)
-  pv <- terra::as.polygons(rstack, dissolve = FALSE,
-                           values = TRUE, na.rm = FALSE)
-  sf_obj <- sf::st_as_sf(pv)
+  # handle gridded case
+  if (has_latlon) {
+    rstack <- .s2dv_to_terra(cube, crs = crs, drop = drop)
+    pv <- terra::as.polygons(rstack, dissolve = FALSE,
+                             values = TRUE, na.rm = FALSE)
+    sf_obj <- sf::st_as_sf(pv)
+  } else if (has_area) {
+    # Extract area geometries (assumed to be an sf or WKT vector)
+    areas <- cube$attrs$area$geom
+
+    d  <- dim(cube$data)
+    nd <- .get_dim(d, "dataset")
+    nv <- .get_dim(d, "var")
+    ns <- .get_dim(d, "sdate")
+    nt <- .get_dim(d, "time")
+    nm <- .get_dim(d, "ensemble")
+
+    layers <- list()
+    k <- 1
+
+    for (d in seq_len(nd)) {
+      d_lab <- .get_label(cube$coords$dataset, d, "dataset")
+      if (nd == 1 && isTRUE(drop)) d_lab <- NULL
+      for (v in seq_len(nv)) {
+        v_lab <- .get_label(cube$coords$var, v, "var")
+        if (nv == 1 && isTRUE(drop)) v_lab <- NULL
+        for (s in seq_len(ns)) {
+          s_lab <- if (!is.null(cube$attrs$Dates) &&
+                         length(cube$attrs$Dates[, 1]) >= s) {
+            paste0("sdate_", format(cube$attrs$Dates[s, 1], "%Y%m%d"))
+          } else {
+            sprintf("sdate_%02d", s)
+          }
+          for (t in seq_len(nt)) {
+            t_lab <- if (!is.null(cube$attrs$Dates) &&
+                           length(cube$attrs$Dates[s, ]) >= t) {
+              paste0("time_", format(cube$attrs$Dates[s, t], "%Y%m%d"))
+            } else {
+              sprintf("time_%02d", t)
+            }
+            for (m in seq_len(nm)) {
+              m_lab <- .get_label(cube$coords$ensemble, m, "ensemble")
+              if (nm == 1 && isTRUE(drop)) m_lab <- NULL
+
+              parts <- list(d_lab, v_lab, s_lab, t_lab, m_lab)
+              parts <- parts[!vapply(parts,
+                                     function(x) is.null(x) || x == "",
+                                     logical(1))]
+
+              layer_name <- paste(parts, collapse = "_")
+
+              # Extract values for all areas at this combination
+              vals <- as.vector(cube$data[d, v, s, t, m, ])
+
+              # Build sf data frame from polygon geometries + values
+              geom_sf <- sf::st_as_sf(data.frame(
+                value = vals,
+                geometry = areas
+              ))
+              sf::st_crs(geom_sf) <- crs
+
+              # Convert to SpatVector for terra
+              vect_layer <- terra::vect(geom_sf)
+              vect_layer$layer <- layer_name
+
+              layers[[k]] <- vect_layer
+              k <- k + 1
+            }
+          }
+        }
+      }
+    }
+
+    # Stack all SpatVector layers into one
+    vstack <- do.call(rbind, layers)
+    pv <- terra::as.polygons(vstack)
+    sf_obj <- sf::st_as_sf(pv)
+  }
   return(sf_obj)
 }
 
@@ -243,10 +335,10 @@
   stopifnot(inherits(cube, "s2dv_cube"))
 
   if (is.null(cube$data) || !is.array(cube$data))
-    stop("`cube$data` must be a multidimensional array.")
+    stop("`data$data` must be a multidimensional array.")
 
   if (is.null(cube$coords))
-    stop("`cube$coords` is missing.")
+    stop("`data$coords` is missing.")
 
   dim_names <- names(cube$dims)
   core_dims <- c("dataset", "var", "sdate", "time", "ensemble")
@@ -263,7 +355,7 @@
   has_area <- "area" %in% dim_names
 
   if (!has_latlon && !has_location && !has_area)
-    stop(paste0("Cube must contain either (latitude & longitude),",
+    stop(paste0("data must contain either (latitude & longitude),",
                 " location, or area dimension.")
     )
 

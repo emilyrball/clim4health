@@ -94,16 +94,17 @@
 #' class(station)
 #' dim(station$data)
 #' summary(station$data)
-c4h_load <- function(path,
-                     variable = NULL,
-                     year = "all",
-                     month = "all",
-                     day = "all",
-                     time = "all",
-                     leadtime_month = "all",
-                     ext = NULL,
-                     bbox = NULL) {
-
+c4h_load <- function(
+  path,
+  variable = NULL,
+  year = "all",
+  month = "all",
+  day = "all",
+  time = "all",
+  leadtime_month = "all",
+  ext = NULL,
+  bbox = NULL
+) {
   if (is.null(ext)) {
     stop("Please specify the file extension using the 'ext' parameter.")
   } else if (!(ext %in% c("nc", "csv"))) {
@@ -111,9 +112,11 @@ c4h_load <- function(path,
     if (ext %in% c(".nc", ".csv")) {
       ext <- gsub("^\\.", "", ext)
     } else {
-      stop(paste0("Please specify a valid file extension using the 'ext'",
-                  " parameter. Valid options are 'nc', 'csv', '.nc', and ",
-                  "'.csv'."))
+      stop(paste0(
+        "Please specify a valid file extension using the 'ext'",
+        " parameter. Valid options are 'nc', 'csv', '.nc', and ",
+        "'.csv'."
+      ))
     }
   }
 
@@ -123,11 +126,28 @@ c4h_load <- function(path,
     lon_selection <- "all"
   } else {
     if (!is.numeric(bbox) || length(bbox) != 4) {
-      stop(paste0("Parameter 'bbox' must be a numeric vector of length 4 ",
-                  "(c(lat_max, lon_min, lat_min, lon_max))."))
+      stop(paste0(
+        "Parameter 'bbox' must be a numeric vector of length 4 ",
+        "(c(lat_max, lon_min, lat_min, lon_max))."
+      ))
     }
     lat_selection <- c(bbox[3], bbox[1])
     lon_selection <- c(bbox[2], bbox[4])
+  }
+
+  if (any(grep("esarchive/recon", path)) || any(grep("esarchive/exp", path))) {
+    data <- .c4h_load_esarchive(
+      path = path,
+      variable = variable,
+      year = year,
+      month = month,
+      day = day,
+      time = time,
+      leadtime_month = leadtime_month,
+      lat_selection = lat_selection,
+      lon_selection = lon_selection
+    )
+    return(data)
   }
 
   # obtain files to load
@@ -135,8 +155,11 @@ c4h_load <- function(path,
     # case: path is a single directory or file
     if (dir.exists(path)) {
       # obtain all files in <path> if path is a directory
-      file_list <- list.files(path = path, pattern = paste0("\\.", ext),
-                              full.names = TRUE)
+      file_list <- list.files(
+        path = path,
+        pattern = paste0("\\.", ext),
+        full.names = TRUE
+      )
       if (length(file_list) == 0) {
         stop("No files found in the specified 'path'.")
       }
@@ -167,32 +190,59 @@ c4h_load <- function(path,
     # check if files exist
     file_exists <- file.exists(file_list)
     if (!all(file_exists)) {
-      stop(paste0("The following files do not exist: ",
-                  paste(file_list[!file_exists], collapse = ", ")))
+      stop(paste0(
+        "The following files do not exist: ",
+        paste(file_list[!file_exists], collapse = ", ")
+      ))
     }
   }
 
-  if (ext == "nc") { # read .nc files
-    data <- .c4h_load_nc_stars(file_list = file_list,
-                               variable = variable,
-                               year = year,
-                               month = month,
-                               day = day,
-                               time = time,
-                               leadtime_month = leadtime_month,
-                               lat_selection = lat_selection,
-                               lon_selection = lon_selection)
-  } else if (ext == "csv") { # Read .csv files
-    data <- .c4h_load_csv(file_list = file_list,
-                          variable = variable,
-                          year = year,
-                          month = month,
-                          day = day,
-                          time = time,
-                          leadtime_month = leadtime_month,
-                          lat_selection = lat_selection,
-                          lon_selection = lon_selection)
+  if (ext == "nc") {
+    # read .nc files
+    data <- .c4h_load_nc_stars(
+      file_list = file_list,
+      variable = variable,
+      year = year,
+      month = month,
+      day = day,
+      time = time,
+      leadtime_month = leadtime_month,
+      lat_selection = lat_selection,
+      lon_selection = lon_selection
+    )
+  } else if (ext == "csv") {
+    # Read .csv files
+    data <- .c4h_load_csv(
+      file_list = file_list,
+      variable = variable,
+      year = year,
+      month = month,
+      day = day,
+      time = time,
+      leadtime_month = leadtime_month,
+      lat_selection = lat_selection,
+      lon_selection = lon_selection
+    )
   }
+
+  # CRS checks
+  lats <- data$coords$lat
+  if (!all(lats >= -90 & lats <= 90)) {
+    stop(
+      "Latitudes not in the interval [-90,90] have been found. ",
+      "clim4health currently only works with a WGS84 CRS. ",
+      "Aborting data loading."
+    )
+  }
+  lons <- data$coords$lon
+  if (!(all(lons >= -180 & lons <= 180) || all(lons >= 0 & lons <= 360))) {
+    stop(
+      "Longitudes not in the interval [-180, 180] or [0, 360] ",
+      "have been found. clim4health currently only works ",
+      "with a WGS84 CRS. Aborting data loading."
+    )
+  }
+
   # return s2dv_cube from csv or nc
   return(data)
 }

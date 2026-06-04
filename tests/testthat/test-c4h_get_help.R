@@ -16,7 +16,6 @@ testthat::local_mocked_bindings(
 )
 
 test_that("1. c4h_get_help: Dataset-level help", {
-
   # Case: No dataset provided - check message and listing
   expect_message(c4h_get_help(), "Available climate datasets:")
   expect_output(c4h_get_help(), "- test-dataset-1 \\n- test-dataset-2 ")
@@ -46,7 +45,7 @@ test_that("3. c4h_get_help: Option-level help", {
     c4h_get_help("test-dataset-1", "product_type"),
     "Possible options for product_type:\\n- reanalysis \\n- monthly_mean "
   )
-  
+
   expect_output(
     c4h_get_help("test-dataset-2", "originating_centre"),
     "Possible options for originating_centre:\\n- ecmwf \\n- meteo_france "

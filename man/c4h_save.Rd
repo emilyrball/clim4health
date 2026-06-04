@@ -4,7 +4,7 @@
 \alias{c4h_save}
 \title{c4h_save}
 \usage{
-c4h_save(data, format, path)
+c4h_save(data, format, path, drop = FALSE)
 }
 \arguments{
 \item{data}{The object you want to save, which could be an s2dv_cube,
@@ -14,6 +14,11 @@ terra, data.frame or sf object.}
 Options are: "s2dv", "terra", "csv" or "polygons"}
 
 \item{path}{A string indicating the path to save the file.}
+
+\item{drop}{Logical. Only relevant for "s2dv" format. For other data formats,
+please use the drop parameter in c4h_convert. If TRUE, dimensions
+with only one value will be dropped when saving. If FALSE, they will be
+retained. Default is FALSE.}
 }
 \value{
 None
@@ -28,5 +33,6 @@ fcst_path <- system.file("extdata", "forecast", package = "clim4health")
 fcst <- c4h_load(fcst_path, variable = "t2m", ext = 'nc')
 
 c4h_save(fcst, "s2dv", "out.nc")
+file.remove("out.nc")
 }
 }

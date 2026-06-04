@@ -26,9 +26,9 @@
 #' 'dynamical_bias', 'bias', 'evmos', 'mse_min', 'crps_min', 'rpc-based'. The
 #' abbreviations 'dbc','qm' can also be used. The default value is NULL.
 #' @param method_remap a character vector indicating the regridding method to
-#' be passed to CDORemap. Accepted methods are "con", "bil", "bic", "nn",
-#' "con2". If "nn" method is to be used, CDO_1.9.8 or newer version is required.
-#' The default value is NULL.
+#' be passed to CDORemap. Accepted methods are "con", "bil" (or "bilinear"),
+#' "bic", "nn", "con2". If "nn" method is to be used, CDO_1.9.8 or newer
+#' version is required. The default value is NULL.
 #' @param points a list of two elements containing the point latitudes and
 #' longitudes of the locations to downscale the model data. The list must
 #' contain the two elements named as 'latitude' and 'longitude'. If the
@@ -39,14 +39,11 @@
 #' methods are "nearest", "bilinear", "9point", "invdist4nn". Only needed if the
 #' downscaling is to a point location.
 #' @param lr_method a character vector indicating the linear regression method
-#' to be applied. Accepted methods are 'basic', 'large-scale' and '9nn'. The
+#' to be applied. Accepted methods are 'basic' and '9nn'. The
 #' 'basic' method fits a linear regression using high resolution observations as
 #' predictands and the interpolated model data as predictor. Then, the
 #' regression equation is applied to the interpolated model data to correct the
-#' interpolated values. The 'large-scale' method fits a linear regression with
-#' large-scale predictors (e.g. teleconnection indices) as predictors and
-#' high-resolution observations as predictands. This equation is then applied
-#' to the interpolated model values. Finally, the '9nn' method uses a linear
+#' interpolated values. The '9nn' method uses a linear
 #' regression with the nine nearest neighbours as predictors and high-resolution
 #' observations as predictands. Instead of constructing a regression model using
 #' all nine predictors, principal component analysis is applied to the data of
@@ -55,13 +52,21 @@
 #' 95% of the variance. The '9nn' method does not require a pre-interpolation
 #' process. The default value is NULL.
 #' @param loocv a logical indicating whether to apply leave-one-out
-#' cross-validation when applying the bias correction. Default to FALSE.
+#' cross-validation when applying the bias correction. Defaults to TRUE.
 #' @param ... additional arguments to be passed to the CSDownscale function.
+#'
 #' @returns A list of statistically downscaled data as s2dv_cube objects.
+#'
+#' @note See clim4health_downscaling.Rmd in the package vignettes for a
+#' detailed tutorial on function arguments and usage.
+#'
 #' @export
 #'
 #' @examples
 #' \donttest{
+#' # DISCLAIMER: The purpose of these examples is to show the functionality
+#' # of the different functions. To perform downscaling and calibration, a
+#' # much larger time series is required.
 #' hcst <- c4h_load(system.file("extdata", "hindcast", package = "clim4health"),
 #'                  variable = "t2m",
 #'                  year = 2010:2012,
@@ -119,6 +124,7 @@
 #' dwn <- c4h_downscale("Interpolation", exp = hcst,
 #'                      points = points, method_point_interp = "bilinear")
 #' }
+
 c4h_downscale <- function(
   downscale_function,
   exp,
@@ -132,7 +138,7 @@ c4h_downscale <- function(
   points = NULL,
   method_point_interp = NULL,
   lr_method = NULL,
-  loocv = FALSE,
+  loocv = TRUE,
   ...
 ) {
   # clim4health s2dv_cube objects will have the following dimensions
@@ -161,7 +167,7 @@ c4h_downscale <- function(
   if (!all(c("latitude", "longitude") %in% names(exp$dims))) {
     if (!("area" %in% names(exp$dims))) {
       stop(
-        "The 'exp' s2dv_cube object must have 'latitude' and 'longitude'",
+        "The 'exp' s2dv_cube object must have 'latitude' and 'longitude' ",
         "or 'area' dimensions."
       )
     } else {
@@ -280,8 +286,7 @@ c4h_downscale <- function(
           " specified, downscaling is to a grid and ",
           "'method_remap' must be specified. 'method_remap'",
           " must be a character vector indicating the regridding ",
-          "method. Accepted methods are",
-          " 'con', 'bil', 'bic', 'nn', 'con2'."
+          "method. "
         ))
       }
       if (downscale_function == "Interpolation") {
@@ -296,17 +301,6 @@ c4h_downscale <- function(
           " passed to CDO, and it must be a grid recognised by CDO."
         ))
       } else {
-        # case: 'Intbc' or 'Intlr' downscaling to a grid
-        if (is.null(obs)) {
-          # case: 'Intbc' or 'Intlr' downscaling to a grid requires 'obs'
-          stop(paste0(
-            "If using '",
-            downscale_function,
-            "', 'obs' must be ",
-            "specified. It must be an s2dv_cube object loaded and ",
-            "transformed using clim4health functions."
-          ))
-        }
         # case: 'Intbc' or 'Intlr' downscaling to a grid requires 'target_grid'
         message(paste0(
           "Note: If using '",
@@ -321,12 +315,19 @@ c4h_downscale <- function(
     }
   }
 
-  if (length(method_remap) > 1) {
-    # case: if more than one method_remap is provided, stop
-    stop(
-      "'method_remap' must be a single character string. Accepted values",
-      " are 'con', 'bil', 'bic', 'nn', 'con2'."
-    )
+  if (!is.null(method_remap)) {
+    if (length(method_remap) > 1) {
+      # case: if more than one method_remap is provided, stop
+      stop("'method_remap' must be a single character string")
+    } else if (
+      !method_remap %in%
+        c("con", "bil", "bilinear", "bic", "bicubic", "nn", "con2")
+    ) {
+      stop(
+        "Accepted values for 'method_remap' are ",
+        "'con', 'bil', 'bilinear', 'bic', 'bicubic', 'nn', 'con2'."
+      )
+    }
   }
 
   # catch missing arguments for each downscaling function
@@ -345,7 +346,7 @@ c4h_downscale <- function(
     if (is.null(lr_method)) {
       stop(
         "If using 'Intlr', 'lr_method' must be specified. Options ",
-        "are: 'basic', 'large-scale' and '9nn'."
+        "are: 'basic' and '9nn'."
       )
     }
   }
@@ -422,6 +423,19 @@ c4h_downscale <- function(
     source_file_exp <- exp$attrs$source_files[1]
 
     tmp_file_exp <- .reduce_source_file(source_file_exp)
+    if (grepl("esarchive/recon", source_file_exp) ||
+          grepl("esarchive/exp", source_file_exp)) {
+      # if source file is in esarchive, lon is 0-360 in source file
+      tmp_file_exp2 <- gsub(".nc", "_lon360.nc", tmp_file_exp)
+      system(paste0(
+        "cdo sellonlatbox,-180,180,-90,90 ",
+        tmp_file_exp,
+        " ",
+        tmp_file_exp2
+      ))
+      system(paste0("rm ", tmp_file_exp))
+      tmp_file_exp <- tmp_file_exp2
+    }
     exp$attrs$source_files[1] <- tmp_file_exp
 
     if (!is.null(obs)) {

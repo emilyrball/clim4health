@@ -1,17 +1,17 @@
 make_test_s2dv_cube <- function(reverse_latitude = FALSE) {
   # Dimensions
   lon <- seq(-80, -70, length.out = 10)
-  lat <- seq(-10,   0,  length.out = 10)
+  lat <- seq(-10, 0, length.out = 10)
   if (reverse_latitude) {
-    lat <- seq(0,   -10,  length.out = 10)
+    lat <- seq(0, -10, length.out = 10)
   }
   dims <- c(
-    dataset   = 1,
-    var       = 1,
-    sdate     = 1,
-    time      = 1,
-    ensemble  = 1,
-    latitude  = length(lat),
+    dataset = 1,
+    var = 1,
+    sdate = 1,
+    time = 1,
+    ensemble = 1,
+    latitude = length(lat),
     longitude = length(lon)
   )
 
@@ -26,17 +26,17 @@ make_test_s2dv_cube <- function(reverse_latitude = FALSE) {
     dims = dims,
     coords = list(
       dataset = "test",
-      var       = "t2m",
-      sdate     = as.Date("2010-01-01"),
-      time      = as.Date("2010-01-01"),
-      ensemble  = 1,
-      latitude  = lat,
+      var = "t2m",
+      sdate = as.Date("2010-01-01"),
+      time = as.Date("2010-01-01"),
+      ensemble = 1,
+      latitude = lat,
       longitude = lon
     ),
     attrs = list(
       Variable = list(
         varName = "t2m",
-        units   = "K"
+        units = "K"
       ),
       # Dates must be a matrix where rows = time, cols = sdate
       Dates = matrix(as.POSIXct("2010-01-01"), nrow = 1, ncol = 1)
@@ -53,10 +53,14 @@ make_test_areas_sf <- function() {
   library(terra)
 
   # Define extent within the cube's range (-80 to -70, -10 to 0)
-  poly1 <- st_as_sfc(st_bbox(c(xmin = -78, xmax = -75, ymin = -8, ymax = -6),
-                             crs = st_crs(4326)))
-  poly2 <- st_as_sfc(st_bbox(c(xmin = -74, xmax = -72, ymin = -4, ymax = -2),
-                             crs = st_crs(4326)))
+  poly1 <- st_as_sfc(st_bbox(
+    c(xmin = -78, xmax = -75, ymin = -8, ymax = -6),
+    crs = st_crs(4326)
+  ))
+  poly2 <- st_as_sfc(st_bbox(
+    c(xmin = -74, xmax = -72, ymin = -4, ymax = -2),
+    crs = st_crs(4326)
+  ))
 
   areas_sf <- st_sf(
     munip_code = c("Area_A", "Area_B"),
@@ -78,13 +82,16 @@ test_that("1. Failure if areas_id not found", {
 
   # 2. Run c4h_space
   # We test that it runs with expected error
-  expect_error({
-    obs_agg <- c4h_space(
-      data = cube,
-      areas = areas_sf,
-      areas_id = "dummy_code"
-    )
-  }, "'areas_id' not found in the 'areas' object.")
+  expect_error(
+    {
+      obs_agg <- c4h_space(
+        data = cube,
+        areas = areas_sf,
+        areas_id = "dummy_code"
+      )
+    },
+    "'areas_id' not found in the 'areas' object."
+  )
 })
 
 test_that("2. Happy path with correct spatial aggregation", {
@@ -94,13 +101,16 @@ test_that("2. Happy path with correct spatial aggregation", {
 
   # 2. Run c4h_space
   # We test that it runs without error
-  expect_error({
-    obs_agg <- c4h_space(
-      data = cube,
-      areas = areas_sf,
-      areas_id = "munip_code"
-    )
-  }, NA)
+  expect_error(
+    {
+      obs_agg <- c4h_space(
+        data = cube,
+        areas = areas_sf,
+        areas_id = "munip_code"
+      )
+    },
+    NA
+  )
 
   # 3. Verify the structure of the aggregated object
   expect_s3_class(obs_agg, "s2dv_cube")
@@ -112,18 +122,21 @@ test_that("2. Happy path with correct spatial aggregation", {
 
 test_that("3. Handling latitude stored north to south", {
   # 1. Setup mock objects
-  cube <- make_test_s2dv_cube(reverse_latitude=TRUE)
+  cube <- make_test_s2dv_cube(reverse_latitude = TRUE)
   areas_sf <- make_test_areas_sf()
 
   # 2. Run c4h_space
   # We test that it runs without error
-  expect_error({
-    obs_agg <- c4h_space(
-      data = cube,
-      areas = areas_sf,
-      areas_id = "munip_code"
-    )
-  }, NA)
+  expect_error(
+    {
+      obs_agg <- c4h_space(
+        data = cube,
+        areas = areas_sf,
+        areas_id = "munip_code"
+      )
+    },
+    NA
+  )
 
   # 3. Verify the structure of the aggregated object
   expect_s3_class(obs_agg, "s2dv_cube")
@@ -175,14 +188,19 @@ test_that("5. Different results for weighting options", {
   # 1. Simple mean
   res_none <- c4h_space(cube, poly_weighted, weighting = "none", fun = "mean")
   # 2. Approx weighting
-  res_approx <- c4h_space(cube, poly_weighted, weighting = "approx", fun = "mean")
+  res_approx <- c4h_space(
+    cube,
+    poly_weighted,
+    weighting = "approx",
+    fun = "mean"
+  )
   # 3. Exact weighting
   res_exact <- c4h_space(cube, poly_weighted, weighting = "exact", fun = "mean")
 
   # Convert to vectors to ensure we are comparing values, not array attributes
-  val_none   <- as.vector(res_none$data)
+  val_none <- as.vector(res_none$data)
   val_approx <- as.vector(res_approx$data)
-  val_exact  <- as.vector(res_exact$data)
+  val_exact <- as.vector(res_exact$data)
 
   # 'None' should be significantly different from 'Exact' and 'Approx'
   # (Difference should be large because 'none' ignores partial cell areas)
@@ -202,7 +220,7 @@ test_that("6. Aggregation function 'fun' works", {
 
   # Get mean vs max
   res_mean <- c4h_space(cube, areas, fun = "mean")
-  res_max  <- c4h_space(cube, areas, fun = "max")
+  res_max <- c4h_space(cube, areas, fun = "max")
 
   # In a gradient (like your make_test_s2dv_cube), max should be > mean
   expect_true(all(res_max$data > res_mean$data))

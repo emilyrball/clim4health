@@ -44,12 +44,14 @@ Imports:
     CSDownscale,
     ncdf4,
     ggpattern,
+    startR,
     rlang
 Suggests: 
     testthat (>= 3.0.0),
     spData,
     cubelyr,
     knitr,
+    withr,
     rmarkdown
 Config/testthat/edition: 3
 VignetteBuilder: knitr

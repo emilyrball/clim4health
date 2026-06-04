@@ -10,9 +10,9 @@ c4h_space(data, areas, fun = "mean", weighting = "none", areas_id = NULL)
 \item{data}{s2dv_cube object with the climate data to be aggregates, usually
 read using \code{c4h_load}.}
 
-\item{areas}{Vector data, either a sf or terra object loaded into memory, or path
-to a vector file to be read. Contains the areal polygon geometries for the spatial
-aggregation.}
+\item{areas}{Vector data, either a sf or terra object loaded into memory, or
+path to a vector file to be read. Contains the areal polygon geometries for
+the spatial aggregation.}
 
 \item{fun}{String. Method to perform the aggregation, defaults to "mean".
 Other possible options include "median", "sum", "min" and "max".}
