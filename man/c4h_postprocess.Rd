@@ -125,14 +125,14 @@ of the test Ho: (R)MSSS = 0. The default value is FALSE. Only relevant if
 "MSSS" or "RMSSS" is in 'metrics'.}
 
 \item{sig_method}{A character string indicating the significance method. The
-options are NULL, "one-sided Fisher" and "RandomWalk".
+options are NULL, "one-sided Fisher", "RandomWalk", and "DieboldMariano".
 Relevant for metrics "BSS", "RPSS", "CRPSS", "AbsBiasSS", "MSSS" and "RMSSS".
 The default is NULL. In this case, "RandomWalk" is applied for "BSS", "RPSS",
 "CRPSS", and "AbsBiasSS", and "one-sided Fisher" is applied for "MSSS" and
 "RMSSS".}
 
 \item{sig_method.type}{A character string indicating the test type of the
-significance method if sig_method is "RandomWalk". Valid
+significance method if sig_method is "RandomWalk" or "DieboldMariano". Valid
 options are "two.sided.approx", "two.sided", "greater", "less". The default
 is "two.sided.approx".}
 
