@@ -76,13 +76,13 @@
 #' of the test Ho: (R)MSSS = 0. The default value is FALSE. Only relevant if
 #' "MSSS" or "RMSSS" is in 'metrics'.
 #' @param sig_method A character string indicating the significance method. The
-#' options are NULL, "one-sided Fisher" and "RandomWalk".
+#' options are NULL, "one-sided Fisher", "RandomWalk", and "DieboldMariano".
 #' Relevant for metrics "BSS", "RPSS", "CRPSS", "AbsBiasSS", "MSSS" and "RMSSS".
 #' The default is NULL. In this case, "RandomWalk" is applied for "BSS", "RPSS",
 #' "CRPSS", and "AbsBiasSS", and "one-sided Fisher" is applied for "MSSS" and
 #' "RMSSS".
 #' @param sig_method.type A character string indicating the test type of the
-#' significance method if sig_method is "RandomWalk". Valid
+#' significance method if sig_method is "RandomWalk" or "DieboldMariano". Valid
 #' options are "two.sided.approx", "two.sided", "greater", "less". The default
 #' is "two.sided.approx".
 #' @param rocss_cat An integer indicating the category to be returned when
@@ -315,7 +315,6 @@ c4h_postprocess <- function(
     sig_method_rmsss <- "one-sided Fisher"
   } else {
     sig_method_brier <- sig_method_rmsss <- sig_method
-
   }
   if (sig_method_rmsss == "RandomWalk") {
     sig_method_rmsss <- "Random Walk"
@@ -338,7 +337,7 @@ c4h_postprocess <- function(
           weights_ref = weights_ref,
           cross.val = cross.val,
           na.rm = na.rm,
-          #sig_method = sig_method_brier,
+          sig_method = sig_method_brier,
           sig_method.type = sig_method.type,
           alpha = alpha,
           N.eff = N.eff,
@@ -377,7 +376,7 @@ c4h_postprocess <- function(
         weights_ref = weights_ref,
         cross.val = cross.val,
         na.rm = na.rm,
-        #sig_method = sig_method_brier,
+        sig_method = sig_method_brier,
         sig_method.type = sig_method.type,
         alpha = alpha,
         N.eff = N.eff,

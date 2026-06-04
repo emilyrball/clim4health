@@ -29,7 +29,6 @@ URL: https://gitlab.earth.bsc.es/ghr/clim4health,
 BugReports: https://gitlab.earth.bsc.es/ghr/clim4health/-/issues
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
 Imports:
     CSTools,
     ecmwfr,
@@ -55,3 +54,4 @@ Suggests:
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 SystemRequirements: CDO (Climate Data Operators, https://code.mpimet.mpg.de/projects/cdo)
+Config/roxygen2/version: 8.0.0
