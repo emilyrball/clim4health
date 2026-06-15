@@ -346,8 +346,8 @@ test_that("RMSSS gridded", {
 
   expect_true("RMSSS" %in% names(res))
   expect_named(res$RMSSS, c("rmsss", "p.val", "sign"))
-  expect_true(!all(is.null(res$RMSSS$sign$data)))
-  expect_true(!all(is.null(res$RMSSS$p.val$data)))
+  expect_false(all(is.null(res$RMSSS$sign$data)))
+  expect_false(all(is.null(res$RMSSS$p.val$data)))
 
   res <- c4h_postprocess(
     exp,

@@ -519,7 +519,7 @@ c4h_postprocess <- function(
       out_coords = out_coords,
       out_attrs = out_attrs
     )
-    if (pval == TRUE) {
+    if (isTRUE(pval)) {
       pval <- .format_output(
         data = temp$p.val,
         out_dims = out_dims,
@@ -530,7 +530,7 @@ c4h_postprocess <- function(
     } else {
       pval <- NULL
     }
-    if (sign == TRUE) {
+    if (isTRUE(TRUE)) {
       signif <- .format_output(
         data = temp$sign,
         out_dims = out_dims,
@@ -604,7 +604,7 @@ c4h_postprocess <- function(
       out_coords = out_coords,
       out_attrs = out_attrs
     )
-    if (pval == TRUE) {
+    if (isTRUE(pval)) {
       pval <- .format_output(
         data = temp$p.val,
         out_dims = out_dims,
@@ -615,7 +615,7 @@ c4h_postprocess <- function(
     } else {
       pval <- NULL
     }
-    if (sign == TRUE) {
+    if (isTRUE(sign)) {
       signif <- .format_output(
         data = temp$sign,
         out_dims = out_dims,

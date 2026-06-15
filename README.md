@@ -27,7 +27,7 @@ provided.
 
 <br>
 <div align="center">
-<img src='inst/figures/clim4health_package_structure.svg' width="80%" /></center>
+<img src='inst/figures/clim4health_package_structure.svg' width="80%" />
 </div>
 <br> 
 
@@ -73,7 +73,9 @@ c4h_plot(rean,
          coordgrid = TRUE)
 ```
 
-<span> <img src='inst/figures/README-example.png' width="70%" />
+<div align="center">
+<img src='inst/figures/README-example.png' width="70%" />
+</div>
 
 ## Developers
 

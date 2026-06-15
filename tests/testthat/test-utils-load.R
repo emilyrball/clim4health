@@ -475,7 +475,7 @@ test_that("get_csv_dims", {
   names <- c("dummy")
   out <- .get_csv_dims(headers, data, names)
   expect_equal(out$val, c(1, 1))
-  expect_equal(out$col, NULL)
+  expect_null(out$col)
 })
 
 
