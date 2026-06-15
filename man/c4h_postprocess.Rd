@@ -236,5 +236,5 @@ c4h_plotskill(skill = skill_point$BSS10$bss, boundaries = areas)
 }
 }
 \seealso{
-\code{\link[=c4h_plotskill]{c4h_plotskill()}} for visualizing the forecast skill.
+\link{c4h_plotskill} for visualizing the forecast skill.
 }

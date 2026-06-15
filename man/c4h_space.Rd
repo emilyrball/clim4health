@@ -21,7 +21,7 @@ Other possible options include "median", "sum", "min" and "max".}
 when \code{fun = "mean"} at the cost of increased computation. Options are "none"
 (a simple mean is applied to cells with centroid within the polygon),
 "approx" (for an approximate and fast weighting) and "exact" (for an exact
-weighting). See \code{\link[terra]{extract}} for details.}
+weighting). See \code{terra::extract} for details.}
 
 \item{areas_id}{String. Name of the area identifier in the \code{areas} object.}
 }

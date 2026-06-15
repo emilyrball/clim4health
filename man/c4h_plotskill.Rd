@@ -52,7 +52,7 @@ climatologies.}
 \code{stars::geom_stars}, including \code{lwd}, \code{alpha}, \code{size} and \code{colour}.}
 }
 \value{
-A plot
+A \code{ggplot2} plot with the postprocessing skill scores.
 }
 \description{
 Plots \emph{s2dv_cube} postprocessing skill scores for gridded,
@@ -155,6 +155,6 @@ c4h_plotskill(skill = skill_point$BSS10$bss,
 }
 }
 \seealso{
-\code{\link[=c4h_postprocess]{c4h_postprocess()}} for calculating forcast skill and \code{\link[=c4h_plot]{c4h_plot()}}
+\link{c4h_postprocess} for calculating forcast skill and \link{c4h_plot}
 for general plotting of \code{s2dv} objects.
 }

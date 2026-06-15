@@ -1,7 +1,7 @@
 #' Example datasets included in *clim4health*
 #'
 #' These datasets are stored in `inst/extdata/` and are accessed
-#' through functions such as [c4h_load()] or via
+#' through functions such as [c4h_load] or via
 #' `system.file("extdata", "file.csv", package = "clim4health")`.
 #'
 #' @section Station and administrative data:
@@ -32,6 +32,6 @@
 #' January, February and March 2010-2012.
 #' The spatial extent covers the "Valle del Cauca" department in Colombia.
 #'
-#' @seealso [c4h_load()]
+#' @seealso [c4h_load]
 #' @name c4h_data
 NULL

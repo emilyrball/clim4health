@@ -37,13 +37,13 @@
 #' @param coordgrid If TRUE, display coordinate grids on the map.
 #' @param ... Extra arguments indicating fixed aesthetics to be passed to
 #'`stars::geom_stars`, including `lwd`, `alpha` and `colour`.
-#' @returns A plot
+#' @returns A `ggplot2` plot with the climate data.
 #' @export
 #'
 #' @importFrom rlang .data
 #'
-#' @seealso [c4h_plotskill()] for plotting forecast skill metrics from
-#' [c4h_postprocess()]
+#' @seealso [c4h_plotskill] for plotting forecast skill metrics from
+#' [c4h_postprocess]
 #'
 #' @examples
 #' \donttest{

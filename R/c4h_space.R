@@ -11,7 +11,7 @@
 #' when `fun = "mean"` at the cost of increased computation. Options are "none"
 #' (a simple mean is applied to cells with centroid within the polygon),
 #' "approx" (for an approximate and fast weighting) and "exact" (for an exact
-#' weighting). See \code{\link[terra]{extract}} for details.
+#' weighting). See `terra::extract` for details.
 #' @param areas_id String. Name of the area identifier in the `areas` object.
 #'
 #' @returns A s2dv_cube object with the aggregated data.

@@ -26,12 +26,12 @@
 #' @param coordgrid If TRUE, display coordinate grids on the map.
 #' @param ... Extra arguments indicating fixed aesthetics to be passed to
 #'`stars::geom_stars`, including `lwd`, `alpha`, `size` and `colour`.
-#' @returns A plot
+#' @returns A `ggplot2` plot with the postprocessing skill scores.
 #' @export
 #'
 #' @importFrom rlang .data
 #'
-#' @seealso [c4h_postprocess()] for calculating forcast skill and [c4h_plot()]
+#' @seealso [c4h_postprocess] for calculating forcast skill and [c4h_plot]
 #' for general plotting of `s2dv` objects.
 #'
 #' @examples

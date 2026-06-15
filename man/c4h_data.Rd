@@ -5,7 +5,7 @@
 \title{Example datasets included in \emph{clim4health}}
 \description{
 These datasets are stored in \verb{inst/extdata/} and are accessed
-through functions such as \code{\link[=c4h_load]{c4h_load()}} or via
+through functions such as \link{c4h_load} or via
 \code{system.file("extdata", "file.csv", package = "clim4health")}.
 }
 \section{Station and administrative data}{
@@ -53,5 +53,5 @@ The spatial extent covers the "Valle del Cauca" department in Colombia.
 }
 
 \seealso{
-\code{\link[=c4h_load]{c4h_load()}}
+\link{c4h_load}
 }

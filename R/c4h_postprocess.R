@@ -93,7 +93,7 @@
 #' @returns a list of lists with the calculated metrics and their significances
 #' as s2dv_cube objects.
 #'
-#' @seealso [c4h_plotskill()] for visualizing the forecast skill.
+#' @seealso [c4h_plotskill] for visualizing the forecast skill.
 #' @note See clim4health_postprocessing.Rmd in the package vignettes for a
 #' detailed tutorial on function arguments and usage.
 #'
