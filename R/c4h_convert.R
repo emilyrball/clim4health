@@ -59,9 +59,7 @@
 #' ## to csv
 #' out <- c4h_convert(stations, "csv")
 #' }
-c4h_convert <- function(data,
-                        output_format,
-                        crs = NULL, drop = FALSE) {
+c4h_convert <- function(data, output_format, crs = NULL, drop = FALSE) {
   if (!output_format %in% c("terra", "csv", "polygons")) {
     stop("Invalid output format. Choose 'terra', 'csv' or 'polygons'.")
   }
@@ -73,7 +71,7 @@ c4h_convert <- function(data,
   if (inherits(data, "s2dv_cube")) {
     # Spatial coords
     dim_names <- names(data$dims)
-    has_latlon  <- all(c("latitude", "longitude") %in% dim_names)
+    has_latlon <- all(c("latitude", "longitude") %in% dim_names)
     has_area <- "area" %in% dim_names
   } else {
     stop("'data' must be an s2dv_cube.")
@@ -83,29 +81,33 @@ c4h_convert <- function(data,
     stop("Gridded data is required for 'terra' output format.")
   }
 
-  if (!(has_latlon || has_area) &&
-        output_format == "polygons") {
+  if (
+    !(has_latlon || has_area) &&
+      output_format == "polygons"
+  ) {
     stop("Gridded or polygon data is required for 'polygons' output format.")
   }
 
   if (is.null(crs) && output_format %in% c("terra", "polygons")) {
     if (has_area) {
-      message(paste0("'crs' is not provided. Taking CRS from",
-                     "the input data if available."))
+      message(paste0(
+        "'crs' is not provided. Taking CRS from",
+        "the input data if available."
+      ))
       crs <- sf::st_crs(data$attrs$area$geom)
     } else if (has_latlon) {
-      message(paste0("'crs' is not provided. Assuming WGS 84 ",
-                     "(EPSG:4326) for gridded data."))
+      message(paste0(
+        "'crs' is not provided. Assuming WGS 84 ",
+        "(EPSG:4326) for gridded data."
+      ))
       crs <- "EPSG:4326"
     }
   }
 
   if (output_format == "terra") {
     .s2dv_to_terra(data, crs = crs, drop = drop)
-
   } else if (output_format == "csv") {
     .s2dv_to_csv(data, drop = drop)
-
   } else if (output_format == "polygons") {
     .s2dv_to_polygons(data, crs = crs, drop = drop)
   }

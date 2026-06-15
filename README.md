@@ -2,6 +2,9 @@
 
 <!-- badges: start -->
 [![License](https://img.shields.io/badge/License-AGPL_v3-brightgreen.svg?style=flat)](https://www.gnu.org/licenses/agpl-3.0.html)
+[![CRAN status](https://www.r-pkg.org/badges/version/clim4health)](https://cran.r-project.org/package=clim4health)
+[![CRAN downloads total](http://cranlogs.r-pkg.org/badges/grand-total/clim4health)](https://cran.r-project.org/package=clim4health)
+[![CRAN downloads month](http://cranlogs.r-pkg.org/badges/clim4health)](https://cran.r-project.org/package=clim4health)
 ![coverage](https://gitlab.earth.bsc.es/ghr/clim4health/badges/main/coverage.svg)
 <!-- badges: end -->
 
@@ -35,8 +38,42 @@ the [HARMONIZE](https://www.harmonize-tools.org/) project, which comprises
 different R and Python libraries tailored for health, climate, environmental, 
 and socioeconomic data acquisition, harmonisation, and visualization.
 
-The package is currently under development and its expected release date 
-is **April 2026**.
+
+## Installation
+
+```R
+# Install from CRAN
+install.packages("clim4health")
+
+# Get the development version from Gitlab
+devtools::install_git('https://earth.bsc.es/gitlab/ghr/clim4health.git')
+```
+
+## Usage
+
+```R
+# Load climate reanalysis temperature data included in the package
+# and plot it for the study area
+library("clim4health")
+library("sf")
+
+# Region municipalities
+mun_path <- system.file("extdata", "areas", "munip_vallecauca.gpkg",
+                        package = "clim4health")
+mun <- read_sf(mun_path)
+
+# Reanalysis data
+rean_path <- system.file("extdata", "reanalysis", package = "clim4health")
+rean <- c4h_load(rean_path, variable = "t2m", ext = 'nc')
+
+# clim4health plot
+c4h_plot(rean, 
+         boundaries = mun,
+         mask_boundaries = TRUE, 
+         coordgrid = TRUE)
+```
+
+<span> <img src='man/figures/README-example.png' width="70%" />
 
 ## Developers
 

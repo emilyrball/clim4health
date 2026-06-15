@@ -34,12 +34,13 @@
 #' mask <- c4h_index(obs, return_mask = TRUE, lower_threshold = 290)
 #' c4h_plot(mask)
 
-c4h_index <- function(data,
-                      return_mask = FALSE,
-                      lower_threshold = NULL,
-                      upper_threshold = NULL,
-                      closed = TRUE) {
-
+c4h_index <- function(
+  data,
+  return_mask = FALSE,
+  lower_threshold = NULL,
+  upper_threshold = NULL,
+  closed = TRUE
+) {
   # Retrieve data
   qube <- data$data
 
@@ -75,10 +76,14 @@ c4h_index <- function(data,
   out <- data
   out$data <- qube
   out$attrs$index$return_mask <- return_mask
-  out$attrs$index$lower_threshold <- paste0(ifelse(closed, ">=", ">"),
-                                            lower_threshold)
-  out$attrs$index$upper_threshold <- paste0(ifelse(closed, "<=", "<"),
-                                            upper_threshold)
+  out$attrs$index$lower_threshold <- paste0(
+    ifelse(closed, ">=", ">"),
+    lower_threshold
+  )
+  out$attrs$index$upper_threshold <- paste0(
+    ifelse(closed, "<=", "<"),
+    upper_threshold
+  )
 
   return(out)
 }

@@ -9,15 +9,18 @@
 #'
 #' @returns padded data array
 #' @noRd
-.pad_array <- function(aggregated_data_i, dates_i,
-                       dim_aggregation = "time", time_zone = "UTC") {
-
+.pad_array <- function(
+  aggregated_data_i,
+  dates_i,
+  dim_aggregation = "time",
+  time_zone = "UTC"
+) {
   # Identify dim_aggregation
-  dims     <- dim(aggregated_data_i)
-  dim_pos  <- which(names(dims) == dim_aggregation)
+  dims <- dim(aggregated_data_i)
+  dim_pos <- which(names(dims) == dim_aggregation)
 
   # Find unique year–month pairs (“blocks”)
-  years  <- lubridate::year(dates_i)
+  years <- lubridate::year(dates_i)
   months <- lubridate::month(dates_i)
   combos <- unique(data.frame(year = years, month = months))
   n_blocks <- nrow(combos)
@@ -53,14 +56,17 @@
     out <- do.call(
       `[<-`,
       c(
-        list(out), idx_new,
+        list(out),
+        idx_new,
         list(do.call(`[`, c(list(aggregated_data_i), idx_old)))
       )
     )
     # Build padded date labels
     padded_labels <- rep(NA_character_, 31)
-    padded_labels[block_days] <- format(dates_i[old_idx],
-                                        paste0("%Y-%m-%d ", tz = time_zone))
+    padded_labels[block_days] <- format(
+      dates_i[old_idx],
+      paste0("%Y-%m-%d ", tz = time_zone)
+    )
     dates_blocks[[k]] <- padded_labels
   }
 
@@ -76,7 +82,7 @@
 #'
 #' @param y vector to be aggregated
 #' @param fun aggregation function
-#' @param min_valid minimum number of valid (non-NA) values required to return 
+#' @param min_valid minimum number of valid (non-NA) values required to return
 #' a non-NA result
 #' @returns aggregated value or NA if not enough valid values
 #' @noRd

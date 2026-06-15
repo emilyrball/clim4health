@@ -1,15 +1,15 @@
 make_test_s2dv_cube <- function() {
   # Dimensions
   lon <- seq(-80, -70, length.out = 10)
-  lat <- seq(-10,   0,  length.out = 10)
+  lat <- seq(-10, 0, length.out = 10)
 
   dims <- c(
-    dataset   = 1,
-    var       = 1,
-    sdate     = 1,
-    time      = 1,
-    ensemble  = 1,
-    latitude  = length(lat),
+    dataset = 1,
+    var = 1,
+    sdate = 1,
+    time = 1,
+    ensemble = 1,
+    latitude = length(lat),
     longitude = length(lon)
   )
 
@@ -24,17 +24,17 @@ make_test_s2dv_cube <- function() {
     dims = dims,
     coords = list(
       dataset = "test",
-      var       = "t2m",
-      sdate     = as.Date("2010-01-01"),
-      time      = as.Date("2010-01-01"),
-      ensemble  = 1,
-      latitude  = lat,
+      var = "t2m",
+      sdate = as.Date("2010-01-01"),
+      time = as.Date("2010-01-01"),
+      ensemble = 1,
+      latitude = lat,
       longitude = lon
     ),
     attrs = list(
       Variable = list(
         varName = "t2m",
-        units   = "K"
+        units = "K"
       ),
       # Dates must be a matrix where rows = time, cols = sdate
       Dates = matrix(as.POSIXct("2010-01-01"), nrow = 1, ncol = 1)

@@ -24,7 +24,7 @@
 
 #' .abs_labels
 #'
-#' paste the absolute value of the input with a "-" prefix if the input is 
+#' paste the absolute value of the input with a "-" prefix if the input is
 #' negative, otherwise just the absolute value. This is used for axis labels
 #' to remove the ordinal N/W/S/E.
 #'

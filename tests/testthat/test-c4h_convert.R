@@ -216,27 +216,34 @@ make_test_areas_sf <- function(crs = 4326) {
 
 test_that("1. Error if output_format is invalid", {
   cube <- make_mock_fcst_cube()
-  expect_error(c4h_convert(cube, "invalid_format"),
-               "Invalid output format. Choose 'terra', 'csv' or 'polygons'.")
+  expect_error(
+    c4h_convert(cube, "invalid_format"),
+    "Invalid output format. Choose 'terra', 'csv' or 'polygons'."
+  )
 })
 
 test_that("2. Error if data is not an s2dv_cube", {
   not_a_cube <- list()
-  expect_error(c4h_convert(not_a_cube, "terra"),
-               "'data' must be an s2dv_cube.")
+  expect_error(c4h_convert(not_a_cube, "terra"), "'data' must be an s2dv_cube.")
 })
 
 test_that("3. Error if gridded data is required but not present", {
   location_cube <- make_mock_location_cube()
-  expect_error(c4h_convert(location_cube, "terra"),
-               "Gridded data is required for 'terra' output format.")
+  expect_error(
+    c4h_convert(location_cube, "terra"),
+    "Gridded data is required for 'terra' output format."
+  )
 })
 
 test_that("4. Error if gridded or polygon data is required but not present", {
   location_cube <- make_mock_location_cube()
-  expect_error(c4h_convert(location_cube, "polygons"),
-               paste0("Gridded or polygon data is required for 'polygons'",
-                      " output format."))
+  expect_error(
+    c4h_convert(location_cube, "polygons"),
+    paste0(
+      "Gridded or polygon data is required for 'polygons'",
+      " output format."
+    )
+  )
 })
 
 test_that("5. c4h_convert dispatches to .s2dv_to_terra", {
@@ -255,7 +262,6 @@ test_that("5. c4h_convert dispatches to .s2dv_to_terra", {
 test_that("6. c4h_convert dispatches to .s2dv_to_csv", {
   cube <- make_mock_fcst_cube()
   mock_csv <- function(x, drop) "csv_result"
-
 
   with_mocked_bindings(
     .s2dv_to_csv = mock_csv,
@@ -281,21 +287,33 @@ test_that("7. c4h_convert dispatches to .s2dv_to_polygons", {
 
 test_that("8. Message if 'crs' is NULL", {
   cube <- make_mock_fcst_cube()
-  expect_message(c4h_convert(cube, "terra", crs = NULL),
-                 paste0("'crs' is not provided. Assuming WGS 84",
-                        " \\(EPSG:4326\\) for gridded data."))
+  expect_message(
+    c4h_convert(cube, "terra", crs = NULL),
+    paste0(
+      "'crs' is not provided. Assuming WGS 84",
+      " \\(EPSG:4326\\) for gridded data."
+    )
+  )
 
   area_cube <- make_mock_area_cube()
   area_cube$attrs$area$geom <- make_test_areas_sf()$geometry
-  expect_message(c4h_convert(area_cube, "polygons", crs = NULL),
-                 paste0("'crs' is not provided. Taking CRS from",
-                        "the input data if available."))
+  expect_message(
+    c4h_convert(area_cube, "polygons", crs = NULL),
+    paste0(
+      "'crs' is not provided. Taking CRS from",
+      "the input data if available."
+    )
+  )
 })
 
 test_that("9. failure if drop is invalid", {
   cube <- make_mock_fcst_cube()
-  expect_error(c4h_convert(cube, "terra", drop = "not_logical"),
-               "'drop' must be a single logical value.")
-  expect_error(c4h_convert(cube, "terra", drop = c(TRUE, FALSE)),
-               "'drop' must be a single logical value.")
+  expect_error(
+    c4h_convert(cube, "terra", drop = "not_logical"),
+    "'drop' must be a single logical value."
+  )
+  expect_error(
+    c4h_convert(cube, "terra", drop = c(TRUE, FALSE)),
+    "'drop' must be a single logical value."
+  )
 })

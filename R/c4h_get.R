@@ -37,7 +37,7 @@
 #'         month = c(4, 5),
 #'         bbox = c(33, -93, -23, -17),
 #'         outname = "era5land")
-#' 
+#'
 #' c4h_get(pat = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
 #'         dataset = "seasonal-monthly-single-levels",
 #'         originating_centre = c("ecmwf"),
@@ -49,7 +49,7 @@
 #'         leadtime_month = c("1", "2", "3"),
 #'         bbox = c(33, -93, -23, -17),
 #'         outname = "hindcast")
-#' 
+#'
 #' c4h_get(pat = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
 #'         dataset = "seasonal-monthly-single-levels",
 #'         originating_centre = c("ecmwf"),
@@ -63,21 +63,22 @@
 #'         outname = "forecast")
 #' }
 
-c4h_get <- function(pat,
-                    dataset,
-                    product_type,
-                    variable,
-                    year,
-                    month = c(1:12),
-                    day = c(1:31),
-                    time = c(0),
-                    bbox,
-                    leadtime_month,
-                    originating_centre,
-                    system,
-                    outname = paste0("cds_"),
-                    outpath = getwd()) {
-
+c4h_get <- function(
+  pat,
+  dataset,
+  product_type,
+  variable,
+  year,
+  month = c(1:12),
+  day = c(1:31),
+  time = c(0),
+  bbox,
+  leadtime_month,
+  originating_centre,
+  system,
+  outname = paste0("cds_"),
+  outpath = getwd()
+) {
   all_params <- c(as.list(environment()))
 
   # check the parameters of the function and give error messages
@@ -85,38 +86,51 @@ c4h_get <- function(pat,
 
   # check whether the dataset is valid
   if (missing(dataset) || !dataset %in% datasets) {
-    stop(paste0("Dataset is not valid. Dataset must be one of the following: ",
-                paste(datasets, collapse = ", ")))
+    stop(paste0(
+      "Dataset is not valid. Dataset must be one of the following: ",
+      paste(datasets, collapse = ", ")
+    ))
   }
 
   # check whether there are missing required parameters
   required_params <- names(.datasets_info[[dataset]])
-  passed_params <- names(all_params[sapply(all_params,
-                                           function(x) !is.symbol(x))])
+  passed_params <- names(all_params[sapply(all_params, function(x) {
+    !is.symbol(x)
+  })])
   missing_params <- required_params[!required_params %in% passed_params]
   if (length(missing_params) != 0) {
-    stop(paste0("You are missing parameters. For ", dataset,
-                " the following additional parameters are required: ",
-                paste(missing_params, collapse = ", ")))
+    stop(paste0(
+      "You are missing parameters. For ",
+      dataset,
+      " the following additional parameters are required: ",
+      paste(missing_params, collapse = ", ")
+    ))
   }
 
   # check if all required params have correct values
   for (p in required_params) {
-    
     if (p == "bbox") {
-      if (!(length(bbox) == 4 && is.numeric(bbox) &&
-            (all(bbox[c(1, 3)] > -90) || all(bbox[c(1, 3)] < 90)) &&
-            (all(bbox[c(1, 3)] > -90) || all(bbox[c(1, 3)] < 90)) &&
-            (all(bbox[c(2, 4)] > -180) || all(bbox[c(1, 3)] < 180)) &&
-            (all(bbox[c(2, 4)] > -180) || all(bbox[c(1, 3)] < 180)))) {
-        stop("Coordinates are out of bound. N,W,S,E coordinates, 
+      if (
+        !(length(bbox) == 4 &&
+          is.numeric(bbox) &&
+          (all(bbox[c(1, 3)] > -90) || all(bbox[c(1, 3)] < 90)) &&
+          (all(bbox[c(1, 3)] > -90) || all(bbox[c(1, 3)] < 90)) &&
+          (all(bbox[c(2, 4)] > -180) || all(bbox[c(1, 3)] < 180)) &&
+          (all(bbox[c(2, 4)] > -180) || all(bbox[c(1, 3)] < 180)))
+      ) {
+        stop(
+          "Coordinates are out of bound. N,W,S,E coordinates, 
                latitudes from 90 to -90, longitudes -180 to 180. Please adjust
-                'bbox' parameter.")
+                'bbox' parameter."
+        )
       }
     } else if (!all(all_params[[p]] %in% .datasets_info[[dataset]][[p]])) {
-      stop(paste0("Your value for ", p,
-                 " is not valid. It must be one of the following: ",
-                 paste(.datasets_info[[dataset]][[p]], collapse = ", ")))
+      stop(paste0(
+        "Your value for ",
+        p,
+        " is not valid. It must be one of the following: ",
+        paste(.datasets_info[[dataset]][[p]], collapse = ", ")
+      ))
     }
   }
 
@@ -148,12 +162,21 @@ c4h_get <- function(pat,
   # loop over each month to request data
   for (year_x in year) {
     for (month_x in month) {
-      if (lubridate::ymd(paste0(year_x, "-", sprintf("%02d", month_x),
-                                "-01")) > Sys.Date()) {
+      if (
+        lubridate::ymd(paste0(year_x, "-", sprintf("%02d", month_x), "-01")) >
+          Sys.Date()
+      ) {
         stop("Cannot download data for a future date.")
       }
-      print(paste0("Loading data to: ", outpath, outname, "_", year_x,
-                   sprintf("%02d", month_x), ".nc"))
+      print(paste0(
+        "Loading data to: ",
+        outpath,
+        outname,
+        "_",
+        year_x,
+        sprintf("%02d", month_x),
+        ".nc"
+      ))
       # set mandatory parameters
       request <- list(
         download_format = "unarchived",
@@ -179,8 +202,15 @@ c4h_get <- function(pat,
       )
       t2 <- Sys.time()
       print(paste0("Loaded ", month_x, "-", year_x, ": took ", t2 - t1))
-      print(paste0("File saved to: ", outpath,
-                   outname, "_", year_x, sprintf("%02d", month_x), ".nc"))
+      print(paste0(
+        "File saved to: ",
+        outpath,
+        outname,
+        "_",
+        year_x,
+        sprintf("%02d", month_x),
+        ".nc"
+      ))
     }
   }
 }

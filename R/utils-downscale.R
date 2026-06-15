@@ -14,14 +14,20 @@
 
   target_file <- source_file
   if (length(file_dims) > 4) {
-    dims_to_reduce <- names(file_dims[!names(file_dims) %in%
-                                        c("latitude", "longitude",
-                                          "lon", "lat")])
-    target_file <- paste0("tmp_", format(Sys.time(), "%Y%m%d%H%M"),
-                          ".nc")
+    dims_to_reduce <- names(file_dims[
+      !names(file_dims) %in%
+        c("latitude", "longitude", "lon", "lat")
+    ])
+    target_file <- paste0("tmp_", format(Sys.time(), "%Y%m%d%H%M"), ".nc")
 
-    system(paste0("ncwa -a ", paste(dims_to_reduce, collapse = ","), " ",
-                  source_file, " ", target_file))
+    system(paste0(
+      "ncwa -a ",
+      paste(dims_to_reduce, collapse = ","),
+      " ",
+      source_file,
+      " ",
+      target_file
+    ))
   }
 
   return(target_file)
@@ -49,9 +55,11 @@
   # longitude circular sort should be preserved
   if ("longitude" %in% req_dims) {
     if (any(data$coords$longitude > 180)) {
-      data$coords$longitude <- ifelse(data$coords$longitude > 180,
-                                      data$coords$longitude - 360,
-                                      data$coords$longitude)
+      data$coords$longitude <- ifelse(
+        data$coords$longitude > 180,
+        data$coords$longitude - 360,
+        data$coords$longitude
+      )
     }
     data$coords$longitude <- round(data$coords$longitude, 4)
   }
@@ -71,8 +79,12 @@
 .add_dim <- function(data, exp_dims) {
   for (dim in exp_dims) {
     if (!dim %in% names(dim(data$data))) {
-      data$data <- s2dv::InsertDim(data$data, posdim = 1, lendim = 1,
-                                   name = dim)
+      data$data <- s2dv::InsertDim(
+        data$data,
+        posdim = 1,
+        lendim = 1,
+        name = dim
+      )
     }
   }
   return(data)
@@ -87,7 +99,9 @@
 #' @noRd
 .drop_dim <- function(data, dim) {
   dims <- dim(data)
-  if (dims[dim] != 1) stop("Cannot drop a dimension that has length > 1")
+  if (dims[dim] != 1) {
+    stop("Cannot drop a dimension that has length > 1")
+  }
 
   index_list <- lapply(dims, function(d) quote(expr = ))
   index_list[[dim]] <- 1
@@ -99,7 +113,7 @@
 }
 
 #' .cdo_check
-#' 
+#'
 #' Check if CDO command line operators are installed
 #'
 #' @returns NULL
@@ -107,8 +121,10 @@
 .cdo_check <- function() {
   cdo_path <- Sys.which("cdo")
   if (cdo_path == "") {
-    stop(paste0("CDO command line operators not found. ",
-                "Please install CDO to use this function. Instructions can be ",
-                "found in the clim4health installation tutorials."))
+    stop(paste0(
+      "CDO command line operators not found. ",
+      "Please install CDO to use this function. Instructions can be ",
+      "found in the clim4health installation tutorials."
+    ))
   }
 }

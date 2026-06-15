@@ -7,10 +7,10 @@ test_that("c4h_convert: terra integration works", {
 
   # subsetting for speed
   fcst_small <- fcst
-  fcst_small$data <- fcst$data[1,1,1,1,1,1:5,1:5, drop = FALSE]
-  fcst_small$dims[c("dataset","var","sdate","time","ensemble")] <- 1
-  fcst_small$dims[c("latitude","longitude")] <- 5
-  fcst_small$coords$latitude  <- fcst$coords$latitude[1:5]
+  fcst_small$data <- fcst$data[1, 1, 1, 1, 1, 1:5, 1:5, drop = FALSE]
+  fcst_small$dims[c("dataset", "var", "sdate", "time", "ensemble")] <- 1
+  fcst_small$dims[c("latitude", "longitude")] <- 5
+  fcst_small$coords$latitude <- fcst$coords$latitude[1:5]
   fcst_small$coords$longitude <- fcst$coords$longitude[1:5]
 
   r <- c4h_convert(fcst_small, "terra")
@@ -30,10 +30,10 @@ test_that("c4h_convert: csv integration works", {
 
   # subsetting for speed
   fcst_small <- fcst
-  fcst_small$data <- fcst$data[1,1,1,1,1,1:3,1:3, drop = FALSE]
-  fcst_small$dims[c("dataset","var","sdate","time","ensemble")] <- 1
-  fcst_small$dims[c("latitude","longitude")] <- 3
-  fcst_small$coords$latitude  <- fcst$coords$latitude[1:3]
+  fcst_small$data <- fcst$data[1, 1, 1, 1, 1, 1:3, 1:3, drop = FALSE]
+  fcst_small$dims[c("dataset", "var", "sdate", "time", "ensemble")] <- 1
+  fcst_small$dims[c("latitude", "longitude")] <- 3
+  fcst_small$coords$latitude <- fcst$coords$latitude[1:3]
   fcst_small$coords$longitude <- fcst$coords$longitude[1:3]
 
   df <- c4h_convert(fcst_small, "csv")
@@ -48,10 +48,10 @@ test_that("c4h_convert: polygons integration works", {
 
   # subsetting for speed
   fcst_small <- fcst
-  fcst_small$data <- fcst$data[1,1,1,1,1,1:3,1:3, drop = FALSE]
-  fcst_small$dims[c("dataset","var","sdate","time","ensemble")] <- 1
-  fcst_small$dims[c("latitude","longitude")] <- 3
-  fcst_small$coords$latitude  <- fcst$coords$latitude[1:3]
+  fcst_small$data <- fcst$data[1, 1, 1, 1, 1, 1:3, 1:3, drop = FALSE]
+  fcst_small$dims[c("dataset", "var", "sdate", "time", "ensemble")] <- 1
+  fcst_small$dims[c("latitude", "longitude")] <- 3
+  fcst_small$coords$latitude <- fcst$coords$latitude[1:3]
   fcst_small$coords$longitude <- fcst$coords$longitude[1:3]
 
   sf_obj <- c4h_convert(fcst_small, "polygons")

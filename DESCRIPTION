@@ -1,6 +1,6 @@
 Package: clim4health
 Title: Post-Processing of Climate Data for Health Applications
-Version: 0.0.0.9000
+Version: 0.1.0
 Authors@R: c(
     person("Emily", "Ball", role = c("aut"),
            comment = c(ORCID = "0000-0002-3002-4068")),
@@ -57,3 +57,4 @@ Config/testthat/edition: 3
 VignetteBuilder: knitr
 SystemRequirements: CDO (Climate Data Operators, https://code.mpimet.mpg.de/projects/cdo)
 Config/roxygen2/version: 8.0.0
+RoxygenNote: 7.3.3

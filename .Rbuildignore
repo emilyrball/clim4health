@@ -7,3 +7,4 @@
 Dockerfile
 inst/extdata/cleandata.R
 tutorials/.
+^cran-comments\.md$

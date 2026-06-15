@@ -21,7 +21,6 @@
 #' @export
 
 c4h_get_help <- function(dataset, parameter) {
-  
   # Retrieve the long list with the catalogue
   datasets <- names(.datasets_info)
 
@@ -36,8 +35,10 @@ c4h_get_help <- function(dataset, parameter) {
 
   # if dataset is wrong, return lsit of available datasets
   if (!dataset %in% datasets) {
-    stop("Incorrect dataset, available climate datasets are:\n",
-         paste("-", datasets, collapse = "\n"))
+    stop(
+      "Incorrect dataset, available climate datasets are:\n",
+      paste("-", datasets, collapse = "\n")
+    )
   }
 
   # get required parameters for selected dataset
@@ -54,8 +55,12 @@ c4h_get_help <- function(dataset, parameter) {
 
   # if dataset correct and parameter missing, return list of parameters
   if (dataset %in% datasets && !parameter %in% required_params) {
-    stop("Incorrect parameter. Required parameters for ", dataset, ":\n",
-         paste("-", required_params, collapse = "\n"))
+    stop(
+      "Incorrect parameter. Required parameters for ",
+      dataset,
+      ":\n",
+      paste("-", required_params, collapse = "\n")
+    )
   }
 
   # get options for parameters

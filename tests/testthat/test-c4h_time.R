@@ -35,8 +35,7 @@ test_that("Invalid parameters fail", {
 
   # Fun
   expect_error(
-    c4h_time(time_aggregation = "daily",
-             fun = "dummy"),
+    c4h_time(time_aggregation = "daily", fun = "dummy"),
     "Invalid choice of parameter 'fun'"
   )
 

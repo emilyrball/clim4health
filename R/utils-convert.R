@@ -20,13 +20,13 @@
   if (lat[1] > lat[length(lat)]) {
     # if latitude is stored north to south, reverse it
     lat <- rev(lat)
-    lat_dim  <- which(names(dim(cube$data)) == "latitude")
+    lat_dim <- which(names(dim(cube$data)) == "latitude")
     idx <- lapply(dim(cube$data), seq_len)
     idx[[lat_dim]] <- rev(idx[[lat_dim]])
     cube$data <- do.call(`[`, c(list(cube$data), idx, drop = FALSE))
   }
 
-  d  <- dim(cube$data)
+  d <- dim(cube$data)
 
   nd <- .get_dim(d, "dataset")
   nv <- .get_dim(d, "var")
@@ -43,21 +43,29 @@
   # REVIEW - nested loops
   for (d in seq_len(nd)) {
     d_lab <- .get_label(cube$coords$dataset, d, "dataset")
-    if (nd == 1 && isTRUE(drop)) d_lab <- NULL
+    if (nd == 1 && isTRUE(drop)) {
+      d_lab <- NULL
+    }
     for (v in seq_len(nv)) {
       v_lab <- .get_label(cube$coords$var, v, "var")
-      if (nv == 1 && isTRUE(drop)) v_lab <- NULL
+      if (nv == 1 && isTRUE(drop)) {
+        v_lab <- NULL
+      }
       for (s in seq_len(ns)) {
-        s_lab <- if (!is.null(cube$attrs$Dates) &&
-                       length(cube$attrs$Dates[, 1]) >= s) {
+        s_lab <- if (
+          !is.null(cube$attrs$Dates) &&
+            length(cube$attrs$Dates[, 1]) >= s
+        ) {
           paste0("sdate_", format(cube$attrs$Dates[s, 1], "%Y%m%d"))
         } else {
           sprintf("sdate_%02d", s)
         }
 
         for (t in seq_len(nt)) {
-          t_lab <- if (!is.null(cube$attrs$Dates) &&
-                         length(cube$attrs$Dates[s, ]) >= t) {
+          t_lab <- if (
+            !is.null(cube$attrs$Dates) &&
+              length(cube$attrs$Dates[s, ]) >= t
+          ) {
             paste0("time_", format(cube$attrs$Dates[s, t], "%Y%m%d"))
           } else {
             sprintf("time_%02d", t)
@@ -73,12 +81,14 @@
             r <- terra::rast(xyz, type = "xyz", crs = crs)
 
             m_lab <- .get_label(cube$coords$ensemble, m, "ensemble")
-            if (nm == 1 && isTRUE(drop)) m_lab <- NULL
+            if (nm == 1 && isTRUE(drop)) {
+              m_lab <- NULL
+            }
 
             parts <- list(d_lab, v_lab, s_lab, t_lab, m_lab)
-            parts <- parts[!vapply(parts,
-                                   function(x) is.null(x) || x == "",
-                                   logical(1))]
+            parts <- parts[
+              !vapply(parts, function(x) is.null(x) || x == "", logical(1))
+            ]
 
             names(r) <- paste(parts, collapse = "_")
 
@@ -107,7 +117,7 @@
 .s2dv_to_csv <- function(cube, drop = FALSE) {
   .validate_s2dv_cube(cube)
 
-  d  <- dim(cube$data)
+  d <- dim(cube$data)
 
   nd <- .get_dim(d, "dataset")
   nv <- .get_dim(d, "var")
@@ -127,15 +137,15 @@
 
   # ---- dates and ensemble values ----
   dates <- tryCatch(as.Date(cube$attrs$Dates), error = function(e) NULL)
-  ens   <- tryCatch(as.vector(cube$coords$ensemble), error = function(e) NULL)
+  ens <- tryCatch(as.vector(cube$coords$ensemble), error = function(e) NULL)
 
   # ---- build expand.grid arguments ----
   grid_args <- c(
     list(
-      dataset  = seq_len(nd),
-      var      = seq_len(nv),
-      sdate    = seq_len(ns),
-      time     = seq_len(nt),
+      dataset = seq_len(nd),
+      var = seq_len(nv),
+      sdate = seq_len(ns),
+      time = seq_len(nt),
       ensemble = seq_len(nm)
     ),
     spatial_coords
@@ -186,7 +196,7 @@
 
   # ---- if s2dv_cube contains location ----
   if ("location" %in% names(cube$coords)) {
-    df$latitude  <- cube$attrs$location$latitude[df$location]
+    df$latitude <- cube$attrs$location$latitude[df$location]
     df$longitude <- cube$attrs$location$longitude[df$location]
   }
 
@@ -217,20 +227,24 @@
 
   # Spatial coords
   dim_names <- names(cube$dims)
-  has_latlon  <- all(c("latitude", "longitude") %in% dim_names)
+  has_latlon <- all(c("latitude", "longitude") %in% dim_names)
   has_area <- "area" %in% dim_names
 
   # handle gridded case
   if (has_latlon) {
     rstack <- .s2dv_to_terra(cube, crs = crs, drop = drop)
-    pv <- terra::as.polygons(rstack, dissolve = FALSE,
-                             values = TRUE, na.rm = FALSE)
+    pv <- terra::as.polygons(
+      rstack,
+      dissolve = FALSE,
+      values = TRUE,
+      na.rm = FALSE
+    )
     sf_obj <- sf::st_as_sf(pv)
   } else if (has_area) {
     # Extract area geometries (assumed to be an sf or WKT vector)
     areas <- cube$attrs$area$geom
 
-    d  <- dim(cube$data)
+    d <- dim(cube$data)
     nd <- .get_dim(d, "dataset")
     nv <- .get_dim(d, "var")
     ns <- .get_dim(d, "sdate")
@@ -242,32 +256,42 @@
 
     for (d in seq_len(nd)) {
       d_lab <- .get_label(cube$coords$dataset, d, "dataset")
-      if (nd == 1 && isTRUE(drop)) d_lab <- NULL
+      if (nd == 1 && isTRUE(drop)) {
+        d_lab <- NULL
+      }
       for (v in seq_len(nv)) {
         v_lab <- .get_label(cube$coords$var, v, "var")
-        if (nv == 1 && isTRUE(drop)) v_lab <- NULL
+        if (nv == 1 && isTRUE(drop)) {
+          v_lab <- NULL
+        }
         for (s in seq_len(ns)) {
-          s_lab <- if (!is.null(cube$attrs$Dates) &&
-                         length(cube$attrs$Dates[, 1]) >= s) {
+          s_lab <- if (
+            !is.null(cube$attrs$Dates) &&
+              length(cube$attrs$Dates[, 1]) >= s
+          ) {
             paste0("sdate_", format(cube$attrs$Dates[s, 1], "%Y%m%d"))
           } else {
             sprintf("sdate_%02d", s)
           }
           for (t in seq_len(nt)) {
-            t_lab <- if (!is.null(cube$attrs$Dates) &&
-                           length(cube$attrs$Dates[s, ]) >= t) {
+            t_lab <- if (
+              !is.null(cube$attrs$Dates) &&
+                length(cube$attrs$Dates[s, ]) >= t
+            ) {
               paste0("time_", format(cube$attrs$Dates[s, t], "%Y%m%d"))
             } else {
               sprintf("time_%02d", t)
             }
             for (m in seq_len(nm)) {
               m_lab <- .get_label(cube$coords$ensemble, m, "ensemble")
-              if (nm == 1 && isTRUE(drop)) m_lab <- NULL
+              if (nm == 1 && isTRUE(drop)) {
+                m_lab <- NULL
+              }
 
               parts <- list(d_lab, v_lab, s_lab, t_lab, m_lab)
-              parts <- parts[!vapply(parts,
-                                     function(x) is.null(x) || x == "",
-                                     logical(1))]
+              parts <- parts[
+                !vapply(parts, function(x) is.null(x) || x == "", logical(1))
+              ]
 
               layer_name <- paste(parts, collapse = "_")
 
@@ -334,46 +358,55 @@
 .validate_s2dv_cube <- function(cube) {
   stopifnot(inherits(cube, "s2dv_cube"))
 
-  if (is.null(cube$data) || !is.array(cube$data))
+  if (is.null(cube$data) || !is.array(cube$data)) {
     stop("`data$data` must be a multidimensional array.")
+  }
 
-  if (is.null(cube$coords))
+  if (is.null(cube$coords)) {
     stop("`data$coords` is missing.")
+  }
 
   dim_names <- names(cube$dims)
   core_dims <- c("dataset", "var", "sdate", "time", "ensemble")
   missing_core <- setdiff(core_dims, dim_names)
-  if (length(missing_core) > 0)
+  if (length(missing_core) > 0) {
     stop(
       "Missing required core dimension(s): ",
       paste(missing_core, collapse = ", ")
     )
+  }
 
   # Spatial validation
-  has_latlon  <- all(c("latitude", "longitude") %in% dim_names)
+  has_latlon <- all(c("latitude", "longitude") %in% dim_names)
   has_location <- "location" %in% dim_names
   has_area <- "area" %in% dim_names
 
-  if (!has_latlon && !has_location && !has_area)
-    stop(paste0("data must contain either (latitude & longitude),",
-                " location, or area dimension.")
-    )
+  if (!has_latlon && !has_location && !has_area) {
+    stop(paste0(
+      "data must contain either (latitude & longitude),",
+      " location, or area dimension."
+    ))
+  }
 
   # If lat/lon grid
   if (has_latlon) {
-    if (length(cube$coords$latitude)  != dim(cube$data)[6])
+    if (length(cube$coords$latitude) != dim(cube$data)[6]) {
       stop("Latitude length does not match data dimension.")
-    if (length(cube$coords$longitude) != dim(cube$data)[7])
+    }
+    if (length(cube$coords$longitude) != dim(cube$data)[7]) {
       stop("Longitude length does not match data dimension.")
+    }
   }
 
   # If location index
   if (has_location) {
-    if (length(cube$coords$location) != dim(cube$data)[6])
+    if (length(cube$coords$location) != dim(cube$data)[6]) {
       stop("Location length does not match data dimension.")
+    }
     if (!is.null(cube$attrs$location)) {
-      if (!all(c("latitude", "longitude") %in% names(cube$attrs$location)))
+      if (!all(c("latitude", "longitude") %in% names(cube$attrs$location))) {
         stop("`attrs$location` must contain latitude and longitude.")
+      }
     }
   }
 
@@ -386,11 +419,14 @@
 
   # Dates validation
   if (!is.null(cube$attrs$Dates)) {
-    if (!is.matrix(cube$attrs$Dates))
+    if (!is.matrix(cube$attrs$Dates)) {
       stop("`attrs$Dates` must be a matrix.")
+    }
 
-    if (nrow(cube$attrs$Dates) < dim(cube$data)[3] ||
-          ncol(cube$attrs$Dates) < dim(cube$data)[4]) {
+    if (
+      nrow(cube$attrs$Dates) < dim(cube$data)[3] ||
+        ncol(cube$attrs$Dates) < dim(cube$data)[4]
+    ) {
       stop(
         "`attrs$Dates` must have [sdate, time] dimensions."
       )
