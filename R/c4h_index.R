@@ -1,6 +1,6 @@
-#' Apply a threshold-based mask to climate data
+#' Apply a threshold-based mask to climate data based on value ranges.
 #'
-#' @param data s2dv_cube object with the climate data to be masked, usually
+#' @param data *s2dv_cube* object with the climate data to be masked, usually
 #' read using `c4h_load`.
 #' @param return_mask Boolean. If TRUE (default), return original values where
 #' the condition is fulfilled and NA otherwise. If FALSE, return 1 where the
@@ -9,10 +9,10 @@
 #' cells below that value will be masked out.
 #' @param upper_threshold Numeric. Optional upper threshold of the mask. All
 #' cells above that value will be masked out.
-#' @param closed Boolean. If TRUE (default), closed intervals including
+#' @param closed Boolean. If TRUE (default), use closed intervals including
 #' the threshold values. If FALSE, intervals are open.
 #'
-#' @returns A s2dv_cube with the values masked or the mask (depending on
+#' @returns An *s2dv_cube* with the values masked or the mask (depending on
 #' `return_mask`).
 #' @export
 #'

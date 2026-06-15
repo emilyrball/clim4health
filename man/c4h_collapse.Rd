@@ -9,7 +9,8 @@ c4h_collapse(data, dim, fun = "mean", na.rm = TRUE)
 \arguments{
 \item{data}{\emph{s2dv_cube} object with the climate data.}
 
-\item{dim}{Dimension to collapse. Options include 'ensemble' and 'time'.}
+\item{dim}{Dimension to collapse. Options include 'ensemble', 'sdate' and
+'time'.}
 
 \item{fun}{Function to perform the aggregation, defaults to 'mean'. Other
 options include 'median', 'min' and 'max'.}
@@ -18,10 +19,10 @@ options include 'median', 'min' and 'max'.}
 applying the collapsing function. Defaults to TRUE.}
 }
 \value{
-The collapsed s2dv_cube.
+The collapsed \emph{s2dv_cube}.
 }
 \description{
-Collapse one dimension of the 's2dv_cube'. \code{c4h_collapse()} works
+Collapse one dimension of the \emph{s2dv_cube}. \code{c4h_collapse()} works
 differently depending on the dimension being collapsed:
 \itemize{
 \item Use dim = "ensemble" to compute a summary statistic across ensemble members

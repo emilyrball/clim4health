@@ -45,11 +45,11 @@ be set to 1.}
 lat_min, lon_max).}
 }
 \value{
-An s2dv_cube object.
+An \emph{s2dv_cube} object.
 }
 \description{
 Load forecast, hindcast, or observational climate data (reanalysis or
-stations) as an s2dv_cube object.
+stations) as an \emph{s2dv_cube} object.
 }
 \examples{
 # Forecast data included in the package

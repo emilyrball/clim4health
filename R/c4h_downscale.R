@@ -4,41 +4,41 @@
 #'
 #' @param downscale_function The downscaling function to use. Options are:
 #' "Interpolation", "Intbc", "Intlr", "Analogs".
-#' @param exp The experimental data to downscale. It must be an s2dv_cube.
-#' @param obs The observational data to downscale. It must be an s2dv_cube.
-#' @param exp_cor Optional data to downscale. It must be an s2dv_cube. If
+#' @param exp The experimental data to downscale. It must be an *s2dv_cube*.
+#' @param obs The observational data to downscale. It must be an *s2dv_cube*
+#' @param exp_cor Optional data to downscale. It must be an *s2dv_cube* If
 #' provided, it will be downscaled using exp and obs; if not provided, the exp
 #' will be downscaled instead. The default value is NULL.
-#' @param bbox a numeric vector indicating the borders of the region defined
+#' @param bbox A numeric vector indicating the borders of the region defined
 #' in obs. It consists of four elements in this order: North, West, South,
 #' East. If set to NULL (default), the function c4h_downscale
 #' will take the minimum and maximum values of the latitudes and longitudes.
-#' @param ncores an integer indicating the number of cores to use in parallel
+#' @param ncores An integer indicating the number of cores to use in parallel
 #' computation. The default value is NULL.
-#' @param target_grid a character vector indicating the target grid (in the case
+#' @param target_grid A character vector indicating the target grid (in the case
 #' of Interpolation techniques) or the coarse grid (in the case of Analogs) to
 #' be passed to CDO. It must be a grid recognised by CDO or a NetCDF file. The
 #' default value is NULL. If NULL, the grid of obs will be used as the target
 #' grid for Interpolation techniques, and the grid of exp will be used as the
 #' coarse grid for Analogs.
-#' @param bc_method a character vector indicating the bias adjustment method to
+#' @param bc_method A character vector indicating the bias adjustment method to
 #' be applied after an interpolation. Accepted methods are 'quantile_mapping',
 #' 'dynamical_bias', 'bias', 'evmos', 'mse_min', 'crps_min', 'rpc-based'. The
 #' abbreviations 'dbc','qm' can also be used. The default value is NULL.
-#' @param method_remap a character vector indicating the regridding method to
+#' @param method_remap A character vector indicating the regridding method to
 #' be passed to CDORemap. Accepted methods are "con", "bil" (or "bilinear"),
 #' "bic", "nn", "con2". If "nn" method is to be used, CDO_1.9.8 or newer
 #' version is required. The default value is NULL.
-#' @param points a list of two elements containing the point latitudes and
+#' @param points A list of two elements containing the point latitudes and
 #' longitudes of the locations to downscale the model data. The list must
 #' contain the two elements named as 'latitude' and 'longitude'. If the
 #' downscaling is to a point location, only regular grids are allowed for exp
 #' and obs. Only needed if the downscaling is to a point location.
-#' @param method_point_interp a character vector indicating the interpolation
+#' @param method_point_interp A character vector indicating the interpolation
 #' method to interpolate model gridded data into the point locations. Accepted
 #' methods are "nearest", "bilinear", "9point", "invdist4nn". Only needed if the
 #' downscaling is to a point location.
-#' @param lr_method a character vector indicating the linear regression method
+#' @param lr_method A character vector indicating the linear regression method
 #' to be applied. Accepted methods are 'basic' and '9nn'. The
 #' 'basic' method fits a linear regression using high resolution observations as
 #' predictands and the interpolated model data as predictor. Then, the
@@ -51,13 +51,13 @@
 #' regression model is then built using the principal components that explain
 #' 95% of the variance. The '9nn' method does not require a pre-interpolation
 #' process. The default value is NULL.
-#' @param loocv a logical indicating whether to apply leave-one-out
+#' @param loocv A logical indicating whether to apply leave-one-out
 #' cross-validation when applying the bias correction. Defaults to TRUE.
-#' @param ... additional arguments to be passed to the CSDownscale function.
+#' @param ... Additional arguments to be passed to the CSDownscale function.
 #'
-#' @returns A list of statistically downscaled data as s2dv_cube objects.
+#' @returns A list of statistically downscaled data as *s2dv_cube* objects.
 #'
-#' @note See clim4health_downscaling.Rmd in the package vignettes for a
+#' @note See the package vignette dedicated to downscaling for a
 #' detailed tutorial on function arguments and usage.
 #'
 #' @export

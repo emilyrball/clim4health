@@ -2,7 +2,7 @@
 % Please edit documentation in R/c4h_index.R
 \name{c4h_index}
 \alias{c4h_index}
-\title{Apply a threshold-based mask to climate data}
+\title{Apply a threshold-based mask to climate data based on value ranges.}
 \usage{
 c4h_index(
   data,
@@ -13,7 +13,7 @@ c4h_index(
 )
 }
 \arguments{
-\item{data}{s2dv_cube object with the climate data to be masked, usually
+\item{data}{\emph{s2dv_cube} object with the climate data to be masked, usually
 read using \code{c4h_load}.}
 
 \item{return_mask}{Boolean. If TRUE (default), return original values where
@@ -26,15 +26,15 @@ cells below that value will be masked out.}
 \item{upper_threshold}{Numeric. Optional upper threshold of the mask. All
 cells above that value will be masked out.}
 
-\item{closed}{Boolean. If TRUE (default), closed intervals including
+\item{closed}{Boolean. If TRUE (default), use closed intervals including
 the threshold values. If FALSE, intervals are open.}
 }
 \value{
-A s2dv_cube with the values masked or the mask (depending on
+An \emph{s2dv_cube} with the values masked or the mask (depending on
 \code{return_mask}).
 }
 \description{
-Apply a threshold-based mask to climate data
+Apply a threshold-based mask to climate data based on value ranges.
 }
 \examples{
 # Read reanalysis data

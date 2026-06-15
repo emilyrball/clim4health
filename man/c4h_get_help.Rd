@@ -20,9 +20,8 @@ Prints a list of either available climate datasets, required
 parameters or options to the console.
 }
 \description{
-The \code{c4h_get_help()} function displays a list of available climate
-datasets that can be usedfor health and climate research, specifically
-using ERA5 reanalysis datasets.
+Displays a list of available climate datasets that can be used
+for health and climate research and that can be processed by \code{clim4health}.
 }
 \examples{
 c4h_get_help()

@@ -1,15 +1,15 @@
 #' c4h_convert
 #'
-#' Convert objects between formats including `s2dv_cube`, `terra`, csv,
-#' and `sf` polygons.
+#' Convert objects between formats including *s2dv_cube*, *terra*, csv,
+#' and *sf* polygons.
 #'
-#' @param data The object to transform
+#' @param data The object to transform.
 #' @param output_format A string specifying the desired output format.
-#' Valid options are 'terra', 'csv' or 'polygons'
+#' Valid options are 'terra', 'csv' or 'polygons'.
 #' @param crs Coordinate reference system to use for output_formats 'terra' and
-#' 'polygons'. The default is NULL, in which case the CRS will be taken from
-#' the input data if available, or assumed to be WGS 84 (EPSG:4326) for gridded
-#' data.
+#' *sf* 'polygons'. The default is NULL, in which case the CRS will be taken
+#' from  the input data if available, or assumed to be WGS 84 (EPSG:4326) for
+#' gridded data.
 #' @param drop Logical. If TRUE, dimensions with only one value will be dropped
 #' when converting to the desired format. Default is FALSE.
 #'
@@ -25,14 +25,12 @@
 #' ############################
 #' ### Convert gridded data
 #' ## to terra
-#' out <- c4h_convert(fcst,
-#'                    "terra", crs = "EPSG:4326")
+#' out <- c4h_convert(fcst, "terra", crs = "EPSG:4326")
 #' ## to csv
-#' out <- c4h_convert(fcst,
-#'                    "csv")
+#' out <- c4h_convert(fcst, "csv")
 #' ## to polygons
-#' out <- c4h_convert(fcst,
-#'                    "polygons", crs = "EPSG:4326")
+#' out <- c4h_convert(fcst, "polygons", crs = "EPSG:4326")
+#'
 #' #############################
 #' ##### load polygon data #####
 #' library(sf)
@@ -45,8 +43,7 @@
 #'
 #' ### Convert polygon data
 #' ## to csv
-#' out <- c4h_convert(fcst_aggr,
-#'                    "csv")
+#' out <- c4h_convert(fcst_aggr, "csv")
 #' ## to polygons
 #' out <- c4h_convert(fcst_aggr, "polygons", crs = "EPSG:4326")
 #'

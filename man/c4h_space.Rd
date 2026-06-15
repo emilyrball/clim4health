@@ -2,17 +2,17 @@
 % Please edit documentation in R/c4h_space.R
 \name{c4h_space}
 \alias{c4h_space}
-\title{Spatial aggregation of climate products into areas.}
+\title{Performs a spatial aggregation of gridded climate data into areas.}
 \usage{
 c4h_space(data, areas, fun = "mean", weighting = "none", areas_id = NULL)
 }
 \arguments{
-\item{data}{s2dv_cube object with the climate data to be aggregates, usually
-read using \code{c4h_load}.}
+\item{data}{\emph{s2dv_cube} object with the climate data to be aggregates,
+usually read using \link{c4h_load}.}
 
-\item{areas}{Vector data, either a sf or terra object loaded into memory, or
-path to a vector file to be read. Contains the areal polygon geometries for
-the spatial aggregation.}
+\item{areas}{Vector data, either a \emph{sf} or \emph{terra} object loaded into memory,
+or path to a vector file to be read. Contains the areal polygon geometries
+for the spatial aggregation.}
 
 \item{fun}{String. Method to perform the aggregation, defaults to "mean".
 Other possible options include "median", "sum", "min" and "max".}
@@ -29,7 +29,7 @@ weighting). See \code{terra::extract} for details.}
 A s2dv_cube object with the aggregated data.
 }
 \description{
-Spatial aggregation of climate products into areas.
+Performs a spatial aggregation of gridded climate data into areas.
 }
 \examples{
 library(sf)

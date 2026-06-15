@@ -7,15 +7,15 @@
 c4h_convert(data, output_format, crs = NULL, drop = FALSE)
 }
 \arguments{
-\item{data}{The object to transform}
+\item{data}{The object to transform.}
 
 \item{output_format}{A string specifying the desired output format.
-Valid options are 'terra', 'csv' or 'polygons'}
+Valid options are 'terra', 'csv' or 'polygons'.}
 
 \item{crs}{Coordinate reference system to use for output_formats 'terra' and
-'polygons'. The default is NULL, in which case the CRS will be taken from
-the input data if available, or assumed to be WGS 84 (EPSG:4326) for gridded
-data.}
+\emph{sf} 'polygons'. The default is NULL, in which case the CRS will be taken
+from  the input data if available, or assumed to be WGS 84 (EPSG:4326) for
+gridded data.}
 
 \item{drop}{Logical. If TRUE, dimensions with only one value will be dropped
 when converting to the desired format. Default is FALSE.}
@@ -24,8 +24,8 @@ when converting to the desired format. Default is FALSE.}
 An R object of type terra SpatRaster, data.frame or sf polygons.
 }
 \description{
-Convert objects between formats including \code{s2dv_cube}, \code{terra}, csv,
-and \code{sf} polygons.
+Convert objects between formats including \emph{s2dv_cube}, \emph{terra}, csv,
+and \emph{sf} polygons.
 }
 \examples{
 \donttest{
@@ -36,14 +36,12 @@ fcst <- c4h_load(fcst_path, variable = "t2m", leadtime_month = 1, ext = 'nc')
 ############################
 ### Convert gridded data
 ## to terra
-out <- c4h_convert(fcst,
-                   "terra", crs = "EPSG:4326")
+out <- c4h_convert(fcst, "terra", crs = "EPSG:4326")
 ## to csv
-out <- c4h_convert(fcst,
-                   "csv")
+out <- c4h_convert(fcst, "csv")
 ## to polygons
-out <- c4h_convert(fcst,
-                   "polygons", crs = "EPSG:4326")
+out <- c4h_convert(fcst, "polygons", crs = "EPSG:4326")
+
 #############################
 ##### load polygon data #####
 library(sf)
@@ -56,8 +54,7 @@ fcst_aggr <- c4h_space(fcst, munip)
 
 ### Convert polygon data
 ## to csv
-out <- c4h_convert(fcst_aggr,
-                   "csv")
+out <- c4h_convert(fcst_aggr, "csv")
 ## to polygons
 out <- c4h_convert(fcst_aggr, "polygons", crs = "EPSG:4326")
 

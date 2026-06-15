@@ -1,16 +1,16 @@
 #' c4h_convert_units
 #'
-#' @param data an s2dv_cube object containing the data to be converted.
-#' @param to a character string specifying the target units to convert to. If
+#' @param data An *s2dv_cube* object containing the data to be converted.
+#' @param to A character string specifying the target units to convert to. If
 #' NULL, no conversion will be performed and the current units will be
 #' displayed. The default is NULL.
-#' @param var a character string specifying the variable to convert.
+#' @param var A character string specifying the variable to convert.
 #' If NULL, all variables will be converted. The default is NULL.
-#' @param from a character string specifying the current units of the variable.
+#' @param from A character string specifying the current units of the variable.
 #' If NULL, the current units will be inferred from the data. The default is
 #' NULL.
 #'
-#' @return an s2dv_cube object with the converted units.
+#' @return An *s2dv_cube* object with the converted units.
 #' @export
 #'
 #' @examples

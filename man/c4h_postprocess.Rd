@@ -48,12 +48,12 @@ forecast is used as reference forecast. The default value is NULL.}
 
 \item{brier_thresholds}{Optional numeric vector of thresholds for the
 Brier Skill Score (BSS) calculation. The default is c(0.1, 0.9). Only
-applicable if "BSS" is in 'metrics'.}
+applicable if "BSS" is in \code{metrics}.}
 
 \item{prob_thresholds}{Optional numeric vector of thresholds for the
 Ranked Probability Skill Score (RPSS) calculation, and for the Relative
 Operating Characteristic Skill Score (ROCSS). The default is c(1/3,
-2/3). Only applicable if "RPSS" or "ROCSS" is in 'metrics'.}
+2/3). Only applicable if "RPSS" or "ROCSS" is in \code{metrics}.}
 
 \item{alpha}{A numeric of the significance level to be used in the
 statistical significance test. The default value is 0.05. Relevant for all
@@ -71,22 +71,22 @@ it will use the length of "obs" along "time", so the autocorrelation is
 not taken into account), a numeric (which is used for all cases), or an array
 with the same dimensions as "obs" except "time" (for a particular N.eff
 to be used for each case). The default value is NA. Only relevant if "BSS",
-"RPSS", "CRPSS", or "RMSSS" is in 'metrics'.}
+"RPSS", "CRPSS", or "RMSSS" is in \code{metrics}.}
 
 \item{indices_for_clim}{A vector of the indices to be taken along 'sdate'
 for computing the thresholds between the probabilistic categories. If NULL,
 the whole period is used. The default value is NULL. Only relevant if "BSS",
-"RPSS", or "ROCSS" is in 'metrics'.}
+"RPSS", or "ROCSS" is in \code{metrics}.}
 
 \item{cross.val}{A logical indicating whether to compute the thresholds
 between probabilistics categories in cross-validation. The default value is
-FALSE. Only relevant if "BSS", "RPSS", or "ROCSS" is in 'metrics'.}
+FALSE. Only relevant if "BSS", "RPSS", or "ROCSS" is in \code{metrics}.}
 
 \item{clim.cross.val}{A logical indicating whether to build the
 climatological forecast in cross-validation (i.e. excluding the observed
 value of the time step when building the probabilistic distribution function
 for that particular time step). The default value is TRUE. Only used if 'ref'
-is NULL and "CRPSS" is in 'metrics'.}
+is NULL and "CRPSS" is in \code{metrics}.}
 
 \item{weights_exp}{A named numerical array of the forecast ensemble weights
 for probability calculation. The dimensions should include 'ensemble',
@@ -95,34 +95,34 @@ lengths must be equal to 'exp' dimension lengths. The default value is NULL,
 which means no weighting is applied. The ensemble should have at least 70
 members or span at least 10 time steps and have more than 45 members if
 consistency between the weighted and unweighted methodologies is desired.
-Only relevant if "BSS" or "RPSS" is in 'metrics'.}
+Only relevant if "BSS" or "RPSS" is in \code{metrics}.}
 
 \item{weights_ref}{Same as 'weights_exp' but for the reference forecast.}
 
 \item{comp_dim}{A character string indicating the name of dimension along
 which obs is taken into account only if it is complete. The default value
-is NULL. Only relevant if "MSE" or "RMSE" is in 'metrics'.}
+is NULL. Only relevant if "MSE" or "RMSE" is in \code{metrics}.}
 
 \item{limits}{A vector of two integers indicating the range along comp_dim
 to be completed. The default value is c(1, length(comp_dim dimension)). Only
-relevant if "MSE" or "RMSE" is in 'metrics'.}
+relevant if "MSE" or "RMSE" is in \code{metrics}.}
 
 \item{conf}{A logical value indicating whether to retrieve the confidence
 intervals or not. The default value is TRUE. Only relevant if "MSE" or "RMSE"
-is in 'metrics'.}
+is in \code{metrics}.}
 
 \item{na.rm}{A logical. FALSE means that NA values will not be removed, and
 the function will return 'NA' if they are present. TRUE means that NA values
 will be removed before computation. The default value is FALSE. Only
-relevant if "BSS", "RPSS", or "AbsBiasSS" is in 'metrics'.}
+relevant if "BSS", "RPSS", or "AbsBiasSS" is in \code{metrics}.}
 
 \item{sign}{A logical value indicating whether to compute or not the
 statistical significance of the test Ho: (R)MSSS = 0. The default value is
-TRUE. Only relevant if "MSSS" or "RMSSS" is in 'metrics'.}
+TRUE. Only relevant if "MSSS" or "RMSSS" is in \code{metrics}.}
 
 \item{pval}{A logical value indicating whether to compute or not the p-value
 of the test Ho: (R)MSSS = 0. The default value is FALSE. Only relevant if
-"MSSS" or "RMSSS" is in 'metrics'.}
+"MSSS" or "RMSSS" is in \code{metrics}.}
 
 \item{sig_method}{A character string indicating the significance method. The
 options are NULL, "one-sided Fisher", "RandomWalk", and "DieboldMariano".
@@ -137,7 +137,7 @@ options are "two.sided.approx", "two.sided", "greater", "less". The default
 is "two.sided.approx".}
 
 \item{rocss_cat}{An integer indicating the category to be returned when
-"ROCSS" is in 'metrics'. The default value is 1, which means that the ROCSS
+"ROCSS" is in \code{metrics}. The default value is 1, which means that the ROCSS
 for the first probability category (i.e. the lowest category) will be
 returned.}
 }
@@ -146,7 +146,7 @@ a list of lists with the calculated metrics and their significances
 as s2dv_cube objects.
 }
 \description{
-Quality assessment of climate forecasts
+Computes quality assessment metrics of climate forecasts.
 }
 \note{
 See clim4health_postprocessing.Rmd in the package vignettes for a

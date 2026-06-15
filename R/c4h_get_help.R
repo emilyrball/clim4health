@@ -1,8 +1,7 @@
 #' Display Available Climate Datasets, parameters and variables
 #'
-#' The `c4h_get_help()` function displays a list of available climate
-#' datasets that can be usedfor health and climate research, specifically
-#' using ERA5 reanalysis datasets.
+#' Displays a list of available climate datasets that can be used
+#' for health and climate research and that can be processed by `clim4health`.
 #'
 #' @param dataset If dataset is provided, then the list of required parameters
 #' for that dataset will be returned. If no dataset is provided, a list of

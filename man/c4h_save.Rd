@@ -7,8 +7,8 @@
 c4h_save(data, format, path, drop = FALSE)
 }
 \arguments{
-\item{data}{The object you want to save, which could be an s2dv_cube,
-terra, data.frame or sf object.}
+\item{data}{The object to be saved, which could be an \emph{s2dv_cube},
+\emph{terra}, data.frame or \emph{sf} object.}
 
 \item{format}{A string indicating the format of the object you want to save.
 Options are: "s2dv", "terra", "csv" or "polygons"}
@@ -21,10 +21,10 @@ with only one value will be dropped when saving. If FALSE, they will be
 retained. Default is FALSE.}
 }
 \value{
-None
+None.
 }
 \description{
-Save objects manipulated using clim4health functions
+Save objects manipulated using \code{clim4health} functions
 in different formats: s2dv, terra, csv, polygons.
 }
 \examples{

@@ -7,21 +7,21 @@
 c4h_convert_units(data, to = NULL, var = NULL, from = NULL)
 }
 \arguments{
-\item{data}{an s2dv_cube object containing the data to be converted.}
+\item{data}{An \emph{s2dv_cube} object containing the data to be converted.}
 
-\item{to}{a character string specifying the target units to convert to. If
+\item{to}{A character string specifying the target units to convert to. If
 NULL, no conversion will be performed and the current units will be
 displayed. The default is NULL.}
 
-\item{var}{a character string specifying the variable to convert.
+\item{var}{A character string specifying the variable to convert.
 If NULL, all variables will be converted. The default is NULL.}
 
-\item{from}{a character string specifying the current units of the variable.
+\item{from}{A character string specifying the current units of the variable.
 If NULL, the current units will be inferred from the data. The default is
 NULL.}
 }
 \value{
-an s2dv_cube object with the converted units.
+An \emph{s2dv_cube} object with the converted units.
 }
 \description{
 c4h_convert_units

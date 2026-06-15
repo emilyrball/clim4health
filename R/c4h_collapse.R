@@ -1,7 +1,7 @@
 #' Collapse one dimension of a s2dv_cube object
 #'
 #' @description
-#' Collapse one dimension of the 's2dv_cube'. `c4h_collapse()` works
+#' Collapse one dimension of the *s2dv_cube*. `c4h_collapse()` works
 #' differently depending on the dimension being collapsed:
 #' * Use dim = "ensemble" to compute a summary statistic across ensemble members
 #' in forecast and hindcast datasets.
@@ -15,13 +15,14 @@
 #' as the new s2dv sdate coordinate.
 #'
 #' @param data *s2dv_cube* object with the climate data.
-#' @param dim Dimension to collapse. Options include 'ensemble' and 'time'.
+#' @param dim Dimension to collapse. Options include 'ensemble', 'sdate' and
+#' 'time'.
 #' @param fun Function to perform the aggregation, defaults to 'mean'. Other
 #' options include 'median', 'min' and 'max'.
 #' @param na.rm Logical, indicating whether NA values should be ignored when
 #' applying the collapsing function. Defaults to TRUE.
 #'
-#' @returns The collapsed s2dv_cube.
+#' @returns The collapsed *s2dv_cube*.
 #' @export
 #'
 #' @examples

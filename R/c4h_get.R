@@ -1,4 +1,4 @@
-#' Download netcdf files from the climate data store
+#' Download netCDF files from the Copernicus climate data store.
 #'
 #' @param pat Your personal acces token (PAT). You can find your PAT in your CDS
 #' profile after logging in.
@@ -24,7 +24,6 @@
 #' Default is the current working directory.
 #' @returns A netcdf file.
 #'
-#' @author Daniela Lührsen
 #' @export
 #'
 #' @examples
@@ -69,9 +68,9 @@ c4h_get <- function(
   product_type,
   variable,
   year,
-  month = c(1:12),
-  day = c(1:31),
-  time = c(0),
+  month = 1:12,
+  day = 1:31,
+  time = 0,
   bbox,
   leadtime_month,
   originating_centre,

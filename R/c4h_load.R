@@ -1,7 +1,7 @@
 #' c4h_load
 #'
 #' Load forecast, hindcast, or observational climate data (reanalysis or
-#' stations) as an s2dv_cube object.
+#' stations) as an *s2dv_cube* object.
 #'
 #' @param path String to the folder containing the files to be loaded, or a
 #' vector of specific file paths.
@@ -22,7 +22,7 @@
 #' @param bbox A vector of coordinates in order: c(lat_max, lon_min,
 #' lat_min, lon_max).
 #'
-#' @returns An s2dv_cube object.
+#' @returns An *s2dv_cube* object.
 #' @export
 #'
 #' @examples

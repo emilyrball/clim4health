@@ -2,7 +2,7 @@
 % Please edit documentation in R/c4h_get.R
 \name{c4h_get}
 \alias{c4h_get}
-\title{Download netcdf files from the climate data store}
+\title{Download netCDF files from the Copernicus climate data store.}
 \usage{
 c4h_get(
   pat,
@@ -10,9 +10,9 @@ c4h_get(
   product_type,
   variable,
   year,
-  month = c(1:12),
-  day = c(1:31),
-  time = c(0),
+  month = 1:12,
+  day = 1:31,
+  time = 0,
   bbox,
   leadtime_month,
   originating_centre,
@@ -62,7 +62,7 @@ Default is the current working directory.}
 A netcdf file.
 }
 \description{
-Download netcdf files from the climate data store
+Download netCDF files from the Copernicus climate data store.
 }
 \examples{
 \dontrun{
@@ -99,7 +99,4 @@ c4h_get(pat = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
         bbox = c(33, -93, -23, -17),
         outname = "forecast")
 }
-}
-\author{
-Daniela Lührsen
 }

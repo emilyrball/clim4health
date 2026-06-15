@@ -1,10 +1,10 @@
-#' Spatial aggregation of climate products into areas.
+#' Performs a spatial aggregation of gridded climate data into areas.
 #'
-#' @param data s2dv_cube object with the climate data to be aggregates, usually
-#' read using `c4h_load`.
-#' @param areas Vector data, either a sf or terra object loaded into memory, or
-#' path to a vector file to be read. Contains the areal polygon geometries for
-#' the spatial aggregation.
+#' @param data *s2dv_cube* object with the climate data to be aggregates,
+#' usually read using [c4h_load].
+#' @param areas Vector data, either a *sf* or *terra* object loaded into memory,
+#' or path to a vector file to be read. Contains the areal polygon geometries
+#' for the spatial aggregation.
 #' @param fun String. Method to perform the aggregation, defaults to "mean".
 #' Other possible options include "median", "sum", "min" and "max".
 #' @param weighting String that indicates whether weighted means should be used

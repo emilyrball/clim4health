@@ -1,6 +1,7 @@
 #' c4h_time
 #'
-#' Temporal aggregation of climate products.
+#' Performs a temporal aggregation of climate data from a finer to a coarser
+#' time scale.
 #'
 #' @param data s2dv_cube object with the climate data to be aggregated,
 #' usually read using `c4h_load`.
@@ -16,7 +17,7 @@
 #' values desired in a group to return a non-NA aggregated value. Defaults to
 #' 1, so that any group with at least one valid value will be aggregated.
 #'
-#' @returns an s2dv_cube object with the temporally aggregated climate data.
+#' @returns An *s2dv_cube* object with the temporally aggregated climate data.
 #' @export
 #'
 #' @examples

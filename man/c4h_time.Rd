@@ -34,10 +34,11 @@ values desired in a group to return a non-NA aggregated value. Defaults to
 1, so that any group with at least one valid value will be aggregated.}
 }
 \value{
-an s2dv_cube object with the temporally aggregated climate data.
+An \emph{s2dv_cube} object with the temporally aggregated climate data.
 }
 \description{
-Temporal aggregation of climate products.
+Performs a temporal aggregation of climate data from a finer to a coarser
+time scale.
 }
 \examples{
 \donttest{
