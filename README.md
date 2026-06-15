@@ -2,9 +2,9 @@
 
 <!-- badges: start -->
 [![License](https://img.shields.io/badge/License-AGPL_v3-brightgreen.svg?style=flat)](https://www.gnu.org/licenses/agpl-3.0.html)
-[![CRAN status](https://www.r-pkg.org/badges/version/clim4health)](https://cran.r-project.org/package=clim4health)
-[![CRAN downloads total](http://cranlogs.r-pkg.org/badges/grand-total/clim4health)](https://cran.r-project.org/package=clim4health)
-[![CRAN downloads month](http://cranlogs.r-pkg.org/badges/clim4health)](https://cran.r-project.org/package=clim4health)
+<!-- [![CRAN status](https://www.r-pkg.org/badges/version/clim4health)](https://cran.r-project.org/package=clim4health) -->
+<!-- [![CRAN downloads total](http://cranlogs.r-pkg.org/badges/grand-total/clim4health)](https://cran.r-project.org/package=clim4health) -->
+<!-- [![CRAN downloads month](http://cranlogs.r-pkg.org/badges/clim4health)](https://cran.r-project.org/package=clim4health) -->
 ![coverage](https://gitlab.earth.bsc.es/ghr/clim4health/badges/main/coverage.svg)
 <!-- badges: end -->
 
@@ -73,7 +73,7 @@ c4h_plot(rean,
          coordgrid = TRUE)
 ```
 
-<span> <img src='man/figures/README-example.png' width="70%" />
+<span> <img src='inst/figures/README-example.png' width="70%" />
 
 ## Developers
 
@@ -115,5 +115,3 @@ Global Health Resilience
 <a href="https://orcid.org/0000-0003-3939-7343" style="margin-left: 15px;"><img src="https://orcid.org/sites/default/files/images/orcid_16x16.png" alt="ORCID" style="width: 16px; height: 16px;" /></a>\
 Barcelona Supercomputing Center\
 Global Health Resilience (Group leader)
-
-
