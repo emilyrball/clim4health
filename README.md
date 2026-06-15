@@ -38,6 +38,10 @@ the [HARMONIZE](https://www.harmonize-tools.org/) project, which comprises
 different R and Python libraries tailored for health, climate, environmental, 
 and socioeconomic data acquisition, harmonisation, and visualization.
 
+More information about the R packages developped at GHR for climate and health workflows 
+and an online version of the package documentation can be found at the
+[GHR tools website](https://bsc-es.github.io/GHRtools/).
+
 
 ## Installation
 
