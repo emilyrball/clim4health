@@ -1,6 +1,7 @@
 #' c4h_convert
 #'
-#' Convert objects between formats including s2dv, terra, csv, polygons.
+#' Convert objects between formats including `s2dv_cube`, `terra`, csv,
+#' and `sf` polygons.
 #'
 #' @param data The object to transform
 #' @param output_format A string specifying the desired output format.

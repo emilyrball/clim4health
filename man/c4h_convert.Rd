@@ -24,7 +24,8 @@ when converting to the desired format. Default is FALSE.}
 An R object of type terra SpatRaster, data.frame or sf polygons.
 }
 \description{
-Convert objects between formats including s2dv, terra, csv, polygons.
+Convert objects between formats including \code{s2dv_cube}, \code{terra}, csv,
+and \code{sf} polygons.
 }
 \examples{
 \donttest{

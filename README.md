@@ -2,10 +2,10 @@
 
 <!-- badges: start -->
 [![License](https://img.shields.io/badge/License-AGPL_v3-brightgreen.svg?style=flat)](https://www.gnu.org/licenses/agpl-3.0.html)
+![coverage](https://gitlab.earth.bsc.es/ghr/clim4health/badges/main/coverage.svg)
 <!-- [![CRAN status](https://www.r-pkg.org/badges/version/clim4health)](https://cran.r-project.org/package=clim4health) -->
 <!-- [![CRAN downloads total](http://cranlogs.r-pkg.org/badges/grand-total/clim4health)](https://cran.r-project.org/package=clim4health) -->
 <!-- [![CRAN downloads month](http://cranlogs.r-pkg.org/badges/clim4health)](https://cran.r-project.org/package=clim4health) -->
-![coverage](https://gitlab.earth.bsc.es/ghr/clim4health/badges/main/coverage.svg)
 <!-- badges: end -->
 
 <img src='inst/figures/clim4health.jpg' align="right" width="14%" />
@@ -18,9 +18,9 @@ The package contains a series of functions structured in three sequential blocks
 input, transformation, and output. 
 
 In the input block, **clim4health** provides functions to download several types of 
-climate data including reanalyses, forecasts, hindcasts, and weather stations 
-and load them into memory for their processing. The transformation block includes 
-functions to postprocess and downscale climate data, perform spatiotemporal
+climate data including reanalyses, seasonal forecasts and hindcasts, and weather 
+stations and load them into memory for their processing. The transformation block
+includes functions to postprocess and downscale climate data, perform spatiotemporal
 aggregations, as well as compute threshold-based suitability indicators. Finally, 
 in the output block, functions to visualize and export the transformed data are 
 provided.
@@ -74,7 +74,7 @@ c4h_plot(rean,
 ```
 
 <div align="center">
-<img src='inst/figures/README-example.png' width="70%" />
+<img src='inst/figures/README-example.png' width="60%" />
 </div>
 
 ## Developers

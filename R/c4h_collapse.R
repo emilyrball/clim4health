@@ -1,15 +1,15 @@
 #' Collapse one dimension of a s2dv_cube object
 #'
 #' @description
-#' `c4h_collapse()` works differently depending on the dimension being
-#' collapsed:
+#' Collapse one dimension of the 's2dv_cube'. `c4h_collapse()` works
+#' differently depending on the dimension being collapsed:
 #' * Use dim = "ensemble" to compute a summary statistic across ensemble members
 #' in forecast and hindcast datasets.
-#' * Use dim = "time" to compute a time mean with observational data (i.e. the
-#' length of the 'sdate' dimension must be one). In this case the first "time"
-#' of the dataset is assigned as the new s2dv time coordinate. To compute time
-#' aggregations when 'sdate' has length greater than one, use the function
-#' `c4h_time()` instead.
+#' * Use dim = "time" to compute a time aggregation with observational data
+#' (i.e. the length of the 'sdate' dimension must be one). In this case the
+#' first "time" of the dataset is assigned as the new s2dv time coordinate.
+#' To compute time aggregations when 'sdate' has length greater than one,
+#' use the function `c4h_time()` instead.
 #' * Use dim = "sdate" to compute a climatology, if each 'sdate' corresponds to
 #' a different year. In this case the first "sdate" of the dataset is assigned
 #' as the new s2dv sdate coordinate.
