@@ -68,7 +68,7 @@ We can also convert all data to degrees Celsius, as is described in the `clim4he
 ``` {r convert_units}
 fcst <- c4h_convert_units(fcst, "celsius")
 hcst <- c4h_convert_units(hcst, "celsius")
-rean  <- c4h_convert_units( rean, "celsius")
+rean <- c4h_convert_units(rean, "celsius")
 ```
 
 Look at the dimensions of the observed and hindcast datasets (recall we can use `dim(rean$data)` or `rean$dims`). We can see that `rean` has more latitude and longitude points, despite covering the same area - it has *higher spatial resolution.* We can also see this by comparing the values of the latitude/longitude coordinates - notice that `rean` has 0.1º resolution, but `hcst` has 1º.
@@ -118,16 +118,20 @@ knitr::include_graphics("https://gitlab.earth.bsc.es/ghr/clim4health/-/blob/main
 <pre lang="markdown">
 forecast_downscaled$
 │
-├── exp$                    # s2dv_cube object containing the downscaled experimental data
-│    │ 
-│    ├── data                  # Array with named dimensions containing the downscaled data       
-│    ├── dims                  # Named vector of the dimensions of the data array
+├── exp$                    # s2dv_cube object containing the downscaled
+│    │                        experimental data
+│    ├── data                  # Array with named dimensions containing the
+│    │                           downscaled data       
+│    ├── dims                  # Named vector of the dimensions of the data
+│    │                           array
 │    ├── coords                # Named list of the coordinates of the data array 
 │    └── attrs                 # Named list of all attributes and metadata
-└── obs$                    # s2dv_cube object containing the (potentially downscaled) observational data
-    │ 
-    ├── data                   # Array with named dimensions containing the downscaled observational data       
-    ├── dims                   # Named vector of the dimensions of the data array
+└── obs$                    # s2dv_cube object containing the (potentially
+    │                         downscaled) observational data
+    ├── data                   # Array with named dimensions containing the
+    │                            downscaled observational data       
+    ├── dims                   # Named vector of the dimensions of the data
+    │                            array
     ├── coords                 # Named list of the coordinates of the data array 
     └── attrs                  # Named list of all attributes and metadata
 </pre>
@@ -163,7 +167,7 @@ Let's try a basic interpolation downscaling. We will downscale the coarse hindca
 dwn <- c4h_downscale("Interpolation",
                      exp = hcst,
                      method_remap = "bilinear",
-                     target_grid = paste0(obs_path, "t2m_201001.nc"))
+                     target_grid = paste0(rean_path, "t2m_201001.nc"))
 ```
 
 You might see some warning messages related to the downscaling functionality - don't worry, this is completely normal.
