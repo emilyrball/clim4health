@@ -168,7 +168,7 @@ test_that("NULL bc method for areal data", {
   expect_message(
     expect_error(
       c4h_downscale("Intbc", exp, obs),
-      "'bc_method' must be specified"
+      "'method_bc' must be specified"
     ),
     "Only bias adjustment or calibration will be applied"
   )
@@ -215,7 +215,7 @@ test_that("Incorrect method_remap + obs message", {
         "Intbc",
         exp,
         obs,
-        bc_method = "bias",
+        method_bc = "bias",
         method_remap = c("con", "bil")
       ),
       "'method_remap' must be a single character string"
@@ -227,80 +227,89 @@ test_that("Incorrect method_remap + obs message", {
       "Intbc",
       exp,
       obs,
-      bc_method = "bias",
+      method_bc = "bias",
       method_remap = "wrong"
     ),
     "Accepted values for 'method_remap' are"
   )
 })
-test_that("'Intbc' with missing 'bc_method'", {
+test_that("'Intbc' with missing 'method_bc'", {
   exp <- mock_s2dv_grid()
   obs <- mock_s2dv_grid()
   expect_error(
     c4h_downscale("Intbc", exp, obs, method_remap = "nn"),
-    "If using 'Intbc', 'bc_method' must be specified"
+    "If using 'Intbc', 'method_bc' must be specified"
   )
 })
-test_that("'Intlr' with missing 'lr_method'", {
+test_that("'Intlr' with missing 'method_lr'", {
   exp <- mock_s2dv_grid()
   obs <- mock_s2dv_grid()
   expect_error(
     c4h_downscale("Intlr", exp, obs, method_remap = "nn"),
-    "If using 'Intlr', 'lr_method' must be specified"
+    "If using 'Intlr', 'method_lr' must be specified"
   )
 })
 
-# Calibration of areal data ----
-test_that("NULL bc method for areal data", {
+# Bilinear grid interpolation (skip CDO) ----
+test_that("Bilinear grid interpolation", {
+  testthat::skip_on_cran()
+
+  exp <- mock_s2dv_grid()
+  obs <- mock_s2dv_grid()
+
+  bctest <- c4h_downscale(
+    "Interpolation",
+    exp,
+    obs,
+    target_grid = system.file(
+      "extdata",
+      "reanalysis/t2m_201001.nc",
+      package = "clim4health"
+    ),
+    method_remap = "bilinear"
+  )
+  expect_true(all(names(bctest) %in% c("obs", "exp")))
+  expect_true(inherits(bctest$exp, "s2dv_cube"))
+})
+
+# 9nn regression downscaling (skip CDO) ----
+test_that("9nn regression downscaling", {
+  testthat::skip_on_cran()
+
+  exp <- mock_s2dv_grid()
+  obs <- mock_s2dv_grid()
+  down <- c4h_downscale(
+    "Intlr",
+    exp,
+    obs,
+    method_remap = "con",
+    target_grid = system.file(
+      "extdata",
+      "reanalysis/t2m_201001.nc",
+      package = "clim4health"
+    ),
+    method_lr = "9nn"
+  )
+  expect_true(all(names(down) %in% c("obs", "exp")))
+  expect_true(inherits(down$obs, "s2dv_cube"))
+})
+
+
+# Calibration of areal data (skip CDO) ----
+test_that("Calibrating areal data", {
+  testthat::skip_on_cran()
+
   exp <- mock_s2dv_area(nd = 10, nv = 10, nt = 10, ns = 10, nm = 1, narea = 5)
   obs <- mock_s2dv_area(nd = 10, nv = 10, nt = 10, ns = 10, nm = 1, narea = 5)
-  bctest <- c4h_downscale("Intbc", exp, obs, bc_method = "bias")
+  bctest <- c4h_downscale("Intbc", exp, obs, method_bc = "bias")
   expect_equal(names(bctest), c("obs", "exp"))
   expect_true(inherits(bctest$obs, "s2dv_cube"))
 })
 
-
-# Analogs with no grid ----
-test_that("Analogs with no grid", {
-  hcst <- c4h_load(
-    system.file("extdata", "hindcast", package = "clim4health"),
-    variable = "t2m",
-    year = 2010:2012,
-    month = 1,
-    leadtime_month = 1:3,
-    ext = "nc"
-  )
-  lats <- hcst$coords$latitude
-  lons <- hcst$coords$longitude
-  obs <- c4h_load(
-    system.file("extdata", "reanalysis", package = "clim4health"),
-    variable = "t2m",
-    year = 2010:2012,
-    month = 1,
-    leadtime_month = 1:3,
-    bbox = c(max(lats), min(lons), min(lats), max(lons)),
-    ext = "nc"
-  )
-  expect_message(
-    {
-      suppressWarnings({
-        dwn <- c4h_downscale(
-          "Analogs",
-          exp = hcst,
-          obs = obs,
-          method_remap = "bilinear"
-        )
-      })
-    },
-    "c4h_downscale will use the grid of 'exp' as the coarse grid"
-  )
-
-  expect_true(all(names(dwn) %in% c("obs", "exp")))
-  expect_true(inherits(dwn$obs, "s2dv_cube"))
-})
-
-# Interpolation with points ----
+# Interpolation with points (skip CDO) ----
 test_that("Interpolation with points", {
+  testthat::skip_on_cran()
+
   hcst <- c4h_load(
     system.file("extdata", "hindcast", package = "clim4health"),
     variable = "t2m",
@@ -332,42 +341,11 @@ test_that("Interpolation with points", {
   expect_true(inherits(dwn$exp, "s2dv_cube"))
 })
 
-# # Intbc with bbox  ----
-# test_that("Intbc with bbox", {
-#   hcst <- c4h_load(
-#     system.file("extdata", "hindcast", package = "clim4health"),
-#     variable = "t2m",
-#     year = 2010:2012,
-#     month = 1,
-#     leadtime_month = 1:3,
-#     ext = "nc"
-#   )
-#   lats <- hcst$coords$latitude
-#   lons <- hcst$coords$longitude
-#   obs <- c4h_load(
-#     system.file("extdata", "reanalysis", package = "clim4health"),
-#     variable = "t2m",
-#     year = 2010:2012,
-#     month = 1,
-#     leadtime_month = 1:3,
-#     bbox = c(max(lats), min(lons), min(lats), max(lons)),
-#     ext = "nc"
-#   )
-#   dwn <- c4h_downscale(
-#     "Intbc",
-#     exp = hcst,
-#     obs = obs,
-#     method_remap = "bic",
-#     bc_method = "bias",
-#     bbox = c(max(lats), min(lons), min(lats), max(lons))
-#   )
-#
-#   expect_true(all(names(dwn) %in% c("obs", "exp")))
-#   expect_true(inherits(dwn$exp, "s2dv_cube"))
-# })
 
-# Intlr with bbox  ----
+# Intlr with bbox (skip CDO) ----
 test_that("Intlr with bbox", {
+  testthat::skip_on_cran()
+
   hcst <- c4h_load(
     system.file("extdata", "hindcast", package = "clim4health"),
     variable = "t2m",
@@ -392,11 +370,51 @@ test_that("Intlr with bbox", {
     exp = hcst,
     obs = obs,
     method_remap = "bic",
-    bc_method = "bias",
-    lr_method = "basic",
+    method_bc = "bias",
+    method_lr = "basic",
     bbox = c(4, -77, 3, -76)
   )
 
   expect_true(all(names(dwn) %in% c("obs", "exp")))
   expect_true(inherits(dwn$exp, "s2dv_cube"))
+})
+
+# Analogs with no grid (skip CDO) ----
+test_that("Analogs with no grid", {
+  testthat::skip_on_cran()
+
+  hcst <- c4h_load(
+    system.file("extdata", "hindcast", package = "clim4health"),
+    variable = "t2m",
+    year = 2010:2012,
+    month = 1,
+    leadtime_month = 1:3,
+    ext = "nc"
+  )
+  lats <- hcst$coords$latitude
+  lons <- hcst$coords$longitude
+  obs <- c4h_load(
+    system.file("extdata", "reanalysis", package = "clim4health"),
+    variable = "t2m",
+    year = 2010:2012,
+    month = 1,
+    leadtime_month = 1:3,
+    bbox = c(max(lats), min(lons), min(lats), max(lons)),
+    ext = "nc"
+  )
+  expect_message(
+    {
+      suppressWarnings({
+        dwn <- c4h_downscale(
+          "Analogs",
+          exp = hcst,
+          obs = obs
+        )
+      })
+    },
+    "c4h_downscale will use the grid of 'exp' as the coarse grid"
+  )
+
+  expect_true(all(names(dwn) %in% c("obs", "exp")))
+  expect_true(inherits(dwn$obs, "s2dv_cube"))
 })

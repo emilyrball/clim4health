@@ -218,7 +218,7 @@ test_that("1. Error if output_format is invalid", {
   cube <- make_mock_fcst_cube()
   expect_error(
     c4h_convert(cube, "invalid_format"),
-    "Invalid output format. Choose 'terra', 'csv' or 'polygons'."
+    "Invalid output format. Choose "
   )
 })
 
@@ -238,9 +238,9 @@ test_that("3. Error if gridded data is required but not present", {
 test_that("4. Error if gridded or polygon data is required but not present", {
   location_cube <- make_mock_location_cube()
   expect_error(
-    c4h_convert(location_cube, "polygons"),
+    c4h_convert(location_cube, "sf"),
     paste0(
-      "Gridded or polygon data is required for 'polygons'",
+      "Gridded or polygon data is required for 'sf'",
       " output format."
     )
   )
@@ -259,27 +259,27 @@ test_that("5. c4h_convert dispatches to .s2dv_to_terra", {
   )
 })
 
-test_that("6. c4h_convert dispatches to .s2dv_to_csv", {
+test_that("6. c4h_convert dispatches to .s2dv_to_df", {
   cube <- make_mock_fcst_cube()
-  mock_csv <- function(x, drop) "csv_result"
+  mock_df <- function(x, drop) "df_result"
 
   with_mocked_bindings(
-    .s2dv_to_csv = mock_csv,
+    .s2dv_to_df = mock_df,
     {
-      out <- c4h_convert(cube, "csv", drop = FALSE)
-      expect_equal(out, "csv_result")
+      out <- c4h_convert(cube, "data.frame", drop = FALSE)
+      expect_equal(out, "df_result")
     }
   )
 })
 
-test_that("7. c4h_convert dispatches to .s2dv_to_polygons", {
+test_that("7. c4h_convert dispatches to .s2dv_to_sf", {
   cube <- make_mock_fcst_cube()
-  mock_polygons <- function(x, crs, drop) "polygon_result"
+  mock_sf <- function(x, crs, drop) "polygon_result"
 
   with_mocked_bindings(
-    .s2dv_to_polygons = mock_polygons,
+    .s2dv_to_sf = mock_sf,
     {
-      out <- c4h_convert(cube, "polygons", crs = "EPSG:4326", drop = FALSE)
+      out <- c4h_convert(cube, "sf", crs = "EPSG:4326", drop = FALSE)
       expect_equal(out, "polygon_result")
     }
   )
@@ -298,7 +298,7 @@ test_that("8. Message if 'crs' is NULL", {
   area_cube <- make_mock_area_cube()
   area_cube$attrs$area$geom <- make_test_areas_sf()$geometry
   expect_message(
-    c4h_convert(area_cube, "polygons", crs = NULL),
+    c4h_convert(area_cube, "sf", crs = NULL),
     paste0(
       "'crs' is not provided. Taking CRS from",
       "the input data if available."

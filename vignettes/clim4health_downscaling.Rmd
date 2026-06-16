@@ -194,11 +194,11 @@ Following this, a bias adjustment of the interpolated values is performed at eac
 
 -   The **quantile mapping** approach may take several forms. A commonly used approach, particularly for bias correcting precipitation forecasts, is the Empirical Quantile Mapping (EQM) method, based on the empirical cumulative distribution functions (CDFs) of the forecast and reference data sets. The transfer function from the forecast CDF to the reference CDF is obtained to bias-correct the forecast data; this method can capture the average evolution of, and variability in, precipitation while adjusting all statistical moments.
 
-Let's try using the **Intbc** method. Since we are downscaling temperature, let's choose a bilinear interpolation and EVMOS. To use the *Intbc* method with gridded data, we select `downscale_function = "Intbc"`, select a regridding method (e.g. `method_remap = "bilinear"`), provide a `target_grid` (a netCDF file containing the grid to which we want to downscale), and select a bias correction method (e.g. `bc_method = "evmos"`).
+Let's try using the **Intbc** method. Since we are downscaling temperature, let's choose a bilinear interpolation and EVMOS. To use the *Intbc* method with gridded data, we select `downscale_function = "Intbc"`, select a regridding method (e.g. `method_remap = "bilinear"`), provide a `target_grid` (a netCDF file containing the grid to which we want to downscale), and select a bias correction method (e.g. `method_bc = "evmos"`).
 
 ```{r }
-dwn <- c4h_downscale("Intbc", exp = hcst, obs = rean, loocv = FALSE,
-                     bc_method = "evmos", method_remap = "bilinear")
+dwn <- c4h_downscale("Intbc", exp = hcst, obs = rean,
+                     method_bc = "evmos", method_remap = "bilinear")
 ```
 
 > 💡 **Note**: You will now see even more warnings related to the downscaling - again, this is completely normal. In this case, it is because we are using a reanalysis dataset which contains NA values over the ocean.
@@ -219,12 +219,12 @@ Following this, a linear-regression with the interpolated values is fitted using
 
 -   The **nearest neighbour method** uses a local linear regression with the nine nearest neighbours as predictors and high-resolution observations as predictands. Instead of constructing a regression model using all nine predictors, principal component analysis is applied to the data of neighboring grids to reduce the dimension of the predictors. The linear regression model is then built using the principal components that explain 95% of the variance. The nearest neighbour method does not require a pre-interpolation process.
 
-We can now try the **Intlr** method. Let's give a conservative regridding and basic linear interpolation a go. To use the *Intlr* method with gridded data, we select `downscale_function = "Intlr"`, select a regridding method (e.g. `method_remap = "conservative"`), provide a `target_grid` (a netCDF file containing the grid to which we want to downscale), and select a linear regression method (e.g. `lr_method = "basic"`). Suppose this time, we want to downscale the forecast rather than the hindcast - we can provide the forecast as `exp_cor` and the hindcast as `exp`.
+We can now try the **Intlr** method. Let's give a conservative regridding and basic linear interpolation a go. To use the *Intlr* method with gridded data, we select `downscale_function = "Intlr"`, select a regridding method (e.g. `method_remap = "conservative"`), provide a `target_grid` (a netCDF file containing the grid to which we want to downscale), and select a linear regression method (e.g. `method_lr = "basic"`). Suppose this time, we want to downscale the forecast rather than the hindcast - we can provide the forecast as `exp_cor` and the hindcast as `exp`.
 
 ```{r }
 dwn <- c4h_downscale("Intlr", exp = hcst, obs = rean,
                      exp_cor = fcst,
-                     lr_method = "basic",
+                     method_lr = "basic",
                      method_remap = "con")
 ```
 
@@ -292,9 +292,9 @@ c4h_plot(dwn$exp, ensemble = TRUE, boundaries = "countries")
 We could also apply an `Intbc` or `Intlr` downscaling to point locations. For example:
 
 ```{r point_intbc}
-dwn <- c4h_downscale("Intbc", exp = hcst, obs = rean, loocv = FALSE,
+dwn <- c4h_downscale("Intbc", exp = hcst, obs = rean,
                      points = points, method_point_interp = "bilinear",
-                     bc_method = "evmos")
+                     method_bc = "evmos")
 ```
 
 ## 4. Calibration
@@ -319,7 +319,7 @@ Now we can use `c4h_downscale()` to calibrate the polygon data.
 
 ```{r }
 cal <- c4h_downscale("Intbc", exp = hcst_aggr, obs = rean_aggr,
-                     bc_method = "bias")
+                     method_bc = "bias")
 ```
 
 We can plot the raw hindcast data, the calibrated hindcast data, and the observations. To plot the data using `boundaries = "countries"`, you must have the suggested package `spData` installed.

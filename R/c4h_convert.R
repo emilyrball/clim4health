@@ -1,19 +1,27 @@
 #' c4h_convert
 #'
-#' Convert objects between formats including *s2dv_cube*, *terra*, csv,
-#' and *sf* polygons.
+#' Convert *s2dv_cube* objects to *terra*, *data.frame*, and *sf*.
 #'
 #' @param data The object to transform.
 #' @param output_format A string specifying the desired output format.
-#' Valid options are 'terra', 'csv' or 'polygons'.
+#' Valid options are 'terra' (SpatRaster), 'data.frame' or 'sf' (polygons).
 #' @param crs Coordinate reference system to use for output_formats 'terra' and
-#' *sf* 'polygons'. The default is NULL, in which case the CRS will be taken
+#' 'sf'. The default is NULL, in which case the CRS will be taken
 #' from  the input data if available, or assumed to be WGS 84 (EPSG:4326) for
 #' gridded data.
 #' @param drop Logical. If TRUE, dimensions with only one value will be dropped
 #' when converting to the desired format. Default is FALSE.
 #'
-#' @returns An R object of type terra SpatRaster, data.frame or sf polygons.
+#' @returns An R object of type terra `SpatRaster`, data.frame or `sf` polygons.
+#'
+#' @details The function only allows to convert into the following classes
+#' depending on the data format.
+#'   \describe{
+#'     \item{Gridded data}{'terra' SpatRaster, 'sf' polygons, or 'data.frame'.}
+#'     \item{Areal data}{'sf' polygons or 'data.frame'.}
+#'     \item{Point data}{'data.frame'.}
+#'   }
+#'
 #' @export
 #'
 #' @examples
@@ -26,10 +34,10 @@
 #' ### Convert gridded data
 #' ## to terra
 #' out <- c4h_convert(fcst, "terra", crs = "EPSG:4326")
-#' ## to csv
-#' out <- c4h_convert(fcst, "csv")
-#' ## to polygons
-#' out <- c4h_convert(fcst, "polygons", crs = "EPSG:4326")
+#' ## to data.frame
+#' out <- c4h_convert(fcst, "data.frame")
+#' ## to sf
+#' out <- c4h_convert(fcst, "sf", crs = "EPSG:4326")
 #'
 #' #############################
 #' ##### load polygon data #####
@@ -42,10 +50,10 @@
 #' fcst_aggr <- c4h_space(fcst, munip)
 #'
 #' ### Convert polygon data
-#' ## to csv
-#' out <- c4h_convert(fcst_aggr, "csv")
-#' ## to polygons
-#' out <- c4h_convert(fcst_aggr, "polygons", crs = "EPSG:4326")
+#' ## to data.frame
+#' out <- c4h_convert(fcst_aggr, "data.frame")
+#' ## to sf
+#' out <- c4h_convert(fcst_aggr, "sf", crs = "EPSG:4326")
 #'
 #' #############################
 #' ##### load station data #####
@@ -54,12 +62,12 @@
 #' stations <- c4h_load(station_path, variable = "temp_mean", ext = 'csv')
 #'
 #' ### Convert location data
-#' ## to csv
-#' out <- c4h_convert(stations, "csv")
+#' ## to data.frame
+#' out <- c4h_convert(stations, "data.frame")
 #' }
 c4h_convert <- function(data, output_format, crs = NULL, drop = FALSE) {
-  if (!output_format %in% c("terra", "csv", "polygons")) {
-    stop("Invalid output format. Choose 'terra', 'csv' or 'polygons'.")
+  if (!output_format %in% c("terra", "data.frame", "sf")) {
+    stop("Invalid output format. Choose 'terra', 'data.frame' or 'sf'.")
   }
 
   if (!inherits(drop, "logical") || length(drop) != 1) {
@@ -81,12 +89,12 @@ c4h_convert <- function(data, output_format, crs = NULL, drop = FALSE) {
 
   if (
     !(has_latlon || has_area) &&
-      output_format == "polygons"
+      output_format == "sf"
   ) {
-    stop("Gridded or polygon data is required for 'polygons' output format.")
+    stop("Gridded or polygon data is required for 'sf' output format.")
   }
 
-  if (is.null(crs) && output_format %in% c("terra", "polygons")) {
+  if (is.null(crs) && output_format %in% c("terra", "sf")) {
     if (has_area) {
       message(paste0(
         "'crs' is not provided. Taking CRS from",
@@ -104,9 +112,9 @@ c4h_convert <- function(data, output_format, crs = NULL, drop = FALSE) {
 
   if (output_format == "terra") {
     .s2dv_to_terra(data, crs = crs, drop = drop)
-  } else if (output_format == "csv") {
-    .s2dv_to_csv(data, drop = drop)
-  } else if (output_format == "polygons") {
-    .s2dv_to_polygons(data, crs = crs, drop = drop)
+  } else if (output_format == "data.frame") {
+    .s2dv_to_df(data, drop = drop)
+  } else if (output_format == "sf") {
+    .s2dv_to_sf(data, crs = crs, drop = drop)
   }
 }

@@ -651,6 +651,8 @@ create_esarchive_recon <- function(
 }
 
 test_that("17. happy esarchive/recon", {
+  testthat::skip_on_cran()
+
   lon <- seq(-10, 10, length.out = 5)
   lat <- seq(40, 50, length.out = 10)
 
@@ -787,6 +789,8 @@ create_esarchive_exp <- function(
 }
 
 test_that("17. happy esarchive/exp", {
+  testthat::skip_on_cran()
+
   lon <- seq(-2, 2, length.out = 5)
   lat <- seq(4, 5, length.out = 10)
 

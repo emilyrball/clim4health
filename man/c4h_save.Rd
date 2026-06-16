@@ -8,7 +8,7 @@ c4h_save(data, format, path, drop = FALSE)
 }
 \arguments{
 \item{data}{The object to be saved, which could be an \emph{s2dv_cube},
-\emph{terra}, data.frame or \emph{sf} object.}
+\emph{terra}, csv or \emph{sf} object.}
 
 \item{format}{A string indicating the format of the object you want to save.
 Options are: "s2dv", "terra", "csv" or "polygons"}

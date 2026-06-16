@@ -251,10 +251,10 @@ test_that("1. Happy path .s2dv_to_terra", {
   )
 })
 
-test_that("2 Happy path .s2dv_to_csv", {
+test_that("2 Happy path .s2dv_to_df", {
   cube <- make_mock_fcst_cube()
 
-  df <- .s2dv_to_csv(cube)
+  df <- .s2dv_to_df(cube)
 
   # Returns data.frame
   expect_s3_class(df, "data.frame")
@@ -286,10 +286,10 @@ test_that("2 Happy path .s2dv_to_csv", {
   )
 })
 
-test_that("3 Happy path .s2dv_to_polygons", {
+test_that("3 Happy path .s2dv_to_sf", {
   cube <- make_mock_fcst_cube(ns = 1, nt = 2, nm = 2)
 
-  sf_obj <- .s2dv_to_polygons(cube)
+  sf_obj <- .s2dv_to_sf(cube)
 
   # Returns sf object
   expect_s3_class(sf_obj, "sf")
@@ -403,10 +403,10 @@ test_that("7. .s2dv_to_terra handles NULL Dates", {
   )
 })
 
-test_that("8. .s2dv_to_csv handles different Dates shapes", {
+test_that("8. .s2dv_to_df handles different Dates shapes", {
   # 2D Dates (ns > 1 && nt > 1)
   cube_2d <- make_mock_fcst_cube(ns = 2, nt = 2)
-  df_2d <- .s2dv_to_csv(cube_2d)
+  df_2d <- .s2dv_to_df(cube_2d)
   expect_equal(df_2d$date[1], as.character(as.Date(cube_2d$attrs$Dates[1, 1])))
   idx_22 <- which(df_2d$sdate == 2 & df_2d$time == 2)[1]
   expect_equal(
@@ -416,7 +416,7 @@ test_that("8. .s2dv_to_csv handles different Dates shapes", {
 
   # 1D time (length == nt)
   cube_time <- make_mock_fcst_cube(ns = 1, nt = 3)
-  df_time <- .s2dv_to_csv(cube_time)
+  df_time <- .s2dv_to_df(cube_time)
   expect_equal(
     unique(df_time$date),
     c("2025-01-01", "2025-01-02", "2025-01-03")
@@ -424,21 +424,21 @@ test_that("8. .s2dv_to_csv handles different Dates shapes", {
 
   # 1D sdate (length == ns)
   cube_sdate <- make_mock_fcst_cube(ns = 3, nt = 1)
-  df_sdate <- .s2dv_to_csv(cube_sdate)
+  df_sdate <- .s2dv_to_df(cube_sdate)
   idx_s2 <- which(df_sdate$sdate == 2)[1]
   expect_equal(df_sdate$date[idx_s2], "2025-01-02")
 
   # NULL Dates
   cube_null <- make_mock_fcst_cube()
   cube_null$attrs$Dates <- NULL
-  df_null <- .s2dv_to_csv(cube_null)
+  df_null <- .s2dv_to_df(cube_null)
   expect_false("date" %in% names(df_null))
 })
 
 # --- Location handling ----
-test_that("9. .s2dv_to_csv handles cubes with location", {
+test_that("9. .s2dv_to_df handles cubes with location", {
   cube_loc <- make_mock_location_cube()
-  df_loc <- .s2dv_to_csv(cube_loc)
+  df_loc <- .s2dv_to_df(cube_loc)
 
   expect_true(all(c("latitude", "longitude") %in% names(df_loc)))
   expect_equal(unique(df_loc$latitude), cube_loc$attrs$location$latitude)
@@ -447,15 +447,15 @@ test_that("9. .s2dv_to_csv handles cubes with location", {
 
 
 # --- Area handling ----
-test_that("10. .s2dv_to_csv handles cubes with area", {
+test_that("10. .s2dv_to_df handles cubes with area", {
   cube_area <- make_mock_area_cube()
-  df_area <- .s2dv_to_csv(cube_area)
+  df_area <- .s2dv_to_df(cube_area)
 
   expect_true("area" %in% names(df_area))
   expect_equal(unique(df_area$area), as.character(cube_area$coords$area))
 
   cube_area$attrs$area_id <- "Area_ID"
-  df_area <- .s2dv_to_csv(cube_area)
+  df_area <- .s2dv_to_df(cube_area)
   expect_true("Area_ID" %in% names(df_area))
   expect_equal(unique(df_area$Area_ID), as.character(cube_area$coords$area))
 })
@@ -470,12 +470,12 @@ test_that("11. get_label falls back when coord labels too short", {
   expect_true(any(grepl("dataset_02", names(r))))
 })
 
-# --- .s2dv_to_polygons area case ----
-test_that("12. Happy .s2dv_to_polygons with area cube", {
+# --- .s2dv_to_sf area case ----
+test_that("12. Happy .s2dv_to_sf with area cube", {
   cube <- make_mock_area_cube()
   cube$attrs$area$geom <- make_test_areas_sf()$geometry
 
-  sf_obj <- .s2dv_to_polygons(cube)
+  sf_obj <- .s2dv_to_sf(cube)
 
   # Returns sf object
   expect_s3_class(sf_obj, "sf")
@@ -527,10 +527,10 @@ test_that("13. Happy drop .s2dv_to_terra", {
   )
 })
 
-test_that("14. Happy drop .s2dv_to_polygons", {
+test_that("14. Happy drop .s2dv_to_sf", {
   cube <- make_mock_fcst_cube(ns = 1, nt = 2, nm = 1)
 
-  sf_obj <- .s2dv_to_polygons(cube, drop = TRUE)
+  sf_obj <- .s2dv_to_sf(cube, drop = TRUE)
 
   # Returns sf object
   expect_s3_class(sf_obj, "sf")
@@ -545,7 +545,7 @@ test_that("14. Happy drop .s2dv_to_polygons", {
   cube <- make_mock_area_cube(nm = 1)
   cube$attrs$area$geom <- make_test_areas_sf()$geometry
 
-  sf_obj <- .s2dv_to_polygons(cube, drop = TRUE)
+  sf_obj <- .s2dv_to_sf(cube, drop = TRUE)
 
   # Returns sf object
   expect_s3_class(sf_obj, "sf")
@@ -559,10 +559,10 @@ test_that("14. Happy drop .s2dv_to_polygons", {
 })
 
 
-test_that("15. Happy drop .s2dv_to_csv", {
+test_that("15. Happy drop .s2dv_to_df", {
   cube <- make_mock_fcst_cube()
 
-  df <- .s2dv_to_csv(cube, drop = TRUE)
+  df <- .s2dv_to_df(cube, drop = TRUE)
 
   # Returns data.frame
   expect_s3_class(df, "data.frame")

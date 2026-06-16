@@ -64,8 +64,8 @@ First, we need to downscale the hindcast to the same spatial resolution as the o
 hcst <- c4h_convert_units(hcst, to = "celsius")
 rean <- c4h_convert_units(rean, to = "celsius")
 
-dwn <- c4h_downscale("Intbc", exp = hcst, obs = rean, loocv = FALSE,
-                     method_remap = "bilinear", bc_method = "evmos")
+dwn <- c4h_downscale("Intbc", exp = hcst, obs = rean,
+                     method_remap = "bilinear", method_bc = "evmos")
 ```
 
 > 💡 **Note**: Instead of downscaling, you could also spatially aggregate the hindcast and reanalysis data using `c4h_space()` to obtain the same spatial resolution, before calculating any skill metrics.
@@ -201,7 +201,7 @@ For skill scores where significance testing is applicable (BSS, RPSS, CRPSS, MSS
 
 ## 3. Example skill assessment
 
-In this example, we have only loaded 3 years of data for each leadtime, which means that we do not have a lot of information to assess whether the hindcast is skillful or not. However, the general process is (for gridded data):
+Using the data loaded and downscaled above, let's perform an example skill assessment. In this example, we have only loaded 3 years of data for each leadtime, which means that we do not have a lot of information to assess whether the hindcast is skillful or not. However, the general process is (for gridded data):
 
 ```{r }
 skill <- c4h_postprocess(exp = dwn$exp, 

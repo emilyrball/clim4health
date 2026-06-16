@@ -105,16 +105,16 @@
   return(rstack)
 }
 
-#' .s2dv_to_csv
+#' .s2dv_to_df
 #'
-#' Transform s2dv into csv
+#' Transform s2dv into data.frame
 #'
 #' @param cube The s2dv_cube object to be transformed.
 #' @param drop Logical. If TRUE, dimensions with only one value will be dropped
 #' when converting to the desired format. Default is FALSE.
 #' @returns A data.frame
 #' @noRd
-.s2dv_to_csv <- function(cube, drop = FALSE) {
+.s2dv_to_df <- function(cube, drop = FALSE) {
   .validate_s2dv_cube(cube)
 
   d <- dim(cube$data)
@@ -211,9 +211,9 @@
   return(df)
 }
 
-#' .s2dv_to_polygons
+#' .s2dv_to_sf
 #'
-#' Transform s2dv into polygons
+#' Transform s2dv into sf
 #'
 #' @param cube The s2dv_cube object to be transformed.
 #' @param crs Coordinate Reference System (default: "EPSG:4326").
@@ -221,7 +221,7 @@
 #' when converting to the desired format. Default is FALSE.
 #' @returns An sf object with polygons.
 #' @noRd
-.s2dv_to_polygons <- function(cube, crs = "EPSG:4326", drop = FALSE) {
+.s2dv_to_sf <- function(cube, crs = "EPSG:4326", drop = FALSE) {
   # Validate cube first
   .validate_s2dv_cube(cube)
 
