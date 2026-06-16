@@ -104,7 +104,7 @@ c4h_get(dataset = "seasonal-monthly-single-levels", # data type
         leadtime_month = c(1, 2))                   # leadtime months
 ```
 
-> 💡 **Note**: Where relevant, the default of `leadtime_month` is to download all possible leadtime months in the forecast data.
+> 💡 **Note**: There is no default of `leadtime_month`, so the user must specify the leadtime months they wish to download. Note that specifying a single value will download exactly one leadtime month, and not all leadtimes up to that month. For example, `leadtime_month = 3` downloads only the third leadtime, not leadtimes 1-3 (which could be specified using `leadtime_month = 1:3`).
 
 ### Specifying spatial extent
 
