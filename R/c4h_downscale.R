@@ -85,7 +85,7 @@
 #'                          min(lats), max(lons)),
 #'                 ext = "nc")
 #' ### Example with gridded data
-#' dwn <- c4h_downscale("Interpolation", exp = hcst, obs = obs,
+#' dwn <- c4h_downscale("Interpolation", exp = hcst,
 #'                      method_remap = "bilinear",
 #'                      target_grid = system.file("extdata",
 #'                                                "reanalysis/t2m_201001.nc",
@@ -229,8 +229,6 @@ c4h_downscale <- function(
       return(out)
     }
   }
-
-  .cdo_check()
 
   if (
     !downscale_function %in% c("Interpolation", "Intbc", "Intlr", "Analogs")
@@ -411,6 +409,11 @@ c4h_downscale <- function(
     # reorder bbox to work with CSDownscale functions
     # lonmin, lonmax, latmin, latmax
     region <- c(bbox[2], bbox[4], bbox[3], bbox[1])
+  }
+
+  # Check CDO
+  if (downscale_function != "Analogs") {
+    .cdo_check()
   }
 
   # cases of bugs in CSDownscale

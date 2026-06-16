@@ -121,7 +121,7 @@ obs <- c4h_load(system.file("extdata", "reanalysis",
                          min(lats), max(lons)),
                 ext = "nc")
 ### Example with gridded data
-dwn <- c4h_downscale("Interpolation", exp = hcst, obs = obs,
+dwn <- c4h_downscale("Interpolation", exp = hcst,
                      method_remap = "bilinear",
                      target_grid = system.file("extdata",
                                                "reanalysis/t2m_201001.nc",
