@@ -82,7 +82,7 @@ Let's explore the functionality of `c4h_postprocess()` and the different verific
 
 Depending on the metrics chosen, additional optional arguments may be selected, which will be discussed below.
 
-```{r c4h_postprocess_parameters,fig.width=10, fig.height=10, fig.align='center', out.width='100%', echo= FALSE, fig.cap="Structure of the c4h_postprocess function, outlining its key arguments and general functionality."}
+```{r c4h_postprocess_parameters,fig.width=10, fig.height=10, fig.align='center', out.width='100%', echo= FALSE, fig.cap="Figure 1: Structure of the c4h_postprocess function, outlining its key arguments and general functionality."}
 knitr::include_graphics("https://gitlab.earth.bsc.es/ghr/clim4health/-/blob/main/inst/figures/clim4health_postprocess_parameters.svg?ref_type=heads")
 ```
 
@@ -171,7 +171,7 @@ For a binary event such as "temperature above mean" and a probabilistic forecast
 
 > 💡 **Note**: In the context of statistical modelling (for example of disease cases), the Hit Rate is the same as the sensitivity, and the False Alarm Rate is the same as `1 - specificity`.
 
-```{r c4h_postprocess_ROC,fig.width=10, fig.height=10, fig.align='center', out.width='100%', echo= FALSE, fig.cap="For the two temperature events (temperature in the upper quintile category, red; temperature in the lower quintile category, blue) the hit rates and false alarm rates associated with a range of 'trigger' thresholds (triangles) are plotted. The vertical axis gives the hit rate, defined as the number of times the event was forecast (with probability above a certain threshold) and later observed to occur. Source: UK Met Office."}
+```{r c4h_postprocess_ROC,fig.width=10, fig.height=10, fig.align='center', out.width='100%', echo= FALSE, fig.cap="Figure 2: For the two temperature events (temperature in the upper quintile category, red; temperature in the lower quintile category, blue) the hit rates and false alarm rates associated with a range of 'trigger' thresholds (triangles) are plotted. The vertical axis gives the hit rate, defined as the number of times the event was forecast (with probability above a certain threshold) and later observed to occur. Source: UK Met Office."}
 knitr::include_graphics("https://gitlab.earth.bsc.es/ghr/clim4health/-/blob/main/inst/figures/metofficegovuk_xsmall.gif?ref_type=heads")
 ```
 

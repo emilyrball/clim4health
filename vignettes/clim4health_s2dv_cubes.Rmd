@@ -51,7 +51,7 @@ knitr::kable(
     check.names = FALSE
     ),
   format = "markdown",
-  caption = "Hindcast structure, for forecasts issued in July. Note that Lead Time 1 corresponds to the same month as the forecast initialisation date (the forecast is issued at the beginning of the month, and provides information for that same month)."
+  caption = "Table 1: Hindcast structure, for forecasts issued in July. Note that Lead Time 1 corresponds to the same month as the forecast initialisation date (the forecast is issued at the beginning of the month, and provides information for that same month)."
 )
 ```
 
