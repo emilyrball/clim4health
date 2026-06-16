@@ -13,16 +13,23 @@
 #' Default is all months.
 #' @param day A vector of days in the month. Default is all days.
 #' @param time A vector of hours (0-23). Only needed when datasets are hourly.
-#' Default is all hours.
+#' Default is 0 (midnight UTC).
 #' @param bbox A vector of coordinates. (in order: North, West, South, East).
 #' @param leadtime_month A vector of months for the forecast leadtime. e.g.
 #' c(1,2) for January and February. Default is all months.
-#' @param originating_centre DESCRIPTION PENDING!
-#' @param system DESCRIPTION PENDING!
+#' @param originating_centre The originating centre of the forecast if
+#' parameter `dataset` is "seasonal-monthly-single-levels". Options are "ecmwf",
+#' "ukmo", "meteo_france", "dwd", "cmcc", "ncep", "jma", "eccc", and "bom".
+#' There is no default value for this parameter.
+#' @param system Model identifier of the forecast if parameter `dataset` is
+#' "seasonal-monthly-single-levels". Options are 1, 2, 3, 4, 5, 6, 7, 8, 9, 12,
+#' 13, 14, 15, 21, 22, 35, 51, 600, 601, 602, 603, 604, 605, 610. Valid options
+#' depend on the value of originating_centre. There is no default value for this
+#' parameter.
 #' @param outname The name stem of the resultant netcdf file.
 #' @param outpath The path where the resultant netcdf file should be saved.
 #' Default is the current working directory.
-#' @returns A netcdf file.
+#' @returns A netcdf file or files.
 #'
 #' @export
 #'
@@ -75,7 +82,7 @@ c4h_get <- function(
   leadtime_month,
   originating_centre,
   system,
-  outname = paste0("cds_"),
+  outname = paste0("cds"),
   outpath = getwd()
 ) {
   all_params <- c(as.list(environment()))
