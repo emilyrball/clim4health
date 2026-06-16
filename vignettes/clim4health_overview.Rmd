@@ -26,7 +26,7 @@ knitr::opts_chunk$set(
 
 The **clim4health** package is intended for use with other packages developed within the [HARMONIZE](https://www.harmonize-tools.org/) project, to spatially and temporally harmonize multiple sources of data for use in health impact studies.
 
-This vignette provides an overview of the **clim4health** package methodology, the core functions, and a simple example workflow using real data. It deals with climate data in multidimensional arrays called *s2dv_cubes* (see the `clim4health_s2dv_cubes` vignette for more details). More complex use cases and examples are described in other vignettes (`clim4health_downscaling` regarding downscaling methodologies and `clim4health_postprocessing` regarding the postprocessing and verification methodologies in **clim4health**).
+This vignette provides an overview of the **clim4health** package methodology, the core functions, and a simple example workflow using real data. It deals with climate data in multidimensional arrays called *s2dv_cubes* (see the `clim4health_s2dv_cubes` vignette for more details). More complex use cases and examples are described in other vignettes (`clim4health_downscaling` regarding downscaling methodologies and `clim4health_postprocessing` regarding the postprocessing and verification methodologies in **clim4health**). Terms are defined in the glossary in the vignette `clim4health_glossary`.
 
 ## Installation
 
