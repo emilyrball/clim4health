@@ -412,9 +412,7 @@ c4h_downscale <- function(
   }
 
   # Check CDO
-  if (downscale_function != "Analogs") {
-    .cdo_check()
-  }
+  .cdo_check()
 
   # cases of bugs in CSDownscale
   if (!is.null(points)) {

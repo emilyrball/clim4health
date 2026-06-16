@@ -789,6 +789,8 @@ create_esarchive_exp <- function(
 }
 
 test_that("17. happy esarchive/exp", {
+  testthat::skip_on_cran()
+
   lon <- seq(-2, 2, length.out = 5)
   lat <- seq(4, 5, length.out = 10)
 

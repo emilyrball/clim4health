@@ -379,8 +379,10 @@ test_that("Intlr with bbox", {
   expect_true(inherits(dwn$exp, "s2dv_cube"))
 })
 
-# Analogs with no grid (CDO not needed) ----
+# Analogs with no grid (skip CDO) ----
 test_that("Analogs with no grid", {
+  testthat::skip_on_cran()
+
   hcst <- c4h_load(
     system.file("extdata", "hindcast", package = "clim4health"),
     variable = "t2m",
