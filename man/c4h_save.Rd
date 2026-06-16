@@ -4,28 +4,33 @@
 \alias{c4h_save}
 \title{c4h_save}
 \usage{
-c4h_save(data, format, path, drop = FALSE)
+c4h_save(data, path, drop = FALSE)
 }
 \arguments{
-\item{data}{The object to be saved, which could be an \emph{s2dv_cube},
-\emph{terra}, csv or \emph{sf} object.}
+\item{data}{The \emph{s2dv_cube} object to be saved.}
 
-\item{format}{A string indicating the format of the object you want to save.
-Options are: "s2dv", "terra", "csv" or "polygons"}
+\item{path}{A string indicating the path to save the file. The driver to
+save the file will be deduced based on the file extension. See details for
+a list of available extensions for each data type.}
 
-\item{path}{A string indicating the path to save the file.}
-
-\item{drop}{Logical. Only relevant for "s2dv" format. For other data formats,
-please use the drop parameter in c4h_convert. If TRUE, dimensions
-with only one value will be dropped when saving. If FALSE, they will be
-retained. Default is FALSE.}
+\item{drop}{Logical. If TRUE, dimensions  with only one value will
+be dropped when saving. If FALSE (defaults), they will be retained.}
 }
 \value{
 None.
 }
 \description{
-Save objects manipulated using \code{clim4health} functions
-in different formats: s2dv, terra, csv, polygons.
+Save \emph{s2dv_cube} objects used in \code{clim4health} functions to disk.
+}
+\details{
+The list of available extensions is the following:
+\describe{
+\item{Gridded data}{'nc', 'tif', 'csv'.}
+\item{Areal data}{'gpkg', 'shp'.}
+\item{Point data}{'csv'.}
+}
+Note that when saving s2dv data to formats other than 'nc', an
+internal conversion using \link{c4h_convert} is applied.
 }
 \examples{
 \donttest{
