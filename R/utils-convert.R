@@ -211,9 +211,9 @@
   return(df)
 }
 
-#' .s2dv_to_polygons
+#' .s2dv_to_sf
 #'
-#' Transform s2dv into polygons
+#' Transform s2dv into sf
 #'
 #' @param cube The s2dv_cube object to be transformed.
 #' @param crs Coordinate Reference System (default: "EPSG:4326").
@@ -221,7 +221,7 @@
 #' when converting to the desired format. Default is FALSE.
 #' @returns An sf object with polygons.
 #' @noRd
-.s2dv_to_polygons <- function(cube, crs = "EPSG:4326", drop = FALSE) {
+.s2dv_to_sf <- function(cube, crs = "EPSG:4326", drop = FALSE) {
   # Validate cube first
   .validate_s2dv_cube(cube)
 

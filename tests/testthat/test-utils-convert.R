@@ -286,10 +286,10 @@ test_that("2 Happy path .s2dv_to_csv", {
   )
 })
 
-test_that("3 Happy path .s2dv_to_polygons", {
+test_that("3 Happy path .s2dv_to_sf", {
   cube <- make_mock_fcst_cube(ns = 1, nt = 2, nm = 2)
 
-  sf_obj <- .s2dv_to_polygons(cube)
+  sf_obj <- .s2dv_to_sf(cube)
 
   # Returns sf object
   expect_s3_class(sf_obj, "sf")
@@ -470,12 +470,12 @@ test_that("11. get_label falls back when coord labels too short", {
   expect_true(any(grepl("dataset_02", names(r))))
 })
 
-# --- .s2dv_to_polygons area case ----
-test_that("12. Happy .s2dv_to_polygons with area cube", {
+# --- .s2dv_to_sf area case ----
+test_that("12. Happy .s2dv_to_sf with area cube", {
   cube <- make_mock_area_cube()
   cube$attrs$area$geom <- make_test_areas_sf()$geometry
 
-  sf_obj <- .s2dv_to_polygons(cube)
+  sf_obj <- .s2dv_to_sf(cube)
 
   # Returns sf object
   expect_s3_class(sf_obj, "sf")
@@ -527,10 +527,10 @@ test_that("13. Happy drop .s2dv_to_terra", {
   )
 })
 
-test_that("14. Happy drop .s2dv_to_polygons", {
+test_that("14. Happy drop .s2dv_to_sf", {
   cube <- make_mock_fcst_cube(ns = 1, nt = 2, nm = 1)
 
-  sf_obj <- .s2dv_to_polygons(cube, drop = TRUE)
+  sf_obj <- .s2dv_to_sf(cube, drop = TRUE)
 
   # Returns sf object
   expect_s3_class(sf_obj, "sf")
@@ -545,7 +545,7 @@ test_that("14. Happy drop .s2dv_to_polygons", {
   cube <- make_mock_area_cube(nm = 1)
   cube$attrs$area$geom <- make_test_areas_sf()$geometry
 
-  sf_obj <- .s2dv_to_polygons(cube, drop = TRUE)
+  sf_obj <- .s2dv_to_sf(cube, drop = TRUE)
 
   # Returns sf object
   expect_s3_class(sf_obj, "sf")

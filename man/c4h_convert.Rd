@@ -10,10 +10,10 @@ c4h_convert(data, output_format, crs = NULL, drop = FALSE)
 \item{data}{The object to transform.}
 
 \item{output_format}{A string specifying the desired output format.
-Valid options are 'terra', 'csv' or 'polygons'.}
+Valid options are 'terra' (SpatRaster), 'csv' or 'sf' (polygons).}
 
 \item{crs}{Coordinate reference system to use for output_formats 'terra' and
-\emph{sf} 'polygons'. The default is NULL, in which case the CRS will be taken
+'sf'. The default is NULL, in which case the CRS will be taken
 from  the input data if available, or assumed to be WGS 84 (EPSG:4326) for
 gridded data.}
 
@@ -21,11 +21,19 @@ gridded data.}
 when converting to the desired format. Default is FALSE.}
 }
 \value{
-An R object of type terra SpatRaster, data.frame or sf polygons.
+An R object of type terra \code{SpatRaster}, data.frame or \code{sf} polygons.
 }
 \description{
-Convert objects between formats including \emph{s2dv_cube}, \emph{terra}, csv,
-and \emph{sf} polygons.
+Convert \emph{s2dv_cube} objects to \emph{terra}, csv, and \emph{sf}.
+}
+\details{
+The function only allows to save in the following formats
+depending on the data format.
+\describe{
+\item{Gridded data}{'terra' SpatRaster, 'sf' polygons, or 'csv'.}
+\item{Areal data}{'sf' polygons or 'csv'.}
+\item{Point data}{'csv'.}
+}
 }
 \examples{
 \donttest{
@@ -39,8 +47,8 @@ fcst <- c4h_load(fcst_path, variable = "t2m", leadtime_month = 1, ext = 'nc')
 out <- c4h_convert(fcst, "terra", crs = "EPSG:4326")
 ## to csv
 out <- c4h_convert(fcst, "csv")
-## to polygons
-out <- c4h_convert(fcst, "polygons", crs = "EPSG:4326")
+## to sf
+out <- c4h_convert(fcst, "sf", crs = "EPSG:4326")
 
 #############################
 ##### load polygon data #####
@@ -55,8 +63,8 @@ fcst_aggr <- c4h_space(fcst, munip)
 ### Convert polygon data
 ## to csv
 out <- c4h_convert(fcst_aggr, "csv")
-## to polygons
-out <- c4h_convert(fcst_aggr, "polygons", crs = "EPSG:4326")
+## to sf
+out <- c4h_convert(fcst_aggr, "sf", crs = "EPSG:4326")
 
 #############################
 ##### load station data #####

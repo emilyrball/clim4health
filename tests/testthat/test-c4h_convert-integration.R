@@ -1,6 +1,3 @@
-#testthat::skip_on_covr()
-#testthat::skip_on_cran()  # optional if they are heavy
-
 test_that("c4h_convert: terra integration works", {
   fcst_path <- system.file("extdata", "forecast", package = "clim4health")
   fcst <- c4h_load(fcst_path, variable = "t2m", ext = "nc")
@@ -17,11 +14,6 @@ test_that("c4h_convert: terra integration works", {
 
   expect_s4_class(r, "SpatRaster")
   expect_equal(terra::nlyr(r), 1)
-
-  # debugging
-  # c4h_plot(fcst, time = 1, ensemble = 1, coordgrid=TRUE)
-  # terra::plot(out[[1]], col = hcl.colors(100, "RdBu", rev = TRUE), grid=TRUE,  xlab = "Longitude",
-  #             ylab = "Latitude")
 })
 
 test_that("c4h_convert: csv integration works", {
@@ -42,7 +34,7 @@ test_that("c4h_convert: csv integration works", {
   expect_equal(nrow(df), 9)
 })
 
-test_that("c4h_convert: polygons integration works", {
+test_that("c4h_convert: sf integration works", {
   fcst_path <- system.file("extdata", "forecast", package = "clim4health")
   fcst <- c4h_load(fcst_path, variable = "t2m", ext = "nc")
 
@@ -54,7 +46,7 @@ test_that("c4h_convert: polygons integration works", {
   fcst_small$coords$latitude <- fcst$coords$latitude[1:3]
   fcst_small$coords$longitude <- fcst$coords$longitude[1:3]
 
-  sf_obj <- c4h_convert(fcst_small, "polygons")
+  sf_obj <- c4h_convert(fcst_small, "sf")
 
   expect_s3_class(sf_obj, "sf")
   expect_true("geometry" %in% names(sf_obj))
