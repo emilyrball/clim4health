@@ -46,31 +46,31 @@ hcst <- c4h_load(hcst_path,
                  leadtime_month = "all",
                  ext = "nc")
 
-obs_path <- system.file("extdata/reanalysis/", package = "clim4health")
-obs_path <- paste0(obs_path, "/")
-obs <- c4h_load(obs_path,
-                variable = "t2m",
-                year = 2010:2012,
-                month = 1,
-                leadtime_month = 1:3,
-                ext = "nc")
+rean_path <- system.file("extdata/reanalysis/", package = "clim4health")
+rean_path <- paste0(rean_path, "/")
+rean <- c4h_load(rean_path,
+                 variable = "t2m",
+                 year = 2010:2012,
+                 month = 1,
+                 leadtime_month = 1:3,
+                 ext = "nc")
 ```
 
-Look at the dimensions of the observed and hindcast datasets (recall we can use `dim(obs$data)` or `obs$dims`). We can see that `obs` has more latitude and longitude points, despite covering the same area - it has *higher spatial resolution.* We can also see this by comparing the values of the latitude/longitude coordinates - notice that `obs` has 0.1º resolution, but `hcst` has 1º.
+Look at the dimensions of the observed and hindcast datasets (recall we can use `dim(rean$data)` or `rean$dims`). We can see that `rean` has more latitude and longitude points, despite covering the same area - it has *higher spatial resolution.*
+
+First, we need to downscale the hindcast to the same spatial resolution as the observations. In the same step, let's convert to degrees Celsius.
 
 ```{r }
-print(obs$dims)
-print(hcst$dims)
+hcst <- c4h_convert_units(hcst, to = "celsius")
+rean <- c4h_convert_units(rean, to = "celsius")
 
-print(obs$coords$latitude)
-print(hcst$coords$latitude)
-
-# Hindcast data
-c4h_plot(hcst, ensemble = TRUE, coordgrid = TRUE)
-
-# Observations
-c4h_plot(obs, ensemble = TRUE, coordgrid = TRUE)
+dwn <- c4h_downscale("Intbc", exp = hcst, obs = rean, loocv = FALSE,
+                     method_remap = "bilinear", bc_method = "evmos")
 ```
+
+> 💡 **Note**: Instead of downscaling, you could also spatially aggregate the hindcast and reanalysis data using `c4h_space()` to obtain the same spatial resolution, before calculating any skill metrics.
+
+Let's explore the functionality of `c4h_postprocess()` and the different verification metrics that can be calculated, before applying them in examples.
 
 ## 1. Key c4h_postprocess arguments
 
@@ -94,16 +94,16 @@ The metrics are calculated by comparing forecast ensemble member predictions to 
 
 #### `"BSS"` - Brier Skill Score
 
-This is a skill score for binary or categorical outcomes (for example, does a forecast successfully predict above normal temperatures?). The **Brier Score (BS)** measures the mean squared error between forecast probabilities and actual outcomes, and the associated **skill score (BSS)** compares the forecast's BS to a reference forecast BS (often the climatology). A forecast is *more skillful* than the reference if BSS~forecast~ \> 0.
+This is a skill score for binary or categorical outcomes (for example, does a forecast successfully predict above normal temperatures?). The **Brier Score (BS)** measures the mean squared error between forecast probabilities and actual outcomes, and the associated **skill score (BSS)** compares the forecast's BS to a reference forecast BS (often the climatology).
 
-**In the example of predicting above-mean temperatures in a given month:**
+**In the example of predicting above-median temperatures in a given month:**
 
-1.  The mean temperature for a given month is the average temperature across all the years of the observations. Temperatures are classified as "above-mean" if they exceed this average.
-2.  The climatological reference forecast assigns a 50% probability to above-mean temperatures every time (since by definition half of all observed values lie above the mean). The BSS measures how much better the ensemble forecast is compared to always predicting this 50% probability.
+1.  The median temperature for a given month is the 50th percentile temperature across all the years of the observations. Temperatures are classified as "above-median" if they exceed this average.
+2.  The climatological reference forecast assigns a 50% probability to above-median temperatures every time (since by definition half of all observed values lie above the median). The BSS measures how much better the ensemble forecast is compared to always predicting this 50% probability.
 3.  Comparing the Brier Scores of the forecast to the climatological reference:
-    -   BSS~forecast~ = 1: perfect forecast - all ensemble members predict above-mean temperatures on every occasion when the event (observed temperature above the mean) occurs, and no ensemble members predict when it does not
+    -   BSS~forecast~ = 1: perfect forecast - all ensemble members predict above-median temperatures on every occasion when the event (observed temperature above the median) occurs, and no ensemble members predict it when it does not occur
     -   BSS~forecast~ = 0: no added skill over climatology — the forecast performs no better than always predicting a 50% probability
-    -   BSS~forecast~ \< 0: the forecast performs worse than climatology and provides no useful additional information. For example, for a given observed "above-mean" month, perhaps only 10% of ensemble members predict above-mean temperatures.
+    -   BSS~forecast~ \< 0: the forecast performs worse than climatology and provides no useful additional information. For example, for a given observed "above-median" month, perhaps only 10% of ensemble members predict above-median temperatures.
 
 Two commonly used thresholds for BSS are BSS10 and BSS90: these define the categories as the 10th and 90th percentiles respectively. They are useful to assess whether the forecast correctly predicts extremes.
 
@@ -118,7 +118,7 @@ For example, BSS90 assesses whether the forecast can predict when temperatures e
 
 #### `"RPSS"` - Ranked Probability Skill Score
 
-This skill score is based on the **Ranked Probability Score (RPS)**, which extends the Brier Skill to multiple ordered categories. For example, you may wish to assess a forecast's ability to predict below-normal, near-normal and above-normal temperatures, where above-normal corresponds to temperatures over the 66th percentile, and below-normal to those below the 33rd.
+This skill score is based on the **Ranked Probability Score (RPS)**, which extends the Brier Score (and associated skill) to multiple ordered categories. For example, you may wish to assess a forecast's ability to predict below-normal, near-normal and above-normal temperatures, where above-normal corresponds to temperatures over the 66th percentile, and below-normal to those below the 33rd.
 
 1.  The climatology by definition correctly categorises temperatures as "above normal" 33% of the time, "near normal" 33% of the time, and "below normal" 33% of the time. The RPSS measures how much better the ensemble forecast is compared to always predicting this uniform 33%/33%/33% distribution across categories.
 2.  Comparing the Ranked Probability Scores of the forecast to the climatological reference:
@@ -147,7 +147,7 @@ The average of the squared differences between forecast ensemble mean and observ
 
 The skill score associated with the MSE.
 
-1.  As before,MSSS values for a forecast when compared to a reference (climatology):
+1.  As before, MSSS values for a forecast when compared to a reference (climatology):
     -   MSSS~forecast~ = 1: a perfect forecast
     -   MSSS~forecast~ = 0: the forecast performs as well as the climatology with no additional skill
     -   MSSS~forecast~ \< 0: the forecast performs worse than the climatology.
@@ -168,6 +168,8 @@ The **Relative Operating Characteristic Skill Score (ROCSS)** assesses the discr
 -   *False Alarm Rate*: the forecast predicts the event, but it does not occur
 
 For a binary event such as "temperature above mean" and a probabilistic forecast, a probability threshold is applied to convert the forecast into a binary prediction (e.g. "predict the event if more than 50% of ensemble members predict it"). By varying this threshold, a Hit Rate and False Alarm Rate are calculated at each value, and the ROC curve is plotted comparing these (example below).
+
+> 💡 **Note**: In the context of statistical modelling (for example of disease cases), the Hit Rate is the same as the sensitivity, and the False Alarm Rate is the same as `1 - specificity`.
 
 ```{r c4h_postprocess_ROC,fig.width=10, fig.height=10, fig.align='center', out.width='100%', echo= FALSE, fig.cap="For the two temperature events (temperature in the upper quintile category, red; temperature in the lower quintile category, blue) the hit rates and false alarm rates associated with a range of 'trigger' thresholds (triangles) are plotted. The vertical axis gives the hit rate, defined as the number of times the event was forecast (with probability above a certain threshold) and later observed to occur. Source: UK Met Office."}
 knitr::include_graphics("https://gitlab.earth.bsc.es/ghr/clim4health/-/blob/main/inst/figures/metofficegovuk_xsmall.gif?ref_type=heads")
@@ -193,25 +195,17 @@ For skill scores where significance testing is applicable (BSS, RPSS, CRPSS, MSS
 -   A skill score marked as significant (p < 0.05) suggests that the forecast has genuine skill beyond climatology, and the result is unlikely to be due to random variation
    -   A skill score that is not significant (p ≥ 0.05) does not necessarily mean the forecast has no skill — it may reflect insufficient sample size (e.g. a short hindcast period) rather than a truly unskillful forecast.
 
-Note that significance testing is not typically applied to raw error metrics (MSE, RMSE, AbsBias) since these are not expressed relative to a reference and do not have a natural null hypothesis of zero.
+> 💡 **Note**: Significance testing is not typically applied to raw error metrics (MSE, RMSE, AbsBias) since these are not expressed relative to a reference and do not have a natural null hypothesis of zero.
 
 ------------------------------------------------------------------------
 
 ## 3. Example skill assessment
 
-First, we need to downscale the hindcast to the same spatial resolution as the observations.
-
-```{r }
-dwn <- c4h_downscale("Intbc", exp = hcst, obs = obs, loocv = FALSE,
-                     method_remap = "bilinear", bc_method = "evmos",
-                     target_grid = obs$attrs$source_files[1])
-```
-
 In this example, we have only loaded 3 years of data for each leadtime, which means that we do not have a lot of information to assess whether the hindcast is skillful or not. However, the general process is (for gridded data):
 
 ```{r }
 skill <- c4h_postprocess(exp = dwn$exp, 
-                         obs = obs,
+                         obs = dwn$obs,
                          metrics = c("BSS", "CRPSS"),
                          brier_thresholds = c(0.1, 0.9))
 ```
@@ -222,7 +216,7 @@ The output of `c4h_postprocess` is a list of lists. The outer list contains the 
 names(skill)
 ```
 
-Within each metric, we save the value and the significance (by default alpha = 0.05). Looking at the dimensions of the outputs, note that the sdate dimension will now always have length 1, because the skill is calculated by assessing statistical relationships across the start dates.
+Within each metric, we save the value and the significance (by default alpha = 0.05). Looking at the dimensions of the outputs, note that the `sdate` dimension will now always have length 1, because the skill is calculated by assessing statistical relationships across the start dates.
 
 ```{r }
 names(skill$BSS10)
@@ -276,7 +270,7 @@ This argument specifies the effective sample size to use in the significance tes
 
 #### `indices_for_clim`
 
-This is a vector of the indices to be taken along the 'sdate' dimension for computing the thresholds between probabilistic categories. If NULL (default), the whole time period is used. If you wanted to specify the probability thresholds based only on the first 10 years of the data, you could set `indices_for_clim = 1:10`. This argument is only relevant if "BSS", "RPSS", "CRPSS", or "ROCSS" is in `metrics`.
+This is a vector of the indices to be taken along the `sdate` dimension for computing the thresholds between probabilistic categories. If NULL (default), the whole time period is used. If you wanted to specify the probability thresholds based only on the first 10 years of the data, you could set `indices_for_clim = 1:10`. This argument is only relevant if "BSS", "RPSS", "CRPSS", or "ROCSS" is in `metrics`.
 
 #### `cross.val` and `clim.cross.val`
 
@@ -288,7 +282,7 @@ This is an array to use to weight the forecast/reference ensemble members in the
 
 #### `comp_dim` and `limits`
 
-`comp_dim` refers to the dimension along which to only take into account complete data. That is to say, data is removed along `comp_dim` if there is at least one NA between `limits`, where `limits` specifies the range of indices along `comp_dim` to be considered. It is recommended to use the default values for these arguments, which means that no data is removed.
+`comp_dim` refers to the dimension along which to only take into account complete data. That is to say, data is removed along `comp_dim` if there is at least one NA between `limits`, where the argument `limits` specifies the range of indices along `comp_dim` to be considered. It is recommended to use the default values for these arguments, which means that no data is removed.
 
 #### `conf`
 
@@ -300,7 +294,7 @@ By default, this is FALSE, meaning that NA values are not removed in the calcula
 
 #### `sign` and `pval`
 
-For the metrics "MSSS" and "RMSSS", `sign` and `pval` specify whether or not to compute the statistical significance and p-values of the test Ho: (R)MSSS = 0. By default, `sign` is TRUE and `pval` is FALSE. The default is that the significance is returned (TRUE/FALSE), but the p-values used to calculated this are not).
+For the metrics "MSSS" and "RMSSS", `sign` and `pval` specify whether or not to compute the statistical significance and p-values of the test Ho: (R)MSSS = 0. By default, `sign` is TRUE and `pval` is FALSE. The default is that the significance is returned (TRUE/FALSE), but the p-values used to calculate this are not).
 
 #### `rocss_cat`
 
