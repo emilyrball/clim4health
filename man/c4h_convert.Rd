@@ -10,7 +10,7 @@ c4h_convert(data, output_format, crs = NULL, drop = FALSE)
 \item{data}{The object to transform.}
 
 \item{output_format}{A string specifying the desired output format.
-Valid options are 'terra' (SpatRaster), 'csv' or 'sf' (polygons).}
+Valid options are 'terra' (SpatRaster), 'data.frame' or 'sf' (polygons).}
 
 \item{crs}{Coordinate reference system to use for output_formats 'terra' and
 'sf'. The default is NULL, in which case the CRS will be taken
@@ -24,15 +24,15 @@ when converting to the desired format. Default is FALSE.}
 An R object of type terra \code{SpatRaster}, data.frame or \code{sf} polygons.
 }
 \description{
-Convert \emph{s2dv_cube} objects to \emph{terra}, csv, and \emph{sf}.
+Convert \emph{s2dv_cube} objects to \emph{terra}, \emph{data.frame}, and \emph{sf}.
 }
 \details{
-The function only allows to save in the following formats
+The function only allows to convert into the following classes
 depending on the data format.
 \describe{
-\item{Gridded data}{'terra' SpatRaster, 'sf' polygons, or 'csv'.}
-\item{Areal data}{'sf' polygons or 'csv'.}
-\item{Point data}{'csv'.}
+\item{Gridded data}{'terra' SpatRaster, 'sf' polygons, or 'data.frame'.}
+\item{Areal data}{'sf' polygons or 'data.frame'.}
+\item{Point data}{'data.frame'.}
 }
 }
 \examples{
@@ -45,8 +45,8 @@ fcst <- c4h_load(fcst_path, variable = "t2m", leadtime_month = 1, ext = 'nc')
 ### Convert gridded data
 ## to terra
 out <- c4h_convert(fcst, "terra", crs = "EPSG:4326")
-## to csv
-out <- c4h_convert(fcst, "csv")
+## to data.frame
+out <- c4h_convert(fcst, "data.frame")
 ## to sf
 out <- c4h_convert(fcst, "sf", crs = "EPSG:4326")
 
@@ -61,8 +61,8 @@ munip <- munip[1:2, ]
 fcst_aggr <- c4h_space(fcst, munip)
 
 ### Convert polygon data
-## to csv
-out <- c4h_convert(fcst_aggr, "csv")
+## to data.frame
+out <- c4h_convert(fcst_aggr, "data.frame")
 ## to sf
 out <- c4h_convert(fcst_aggr, "sf", crs = "EPSG:4326")
 
@@ -73,7 +73,7 @@ station_path <- system.file("extdata", "stations", "temp_vallecauca.csv",
 stations <- c4h_load(station_path, variable = "temp_mean", ext = 'csv')
 
 ### Convert location data
-## to csv
-out <- c4h_convert(stations, "csv")
+## to data.frame
+out <- c4h_convert(stations, "data.frame")
 }
 }

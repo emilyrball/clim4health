@@ -1,10 +1,10 @@
 #' c4h_save
 #'
 #' Save objects manipulated using `clim4health` functions
-#' in different formats: s2dv, terra, data.frame, polygons.
+#' in different formats: s2dv, terra, csv, polygons.
 #'
 #' @param data The object to be saved, which could be an *s2dv_cube*,
-#' *terra*, data.frame or *sf* object.
+#' *terra*, csv or *sf* object.
 #' @param format A string indicating the format of the object you want to save.
 #' Options are: "s2dv", "terra", "csv" or "polygons"
 #' @param path A string indicating the path to save the file.

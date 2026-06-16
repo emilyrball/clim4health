@@ -105,16 +105,16 @@
   return(rstack)
 }
 
-#' .s2dv_to_csv
+#' .s2dv_to_df
 #'
-#' Transform s2dv into csv
+#' Transform s2dv into data.frame
 #'
 #' @param cube The s2dv_cube object to be transformed.
 #' @param drop Logical. If TRUE, dimensions with only one value will be dropped
 #' when converting to the desired format. Default is FALSE.
 #' @returns A data.frame
 #' @noRd
-.s2dv_to_csv <- function(cube, drop = FALSE) {
+.s2dv_to_df <- function(cube, drop = FALSE) {
   .validate_s2dv_cube(cube)
 
   d <- dim(cube$data)

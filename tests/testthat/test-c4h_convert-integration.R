@@ -16,7 +16,7 @@ test_that("c4h_convert: terra integration works", {
   expect_equal(terra::nlyr(r), 1)
 })
 
-test_that("c4h_convert: csv integration works", {
+test_that("c4h_convert: data.frame integration works", {
   fcst_path <- system.file("extdata", "forecast", package = "clim4health")
   fcst <- c4h_load(fcst_path, variable = "t2m", ext = "nc")
 
@@ -28,7 +28,7 @@ test_that("c4h_convert: csv integration works", {
   fcst_small$coords$latitude <- fcst$coords$latitude[1:3]
   fcst_small$coords$longitude <- fcst$coords$longitude[1:3]
 
-  df <- c4h_convert(fcst_small, "csv")
+  df <- c4h_convert(fcst_small, "data.frame")
 
   expect_s3_class(df, "data.frame")
   expect_equal(nrow(df), 9)

@@ -218,7 +218,7 @@ test_that("1. Error if output_format is invalid", {
   cube <- make_mock_fcst_cube()
   expect_error(
     c4h_convert(cube, "invalid_format"),
-    "Invalid output format. Choose 'terra', 'csv' or 'sf'."
+    "Invalid output format. Choose "
   )
 })
 
@@ -259,15 +259,15 @@ test_that("5. c4h_convert dispatches to .s2dv_to_terra", {
   )
 })
 
-test_that("6. c4h_convert dispatches to .s2dv_to_csv", {
+test_that("6. c4h_convert dispatches to .s2dv_to_df", {
   cube <- make_mock_fcst_cube()
-  mock_csv <- function(x, drop) "csv_result"
+  mock_df <- function(x, drop) "df_result"
 
   with_mocked_bindings(
-    .s2dv_to_csv = mock_csv,
+    .s2dv_to_df = mock_df,
     {
-      out <- c4h_convert(cube, "csv", drop = FALSE)
-      expect_equal(out, "csv_result")
+      out <- c4h_convert(cube, "data.frame", drop = FALSE)
+      expect_equal(out, "df_result")
     }
   )
 })

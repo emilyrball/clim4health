@@ -1,10 +1,10 @@
 #' c4h_convert
 #'
-#' Convert *s2dv_cube* objects to *terra*, csv, and *sf*.
+#' Convert *s2dv_cube* objects to *terra*, *data.frame*, and *sf*.
 #'
 #' @param data The object to transform.
 #' @param output_format A string specifying the desired output format.
-#' Valid options are 'terra' (SpatRaster), 'csv' or 'sf' (polygons).
+#' Valid options are 'terra' (SpatRaster), 'data.frame' or 'sf' (polygons).
 #' @param crs Coordinate reference system to use for output_formats 'terra' and
 #' 'sf'. The default is NULL, in which case the CRS will be taken
 #' from  the input data if available, or assumed to be WGS 84 (EPSG:4326) for
@@ -17,9 +17,9 @@
 #' @details The function only allows to convert into the following classes
 #' depending on the data format.
 #'   \describe{
-#'     \item{Gridded data}{'terra' SpatRaster, 'sf' polygons, or 'csv'.}
-#'     \item{Areal data}{'sf' polygons or 'csv'.}
-#'     \item{Point data}{'csv'.}
+#'     \item{Gridded data}{'terra' SpatRaster, 'sf' polygons, or 'data.frame'.}
+#'     \item{Areal data}{'sf' polygons or 'data.frame'.}
+#'     \item{Point data}{'data.frame'.}
 #'   }
 #'
 #' @export
@@ -34,8 +34,8 @@
 #' ### Convert gridded data
 #' ## to terra
 #' out <- c4h_convert(fcst, "terra", crs = "EPSG:4326")
-#' ## to csv
-#' out <- c4h_convert(fcst, "csv")
+#' ## to data.frame
+#' out <- c4h_convert(fcst, "data.frame")
 #' ## to sf
 #' out <- c4h_convert(fcst, "sf", crs = "EPSG:4326")
 #'
@@ -50,8 +50,8 @@
 #' fcst_aggr <- c4h_space(fcst, munip)
 #'
 #' ### Convert polygon data
-#' ## to csv
-#' out <- c4h_convert(fcst_aggr, "csv")
+#' ## to data.frame
+#' out <- c4h_convert(fcst_aggr, "data.frame")
 #' ## to sf
 #' out <- c4h_convert(fcst_aggr, "sf", crs = "EPSG:4326")
 #'
@@ -62,12 +62,12 @@
 #' stations <- c4h_load(station_path, variable = "temp_mean", ext = 'csv')
 #'
 #' ### Convert location data
-#' ## to csv
-#' out <- c4h_convert(stations, "csv")
+#' ## to data.frame
+#' out <- c4h_convert(stations, "data.frame")
 #' }
 c4h_convert <- function(data, output_format, crs = NULL, drop = FALSE) {
-  if (!output_format %in% c("terra", "csv", "sf")) {
-    stop("Invalid output format. Choose 'terra', 'csv' or 'sf'.")
+  if (!output_format %in% c("terra", "data.frame", "sf")) {
+    stop("Invalid output format. Choose 'terra', 'data.frame' or 'sf'.")
   }
 
   if (!inherits(drop, "logical") || length(drop) != 1) {
@@ -112,8 +112,8 @@ c4h_convert <- function(data, output_format, crs = NULL, drop = FALSE) {
 
   if (output_format == "terra") {
     .s2dv_to_terra(data, crs = crs, drop = drop)
-  } else if (output_format == "csv") {
-    .s2dv_to_csv(data, drop = drop)
+  } else if (output_format == "data.frame") {
+    .s2dv_to_df(data, drop = drop)
   } else if (output_format == "sf") {
     .s2dv_to_sf(data, crs = crs, drop = drop)
   }
