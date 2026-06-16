@@ -53,23 +53,31 @@ hcst <- c4h_load(hcst_path,
                  leadtime_month = "all",
                  ext = "nc")
 
-obs_path <- system.file("extdata/reanalysis/", package = "clim4health")
-obs_path <- paste0(obs_path, "/")
-obs <- c4h_load(obs_path,
-                variable = "t2m",
-                year = 2010:2012,
-                month = 1,
-                leadtime_month = 1:3,
-                ext = "nc")
+rean_path <- system.file("extdata/reanalysis/", package = "clim4health")
+rean_path <- paste0(rean_path, "/")
+rean <- c4h_load(rean_path,
+                 variable = "t2m",
+                 year = 2010:2012,
+                 month = 1,
+                 leadtime_month = 1:3,
+                 ext = "nc")
 ```
 
-Look at the dimensions of the observed and hindcast datasets (recall we can use `dim(obs$data)` or `obs$dims`). We can see that `obs` has more latitude and longitude points, despite covering the same area - it has *higher spatial resolution.* We can also see this by comparing the values of the latitude/longitude coordinates - notice that `obs` has 0.1º resolution, but `hcst` has 1º.
+We can also convert all data to degrees Celsius, as is described in the `clim4health_overview` vignette.
+
+``` {r convert_units}
+fcst <- c4h_convert_units(fcst, "celsius")
+hcst <- c4h_convert_units(hcst, "celsius")
+rean  <- c4h_convert_units( rean, "celsius")
+```
+
+Look at the dimensions of the observed and hindcast datasets (recall we can use `dim(rean$data)` or `rean$dims`). We can see that `rean` has more latitude and longitude points, despite covering the same area - it has *higher spatial resolution.* We can also see this by comparing the values of the latitude/longitude coordinates - notice that `rean` has 0.1º resolution, but `hcst` has 1º.
 
 ```{r explore_data}
-print(obs$dims)
+print(rean$dims)
 print(hcst$dims)
 
-print(obs$coords$latitude)
+print(rean$coords$latitude)
 print(hcst$coords$latitude)
 ```
 
@@ -80,7 +88,7 @@ We can also plot the datasets to visually confirm the higher spatial resolution.
 c4h_plot(hcst, ensemble = TRUE, coordgrid = TRUE)
 
 # Observations
-c4h_plot(obs, ensemble = TRUE, coordgrid = TRUE)
+c4h_plot(rean, ensemble = TRUE, coordgrid = TRUE)
 ```
 
 We would like to increase the resolution of our forecast and hindcast data, which we will do by using `c4h_downscale()`.
@@ -90,12 +98,12 @@ We would like to increase the resolution of our forecast and hindcast data, whic
 `c4h_downscale()` takes a variety of arguments depending on the downscaling to be performed. There are two required inputs for the function.
 
 1.  `downscale_function`: a string identifying the method of downscaling to be used.
-2.  `exp`: an s2dv_cube object containing the experimental data (i.e. a forecast or hindcast) to be downscaled.
+2.  `exp`: an s2dv_cube object containing the experimental data (i.e. a hindcast) to establish the downscaling relationship. If `exp_cor` is not provided, the downscaling will be applied to `exp`.
 
 Additionally, arguments `obs` and `exp_cor` are often required.
 
 3.  `obs`: an s2dv_cube object containing the observational data to be used for downscaling.
-4.  `exp_cor`: an s2dv_cube object of experimental data to downscale. The downscaling will be applied to this data, using the statistical relationship between `obs` and `exp`. For example, you can use the hindcast as `exp` and the forecast as `exp_cor` to obtain a downscaled forecast.
+4.  `exp_cor`: an s2dv_cube object of experimental data to downscale. The downscaling will be applied to this data, using the statistical relationship between `obs` and `exp`, if `exp_cor` is provided. For example, you can use the hindcast as `exp` and the forecast as `exp_cor` to obtain a downscaled forecast.
 
 The following figure shows the key arguments for `c4h_downscale()` depending on the downscaling method chosen.
 
@@ -103,19 +111,39 @@ The following figure shows the key arguments for `c4h_downscale()` depending on 
 knitr::include_graphics("https://gitlab.earth.bsc.es/ghr/clim4health/-/blob/main/inst/figures/clim4health_downscale_parameters.svg?ref_type=heads")
 ```
 
-`c4h_downscale` returns a named list containing two elements, `exp` and `obs`. `exp` is an s2dv_cube object containing the downscaled data, and `obs` is an s2dv_cube object containing the (potentially downscaled) observational data.
+`c4h_downscale()` returns a named list containing two elements, `exp` and `obs`. `exp` is an s2dv_cube object containing the downscaled experimental data (from either `exp` or `exp_cor`), and `obs` is an s2dv_cube object containing the observational data (from `obs`). This looks like:
 
-> 💡 **Note**: Often, the output `obs` is the same as the input `obs`. However, this will not always be the case - for example, if you choose a sub-region of interest using the argument `bbox` then `obs` will be cropped to this region as well.
+
+```{=html}
+<pre lang="markdown">
+forecast_downscaled$
+│
+├── exp$                    # s2dv_cube object containing the downscaled experimental data
+│    │ 
+│    ├── data                  # Array with named dimensions containing the downscaled data       
+│    ├── dims                  # Named vector of the dimensions of the data array
+│    ├── coords                # Named list of the coordinates of the data array 
+│    └── attrs                 # Named list of all attributes and metadata
+└── obs$                    # s2dv_cube object containing the (potentially downscaled) observational data
+    │ 
+    ├── data                   # Array with named dimensions containing the downscaled observational data       
+    ├── dims                   # Named vector of the dimensions of the data array
+    ├── coords                 # Named list of the coordinates of the data array 
+    └── attrs                  # Named list of all attributes and metadata
+</pre>
+```
+
+> 💡 **Note**: Often, the output `obs` is the same as the input `obs`. However, this will not always be the case - for example, if you choose to downscale to a sub-region of interest using the argument `bbox`, then `obs` will be cropped to this region as well.
 
 ## 2. Downscaling methods (gridded data)
 
-The downscaling methods available through **clim4health** are a simple interpolation, an interpolation plus bias correction, an interpolation plus linear regression, or the analogs method. Let's explore the different downscaling options.
+The downscaling methods available through **clim4health** are a simple interpolation, an interpolation plus bias correction (Intbc), an interpolation plus linear regression (Intlr), or the analogs method. Let's explore the different downscaling options.
 
 ### Method 1: Interpolation
 
 This is the simplest method of downscaling available through **clim4health**. It involves a regrid of coarse-scale gridded climate data onto a finer-scale grid, or a similar interpolation of gridded model data to a point location.
 
-> 💡 **Note**: Other downscaling methods, *Intbc* and *Intlr*, involve this method as a first step.
+> 💡 **Note**: Other downscaling methods, *Intbc* and *Intlr*, involve this method as a first step. These methods are explained below.
 
 Different interpolation methods, based on different mathematical approaches, can be applied: conservative, nearest neighbour, bilinear or bicubic. This method does not rely on any data for training (i.e. no observations are used to adjust the forecast data).
 
@@ -127,20 +155,20 @@ Different interpolation methods, based on different mathematical approaches, can
 
 -   Similarly, **bicubic** interpolation considers the sixteen nearest grid cells of the original data to generate polynomial cubic splines in two directions.
 
-Let's try a basic interpolation downscaling. We will downscale the coarse hindcast to the higher-resolution observations. To use the *Interpolation* method with gridded data, we select `downscaling_method = "Interpolation"`, select a regridding method (e.g. `method_remap = "bilinear"`), and provide a `target_grid` (a netCDF file containing the grid to which we want to downscale).
+Let's try a basic interpolation downscaling. We will downscale the coarse hindcast to the higher-resolution observations. To use the *Interpolation* method with gridded data, we select `downscale_function = "Interpolation"`, select a regridding method (e.g. `method_remap = "bilinear"`), and provide a `target_grid` (a netCDF file containing the grid to which we want to downscale).
 
 > 💡 **Note**: `target_grid` is often the same as the source files used to load the observed data.
 
 ```{r }
 dwn <- c4h_downscale("Interpolation",
-                     exp = hcst, obs = obs,
+                     exp = hcst,
                      method_remap = "bilinear",
                      target_grid = paste0(obs_path, "t2m_201001.nc"))
 ```
 
 You might see some warning messages related to the downscaling functionality - don't worry, this is completely normal.
 
-`c4h_downscale` returns a list of `s2dv_cube` objects including the downscaled experimental (i.e. forecast or hindcast) and observation data. We can visualise the downscaled hindcast using `c4h_plot()`.
+`c4h_downscale()` returns a list of `s2dv_cube` objects including the downscaled experimental (i.e. forecast or hindcast) and observational data. We can visualise the downscaled hindcast using `c4h_plot()`.
 
 ```{r }
 c4h_plot(dwn$exp, ensemble = TRUE)
@@ -149,7 +177,7 @@ c4h_plot(dwn$exp, ensemble = TRUE)
 We can compare this to the observations. Now the hindcast spatial resolution has been increased.
 
 ```{r }
-c4h_plot(obs)
+c4h_plot(rean)
 ```
 
 > 💡 **Note**: The *Interpolation* method does not involve any bias adjustment, so we have simply increased the spatial resolution of data, without comparing any statistical relationships with the observed values. No new information (such as high-resolution observations) has been introduced, so the interpolation tends to smooth fields.
@@ -166,10 +194,10 @@ Following this, a bias adjustment of the interpolated values is performed at eac
 
 -   The **quantile mapping** approach may take several forms. A commonly used approach, particularly for bias correcting precipitation forecasts, is the Empirical Quantile Mapping (EQM) method, based on the empirical cumulative distribution functions (CDFs) of the forecast and reference data sets. The transfer function from the forecast CDF to the reference CDF is obtained to bias-correct the forecast data; this method can capture the average evolution of, and variability in, precipitation while adjusting all statistical moments.
 
-Let's try using the **Intbc** method. Since we are downscaling temperature, let's choose a bicubic interpolation and EVMOS. To use the *Intbc* method with gridded data, we select `downscaling_method = "Intbc"`, select a regridding method (e.g. `method_remap = "bilinear"`), provide a `target_grid` (a netCDF file containing the grid to which we want to downscale), and select a bias correction method (e.g. `bc_method = "evmos"`).
+Let's try using the **Intbc** method. Since we are downscaling temperature, let's choose a bilinear interpolation and EVMOS. To use the *Intbc* method with gridded data, we select `downscale_function = "Intbc"`, select a regridding method (e.g. `method_remap = "bilinear"`), provide a `target_grid` (a netCDF file containing the grid to which we want to downscale), and select a bias correction method (e.g. `bc_method = "evmos"`).
 
 ```{r }
-dwn <- c4h_downscale("Intbc", exp = hcst, obs = obs, loocv = FALSE,
+dwn <- c4h_downscale("Intbc", exp = hcst, obs = rean, loocv = FALSE,
                      bc_method = "evmos", method_remap = "bilinear")
 ```
 
@@ -189,18 +217,18 @@ Following this, a linear-regression with the interpolated values is fitted using
 
 -   The **basic method** fits a linear regression at each grid cell using high resolution observations as predictands and the interpolated model data as predictor. The regression equation is applied to the interpolated model data to correct the interpolated values.
 
--   Finally, the **nearest neighbour method** uses a local linear regression with the nine nearest neighbours as predictors and high-resolution observations as predictands. Instead of constructing a regression model using all nine predictors, principal component analysis is applied to the data of neighboring grids to reduce the dimension of the predictors. The linear regression model is then built using the principal components that explain 95% of the variance. The nearest neighbour method does not require a pre-interpolation process.
+-   The **nearest neighbour method** uses a local linear regression with the nine nearest neighbours as predictors and high-resolution observations as predictands. Instead of constructing a regression model using all nine predictors, principal component analysis is applied to the data of neighboring grids to reduce the dimension of the predictors. The linear regression model is then built using the principal components that explain 95% of the variance. The nearest neighbour method does not require a pre-interpolation process.
 
-We can now try the **Intlr** method. Let's give a conservative regridding and basic linear interpolation a go. To use the *Intlr* method with gridded data, we select `downscaling_method = "Intlr"`, select a regridding method (e.g. `method_remap = "conservative"`), provide a `target_grid` (a netCDF file containing the grid to which we want to downscale), and select a linear regression method (e.g. `lr_method = "basic"`). Suppose this time, we want to downscale the forecast rather than the hindcast - we can provide the forecast as `exp_cor` and the hindcast as `exp`.
+We can now try the **Intlr** method. Let's give a conservative regridding and basic linear interpolation a go. To use the *Intlr* method with gridded data, we select `downscale_function = "Intlr"`, select a regridding method (e.g. `method_remap = "conservative"`), provide a `target_grid` (a netCDF file containing the grid to which we want to downscale), and select a linear regression method (e.g. `lr_method = "basic"`). Suppose this time, we want to downscale the forecast rather than the hindcast - we can provide the forecast as `exp_cor` and the hindcast as `exp`.
 
 ```{r }
-dwn <- c4h_downscale("Intlr", exp = hcst, obs = obs,
+dwn <- c4h_downscale("Intlr", exp = hcst, obs = rean,
                      exp_cor = fcst,
                      lr_method = "basic",
                      method_remap = "con")
 ```
 
-> 💡 **Note**: In both the **Intbc** and **Intlr** methods, it is not required to specify the argument `target_grid`. This is because `c4h_downscale` will extract this from the metadata of the high resolution `obs`. This is not the case with the **Interpolation** technique, which may be used without specifying `obs`, and so the `target_grid` argument is required.
+> 💡 **Note**: In both the **Intbc** and **Intlr** methods, it is not required to specify the argument `target_grid`. This is because `c4h_downscale()` will extract this from the metadata of the high resolution `obs`. This is not the case with the **Interpolation** technique, which may be used without specifying `obs`, and so the `target_grid` argument is required.
 
 Again, we can visualise the downscaled data. Note that in this case, `dwn$exp` contains the downscaled forecast data (not the hindcast).
 
@@ -215,7 +243,7 @@ A Perfect Prognosis (PP) method based on the popular analog technique, which inf
 The analogs method essentially matches observed large-scale atmospheric conditions (e.g., pressure patterns, temperature fields) with similar patterns simulated within the forecast. The high-resolution observed local climate associated with those patterns is then used as the downscaled climate data in the forecast. By default, only the first analog (i.e. the closest match) will be returned.
 
 ```{r }
-dwn <- c4h_downscale("Analogs", exp = hcst, obs = obs)
+dwn <- c4h_downscale("Analogs", exp = hcst, obs = rean)
 ```
 
 Plot the output.
@@ -243,17 +271,17 @@ point_locs <- clim4health::c4h_load(stat_path,
 point_locs <- c4h_time(point_locs, time_aggregation = "monthly", dim_aggregation = "sdate")
 ```
 
-To downscale to point locations, we need to provide `points`, a named list of latitudes and longitudes. `c4h_load` has already saved these in the attribute `location`. We also need to provide the `method_point_interp` argument to `c4h_downscale`.
+To downscale to point locations, we need to provide `points`, a named list of latitudes and longitudes. `c4h_load` has already saved these in the attribute `location`. We also need to provide the `method_point_interp` argument to `c4h_downscale()`.
 
 ```{r point_interpolation}
-points <- list(latitude = point_locs$attrs$location$latitude,
+points <- list(latitude  = point_locs$attrs$location$latitude,
                longitude = point_locs$attrs$location$longitude)
 
 dwn <- c4h_downscale("Interpolation", exp = hcst,
                      points = points, method_point_interp = "bilinear")
 ```
 
-Note in the case of point downscaling, if using `Intbc` or `Intlr` both `exp` and `obs` will be downscaled to the location of the points, and only regular gridded data is allowed as input for `exp`/`obs`.
+> 💡 **Note**: In the case of point downscaling, if using `Intbc` or `Intlr` both `exp` and `obs` will be downscaled to the location of the points, and only regular gridded data is allowed as input for `exp`/`obs`.
 
 Let's plot the output of this downscaling.
 
@@ -264,14 +292,14 @@ c4h_plot(dwn$exp, ensemble = TRUE, boundaries = "countries")
 We could also apply an `Intbc` or `Intlr` downscaling to point locations. For example:
 
 ```{r point_intbc}
-dwn <- c4h_downscale("Intbc", exp = hcst, obs = obs, loocv = FALSE,
+dwn <- c4h_downscale("Intbc", exp = hcst, obs = rean, loocv = FALSE,
                      points = points, method_point_interp = "bilinear",
                      bc_method = "evmos")
 ```
 
 ## 4. Calibration
 
-We can also calibrate climate data (this is much the same as downscaling, but we will use calibration to refer to the bias adjustment of polygon, or areal, data). In this case there is then no interpolation step.
+We can also calibrate climate data (this is similar to downscaling, but we will use calibration to refer to the bias adjustment of polygon, or areal, data). In this case there is then no interpolation step as we do not need to regrid the data. Instead, data are compared for each spatial region instead of by grid cell.
 
 First, let's aggregate the gridded data to polygons.
 
@@ -284,22 +312,22 @@ munip_path <- system.file("extdata", "areas", "munip_vallecauca.gpkg",
 munip <- read_sf(munip_path)
 
 hcst_aggr <- c4h_space(hcst, munip)
-obs_aggr  <- c4h_space( obs, munip)
+rean_aggr <- c4h_space(rean, munip)
 ```
 
 Now we can use `c4h_downscale()` to calibrate the polygon data.
 
 ```{r }
-cal <- c4h_downscale("Intbc", exp = hcst_aggr, obs = obs_aggr,
+cal <- c4h_downscale("Intbc", exp = hcst_aggr, obs = rean_aggr,
                      bc_method = "bias")
 ```
 
-We can plot the raw hindcast data, the calibrated hindcast data, and the observations.
+We can plot the raw hindcast data, the calibrated hindcast data, and the observations. To plot the data using `boundaries = "countries"`, you must have the suggested package `spData` installed.
 
 ```{r }
 c4h_plot(hcst_aggr, ensemble = TRUE, boundaries = "countries")
 c4h_plot(cal$exp,   ensemble = TRUE, boundaries = "countries")
-c4h_plot(obs_aggr,  ensemble = TRUE, boundaries = "countries")
+c4h_plot(rean_aggr, ensemble = TRUE, boundaries = "countries")
 ```
 
 > 💡 **Note**: In this case, because we have only used 3 years of data, there was not enough information to calibrate the data and only NA values were returned for the calibrated output.
@@ -316,11 +344,11 @@ The choice of parameters for your downscaling is important, and can vary between
 
 #### Specific recommendations for precipitation downscaling
 
--   If you are interested in downscaling precipitation, it is important to choose a regridding method that preserves the total amount of precipitation. **We therefore recommend using the *conservative* remapping within the `Integration`, `Intbc`, and `Intlr` downscaling methods.**
+-   If you are interested in downscaling precipitation, it is important to choose a regridding method that preserves the total amount of precipitation. **We therefore recommend using the *conservative* remapping within the `Interpolation`, `Intbc`, and `Intlr` downscaling methods.**
 
 -   Similarly, precipitation cannot be assumed to follow an approximately Gaussian (normal) distribution (as many values will be 0, and no values below this). **Therefore we do not recommend the simple bias correction method.**
 
--   `quantile_mapping` bias correction may be appropriate in the case of precipitation. In this case, you could also apply the argument `wet.day = TRUE`, which attempts to equalise the fraction of days with precipitation between `obs` and `exp` - in this case, the empirical probability of nonzero observations is found (`obs$data>0`) and the corresponding value in `exp` becomes a threshold below which all values are set to zero.
+-   `quantile_mapping` bias correction may be most appropriate in the case of precipitation. For precipitation downscaling, you could also apply the argument `wet.day = TRUE`, which attempts to equalise the fraction of days with precipitation between `obs` and `exp` - in this case, the empirical probability of nonzero observations is found (`obs$data>0`) and the corresponding value in `exp` becomes a threshold below which all values are set to zero.
 
 #### General recommendations
 
@@ -330,7 +358,7 @@ The choice of parameters for your downscaling is important, and can vary between
 
 ## Parameter selection
 
-`c4h_downscale` has many optional parameters. The diagram below can be used as a guide to select the appropriate parameters, depending on the `downscale_function` chosen and the type of data being downscaled (gridded, point, polygon). Not all arguments are shown!
+`c4h_downscale()` has many optional parameters. The diagram below can be used as a guide to select the appropriate parameters, depending on the `downscale_function` chosen and the type of data being downscaled (gridded, point, polygon). Not all arguments are shown!
 
 ```{r c4h_downscale_flowchart,fig.width=10, fig.height=10, fig.align='center', out.width='100%', echo= FALSE, fig.cap="Flowchart for selecting downscaling parameters. Dashed lines indicate optional arguments."}
 knitr::include_graphics("https://gitlab.earth.bsc.es/ghr/clim4health/-/blob/develop-vignettes/inst/figures/c4h_downscale.svg?ref_type=heads")
