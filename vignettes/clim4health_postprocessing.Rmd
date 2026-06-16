@@ -203,7 +203,7 @@ First, we need to downscale the hindcast to the same spatial resolution as the o
 
 ```{r }
 dwn <- c4h_downscale("Intbc", exp = hcst, obs = obs, loocv = FALSE,
-                     method_remap = "bilinear", bc_method = "evmos",
+                     method_remap = "bilinear", method_bc = "evmos",
                      target_grid = obs$attrs$source_files[1])
 ```
 

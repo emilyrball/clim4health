@@ -168,7 +168,7 @@ test_that("NULL bc method for areal data", {
   expect_message(
     expect_error(
       c4h_downscale("Intbc", exp, obs),
-      "'bc_method' must be specified"
+      "'method_bc' must be specified"
     ),
     "Only bias adjustment or calibration will be applied"
   )
@@ -215,7 +215,7 @@ test_that("Incorrect method_remap + obs message", {
         "Intbc",
         exp,
         obs,
-        bc_method = "bias",
+        method_bc = "bias",
         method_remap = c("con", "bil")
       ),
       "'method_remap' must be a single character string"
@@ -227,26 +227,26 @@ test_that("Incorrect method_remap + obs message", {
       "Intbc",
       exp,
       obs,
-      bc_method = "bias",
+      method_bc = "bias",
       method_remap = "wrong"
     ),
     "Accepted values for 'method_remap' are"
   )
 })
-test_that("'Intbc' with missing 'bc_method'", {
+test_that("'Intbc' with missing 'method_bc'", {
   exp <- mock_s2dv_grid()
   obs <- mock_s2dv_grid()
   expect_error(
     c4h_downscale("Intbc", exp, obs, method_remap = "nn"),
-    "If using 'Intbc', 'bc_method' must be specified"
+    "If using 'Intbc', 'method_bc' must be specified"
   )
 })
-test_that("'Intlr' with missing 'lr_method'", {
+test_that("'Intlr' with missing 'method_lr'", {
   exp <- mock_s2dv_grid()
   obs <- mock_s2dv_grid()
   expect_error(
     c4h_downscale("Intlr", exp, obs, method_remap = "nn"),
-    "If using 'Intlr', 'lr_method' must be specified"
+    "If using 'Intlr', 'method_lr' must be specified"
   )
 })
 
@@ -288,7 +288,7 @@ test_that("9nn regression downscaling", {
       "reanalysis/t2m_201001.nc",
       package = "clim4health"
     ),
-    lr_method = "9nn"
+    method_lr = "9nn"
   )
   expect_true(all(names(down) %in% c("obs", "exp")))
   expect_true(inherits(down$obs, "s2dv_cube"))
@@ -301,7 +301,7 @@ test_that("Calibrating areal data", {
 
   exp <- mock_s2dv_area(nd = 10, nv = 10, nt = 10, ns = 10, nm = 1, narea = 5)
   obs <- mock_s2dv_area(nd = 10, nv = 10, nt = 10, ns = 10, nm = 1, narea = 5)
-  bctest <- c4h_downscale("Intbc", exp, obs, bc_method = "bias")
+  bctest <- c4h_downscale("Intbc", exp, obs, method_bc = "bias")
   expect_equal(names(bctest), c("obs", "exp"))
   expect_true(inherits(bctest$obs, "s2dv_cube"))
 })
@@ -370,8 +370,8 @@ test_that("Intlr with bbox", {
     exp = hcst,
     obs = obs,
     method_remap = "bic",
-    bc_method = "bias",
-    lr_method = "basic",
+    method_bc = "bias",
+    method_lr = "basic",
     bbox = c(4, -77, 3, -76)
   )
 

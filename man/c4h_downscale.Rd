@@ -12,11 +12,11 @@ c4h_downscale(
   bbox = NULL,
   ncores = NULL,
   target_grid = NULL,
-  bc_method = NULL,
+  method_bc = NULL,
   method_remap = NULL,
   points = NULL,
   method_point_interp = NULL,
-  lr_method = NULL,
+  method_lr = NULL,
   loocv = TRUE,
   ...
 )
@@ -48,7 +48,7 @@ default value is NULL. If NULL, the grid of obs will be used as the target
 grid for Interpolation techniques, and the grid of exp will be used as the
 coarse grid for Analogs.}
 
-\item{bc_method}{A character vector indicating the bias adjustment method to
+\item{method_bc}{A character vector indicating the bias adjustment method to
 be applied after an interpolation. Accepted methods are 'quantile_mapping',
 'dynamical_bias', 'bias', 'evmos', 'mse_min', 'crps_min', 'rpc-based'. The
 abbreviations 'dbc','qm' can also be used. The default value is NULL.}
@@ -69,7 +69,7 @@ method to interpolate model gridded data into the point locations. Accepted
 methods are "nearest", "bilinear", "9point", "invdist4nn". Only needed if the
 downscaling is to a point location.}
 
-\item{lr_method}{A character vector indicating the linear regression method
+\item{method_lr}{A character vector indicating the linear regression method
 to be applied. Accepted methods are 'basic' and '9nn'. The
 'basic' method fits a linear regression using high resolution observations as
 predictands and the interpolated model data as predictor. Then, the
@@ -140,7 +140,7 @@ hcst_agg <- c4h_space(hcst,
 hcst_agg_cal <- c4h_downscale(downscale_function = "Intbc",
                               exp = hcst_agg,
                               obs = obs_agg,
-                              bc_method = "evmos")
+                              method_bc = "evmos")
 ## Example with station data
 point_locs <- clim4health::c4h_load(system.file("extdata",
                                                "stations",

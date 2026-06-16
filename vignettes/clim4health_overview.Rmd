@@ -334,7 +334,7 @@ cal <- c4h_downscale(downscale_function = "Intbc", # downscaling method
                      obs = rean,                   # observational data, used to bias adjust the experiment
                      exp = hcst,                   # the experimental data to calculate the bias adjustment parameters
                      exp_cor = fcst,               # the experimental data to which the bias adjustment parameters will be applied
-                     bc_method = "bias",           # for "Intbc", the bias correction method to use
+                     method_bc = "bias",           # for "Intbc", the bias correction method to use
                      method_remap = "bilinear")    # the method to remap the data to the new grid
 ```
 
@@ -354,7 +354,7 @@ We can also downscale the hindcast data, which is used in the verification step 
 cal_hcst <- c4h_downscale(downscale_function = "Intbc",
                           obs = rean,
                           exp = hcst,
-                          bc_method = "bias",
+                          method_bc = "bias",
                           method_remap = "bilinear",
                           loocv = FALSE)
 ```
