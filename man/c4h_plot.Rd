@@ -122,5 +122,5 @@ c4h_plot(fcst_aggr, ensemble = 1:5, lwd = 0.1,
 }
 \seealso{
 \link{c4h_plotskill} for plotting forecast skill metrics from
-\link{c4h_postprocess}.
+\link{c4h_verify}.
 }

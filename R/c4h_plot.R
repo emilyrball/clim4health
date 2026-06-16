@@ -43,7 +43,7 @@
 #' @importFrom rlang .data
 #'
 #' @seealso [c4h_plotskill] for plotting forecast skill metrics from
-#' [c4h_postprocess].
+#' [c4h_verify].
 #'
 #' @examples
 #' \donttest{

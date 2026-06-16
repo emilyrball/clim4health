@@ -20,7 +20,7 @@ input, transformation, and output.
 In the input block, **clim4health** provides functions to download several types of 
 climate data including reanalyses, seasonal forecasts and hindcasts, and weather 
 stations and load them into memory for their processing. The transformation block
-includes functions to postprocess and downscale climate data, perform spatiotemporal
+includes functions to downscale and verify climate data, perform spatiotemporal
 aggregations, as well as compute threshold-based suitability indicators. Finally, 
 in the output block, functions to visualize and export the transformed data are 
 provided.

@@ -21,11 +21,11 @@ knitr::opts_chunk$set(
 
 # Overview
 
-**clim4health** is an R package designed to load, transform, process, plot, and save climate data. It is specifically designed for use in downscaling and postprocessing seasonal forecast data.
+**clim4health** is an R package designed to load, transform, process, plot, and save climate data. It is specifically designed for use in downscaling and verification of seasonal forecast data.
 
 The **clim4health** package is intended for use with other packages developed within the [HARMONIZE](https://www.harmonize-tools.org/) project, to spatially and temporally harmonize multiple sources of data for use in health impact studies.
 
-This vignette provides an overview of core terms used within the **clim4health** package, in particular those relating to climate data, downscaling, and postprocessing.
+This vignette provides an overview of core terms used within the **clim4health** package, in particular those relating to climate data, downscaling, and verification.
 
 # Glossary
 

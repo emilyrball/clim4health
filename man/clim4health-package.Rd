@@ -6,7 +6,7 @@
 \alias{clim4health-package}
 \title{clim4health: Post-Processing of Climate Data for Health Applications}
 \description{
-Obtain, transform and export climate data including reanalyses, (seasonal) forecasts and hindcasts, and weather stations for their use in epidemiological analyses. It is organised in three sequential blocks, input (download and load data), transform (postprocessing, downscaling, spatiotemporal aggregation and threshold-based indicators) and output (visualizing and exporting data).
+Obtain, transform and export climate data including reanalyses, (seasonal) forecasts and hindcasts, and weather stations for their use in epidemiological analyses. It is organised in three sequential blocks, input (download and load data), transform (downscaling, verification, spatiotemporal aggregation and threshold-based indicators) and output (visualising and exporting data).
 }
 \seealso{
 Useful links:

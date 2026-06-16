@@ -1,4 +1,4 @@
-#' c4h_postprocess
+#' c4h_verify
 #'
 #' Computes quality assessment metrics of climate forecasts.
 #'
@@ -94,7 +94,7 @@
 #' as s2dv_cube objects.
 #'
 #' @seealso [c4h_plotskill] for visualizing the forecast skill.
-#' @note See clim4health_postprocessing.Rmd in the package vignettes for a
+#' @note See clim4health_verification.Rmd in the package vignettes for a
 #' detailed tutorial on function arguments and usage.
 #'
 #' @export
@@ -102,8 +102,8 @@
 #' @examples
 #' \donttest{
 #' # DISCLAIMER: The purpose of these examples is to show the functionality
-#' # of the different functions. To perform postprocessing, a much larger time
-#' # series is required.
+#' # of the different functions. To perform a meaningful verification, a much
+#' # larger time series is required.
 #' # Load data
 #' hcst <- c4h_load(
 #'   system.file("extdata", "hindcast", package = "clim4health"),
@@ -138,7 +138,7 @@
 #'   )
 #' )
 #' hcst_dwn <- dwn$exp
-#' skill_grid <- c4h_postprocess(exp = hcst_dwn, obs = obs, metrics = "BSS")
+#' skill_grid <- c4h_verify(exp = hcst_dwn, obs = obs, metrics = "BSS")
 #' c4h_plotskill(skill_grid$BSS10$bss, skill_grid$BSS10$sign)
 #'
 #' # Example with polygon data
@@ -152,10 +152,10 @@
 #'                        areas = areas,
 #'                        fun = "mean",
 #'                        areas_id = "munip_code")
-#' skill_area <- c4h_postprocess(exp = hcst_area,
-#'                               obs = obs_area,
-#'                               metrics = "CRPSS",
-#'                               brier_thresholds = c(0.1, 0.9))
+#' skill_area <- c4h_verify(exp = hcst_area,
+#'                          obs = obs_area,
+#'                          metrics = "CRPSS",
+#'                          brier_thresholds = c(0.1, 0.9))
 #' c4h_plotskill(skill_area$CRPSS$crpss, skill_area$CRPSS$sign)
 #'
 #' # Example with station data
@@ -176,12 +176,12 @@
 #' dwn <- c4h_downscale("Interpolation", exp = hcst,
 #'                      points = points, method_point_interp = "bilinear")
 #' hcst_dwn <- dwn$exp
-#' skill_point <- c4h_postprocess(exp = hcst_dwn,
-#'                                obs = point_locs,
-#'                                metrics = "BSS")
+#' skill_point <- c4h_verify(exp = hcst_dwn,
+#'                           obs = point_locs,
+#'                           metrics = "BSS")
 #' c4h_plotskill(skill = skill_point$BSS10$bss, boundaries = areas)
 #' }
-c4h_postprocess <- function(
+c4h_verify <- function(
   exp,
   obs,
   metrics,

@@ -1,10 +1,10 @@
 ---
-title: "clim4health postprocess"
+title: "clim4health verification"
 output:
   rmarkdown::html_vignette:
     toc: true
 vignette: >
-  %\VignetteIndexEntry{clim4health postprocess}
+  %\VignetteIndexEntry{clim4health verification}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -22,7 +22,7 @@ knitr::opts_chunk$set(
 
 ## Overview
 
-This vignette provides an introduction to the `c4h_postprocess()` function, used for forecast verification. Forecast verification is an important step in evaluating the performance of climate forecasts, especially relevant in the development of climate-related early warning systems, since a forecast with poor skill may not provide reliable information to users. Verification involves comparing forecasted values (from a hindcast) to observed values (e.g. from reanalysis) to assess the performance of the prediction system at a given location, time, and leadtime. It is often necessary to *downscale* the hindcast to the same spatial resolution as the observations before performing the verification, which can be done using `c4h_downscale()`.
+This vignette provides an introduction to the `c4h_verify()` function, used for forecast verification. Forecast verification is an important step in evaluating the performance of climate forecasts, especially relevant in the development of climate-related early warning systems, since a forecast with poor skill may not provide reliable information to users. Verification involves comparing forecasted values (from a hindcast) to observed values (e.g. from reanalysis) to assess the performance of the prediction system at a given location, time, and leadtime. It is often necessary to *downscale* the hindcast to the same spatial resolution as the observations before performing the verification, which can be done using `c4h_downscale()`.
 
 Within this vignette, the different verification metrics are described, and examples of how to use the function are provided.
 
@@ -70,11 +70,11 @@ dwn <- c4h_downscale("Intbc", exp = hcst, obs = rean,
 
 > 💡 **Note**: Instead of downscaling, you could also spatially aggregate the hindcast and reanalysis data using `c4h_space()` to obtain the same spatial resolution, before calculating any skill metrics.
 
-Let's explore the functionality of `c4h_postprocess()` and the different verification metrics that can be calculated, before applying them in examples.
+Let's explore the functionality of `c4h_verify()` and the different verification metrics that can be calculated, before applying them in examples.
 
-## 1. Key c4h_postprocess arguments
+## 1. Key c4h_verify arguments
 
-`c4h_postprocess()` takes many input parameters depending on the skill metrics to be calculated. The following are the key input arguments:
+`c4h_verify()` takes many input parameters depending on the skill metrics to be calculated. The following are the key input arguments:
 
 1.  `exp`: an `s2dv_cube` object containing the experimental data.
 2.  `obs`: an `s2dv_cube` object containing the observational data.
@@ -82,13 +82,13 @@ Let's explore the functionality of `c4h_postprocess()` and the different verific
 
 Depending on the metrics chosen, additional optional arguments may be selected, which will be discussed below.
 
-```{r c4h_postprocess_parameters,fig.width=10, fig.height=10, fig.align='center', out.width='100%', echo= FALSE, fig.cap="Figure 1: Structure of the c4h_postprocess function, outlining its key arguments and general functionality."}
-knitr::include_graphics("https://gitlab.earth.bsc.es/ghr/clim4health/-/blob/main/inst/figures/clim4health_postprocess_parameters.svg?ref_type=heads")
+```{r c4h_verify_parameters,fig.width=10, fig.height=10, fig.align='center', out.width='100%', echo= FALSE, fig.cap="Figure 1: Structure of the c4h_verify function, outlining its key arguments and general functionality."}
+knitr::include_graphics("https://gitlab.earth.bsc.es/ghr/clim4health/-/blob/main/inst/figures/clim4health_verification_parameters.svg?ref_type=heads")
 ```
 
 ## 2. Verification metrics
 
-There are many widely-used metrics to assess the quality of a forecast product. These typically compare the hindcasts and observations to see when the hindcast makes reasonable predictions of the observed values. The following are optional metrics that may be calculated within `c4h_postprocess()` and are selected using the `metrics` parameter.
+There are many widely-used metrics to assess the quality of a forecast product. These typically compare the hindcasts and observations to see when the hindcast makes reasonable predictions of the observed values. The following are optional metrics that may be calculated within `c4h_verify()` and are selected using the `metrics` parameter.
 
 The metrics are calculated by comparing forecast ensemble member predictions to observations.
 
@@ -171,7 +171,7 @@ For a binary event such as "temperature above mean" and a probabilistic forecast
 
 > 💡 **Note**: In the context of statistical modelling (for example, of disease cases), the Hit Rate is the same as the sensitivity, and the False Alarm Rate is the same as `1 - specificity`.
 
-```{r c4h_postprocess_ROC,fig.width=10, fig.height=10, fig.align='center', out.width='100%', echo= FALSE, fig.cap="Figure 2: For the two temperature events (temperature in the upper quintile category, red; temperature in the lower quintile category, blue) the hit rates and false alarm rates associated with a range of 'trigger' thresholds (triangles) are plotted. The vertical axis gives the hit rate, defined as the number of times the event was forecast (with probability above a certain threshold) and later observed to occur. Source: UK Met Office."}
+```{r c4h_verify_ROC,fig.width=10, fig.height=10, fig.align='center', out.width='100%', echo= FALSE, fig.cap="Figure 2: For the two temperature events (temperature in the upper quintile category, red; temperature in the lower quintile category, blue) the hit rates and false alarm rates associated with a range of 'trigger' thresholds (triangles) are plotted. The vertical axis gives the hit rate, defined as the number of times the event was forecast (with probability above a certain threshold) and later observed to occur. Source: UK Met Office."}
 knitr::include_graphics("https://gitlab.earth.bsc.es/ghr/clim4health/-/blob/main/inst/figures/metofficegovuk_xsmall.gif?ref_type=heads")
 ```
 
@@ -204,13 +204,13 @@ For skill scores where significance testing is applicable (BSS, RPSS, CRPSS, MSS
 Using the data loaded and downscaled above, let's perform an example skill assessment. In this example, we have only loaded 3 years of data for each leadtime, which means that we do not have a lot of information to assess whether the hindcast is skillful or not. However, the general process is (for gridded data):
 
 ```{r }
-skill <- c4h_postprocess(exp = dwn$exp, 
-                         obs = dwn$obs,
-                         metrics = c("BSS", "CRPSS"),
-                         brier_thresholds = c(0.1, 0.9))
+skill <- c4h_verify(exp = dwn$exp, 
+                    obs = dwn$obs,
+                    metrics = c("BSS", "CRPSS"),
+                    brier_thresholds = c(0.1, 0.9))
 ```
 
-The output of `c4h_postprocess` is a list of lists. The outer list contains the names of the metrics, and the inner contains the value of the metric and its significance, if applicable. In the above, we calculated the Brier Skill Score (BSS) at the 10th and 90th percentiles and Continuous Ranked Probability Skill Score (CRPSS), so we can find them in the list as:
+The output of `c4h_verify` is a list of lists. The outer list contains the names of the metrics, and the inner contains the value of the metric and its significance, if applicable. In the above, we calculated the Brier Skill Score (BSS) at the 10th and 90th percentiles and Continuous Ranked Probability Skill Score (CRPSS), so we can find them in the list as:
 
 ```{r }
 names(skill)
@@ -232,11 +232,11 @@ Each value and significance is an `s2dv_cube` object. They can be plotted using 
 c4h_plotskill(skill$BSS10$bss, skill$BSS10$sign, ensemble = TRUE, boundaries = "countries")
 ```
 
-### Choosing arguments in c4h_postprocess
+### Choosing arguments in c4h_verify
 
-There are many optional arguments in `c4h_postprocess()` that the user can specify to tailor their skill assessment. Currently, we recommend using the default values for most of these, but here we provide some guidance on how to choose them.
+There are many optional arguments in `c4h_verify()` that the user can specify to tailor their skill assessment. Currently, we recommend using the default values for most of these, but here we provide some guidance on how to choose them.
 
-> 💡 **Note**: Currently, `c4h_postprocess` applies arguments across all metrics (except for a minority of cases, explained below). This is why it is recommended to use the default values. In future, it will be possible to specify arguments for specific metrics.
+> 💡 **Note**: Currently, `c4h_verify()` applies arguments across all metrics (except for a minority of cases, explained below). This is why it is recommended to use the default values. In future, it will be possible to specify arguments for specific metrics.
 
 #### `ref`
 
