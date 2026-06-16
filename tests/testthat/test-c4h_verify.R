@@ -65,14 +65,14 @@ mock_s2dv_grid <- function(
 
 test_that("errors when exp or obs is NULL", {
   expect_error(
-    c4h_postprocess(NULL, NULL, metrics = "BSS"),
+    c4h_verify(NULL, NULL, metrics = "BSS"),
     "must be specified"
   )
 })
 
 test_that("errors with invalid data", {
   expect_error(
-    c4h_postprocess(exp, "wrong", metrics = "BSS"),
+    c4h_verify(exp, "wrong", metrics = "BSS"),
     "Both 'exp' and 'obs'"
   )
 })
@@ -82,7 +82,7 @@ test_that("errors with invalid metrics", {
   obs <- mock_s2dv_grid()
 
   expect_error(
-    c4h_postprocess(exp, obs, metrics = "INVALID"),
+    c4h_verify(exp, obs, metrics = "INVALID"),
     "metrics.*must be specified"
   )
 })
@@ -93,7 +93,7 @@ test_that("errors when ncores exceeds available cores", {
   obs <- mock_s2dv_grid()
 
   expect_error(
-    c4h_postprocess(exp, obs, metrics = "BSS", ncores = 9999),
+    c4h_verify(exp, obs, metrics = "BSS", ncores = 9999),
     "cannot be equal to or greater"
   )
 })
@@ -104,7 +104,7 @@ test_that("errors when dimension names differ", {
   obs$dims[["extra"]] <- 1
 
   expect_error(
-    c4h_postprocess(exp, obs, metrics = "BSS"),
+    c4h_verify(exp, obs, metrics = "BSS"),
     "same named dimensions"
   )
 })
@@ -115,7 +115,7 @@ test_that("errors when dimension lengths differ", {
   obs$dims[["sdate"]] <- 5
 
   expect_error(
-    c4h_postprocess(exp, obs, metrics = "BSS"),
+    c4h_verify(exp, obs, metrics = "BSS"),
     "different lengths"
   )
 })
@@ -124,7 +124,7 @@ test_that("BSS metric returns expected structure", {
   exp <- mock_s2dv_grid()
   obs <- mock_s2dv_grid()
 
-  res <- c4h_postprocess(
+  res <- c4h_verify(
     exp,
     obs,
     metrics = "BSS",
@@ -139,7 +139,7 @@ test_that("BSS metric returns expected structure", {
 
 test_that("errors when exp or obs is NULL", {
   expect_error(
-    c4h_postprocess(NULL, NULL, metrics = "BSS"),
+    c4h_verify(NULL, NULL, metrics = "BSS"),
     "must be specified"
   )
 })
@@ -149,7 +149,7 @@ test_that("errors on invalid metrics", {
   obs <- mock_s2dv_grid()
 
   expect_error(
-    c4h_postprocess(exp, obs, metrics = "INVALID"),
+    c4h_verify(exp, obs, metrics = "INVALID"),
     "metrics.*must be specified"
   )
 })
@@ -159,7 +159,7 @@ test_that("errors when ncores exceeds available cores", {
   obs <- mock_s2dv_grid()
 
   expect_error(
-    c4h_postprocess(exp, obs, metrics = "BSS", ncores = 9999),
+    c4h_verify(exp, obs, metrics = "BSS", ncores = 9999),
     "cannot be equal to or greater"
   )
 })
@@ -170,7 +170,7 @@ test_that("errors when dimension names differ", {
   obs$dims[["extra"]] <- 1
 
   expect_error(
-    c4h_postprocess(exp, obs, metrics = "BSS"),
+    c4h_verify(exp, obs, metrics = "BSS"),
     "same named dimensions"
   )
 })
@@ -178,7 +178,7 @@ test_that("errors when dimension names differ", {
 
 test_that("errors when exp or obs is NULL", {
   expect_error(
-    c4h_postprocess(NULL, NULL, metrics = "BSS"),
+    c4h_verify(NULL, NULL, metrics = "BSS"),
     "must be specified"
   )
 })
@@ -188,7 +188,7 @@ test_that("errors on invalid metrics", {
   obs <- mock_s2dv_grid()
 
   expect_error(
-    c4h_postprocess(exp, obs, metrics = "INVALID"),
+    c4h_verify(exp, obs, metrics = "INVALID"),
     "metrics.*must be specified"
   )
 })
@@ -198,7 +198,7 @@ test_that("errors when ncores exceeds available cores", {
   obs <- mock_s2dv_grid()
 
   expect_error(
-    c4h_postprocess(exp, obs, metrics = "BSS", ncores = 9999),
+    c4h_verify(exp, obs, metrics = "BSS", ncores = 9999),
     "cannot be equal to or greater"
   )
 })
@@ -209,7 +209,7 @@ test_that("errors when dimension names differ", {
   obs$dims[["extra"]] <- 1
 
   expect_error(
-    c4h_postprocess(exp, obs, metrics = "BSS"),
+    c4h_verify(exp, obs, metrics = "BSS"),
     "same named dimensions"
   )
 })
@@ -220,7 +220,7 @@ test_that("errors when dimension lengths differ", {
   obs$dims[["sdate"]] <- 5
 
   expect_error(
-    c4h_postprocess(exp, obs, metrics = "BSS"),
+    c4h_verify(exp, obs, metrics = "BSS"),
     "different lengths"
   )
 })
@@ -229,7 +229,7 @@ test_that("BSS returns expected structure", {
   exp <- mock_s2dv_grid()
   obs <- mock_s2dv_grid()
 
-  res <- c4h_postprocess(
+  res <- c4h_verify(
     exp,
     obs,
     metrics = "BSS",
@@ -246,7 +246,7 @@ test_that("RPSS gridded", {
   exp <- mock_s2dv_grid()
   obs <- mock_s2dv_grid()
 
-  res <- c4h_postprocess(
+  res <- c4h_verify(
     exp,
     obs,
     metrics = "RPSS",
@@ -262,7 +262,7 @@ test_that("CRPSS gridded", {
   exp <- mock_s2dv_grid()
   obs <- mock_s2dv_grid()
 
-  res <- c4h_postprocess(
+  res <- c4h_verify(
     exp,
     obs,
     metrics = "CRPSS"
@@ -276,7 +276,7 @@ test_that("AbsBiasSS gridded", {
   exp <- mock_s2dv_grid()
   obs <- mock_s2dv_grid()
 
-  res <- c4h_postprocess(
+  res <- c4h_verify(
     exp,
     obs,
     metrics = "AbsBiasSS"
@@ -290,7 +290,7 @@ test_that("MSE gridded", {
   exp <- mock_s2dv_grid(ns = 4)
   obs <- mock_s2dv_grid(ns = 4)
 
-  res <- c4h_postprocess(
+  res <- c4h_verify(
     exp,
     obs,
     metrics = "MSE"
@@ -304,7 +304,7 @@ test_that("MSSS gridded", {
   exp <- mock_s2dv_grid(nt = 4, ns = 4)
   obs <- mock_s2dv_grid(nt = 4, ns = 4)
 
-  res <- c4h_postprocess(
+  res <- c4h_verify(
     exp,
     obs,
     ref = exp,
@@ -320,7 +320,7 @@ test_that("RMSE gridded", {
   exp <- mock_s2dv_grid(nt = 4, ns = 4)
   obs <- mock_s2dv_grid(nt = 4, ns = 4)
 
-  res <- c4h_postprocess(
+  res <- c4h_verify(
     exp,
     obs,
     ref = exp,
@@ -335,7 +335,7 @@ test_that("RMSSS gridded", {
   exp <- mock_s2dv_grid(nt = 4, ns = 4)
   obs <- mock_s2dv_grid(nt = 4, ns = 4)
 
-  res <- c4h_postprocess(
+  res <- c4h_verify(
     exp,
     obs,
     ref = exp,
@@ -349,7 +349,7 @@ test_that("RMSSS gridded", {
   expect_false(all(is.null(res$RMSSS$sign$data)))
   expect_false(all(is.null(res$RMSSS$p.val$data)))
 
-  res <- c4h_postprocess(
+  res <- c4h_verify(
     exp,
     obs,
     ref = exp,
@@ -365,7 +365,7 @@ test_that("ROCSS gridded", {
   exp <- mock_s2dv_grid(nt = 4, ns = 4)
   obs <- mock_s2dv_grid(nt = 4, ns = 4)
 
-  res <- c4h_postprocess(
+  res <- c4h_verify(
     exp,
     obs,
     ref = exp,

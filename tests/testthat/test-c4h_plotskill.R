@@ -285,7 +285,7 @@ test_that("2. failure if sdate or ensemble dims are greater than 1", {
     paste0(
       "'sdate' and 'ensemble' dimensions must have a length ",
       "of one. Please verify you are plotting the output of ",
-      "c4h_postprocess()"
+      "c4h_verify()"
     )
   )
 
@@ -296,7 +296,7 @@ test_that("2. failure if sdate or ensemble dims are greater than 1", {
     paste0(
       "'sdate' and 'ensemble' dimensions must have a length ",
       "of one. Please verify you are plotting the output of ",
-      "c4h_postprocess()"
+      "c4h_verify()"
     )
   )
 })

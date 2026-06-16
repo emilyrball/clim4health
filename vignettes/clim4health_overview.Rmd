@@ -22,11 +22,11 @@ knitr::opts_chunk$set(
 
 # Overview
 
-**clim4health** is an R package designed to load, transform, process, plot, and save climate data. It is specifically designed for use in downscaling and postprocessing seasonal forecast data.
+**clim4health** is an R package designed to load, transform, process, plot, and save climate data. It is specifically designed for use in downscaling and verification of seasonal forecast data.
 
 The **clim4health** package is intended for use with other packages developed within the [HARMONIZE](https://www.harmonize-tools.org/) project, to spatially and temporally harmonize multiple sources of data for use in health impact studies.
 
-This vignette provides an overview of the **clim4health** package methodology, the core functions, and a simple example workflow using real data. It deals with climate data in multidimensional arrays called *s2dv_cubes* (see the `clim4health_s2dv_cubes` vignette for more details). More complex use cases and examples are described in other vignettes (`clim4health_downscaling` regarding downscaling methodologies and `clim4health_postprocessing` regarding the postprocessing and verification methodologies in **clim4health**). Terms are defined in the glossary in the vignette `clim4health_glossary`.
+This vignette provides an overview of the **clim4health** package methodology, the core functions, and a simple example workflow using real data. It deals with climate data in multidimensional arrays called *s2dv_cubes* (see the `clim4health_s2dv_cubes` vignette for more details). More complex use cases and examples are described in other vignettes (`clim4health_downscaling` regarding downscaling methodologies and `clim4health_verification` regarding the verification methodologies in **clim4health**). Terms are defined in the glossary in the vignette `clim4health_glossary`.
 
 ## Installation
 
@@ -107,7 +107,7 @@ To use the rest of the **clim4health** functions, the data must be in an s2dv_cu
 
     -   **location** for point data, e.g. weather station data
 
-> 💡 **Tip**: the dimension **dataset** will always have size 1 in **clim4health** cases. It only exists because it is required for package dependencies in the downscaling and postprocessing/skill functions.
+> 💡 **Tip**: the dimension **dataset** will always have size 1 in **clim4health** cases. It only exists because it is required for package dependencies in the downscaling and verification functions.
 
 Once the data has been loaded as an s2dv_cube, the user can move on to the transformation and postprocessing steps, which are described in the next section.
 
@@ -118,7 +118,7 @@ There are several functions available to transform and process the data, which c
 ```{r transform_functions_table, echo = FALSE}
 knitr::kable(
   data.frame(
-    Function = c("`c4h_space()`", "`c4h_time()`", "`c4h_downscale()`", "`c4h_postprocess()`", "`c4h_index()`", "`c4h_collapse()`"),
+    Function = c("`c4h_space()`", "`c4h_time()`", "`c4h_downscale()`", "`c4h_verify()`", "`c4h_index()`", "`c4h_collapse()`"),
     Purpose = c(
       "Spatially aggregate gridded data to administrative areas.",
       "Temporal aggregation to a desired time resolution.",
@@ -133,7 +133,7 @@ knitr::kable(
 )
 ```
 
-For the more complex functions `c4h_downscale()` and `c4h_postprocess()`, vignettes are available (`clim4health_downscaling` and `clim4health_postprocessing`) which provide more detailed information about the methodologies available and relevant choices of input arguments.
+For the more complex functions `c4h_downscale()` and `c4h_verify()`, vignettes are available (`clim4health_downscaling` and `clim4health_verification`) which provide more detailed information about the methodologies available and relevant choices of input arguments.
 
 ### 3. Prepare outputs
 
@@ -280,7 +280,7 @@ c4h_plot(rean, var = "t2m", ensemble = TRUE)
 
 ## 2. Processing the data
 
-Once the data has been loaded and explored, we can use **clim4health** functions to transform, downscale, and postprocess the data as required. In this example, we will spatially aggregate the data to municipalities, calibrate the forecast and hindcast data to the reanalysis data, and perform a forecast verification to assess the skill of the forecast model. We will also apply a threshold-based mask to the data to identify only grid cells that exceed a certain temperature threshold.
+Once the data has been loaded and explored, we can use **clim4health** functions to transform, downscale, and verify the data as required. In this example, we will spatially aggregate the data to municipalities, calibrate the forecast and hindcast data to the reanalysis data, and perform a forecast verification to assess the skill of the forecast model. We will also apply a threshold-based mask to the data to identify only grid cells that exceed a certain temperature threshold.
 
 ### Spatial aggregation
 
@@ -374,19 +374,19 @@ c4h_plot(cal_hcst$exp, ensemble = TRUE)
 
 ### Verification and postprocessing
 
-When using subseasonal to decadal predictions, we use hindcasts to assess the *skill* of the predictions. We can use `c4h_postprocess()` to perform a forecast verification and quality assessment of the forecast model, by comparing the downscaled hindcast data to the reanalysis data. This will give us an indication of how skillful the forecast model is at predicting the observed values.
+When using subseasonal to decadal predictions, we use hindcasts to assess the *skill* of the predictions. We can use `c4h_verify()` to perform a forecast verification and quality assessment of the forecast model, by comparing the downscaled hindcast data to the reanalysis data. This will give us an indication of how skillful the forecast model is at predicting the observed values.
 
-> 📝 **NOTE**: there are many different ways to perform a skill assessment or verification. See the `clim4health_postprocessing` vignette for more information.
+> 📝 **NOTE**: there are many different ways to perform a skill assessment or verification. See the `clim4health_verification` vignette for more information.
 
-`c4h_postprocess()` requires the user to specify a selection of metrics using the parameter `metrics`, as well the experimental data (`exp`) and the observational data (`obs`). Further parameters can be specified depending on the selected metrics. The possible metrics to select are explored in detail in the `clim4health_postprocessing` vignette, but for this example, we will calculate the Continuous Ranked Probability Skill Score (CRPSS) of the forecast model compared to a reference forecast of climatology.
+`c4h_verify()` requires the user to specify a selection of metrics using the parameter `metrics`, as well the experimental data (`exp`) and the observational data (`obs`). Further parameters can be specified depending on the selected metrics. The possible metrics to select are explored in detail in the `clim4health_verification` vignette, but for this example, we will calculate the Continuous Ranked Probability Skill Score (CRPSS) of the forecast model compared to a reference forecast of climatology.
 
 ```{r verification}
-skill <- c4h_postprocess(exp = cal_hcst$exp,   # the experimental data (downscaled hindcast data)
-                         obs = cal_hcst$obs,   # the observational data (downscaled hindcast data)
-                         metrics = c("CRPSS")) # the desired metrics to calculate
+skill <- c4h_verify(exp = cal_hcst$exp,   # the experimental data (downscaled hindcast data)
+                    obs = cal_hcst$obs,   # the observational data (downscaled hindcast data)
+                    metrics = c("CRPSS")) # the desired metrics to calculate
 ```
 
-`c4h_postprocess()` returns a list of lists, where each element of the outer list corresponds to a metric, and each element of the inner list contains both the values of the metric, its significance, and in some cases additional information such as the upper and lower confidence intervals.
+`c4h_verify()` returns a list of lists, where each element of the outer list corresponds to a metric, and each element of the inner list contains both the values of the metric, its significance, and in some cases additional information such as the upper and lower confidence intervals.
 
 For example, `skill` contains only one element, `skill$CRPSS`, which is a list containing the values of CRPSS in `skill$CRPSS$crpss` and the significance of the CRPSS values in `skill$CRPSS$sign`. We can plot the skill of the forecast model using `c4h_plotskill()`. This differs from `c4h_plot()` in that it is specifically designed to plot skill scores, and can add a layer to the plot to indicate the significance of the skill values.
 

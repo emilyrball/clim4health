@@ -17,7 +17,7 @@ c4h_get(
   leadtime_month,
   originating_centre,
   system,
-  outname = paste0("cds_"),
+  outname = paste0("cds"),
   outpath = getwd()
 )
 }
@@ -42,16 +42,23 @@ Default is all months.}
 \item{day}{A vector of days in the month. Default is all days.}
 
 \item{time}{A vector of hours (0-23). Only needed when datasets are hourly.
-Default is all hours.}
+Default is 0 (midnight UTC).}
 
 \item{bbox}{A vector of coordinates. (in order: North, West, South, East).}
 
 \item{leadtime_month}{A vector of months for the forecast leadtime. e.g.
 c(1,2) for January and February. Default is all months.}
 
-\item{originating_centre}{DESCRIPTION PENDING!}
+\item{originating_centre}{The originating centre of the forecast if
+parameter \code{dataset} is "seasonal-monthly-single-levels". Options are "ecmwf",
+"ukmo", "meteo_france", "dwd", "cmcc", "ncep", "jma", "eccc", and "bom".
+There is no default value for this parameter.}
 
-\item{system}{DESCRIPTION PENDING!}
+\item{system}{Model identifier of the forecast if parameter \code{dataset} is
+"seasonal-monthly-single-levels". Options are 1, 2, 3, 4, 5, 6, 7, 8, 9, 12,
+13, 14, 15, 21, 22, 35, 51, 600, 601, 602, 603, 604, 605, 610. Valid options
+depend on the value of originating_centre. There is no default value for this
+parameter.}
 
 \item{outname}{The name stem of the resultant netcdf file.}
 
@@ -59,7 +66,7 @@ c(1,2) for January and February. Default is all months.}
 Default is the current working directory.}
 }
 \value{
-A netcdf file.
+A netcdf file or files.
 }
 \description{
 Download netCDF files from the Copernicus climate data store.
