@@ -436,7 +436,18 @@
   invisible(TRUE)
 }
 
-.s2dv_to_stars <- function(cube, crs = "EPSG:4326", drop = FALSE) {
+
+#' .s2dv_to_stars
+#'
+#' Transform s2dv into stars
+#'
+#' @param cube The s2dv_cube object to be transformed.
+#' @param crs The crs to be applied to the data.
+#' @param drop Logical. If TRUE, dimensions with only one value will be dropped
+#' when converting to the desired format. Default is FALSE.
+#' @returns A stars object.
+#' @noRd
+.s2dv_to_stars <- function(cube, crs, drop = FALSE) {
   # Reorder array
   cubedata <- cube$data
   spatial_dims <- c(
@@ -459,19 +470,28 @@
     cubedata <- drop(cubedata)
   }
 
+  # Missing crs
+  if (is.null(crs)) {
+    crs <- "EPSG:4326"
+  }
+
   # Convert to stars and insert coordinate values
   starscube <- stars::st_as_stars(cubedata)
   names(starscube) <- cube$attrs$Variable$varName
-  starscube <- stars::st_set_dimensions(
-    starscube,
-    "longitude",
-    values = c(cube$coords$longitude)
-  )
-  starscube <- stars::st_set_dimensions(
-    starscube,
-    "latitude",
-    values = c(cube$coords$latitude)
-  )
+  if ("longitude" %in% names(dim(starscube))) {
+    starscube <- stars::st_set_dimensions(
+      starscube,
+      "longitude",
+      values = c(cube$coords$longitude)
+    )
+  }
+  if ("latitude" %in% names(dim(starscube))) {
+    starscube <- stars::st_set_dimensions(
+      starscube,
+      "latitude",
+      values = c(cube$coords$latitude)
+    )
+  }
 
   # Apply CRS if the first two dimensions are lon/lat
   if (
