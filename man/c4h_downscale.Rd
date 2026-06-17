@@ -84,7 +84,9 @@ regression model is then built using the principal components that explain
 process. The default value is NULL.}
 
 \item{loocv}{A logical indicating whether to apply leave-one-out
-cross-validation when applying the bias correction. Defaults to TRUE.}
+cross-validation when applying the bias correction. The default is TRUE. In
+this case, when applying the bias correction or building the regression model
+for a given year, the corresponding values from that year are removed.}
 
 \item{...}{Additional arguments to be passed to the CSDownscale function.}
 }
@@ -95,7 +97,7 @@ A list of statistically downscaled data as \emph{s2dv_cube} objects.
 Downscale and calibrate climate data.
 }
 \note{
-See the package vignette dedicated to downscaling for a
+See clim4health_downscaling.Rmd in the package vignettes for a
 detailed tutorial on function arguments and usage.
 }
 \examples{
