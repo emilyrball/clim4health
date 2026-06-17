@@ -11,35 +11,21 @@
 #' @returns None
 #' @noRd
 .save_s2dv <- function(cube, path, drop = FALSE) {
-  # Detect longitude / latitude dims
-  lon <- as.vector(cube$coords$longitude)
-  lat <- as.vector(cube$coords$latitude)
+  # if (isTRUE(drop)) {
+  #   drop_dims <- names(cube$dims)[which(cube$dims == 1)]
+  # } else {
+  #   drop_dims <- NULL
+  # }
+  # plot_data <- stars::st_as_stars(
+  #   plot_data,
+  #   dimensions = stars::st_dimensions(
+  #     dataset = c(data$coords$dataset),
+  #     var = c(data$coords$var),
+  #     sdate = c(data$coords$sdate)[sdate],
+  #     time = c(data$coords$time)[time],
+  #     ensemble = c(data$coords$ensemble)[ensemble],
+  #     location = point_geom
+  #   )
 
-  # Drop non-spatial singleton dims (dataset, var, sdate, etc.)
-  if (drop) {
-    arr <- drop(cube$data)
-  } else {
-    arr <- cube$data
-  }
-
-  # Collapse everything except lon/lat into "band"
-  dim_arr <- dim(arr)
-  nlon <- length(lon)
-  nlat <- length(lat)
-  nband <- prod(dim_arr) / (nlon * nlat)
-  arr3 <- array(arr, dim = c(nlon, nlat, nband)) # [lon, lat, band]
-
-  # Build stars object
-  dims <- stars::st_dimensions(
-    x = lon,
-    y = lat,
-    band = seq_len(nband)
-  )
-
-  st <- stars::st_as_stars(arr3, dimensions = dims)
-  names(st) <- cube$attrs$varName %||% "var"
-
-  # Write NetCDF file
-  stars::write_stars(st, path)
-  message("Saved NetCDF: ", path)
+  return(cube)
 }

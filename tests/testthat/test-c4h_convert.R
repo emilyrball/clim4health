@@ -231,7 +231,7 @@ test_that("3. Error if gridded data is required but not present", {
   location_cube <- make_mock_location_cube()
   expect_error(
     c4h_convert(location_cube, "terra"),
-    "Gridded data is required for 'terra' output format."
+    "Gridded data is required for 'terra' and 'stars' formats."
   )
 })
 

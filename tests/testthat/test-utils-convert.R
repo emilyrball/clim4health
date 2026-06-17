@@ -593,3 +593,14 @@ test_that("15. Happy drop .s2dv_to_df", {
     tolerance = 1e-6
   )
 })
+
+
+test_that("16. Happy drop .s2dv_to_stars", {
+  cube <- make_mock_fcst_cube()
+  stars <- .s2dv_to_stars(cube, drop = TRUE)
+
+  # Returns data.frame
+  expect_s3_class(stars, "stars")
+  # Contains expected columns
+  expect_true(!any(c("dataset", "var", "var_names") %in% dimnames(stars)))
+})

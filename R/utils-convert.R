@@ -435,3 +435,51 @@
 
   invisible(TRUE)
 }
+
+.s2dv_to_stars <- function(cube, crs = "EPSG:4326", drop = FALSE) {
+  # Reorder array
+  cubedata <- cube$data
+  spatial_dims <- c(
+    which(names(dim(cubedata)) == "longitude"),
+    which(names(dim(cubedata)) == "latitude")
+  )
+  cubedata <- aperm(
+    cubedata,
+    c(spatial_dims, setdiff(seq_along(names(dim(cubedata))), spatial_dims))
+  )
+
+  # Drop singletons if needed
+  if (isTRUE(drop)) {
+    if (dim(cubedata)["longitude"] <= 1 || dim(cubedata)["latitude"] <= 1) {
+      message(
+        "Longitude and/or latitude dimensions are singletons. ",
+        "Please set drop = FALSE if you want to keep spatial information."
+      )
+    }
+    cubedata <- drop(cubedata)
+  }
+
+  # Convert to stars and insert coordinate values
+  starscube <- stars::st_as_stars(cubedata)
+  names(starscube) <- cube$attrs$Variable$varName
+  starscube <- stars::st_set_dimensions(
+    starscube,
+    "longitude",
+    values = c(cube$coords$longitude)
+  )
+  starscube <- stars::st_set_dimensions(
+    starscube,
+    "latitude",
+    values = c(cube$coords$latitude)
+  )
+
+  # Apply CRS if the first two dimensions are lon/lat
+  if (
+    names(dim(starscube))[1] == "longitude" &&
+      names(dim(starscube))[2] == "latitude"
+  ) {
+    sf::st_crs(starscube) <- crs
+  }
+
+  return(starscube)
+}

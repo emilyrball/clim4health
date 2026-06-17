@@ -12,12 +12,13 @@
 #' @param drop Logical. If TRUE, dimensions with only one value will be dropped
 #' when converting to the desired format. Default is FALSE.
 #'
-#' @returns An R object of type terra `SpatRaster`, data.frame or `sf` polygons.
+#' @returns An R object of type terra `SpatRaster`, `stars`, data.frame or
+#' `sf` polygons.
 #'
 #' @details The function only allows to convert into the following classes
 #' depending on the data format.
 #'   \describe{
-#'     \item{Gridded data}{'terra' SpatRaster, 'sf' polygons, or 'data.frame'.}
+#'     \item{Gridded data}{'terra' SpatRaster, 'stars', 'sf' polygons, or 'data.frame'.}
 #'     \item{Areal data}{'sf' polygons or 'data.frame'.}
 #'     \item{Point data}{'data.frame'.}
 #'   }
@@ -66,8 +67,10 @@
 #' out <- c4h_convert(stations, "data.frame")
 #' }
 c4h_convert <- function(data, output_format, crs = NULL, drop = FALSE) {
-  if (!output_format %in% c("terra", "data.frame", "sf")) {
-    stop("Invalid output format. Choose 'terra', 'data.frame' or 'sf'.")
+  if (!output_format %in% c("terra", "stars", "data.frame", "sf")) {
+    stop(
+      "Invalid output format. Choose 'terra', 'stars', 'data.frame' or 'sf'."
+    )
   }
 
   if (!inherits(drop, "logical") || length(drop) != 1) {
@@ -83,8 +86,8 @@ c4h_convert <- function(data, output_format, crs = NULL, drop = FALSE) {
     stop("'data' must be an s2dv_cube.")
   }
 
-  if (!has_latlon && output_format == "terra") {
-    stop("Gridded data is required for 'terra' output format.")
+  if (!has_latlon && output_format %in% c("terra", "stars")) {
+    stop("Gridded data is required for 'terra' and 'stars' formats.")
   }
 
   if (
@@ -112,6 +115,8 @@ c4h_convert <- function(data, output_format, crs = NULL, drop = FALSE) {
 
   if (output_format == "terra") {
     .s2dv_to_terra(data, crs = crs, drop = drop)
+  } else if (output_format == "stars") {
+    .s2dv_to_stars(data, crs = crs, drop = drop)
   } else if (output_format == "data.frame") {
     .s2dv_to_df(data, drop = drop)
   } else if (output_format == "sf") {
