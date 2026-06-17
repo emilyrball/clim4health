@@ -24,7 +24,9 @@ NULL.}
 An \emph{s2dv_cube} object with the converted units.
 }
 \description{
-c4h_convert_units
+Convert the units of a variable or variables in an s2dv_cube. If
+the 'to' argument is NULL, the current units will be displayed instead of
+performing any conversion.
 }
 \examples{
 # Forecast data included in the package
