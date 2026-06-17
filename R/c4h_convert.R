@@ -97,7 +97,7 @@ c4h_convert <- function(data, output_format, crs = NULL, drop = FALSE) {
   if (is.null(crs) && output_format %in% c("terra", "sf")) {
     if (has_area) {
       message(paste0(
-        "'crs' is not provided. Taking CRS from",
+        "'crs' is not provided. Taking CRS from ",
         "the input data if available."
       ))
       crs <- sf::st_crs(data$attrs$area$geom)

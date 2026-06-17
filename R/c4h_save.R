@@ -5,9 +5,9 @@
 #' @param data The *s2dv_cube* object to be saved.
 #' @param path A string indicating the path to save the file. The driver to
 #' save the file will be deduced based on the file extension. See details for
-#' a list of available extensions for each data type.
-#' @param drop Logical. If TRUE, dimensions  with only one value will
-#' be dropped when saving. If FALSE (defaults), they will be retained.
+#' a list of available extensions for each *s2dv_cube* data type.
+#' @param drop Logical. If TRUE, dimensions with only one value will
+#' be dropped when saving. If FALSE (default), they will be retained.
 #'
 #' @returns None.
 #' @details The list of available extensions is the following:
@@ -26,7 +26,7 @@
 #' fcst_path <- system.file("extdata", "forecast", package = "clim4health")
 #' fcst <- c4h_load(fcst_path, variable = "t2m", ext = 'nc')
 #'
-#' c4h_save(fcst, "s2dv", "out.nc")
+#' c4h_save(fcst, "out.nc")
 #' file.remove("out.nc")
 #' }
 c4h_save <- function(data, path, drop = FALSE) {
