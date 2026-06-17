@@ -1,4 +1,8 @@
 #' c4h_convert_units
+#' 
+#' @description Convert the units of a variable or variables in an s2dv_cube. If
+#' the 'to' argument is NULL, the current units will be displayed instead of
+#' performing any conversion.
 #'
 #' @param data An *s2dv_cube* object containing the data to be converted.
 #' @param to A character string specifying the target units to convert to. If
