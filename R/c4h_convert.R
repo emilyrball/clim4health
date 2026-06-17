@@ -1,10 +1,11 @@
 #' c4h_convert
 #'
-#' Convert *s2dv_cube* objects to *terra*, *data.frame*, and *sf*.
+#' Convert *s2dv_cube* objects to *terra*, *stars*, *data.frame*, and *sf*.
 #'
 #' @param data The object to transform.
 #' @param output_format A string specifying the desired output format.
-#' Valid options are 'terra' (SpatRaster), 'data.frame' or 'sf' (polygons).
+#' Valid options are 'terra' (SpatRaster), 'stars', 'data.frame' or
+#' 'sf' (polygons).
 #' @param crs Coordinate reference system to use for output_formats 'terra' and
 #' 'sf'. The default is NULL, in which case the CRS will be taken
 #' from  the input data if available, or assumed to be WGS 84 (EPSG:4326) for

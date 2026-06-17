@@ -10,7 +10,8 @@ c4h_convert(data, output_format, crs = NULL, drop = FALSE)
 \item{data}{The object to transform.}
 
 \item{output_format}{A string specifying the desired output format.
-Valid options are 'terra' (SpatRaster), 'data.frame' or 'sf' (polygons).}
+Valid options are 'terra' (SpatRaster), 'stars', 'data.frame' or
+'sf' (polygons).}
 
 \item{crs}{Coordinate reference system to use for output_formats 'terra' and
 'sf'. The default is NULL, in which case the CRS will be taken
@@ -25,7 +26,7 @@ An R object of type terra \code{SpatRaster}, \code{stars}, data.frame or
 \code{sf} polygons.
 }
 \description{
-Convert \emph{s2dv_cube} objects to \emph{terra}, \emph{data.frame}, and \emph{sf}.
+Convert \emph{s2dv_cube} objects to \emph{terra}, \emph{stars}, \emph{data.frame}, and \emph{sf}.
 }
 \details{
 The function only allows to convert into the following classes

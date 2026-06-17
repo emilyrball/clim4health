@@ -161,18 +161,26 @@ In this example, we demonstrate how to use **clim4health** to load and downscale
 
 In this example, we will perform the following steps:
 
-1.1.  Load the forecast, hindcast, and reanalysis data into R as s2dv_cube objects.
-1.2.  Convert the units of the datasets.
-1.3.  Plot the forecast, hindcast, and reanalysis data to visualize the raw data.
-2.1.  Spatially aggregate the hindcast and reanalysis data to administrative areas.
-2.2.  Alternatively, downscale the forecast and hindcast data to the finer spatial resolution of the reanalysis data.
-2.3.  Plot the downscaled forecast and hindcast data to visualize the downscaling results.
-2.4.  Perform a forecast verification to assess the skill of the forecast model compared to the reanalysis data.
-2.5.  Apply a threshold-based mask to the downscaled forecast data to identify only grid cells that exceed a certain temperature threshold.
-2.6.  Aggregate the data to a different temporal resolution, e.g. weekly or yearly.
-2.7.  Collapse the data across one or more dimensions, e.g. to calculate the ensemble mean or maximum value across time.
-3.1.  Convert the transformed data to a different data type, e.g. raster, polygon, or csv.
-3.2.  Save the transformed data.
+**Step 1:**
+
+-   Load the forecast, hindcast, and reanalysis data into R as s2dv_cube objects.
+-   Convert the units of the datasets.
+-   Plot the forecast, hindcast, and reanalysis data to visualize the raw data.
+
+**Step 2:**
+
+-   Spatially aggregate the hindcast and reanalysis data to administrative areas.
+-   Alternatively, downscale the forecast and hindcast data to the finer spatial resolution of the reanalysis data.
+-   Plot the downscaled forecast and hindcast data to visualize the downscaling results.
+-   Perform a forecast verification to assess the skill of the forecast model compared to the reanalysis data.
+-   Apply a threshold-based mask to the downscaled forecast data to identify only grid cells that exceed a certain temperature threshold.
+-   Aggregate the data to a different temporal resolution, e.g. weekly or yearly.
+-   Collapse the data across one or more dimensions, e.g. to calculate the ensemble mean or maximum value across time.
+
+**Step 3:**
+
+-   Convert the transformed data to a different data type, e.g. to a raster, polygon, or data frame.
+-   Save the data.
 
 > 📝 **NOTE**: the order of operations performed here is illustrative only, and users should decide based on their requirements.
 
@@ -346,9 +354,9 @@ cal <- c4h_downscale(downscale_function = "Intbc", # downscaling method
 
 `c4h_downscale()` returns a list of two s2dv_cubes:
 
--    `cal$exp` contains the downscaled/calibrated experimental data (in this case, the forecast data),
+-   `cal$exp` contains the downscaled/calibrated experimental data (in this case, the forecast data),
 
--    `cal$obs` contains the observational data.
+-   `cal$obs` contains the observational data.
 
 > 📝 **NOTE**: in many cases, `cal$obs` will be the same as `rean_aggr` (the input `obs`), but there are certain cases where it may differ. See the `clim4health_downscaling` vignette for more information.
 
@@ -497,22 +505,22 @@ Once the data has been transformed as required, we can use **clim4health** funct
 
 ### Convert data from an s2dv_cube to a different data type
 
-Once all the desired processing has been done, you can convert the data from an s2dv_cube to a different data type using `c4h_convert()`. It takes an s2dv_cube as input, and a string containing the desired output type - raster objects (`"terra"`), data frames (`"csv"`), or polygon objects (`"polygons"`). You may also choose to use the flag `drop` to remove any singleton dimensions.
+Once all the desired processing has been done, you can convert the data from an s2dv_cube to a different data type using `c4h_convert()`. It takes an s2dv_cube as input, and a string containing the desired output type - SpatRaster objects (`"terra"`), stars (`"stars"`), data frames (`"data.frame"`), or polygon objects (`"sf"`). You may also choose to use the flags `crs` to identify the coordinate reference system for the output and `drop` to remove any singleton dimensions.
 
 ```{r convert_data_type}
-csv_out <- c4h_convert(data = climatology, output_format = "csv", drop = TRUE)
+csv_out <- c4h_convert(data = climatology, output_format = "data.frame", drop = TRUE)
 
 terra_out <- c4h_convert(data = cal$exp, output_format = "terra")
 
-polygons_out <- c4h_convert(data = cal$exp, output_format = "polygons")
+polygons_out <- c4h_convert(data = cal$exp, output_format = "sf")
 ```
 
 ### Save the data
 
-Finally, you can save the data using `c4h_save()`. This function allows you to save the processed data, either as a netCDF (if the data is still in s2dv_cube format), or as a csv, raster, or polygon file if the data has been converted to a different data type using `c4h_convert()`.
+Finally, you can save the data using `c4h_save()`. This function allows you to save the processed data in a variety of formats, determined by the requested file extension. Valid file extensions include `"nc"`, `"tif"`, `"csv"`, `"gpkg"`, and `"shp"`, depending on whether the data to be saved is gridded, areal, or point data.
 
 ```{r }
-c4h_save(csv_out, format = "csv", path = "path_to_file.csv")
+c4h_save(climatology, path = "path_to_file.csv")
 ```
 
 > 📝 **NOTE**: We recommend using `c4h_save()` at the end of your analysis, when the data is in its final format. If you think you will want to apply further **clim4health** functions later, we recommend saving an intermediate file using `saveRDS()` and loading it later using `readRDS()`.
