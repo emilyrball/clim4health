@@ -56,6 +56,8 @@ Suggests:
     rmarkdown
 Config/testthat/edition: 3
 VignetteBuilder: knitr
-SystemRequirements: CDO (Climate Data Operators, https://code.mpimet.mpg.de/projects/cdo)
+SystemRequirements:
+    CDO (Climate Data Operators, https://code.mpimet.mpg.de/projects/cdo),
+    NCO (NetCDF Operators, https://nco.sourceforge.net/)
 Config/roxygen2/version: 8.0.0
 RoxygenNote: 7.3.3
