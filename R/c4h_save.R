@@ -1,19 +1,25 @@
 #' c4h_save
 #'
-#' Save objects manipulated using `clim4health` functions
-#' in different formats: s2dv, terra, csv, polygons.
+#' Save *s2dv_cube* objects used in `clim4health` functions to disk.
 #'
-#' @param data The object to be saved, which could be an *s2dv_cube*,
-#' *terra*, csv or *sf* object.
-#' @param format A string indicating the format of the object you want to save.
-#' Options are: "s2dv", "terra", "csv" or "polygons"
-#' @param path A string indicating the path to save the file.
-#' @param drop Logical. Only relevant for "s2dv" format. For other data formats,
-#' please use the drop parameter in c4h_convert. If TRUE, dimensions
-#' with only one value will be dropped when saving. If FALSE, they will be
-#' retained. Default is FALSE.
+#' @param data The *s2dv_cube* object to be saved.
+#' @param path A string indicating the path to save the file. The driver to
+#' save the file will be deduced based on the file extension. See details for
+#' a list of available extensions for each *s2dv_cube* data type.
+#' @param drop Logical. If TRUE, dimensions with only one value will
+#' be dropped when saving. If FALSE (default), they will be retained. Ignored
+#' when saving netCDF files.
 #'
 #' @returns None.
+#' @details The list of available extensions is the following:
+#'   \describe{
+#'     \item{Gridded data}{'nc', 'tif', 'csv'.}
+#'     \item{Areal data}{'gpkg', 'shp'.}
+#'     \item{Point data}{'csv'.}
+#'   }
+#' Note that when saving *s2dv_cube* objects an
+#' internal conversion using [c4h_convert] is applied.
+#'
 #' @export
 #'
 #' @examples
@@ -21,41 +27,63 @@
 #' fcst_path <- system.file("extdata", "forecast", package = "clim4health")
 #' fcst <- c4h_load(fcst_path, variable = "t2m", ext = 'nc')
 #'
-#' c4h_save(fcst, "s2dv", "out.nc")
+#' c4h_save(fcst, "out.nc")
 #' file.remove("out.nc")
 #' }
-c4h_save <- function(data, format, path, drop = FALSE) {
-  # checks
-  if (!inherits(data, "s2dv_cube") && format == "s2dv") {
-    stop("Data must be an s2dv_cube for format 's2dv'.")
-  } else if (!inherits(data, "SpatRaster") && format == "terra") {
-    stop("Data must be a SpatRaster for format 'terra'.")
-  } else if (!inherits(data, "sf") && format == "polygons") {
-    stop("Data must be an sf object for format 'polygons'.")
-  } else if (!inherits(data, "data.frame") && format == "csv") {
-    stop("Data must be a data.frame for format 'csv'.")
+c4h_save <- function(data, path, drop = FALSE) {
+  # s2dv checks
+  if (!inherits(data, "s2dv_cube")) {
+    stop("Data must be an s2dv_cube.")
   }
-  if (
-    format == "s2dv" &&
-      !(all(
-        c("longitude", "latitude") %in%
-          names(data$dims)
-      ))
-  ) {
-    stop(paste0(
-      "s2dv_cube must have 'longitude' and 'latitude' dimensions to ",
-      "be saved in 's2dv' format. Consider converting to 'terra', ",
-      "'csv', or 'polygons' format using c4h_convert()."
-    ))
+  dim_names <- names(data$dims)
+  has_latlon <- all(c("latitude", "longitude") %in% dim_names)
+  has_area <- "area" %in% dim_names
+  has_loc <- "location" %in% dim_names
+  if ((has_latlon + has_area + has_loc) != 1L) {
+    stop("Invalid s2dv_cube object")
   }
 
-  if (format == "s2dv") {
-    .save_s2dv(data, path, drop = drop)
-  } else if (format == "terra") {
-    .save_terra(data, path)
-  } else if (format == "csv") {
-    .save_csv(data, path)
-  } else if (format == "polygons") {
-    .save_polygons(data, path)
+  # get and check file extension
+  extpath <- tools::file_ext(path)
+  if (!extpath %in% c("nc", "tif", "csv", "gpkg", "shp")) {
+    stop(
+      "Invalid file extension. Please check available extensions ",
+      "in the documentation."
+    )
+  }
+
+  # Gridded data
+  if (has_latlon) {
+    if (extpath == "nc") {
+      .save_s2dv(data, path, drop = drop)
+    } else if (extpath == "tif") {
+      data_conv <- c4h_convert(data, "terra", drop = drop)
+      terra::writeRaster(data_conv, filename = path, overwrite = TRUE)
+    } else if (extpath == "csv") {
+      data_conv <- c4h_convert(data, "data.frame", drop = drop)
+      utils::write.csv(data_conv, file = path, row.names = FALSE)
+    } else {
+      stop("Invalid extension for gridded data.")
+    }
+  }
+
+  # Areal data
+  if (has_area) {
+    if (extpath %in% c("gpkg", "shp")) {
+      data_conv <- c4h_convert(data, "sf", drop = drop)
+      sf::st_write(data_conv, dsn = path, append = FALSE, quiet = TRUE)
+    } else {
+      stop("Invalid extension for areal data.")
+    }
+  }
+
+  # Point data
+  if (has_loc) {
+    if (extpath %in% c("csv")) {
+      data_conv <- c4h_convert(data, "data.frame", drop = drop)
+      utils::write.csv(data_conv, file = path, row.names = FALSE)
+    } else {
+      stop("Invalid extension for point data.")
+    }
   }
 }

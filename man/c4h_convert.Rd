@@ -21,7 +21,8 @@ gridded data.}
 when converting to the desired format. Default is FALSE.}
 }
 \value{
-An R object of type terra \code{SpatRaster}, data.frame or \code{sf} polygons.
+An R object of type terra \code{SpatRaster}, \code{stars}, data.frame or
+\code{sf} polygons.
 }
 \description{
 Convert \emph{s2dv_cube} objects to \emph{terra}, \emph{data.frame}, and \emph{sf}.
@@ -30,7 +31,7 @@ Convert \emph{s2dv_cube} objects to \emph{terra}, \emph{data.frame}, and \emph{s
 The function only allows to convert into the following classes
 depending on the data format.
 \describe{
-\item{Gridded data}{'terra' SpatRaster, 'sf' polygons, or 'data.frame'.}
+\item{Gridded data}{'terra' SpatRaster, 'stars', 'sf' polygons, or 'data.frame'.}
 \item{Areal data}{'sf' polygons or 'data.frame'.}
 \item{Point data}{'data.frame'.}
 }

@@ -231,7 +231,7 @@ test_that("3. Error if gridded data is required but not present", {
   location_cube <- make_mock_location_cube()
   expect_error(
     c4h_convert(location_cube, "terra"),
-    "Gridded data is required for 'terra' output format."
+    "Gridded data is required for 'terra' and 'stars' formats."
   )
 })
 
@@ -289,20 +289,14 @@ test_that("8. Message if 'crs' is NULL", {
   cube <- make_mock_fcst_cube()
   expect_message(
     c4h_convert(cube, "terra", crs = NULL),
-    paste0(
-      "'crs' is not provided. Assuming WGS 84",
-      " \\(EPSG:4326\\) for gridded data."
-    )
+    "'crs' is not provided. Assuming WGS 84"
   )
 
   area_cube <- make_mock_area_cube()
   area_cube$attrs$area$geom <- make_test_areas_sf()$geometry
   expect_message(
     c4h_convert(area_cube, "sf", crs = NULL),
-    paste0(
-      "'crs' is not provided. Taking CRS from",
-      "the input data if available."
-    )
+    "'crs' is not provided. Taking CRS from"
   )
 })
 
