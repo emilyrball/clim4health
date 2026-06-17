@@ -14,7 +14,8 @@ save the file will be deduced based on the file extension. See details for
 a list of available extensions for each \emph{s2dv_cube} data type.}
 
 \item{drop}{Logical. If TRUE, dimensions with only one value will
-be dropped when saving. If FALSE (default), they will be retained.}
+be dropped when saving. If FALSE (default), they will be retained. Ignored
+when saving netCDF files.}
 }
 \value{
 None.
@@ -29,7 +30,7 @@ The list of available extensions is the following:
 \item{Areal data}{'gpkg', 'shp'.}
 \item{Point data}{'csv'.}
 }
-Note that when saving s2dv data to formats other than 'nc', an
+Note that when saving \emph{s2dv_cube} objects an
 internal conversion using \link{c4h_convert} is applied.
 }
 \examples{

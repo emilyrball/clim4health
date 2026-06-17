@@ -44,21 +44,21 @@ test_that("2. incorrect extensions", {
 })
 
 test_that("3. Write gridded data successfully", {
-  # out_path1 <- tempfile(fileext = ".nc")
+  out_path1 <- tempfile(fileext = ".nc")
   out_path2 <- tempfile(fileext = ".csv")
   out_path3 <- tempfile(fileext = ".tif")
 
-  # c4h_save(fcst, out_path1)
+  c4h_save(fcst, out_path1)
   c4h_save(fcst, out_path2)
   c4h_save(fcst, out_path3)
 
   # Check that file was created
-  # expect_true(file.exists(out_path1))
+  expect_true(file.exists(out_path1))
   expect_true(file.exists(out_path2))
   expect_true(file.exists(out_path3))
 
   # Clean up
-  # file.remove(out_path1)
+  file.remove(out_path1)
   file.remove(out_path2)
   file.remove(out_path3)
 })

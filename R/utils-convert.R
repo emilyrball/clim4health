@@ -447,7 +447,7 @@
 #' when converting to the desired format. Default is FALSE.
 #' @returns A stars object.
 #' @noRd
-.s2dv_to_stars <- function(cube, crs, drop = FALSE) {
+.s2dv_to_stars <- function(cube, crs = NULL, drop = FALSE) {
   # Reorder array
   cubedata <- cube$data
   spatial_dims <- c(

@@ -7,7 +7,8 @@
 #' save the file will be deduced based on the file extension. See details for
 #' a list of available extensions for each *s2dv_cube* data type.
 #' @param drop Logical. If TRUE, dimensions with only one value will
-#' be dropped when saving. If FALSE (default), they will be retained.
+#' be dropped when saving. If FALSE (default), they will be retained. Ignored
+#' when saving netCDF files.
 #'
 #' @returns None.
 #' @details The list of available extensions is the following:
@@ -16,7 +17,7 @@
 #'     \item{Areal data}{'gpkg', 'shp'.}
 #'     \item{Point data}{'csv'.}
 #'   }
-#' Note that when saving s2dv data to formats other than 'nc', an
+#' Note that when saving *s2dv_cube* objects an
 #' internal conversion using [c4h_convert] is applied.
 #'
 #' @export
