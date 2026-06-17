@@ -52,12 +52,14 @@
 #' 95% of the variance. The '9nn' method does not require a pre-interpolation
 #' process. The default value is NULL.
 #' @param loocv A logical indicating whether to apply leave-one-out
-#' cross-validation when applying the bias correction. Defaults to TRUE.
+#' cross-validation when applying the bias correction. The default is TRUE. In
+#' this case, when applying the bias correction or building the regression model
+#' for a given year, the corresponding values from that year are removed.
 #' @param ... Additional arguments to be passed to the CSDownscale function.
 #'
 #' @returns A list of statistically downscaled data as *s2dv_cube* objects.
 #'
-#' @note See the package vignette dedicated to downscaling for a
+#' @note See clim4health_downscaling.Rmd in the package vignettes for a
 #' detailed tutorial on function arguments and usage.
 #'
 #' @export
