@@ -251,7 +251,7 @@ Now that we have loaded the data, let's check the units.
 c4h_convert_units(fcst, var = "t2m")
 ```
 
-We saw above that the temperature data are stored in Kelvin, which is common for climate model output and reanalyses. We can convert the units to Celsius, which is more useful in health impact studies, using the `c4h_convert_units()` function.
+We saw above that the temperature data are stored in Kelvin, which is common for climate model output and reanalyses due to the model physics. We can convert the units to Celsius, which is more useful in health impact studies, using the `c4h_convert_units()` function.
 
 ```{r convert_units}
 # Convert from Kelvin to Celsius
