@@ -192,16 +192,17 @@ c4h_space <- function(
 
 #' .make_raster
 #'
-#' TBC
+#' Convert a certain slice of a gridded s2dv_cube object into a terra
+#' raster object for spatial extraction
 #'
-#' @param index_list TBC
-#' @param data TBC
-#' @param lat TBC
-#' @param lon TBC
-#' @param n_spatial TBC
-#' @param crs_code TBC
+#' @param index_list List with indices to be extracted.
+#' @param data s2dv_cube object with gridded data
+#' @param lat Latitude coordinate
+#' @param lon Longitude coordinate
+#' @param n_spatial Length of the spatial dimensions
+#' @param crs_code CRS EPSG code
 #'
-#' @returns A vector of concatenated hours and minutes.
+#' @returns A terra raster object.
 #' @noRd
 .make_raster <- function(index_list, data, lat, lon, n_spatial, crs_code) {
   dx <- abs(lon[2] - lon[1])
