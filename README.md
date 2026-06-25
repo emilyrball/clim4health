@@ -86,7 +86,7 @@ c4h_plot(rean,
 
 ## Vignettes
 
-Several vignettes are available to explore the clim4health. Vignettes loaded in the package can be accessed in R by typing `vignette("vignettename")` (e.g., `vignette("clim4health_overview")`).
+Several vignettes are available to explore **clim4health**. Vignettes loaded in the package can be accessed in R by typing `vignette("vignettename")` (e.g., `vignette("clim4health_overview")`).
 
 The vignettes are:
 - `"clim4health_overview"`: a general introduction to the main functionalities of the package, including a worked example.
