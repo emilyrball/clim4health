@@ -24,9 +24,9 @@ Description: Obtain, transform and export climate data including reanalyses,
     input (download and load data), transform (downscaling, verification,
     spatiotemporal aggregation and threshold-based indicators) and output
     (visualising and exporting data). Downscaling methods include those
-    described in Duzenli et al. (2026) <https://doi.org/10.1038/s41598-026-45067-2>
+    described in Duzenli et al. (2026) <doi:10.1038/s41598-026-45067-2>
     and verification methods are based on those in Manubens et al. (2018) 
-    <https://doi.org/10.1016/j.envsoft.2018.01.018>.
+    <doi:10.1016/j.envsoft.2018.01.018>.
 License: AGPL (>= 3)
 URL: https://gitlab.earth.bsc.es/ghr/clim4health,
     https://bsc-es.github.io/GHRtools/docs/clim4health/clim4health

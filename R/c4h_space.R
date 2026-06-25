@@ -20,10 +20,10 @@
 #' @examples
 #' library(sf)
 #'
-#' # Region municipalities
+#' # Region municipalities (first 5)
 #' munip_path <- system.file("extdata", "areas", "munip_vallecauca.gpkg",
-#'                         package = "clim4health")
-#' munip <- read_sf(munip_path)
+#'                           package = "clim4health")
+#' munip <- read_sf(munip_path)[1:5,]
 #'
 #' # Forecast
 #' fcst_path <- system.file("extdata", "forecast", package = "clim4health")
