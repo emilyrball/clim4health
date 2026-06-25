@@ -2,7 +2,7 @@
 % Please edit documentation in R/c4h_get_help.R
 \name{c4h_get_help}
 \alias{c4h_get_help}
-\title{Display Available Climate Datasets, parameters and variables}
+\title{Displays a list of available climate datasets, variables and parameters.}
 \usage{
 c4h_get_help(dataset, parameter)
 }
@@ -20,12 +20,17 @@ Prints a list of either available climate datasets, required
 parameters or options to the console.
 }
 \description{
-Displays a list of available climate datasets that can be used
-for health and climate research and that can be processed by \code{clim4health}.
+Displays a list of available climate datasets that can downloaded from
+the Copernicus Climate Data Store using \link{c4h_get}, as well as
+information about the available variables and parameters.
 }
 \examples{
 c4h_get_help()
 c4h_get_help("reanalysis-era5-land")
 c4h_get_help("reanalysis-era5-land", "product_type")
 c4h_get_help("reanalysis-era5-land", "variable")
+
+}
+\seealso{
+\link{c4h_get} to download climate data.
 }

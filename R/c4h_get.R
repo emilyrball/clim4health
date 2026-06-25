@@ -1,19 +1,22 @@
-#' Download netCDF files from the Copernicus climate data store.
+#' c4h_get
+#'
+#' Download netCDF climate data from the Copernicus Climate Data Store.
 #'
 #' @param pat Your personal acces token (PAT). You can find your PAT in your CDS
 #' profile after logging in.
-#' @param dataset The name of the dataset you want to load. available datasets
-#' can be found via c4h_get_datasets().
+#' @param dataset The name of the dataset you want to load. Available datasets
+#' can be found via [c4h_get_help].
 #' @param product_type The product type that you want to load. Available
-#' variables can be found via c4h_get_product_types().
+#' variables can be found via [c4h_get_help].
 #' @param variable The variable that you want to load. Available variables can
-#' be found via c4h_get_variables().
+#' be found via [c4h_get_help].
 #' @param year A vector of years, starting in 1950.
 #' @param month A vector of months. e.g. c(1,2) for January and February.
 #' Default is all months.
 #' @param day A vector of days in the month. Default is all days.
-#' @param time A vector of hours (0-23). Only needed when datasets are hourly.
-#' Default is 0 (midnight UTC).
+#' @param time A vector of hours (0-23) in UTC time, only needed when datasets
+#' are hourly. Note that you may need to convert your local time zone to UTC
+#' to get the correct time points. Default is 0 (midnight UTC).
 #' @param bbox A vector of coordinates. (in order: North, West, South, East).
 #' @param leadtime_month A vector of months for the forecast leadtime. e.g.
 #' c(1,2) for January and February. Default is all months.
@@ -29,12 +32,16 @@
 #' @param outname The name stem of the resultant netcdf file.
 #' @param outpath The path where the resultant netcdf file should be saved.
 #' Default is the current working directory.
+#'
 #' @returns A netcdf file or files.
 #'
+#' @seealso [c4h_get_help] to get help about the available datasets and
+#' parameters used in `c4h_get`.
 #' @export
 #'
 #' @examples
 #' \dontrun{
+#' # Download ERA5 land 2m temperature reanalysis data
 #' c4h_get(pat = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
 #'         dataset = "reanalysis-era5-land-monthly-means",
 #'         product_type = "monthly_averaged_reanalysis",
@@ -44,27 +51,28 @@
 #'         bbox = c(33, -93, -23, -17),
 #'         outname = "era5land")
 #'
+#' # Download 2m temperature system 51 ECMWF monthly seasonal forecasts
+#' # to be used as forecasts and hindcasts respectively.
 #' c4h_get(pat = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
 #'         dataset = "seasonal-monthly-single-levels",
 #'         originating_centre = c("ecmwf"),
 #'         system = c("51"),
 #'         variable = c("2m_temperature"),
 #'         product_type = c("monthly_mean"),
-#'         year = c("2010", "2011", "2012"),
-#'         month = c("04"),
-#'         leadtime_month = c("1", "2", "3"),
+#'         year = c(2010, 2011, 2012),
+#'         month = 4,
+#'         leadtime_month = 1:3,
 #'         bbox = c(33, -93, -23, -17),
 #'         outname = "hindcast")
-#'
 #' c4h_get(pat = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
 #'         dataset = "seasonal-monthly-single-levels",
 #'         originating_centre = c("ecmwf"),
 #'         system = c("51"),
 #'         variable = c("2m_temperature"),
 #'         product_type = c("monthly_mean"),
-#'         year = c("2024"),
-#'         month = c("04"),
-#'         leadtime_month = c("1", "2", "3"),
+#'         year = 2024,
+#'         month = 4,
+#'         leadtime_month = 1:3,
 #'         bbox = c(33, -93, -23, -17),
 #'         outname = "forecast")
 #' }

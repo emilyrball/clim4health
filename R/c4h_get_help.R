@@ -1,7 +1,8 @@
-#' Display Available Climate Datasets, parameters and variables
+#' Displays a list of available climate datasets, variables and parameters.
 #'
-#' Displays a list of available climate datasets that can be used
-#' for health and climate research and that can be processed by `clim4health`.
+#' Displays a list of available climate datasets that can downloaded from
+#' the Copernicus Climate Data Store using [c4h_get], as well as
+#' information about the available variables and parameters.
 #'
 #' @param dataset If dataset is provided, then the list of required parameters
 #' for that dataset will be returned. If no dataset is provided, a list of
@@ -17,6 +18,9 @@
 #' c4h_get_help("reanalysis-era5-land")
 #' c4h_get_help("reanalysis-era5-land", "product_type")
 #' c4h_get_help("reanalysis-era5-land", "variable")
+#'
+#' @seealso [c4h_get] to download climate data.
+#'
 #' @export
 
 c4h_get_help <- function(dataset, parameter) {
