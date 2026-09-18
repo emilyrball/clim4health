@@ -55,8 +55,8 @@ c4h_space <- function(
   lat <- coords$latitude
   lon <- coords$longitude
 
-  if (lat[1] > lat[length(lat)]) {
-    # if latitude is stored north to south, reverse it
+  if (lat[1] < lat[length(lat)]) {
+    # if latitude is stored south to north, reverse it
     lat <- rev(lat)
     lat_dim <- which(names(dim(data$data)) == "latitude")
     idx <- lapply(dim(data$data), seq_len)
@@ -85,7 +85,7 @@ c4h_space <- function(
   idx_lon <- which(dim_names == "longitude")
   spatial_dims <- c(idx_lat, idx_lon)
   non_spatial_dims <- seq_along(dims)[-spatial_dims]
-  names(non_spatial_dims) <- names(seq_along(dims)[-spatial_dims])
+  names(non_spatial_dims) <- names(dims[-spatial_dims])
 
   # create a grid of indices for the non-spatial dimensions
   index_grid <- expand.grid(

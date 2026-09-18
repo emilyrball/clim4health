@@ -2,9 +2,7 @@ make_test_s2dv_cube <- function(reverse_latitude = FALSE) {
   # Dimensions
   lon <- seq(-80, -70, length.out = 10)
   lat <- seq(-10, 0, length.out = 10)
-  if (reverse_latitude) {
-    lat <- seq(0, -10, length.out = 10)
-  }
+
   dims <- c(
     dataset = 1,
     var = 1,
@@ -15,11 +13,26 @@ make_test_s2dv_cube <- function(reverse_latitude = FALSE) {
     longitude = length(lon)
   )
 
-  # Data: simple gradient, easy to see thresholding
-  data_array <- array(
-    seq(280, 300, length.out = prod(dims)),
-    dim = dims
-  )
+  # store latitude in the order specified by reverse_latitude
+  if (reverse_latitude) {
+    lat <- rev(lat)
+    data_array <- array(
+      outer(
+        rev(seq(280, 290, length.out = length(lat))),
+        seq(0, 10, length.out = length(lon)), "+"
+      ),
+      dim = dims
+    )
+  } else {
+    # Data: simple gradient, easy to see thresholding
+    data_array <- array(
+      outer(
+        seq(280, 290, length.out = length(lat)),
+        seq(0, 10, length.out = length(lon)), "+"
+      ),
+      dim = dims
+    )
+  }
 
   cube <- list(
     data = data_array,
@@ -61,15 +74,23 @@ make_test_areas_sf <- function() {
     c(xmin = -74, xmax = -72, ymin = -4, ymax = -2),
     crs = st_crs(4326)
   ))
+  poly3 <- st_as_sfc(st_bbox(
+    c(xmin = -78, xmax = -76, ymin = -4, ymax = -2),
+    crs = st_crs(4326)
+  ))
+  poly4 <- st_as_sfc(st_bbox(
+    c(xmin = -80, xmax = -79, ymin = -10, ymax = -9),
+    crs = st_crs(4326)
+  ))
 
   areas_sf <- st_sf(
-    munip_code = c("Area_A", "Area_B"),
-    geometry = c(poly1, poly2)
+    munip_code = c("Area_A", "Area_B", "Area_C", "Area_D"),
+    geometry = c(poly1, poly2, poly3, poly4)
   )
   return(areas_sf)
 }
 
-# This creates the exact same 2 polygons but as a SpatVector
+# This creates the exact same polygons but as a SpatVector
 make_test_areas_terra <- function() {
   areas_sf <- make_test_areas_sf()
   return(terra::vect(areas_sf))
@@ -115,9 +136,9 @@ test_that("2. Happy path with correct spatial aggregation", {
   # 3. Verify the structure of the aggregated object
   expect_s3_class(obs_agg, "s2dv_cube")
   expect_true("area" %in% names(obs_agg$dims))
-  expect_equal(as.numeric(obs_agg$dims["area"]), 2)
-  expect_equal(drop(obs_agg$data), c(287, 294), tolerance = 1e-2)
-  expect_equal(obs_agg$coords$area, c("Area_A", "Area_B"))
+  expect_equal(as.numeric(obs_agg$dims["area"]), 4)
+  expect_equal(drop(obs_agg$data), c(286, 294, 290, 281), tolerance = 1e-2)
+  expect_equal(obs_agg$coords$area, c("Area_A", "Area_B", "Area_C", "Area_D"))
 })
 
 test_that("3. Handling latitude stored north to south", {
@@ -141,9 +162,9 @@ test_that("3. Handling latitude stored north to south", {
   # 3. Verify the structure of the aggregated object
   expect_s3_class(obs_agg, "s2dv_cube")
   expect_true("area" %in% names(obs_agg$dims))
-  expect_equal(as.numeric(obs_agg$dims["area"]), 2)
-  expect_equal(drop(obs_agg$data), c(287, 294), tolerance = 1e-2)
-  expect_equal(obs_agg$coords$area, c("Area_A", "Area_B"))
+  expect_equal(as.numeric(obs_agg$dims["area"]), 4)
+  expect_equal(drop(obs_agg$data), c(286, 294, 290, 281), tolerance = 1e-2)
+  expect_equal(obs_agg$coords$area, c("Area_A", "Area_B", "Area_C", "Area_D"))
 })
 
 test_that("4. Identical results for sf, terra and path areas", {
