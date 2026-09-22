@@ -380,7 +380,8 @@ c4h_plotskill <- function(
   plot_skill[[varname]] <- cut(
     plot_skill[[varname]],
     breaks = c(-Inf, seq(0, 1, by = 0.2)),
-    labels = paste0("<", seq(0, 1, by = 0.2))
+    labels = c("< 0", paste0(seq(0, 0.8, by = 0.2), " - ",
+                             seq(0.2, 1, by = 0.2)))
   )
   plot_skill[[varname]] <- factor(
     plot_skill[[varname]],
@@ -438,7 +439,8 @@ c4h_plotskill <- function(
             pattern_alpha = 0.9,
             pattern_spacing = 0.03,
             lwd = 0,
-            fill = NA
+            fill = NA,
+            colour = NA
           ) +
           ggpattern::scale_pattern_manual(
             name = "",
