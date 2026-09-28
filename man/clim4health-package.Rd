@@ -25,11 +25,15 @@ Authors:
   \item Carles Milà \email{carles.milagarcia@bsc.es} (\href{https://orcid.org/0000-0003-0470-0760}{ORCID})
   \item Emily Ball \email{emily.ball@bsc.es} (\href{https://orcid.org/0000-0002-3002-4068}{ORCID})
   \item Alba Llabrés (\href{https://orcid.org/0000-0003-2144-675X}{ORCID})
-  \item Raul Capellan
   \item Rebeca Nunes (\href{https://orcid.org/0009-0009-8738-0985}{ORCID})
   \item Daniela Lührsen (\href{https://orcid.org/0009-0002-6340-5964}{ORCID})
-  \item Anna B. Kawiecki (\href{https://orcid.org/0000-0002-0499-2612}{ORCID})
   \item Rachel Lowe (\href{https://orcid.org/0000-0003-3939-7343}{ORCID})
+}
+
+Other contributors:
+\itemize{
+  \item Raul Capellan [contributor]
+  \item Anna B. Kawiecki (\href{https://orcid.org/0000-0002-0499-2612}{ORCID}) [contributor]
 }
 
 }
