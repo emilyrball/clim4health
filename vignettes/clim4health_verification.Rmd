@@ -39,21 +39,25 @@ Let's load some sample data that we can use to demonstrate the verification meth
 ```{r }
 hcst_path <- system.file("extdata/hindcast/", package = "clim4health")
 hcst_path <- paste0(hcst_path, "/")
-hcst <- c4h_load(hcst_path,
-                 variable = "t2m",
-                 year = 2010:2012,
-                 month = 1,
-                 leadtime_month = "all",
-                 ext = "nc")
+hcst <- c4h_load(
+  hcst_path,
+  variable = "t2m",
+  year = 2010:2012,
+  month = 1,
+  leadtime_month = "all",
+  ext = "nc"
+)
 
 rean_path <- system.file("extdata/reanalysis/", package = "clim4health")
 rean_path <- paste0(rean_path, "/")
-rean <- c4h_load(rean_path,
-                 variable = "t2m",
-                 year = 2010:2012,
-                 month = 1,
-                 leadtime_month = 1:3,
-                 ext = "nc")
+rean <- c4h_load(
+  rean_path,
+  variable = "t2m",
+  year = 2010:2012,
+  month = 1,
+  leadtime_month = 1:3,
+  ext = "nc"
+)
 ```
 
 Look at the dimensions of the observed and hindcast datasets (recall we can use `dim(rean$data)` or `rean$dims`). We can see that `rean` has more latitude and longitude points, despite covering the same area - it has *higher spatial resolution.*
@@ -64,8 +68,13 @@ First, we need to downscale the hindcast to the same spatial resolution as the o
 hcst <- c4h_convert_units(hcst, to = "celsius")
 rean <- c4h_convert_units(rean, to = "celsius")
 
-dwn <- c4h_downscale("Intbc", exp = hcst, obs = rean,
-                     method_remap = "bilinear", method_bc = "evmos")
+dwn <- c4h_downscale(
+  "Intbc",
+  exp = hcst,
+  obs = rean,
+  method_remap = "bilinear",
+  method_bc = "evmos"
+)
 ```
 
 > 💡 **Note**: Instead of downscaling, you could also spatially aggregate the hindcast and reanalysis data using `c4h_space()` to obtain the same spatial resolution, before calculating any skill metrics.
@@ -210,10 +219,12 @@ For skill scores where significance testing is applicable (BSS, RPSS, CRPSS, MSS
 Using the data loaded and downscaled above, let's perform an example skill assessment. In this example, we have only loaded 3 years of data for each leadtime, which means that we do not have a lot of information to assess whether the hindcast is skillful or not. However, the general process is (for gridded data):
 
 ```{r }
-skill <- c4h_verify(exp = dwn$exp, 
-                    obs = dwn$obs,
-                    metrics = c("BSS", "CRPSS"),
-                    brier_thresholds = c(0.1, 0.9))
+skill <- c4h_verify(
+  exp = dwn$exp,
+  obs = dwn$obs,
+  metrics = c("BSS", "CRPSS"),
+  brier_thresholds = c(0.1, 0.9)
+)
 ```
 
 The output of `c4h_verify` is a list of lists. The outer list contains the names of the metrics, and the inner contains the value of the metric and its significance, if applicable. In the above, we calculated the Brier Skill Score (BSS) at the 10th and 90th percentiles and Continuous Ranked Probability Skill Score (CRPSS), so we can find them in the list as:
@@ -235,7 +246,12 @@ print(skill$BSS10$bss$dims)
 Each value and significance is an `s2dv_cube` object. They can be plotted using `c4h_plotskill()`.
 
 ```{r }
-c4h_plotskill(skill$BSS10$bss, skill$BSS10$sign, ensemble = TRUE, boundaries = "countries")
+c4h_plotskill(
+  skill$BSS10$bss,
+  skill$BSS10$sign,
+  ensemble = TRUE,
+  boundaries = "countries"
+)
 ```
 
 ### Choosing arguments in c4h_verify

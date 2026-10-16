@@ -87,10 +87,12 @@ Examples in this section of the vignette will fail if they are run because addit
 There are multiple arguments to specify the time range you would like to download. Parameters `year`, `month`, `day`, and `time` take vector inputs to determine the years, months, days and times of day of interest. For example, to download hourly reanalysis data from 2011 to 2025 in February and March:
 
 ```{r }
-c4h_get(dataset = "reanalysis-era5-land", # data type
-        year = 2011:2025,                 # load multiple years
-        month = c(2,3),                   # load February and March
-        time = 0:23)                      # load all hours of the day
+c4h_get(
+  dataset = "reanalysis-era5-land", # data type
+  year = 2011:2025, # load multiple years
+  month = c(2, 3), # load February and March
+  time = 0:23
+) # load all hours of the day
 ```
 
 > 💡 **Note**: In this case (for hourly reanalysis data from ERA5-Land), the default is to download data from midnight (`time = 0`). You could choose to download data at midday by selecting `time = 12`, or load data from all hours of the day by specifying `time = 0:23`. This can be useful to reduce the amount of data you have to process.
@@ -98,10 +100,12 @@ c4h_get(dataset = "reanalysis-era5-land", # data type
 Additionally, the argument `leadtime_month` specifies the forecast months to download if relevant. For example, to download leadtime months of February and March for a seasonal forecast initialised in February 2025, we would specify:
 
 ```{r }
-c4h_get(dataset = "seasonal-monthly-single-levels", # data type
-        year = c(2025),                             # year of initialisation
-        month = c(2),                               # month of initialisation
-        leadtime_month = c(1, 2))                   # leadtime months
+c4h_get(
+  dataset = "seasonal-monthly-single-levels", # data type
+  year = c(2025), # year of initialisation
+  month = c(2), # month of initialisation
+  leadtime_month = c(1, 2)
+) # leadtime months
 ```
 
 > 💡 **Note**: There is no default of `leadtime_month`, so the user must specify the leadtime months they wish to download. Note that specifying a single value will download exactly one leadtime month, and not all leadtimes up to that month. For example, `leadtime_month = 3` downloads only the third leadtime, not leadtimes 1-3 (which could be specified using `leadtime_month = 1:3`).
@@ -117,8 +121,10 @@ c4h_get_help("reanalysis-era5-land", "bbox")
 We can select a box in latitude and longitude coordinates using the parameter `bbox` within `c4h_get()`. For example, to select latitudes between -4 and 4, and longitudes between -73, -70, we specify the box in order of its North, West, South, East boundaries.
 
 ```{r }
-c4h_get(dataset = "reanalysis-era5-land", # data type
-        bbox = c(4, -73, -4, -70))        # bounding box in order N, W, S, E
+c4h_get(
+  dataset = "reanalysis-era5-land", # data type
+  bbox = c(4, -73, -4, -70)
+) # bounding box in order N, W, S, E
 ```
 
 > 💡 **Note**: There is no default of `bbox`. The user must always specify the region they wish to download.
@@ -128,8 +134,10 @@ c4h_get(dataset = "reanalysis-era5-land", # data type
 You can check the available variables for a given dataset using `c4h_get_help(dataset = example_dataset, parameter = "variable")`, as above. The variable is then specified in `c4h_get()` using the `variable` parameter. For example, to download temperature at 2m from ERA5-Land, the key parameters we would specify are:
 
 ```{r }
-c4h_get(dataset = "reanalysis-era5-land", # data type
-        variable = "2m_temperature")      # variable name
+c4h_get(
+  dataset = "reanalysis-era5-land", # data type
+  variable = "2m_temperature"
+) # variable name
 ```
 
 ### Specifying the file path and name
@@ -137,11 +145,13 @@ c4h_get(dataset = "reanalysis-era5-land", # data type
 By default, `c4h_get()` will download data to your current working directory. However, you may wish to specify a different directory using `outpath`, and change the name of the file you are downloading. For example:
 
 ```{r }
-c4h_get(dataset = "reanalysis-era5-land",         # data type
-        variable = "2m_temperature",              # variable name
-        year = 2010:2012,                         # years to download
-        outpath = "/path/to/dir/",                # directory to save data
-        outname = "era5land_t2m")                 # file name stem
+c4h_get(
+  dataset = "reanalysis-era5-land", # data type
+  variable = "2m_temperature", # variable name
+  year = 2010:2012, # years to download
+  outpath = "/path/to/dir/", # directory to save data
+  outname = "era5land_t2m"
+) # file name stem
 ```
 
 > 💡 **Note**: It is recommended to save different datasets in different sub-folders, which will allow the `c4h_load` function to easily parse the relevant datasets. For example, you could have two folders called `/path/to/dir/reanalysis/` and `/path/to/dir/forecast/`.
@@ -174,14 +184,16 @@ This example downloads monthly mean 2m temperature from the ERA5-Land reanalysis
 
 ```{r }
 # Download reanalysis data
-c4h_get(pat = pat_api,
-        dataset = "reanalysis-era5-land-monthly-means",
-        product_type = "monthly_averaged_reanalysis",
-        variable = "2m_temperature",
-        year = c(2010, 2011, 2012),
-        month = c(4, 5),
-        bbox = c(33, -93, -23, -17),
-        outname = "era5land")
+c4h_get(
+  pat = pat_api,
+  dataset = "reanalysis-era5-land-monthly-means",
+  product_type = "monthly_averaged_reanalysis",
+  variable = "2m_temperature",
+  year = c(2010, 2011, 2012),
+  month = c(4, 5),
+  bbox = c(33, -93, -23, -17),
+  outname = "era5land"
+)
 ```
 
 > 💡 **Note**: In this case (for monthly-mean reanalysis data from ERA5-Land), you can download monthly-mean daily-mean data by selecting `product_type = "monthly_averaged_reanalysis"`. The option to download monthly-mean data from a specific hour of day is not yet implemented (for example, monthly-mean midday temperature).
@@ -192,19 +204,24 @@ This example downloads monthly mean 2m temperature, 2m dewpoint temperature, and
 
 ```{r }
 # Download hindcast data
-c4h_get(pat = pat_api,
-        dataset = "seasonal-monthly-single-levels",
-        originating_centre = c("ecmwf"),
-        system = c("51"),
-        variable = c("2m_temperature",
-                     "2m_dewpoint_temperature",
-                     "total_precipitation"),
-        product_type = c("monthly_mean"),
-        year = c(2010, 2011, 2012), month = c(4),
-        leadtime_month = c(1, 2),
-        bbox = c(33, -93, -23, -17),
-        outpath = "/path/to/dir/",
-        outname = "hindcast")
+c4h_get(
+  pat = pat_api,
+  dataset = "seasonal-monthly-single-levels",
+  originating_centre = c("ecmwf"),
+  system = c("51"),
+  variable = c(
+    "2m_temperature",
+    "2m_dewpoint_temperature",
+    "total_precipitation"
+  ),
+  product_type = c("monthly_mean"),
+  year = c(2010, 2011, 2012),
+  month = c(4),
+  leadtime_month = c(1, 2),
+  bbox = c(33, -93, -23, -17),
+  outpath = "/path/to/dir/",
+  outname = "hindcast"
+)
 ```
 
 ### 5.3. Forecast data
@@ -213,16 +230,18 @@ This example downloads the data in the same format as above, except this time we
 
 ```{r }
 # Download forecast data
-c4h_get(pat = pat_api,
-        dataset = "seasonal-monthly-single-levels",
-        originating_centre = c("ecmwf"),
-        system = c("51"),
-        variable = c("total_precipitation"),
-        product_type = c("monthly_mean"),
-        year = c(2025),
-        month = c(4),
-        leadtime_month = c(1, 2),
-        bbox = c(33, -93, -23, -17),
-        outpath = "/path/to/dir/",
-        outname = "forecast")
+c4h_get(
+  pat = pat_api,
+  dataset = "seasonal-monthly-single-levels",
+  originating_centre = c("ecmwf"),
+  system = c("51"),
+  variable = c("total_precipitation"),
+  product_type = c("monthly_mean"),
+  year = c(2025),
+  month = c(4),
+  leadtime_month = c(1, 2),
+  bbox = c(33, -93, -23, -17),
+  outpath = "/path/to/dir/",
+  outname = "forecast"
+)
 ```
