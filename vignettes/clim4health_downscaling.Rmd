@@ -107,9 +107,12 @@ Additionally, arguments `obs` and `exp_cor` are often required.
 
 The following figure shows the key arguments for `c4h_downscale()` depending on the downscaling method chosen.
 
-```{r c4h_downscale_parameters,fig.width=10, fig.height=10, fig.align='center', out.width='100%', echo= FALSE, fig.cap="Figure 1: Structure of the c4h_downscale function, outlining its key arguments and general functionality."}
-knitr::include_graphics("https://gitlab.earth.bsc.es/ghr/clim4health/-/blob/main/inst/figures/clim4health_downscale_parameters.svg?ref_type=heads")
-```
+<br>
+<div align="center">
+<img src='../inst/figures/clim4health_downscale_parameters.svg' width="100%" />
+<label> 
+</div>
+<br> 
 
 `c4h_downscale()` returns a named list containing two elements, `exp` and `obs`. `exp` is an s2dv_cube object containing the downscaled experimental data (from either `exp` or `exp_cor`), and `obs` is an s2dv_cube object containing the observational data (from `obs`). This looks like:
 
@@ -364,8 +367,11 @@ The choice of parameters for your downscaling is important, and can vary between
 
 `c4h_downscale()` has many optional parameters. The diagram below can be used as a guide to select the appropriate parameters, depending on the `downscale_function` chosen and the type of data being downscaled (gridded, point, polygon). Not all arguments are shown!
 
-```{r c4h_downscale_flowchart,fig.width=10, fig.height=10, fig.align='center', out.width='100%', echo= FALSE, fig.cap="Figure 2: Flowchart for selecting downscaling parameters. Dashed lines indicate optional arguments."}
-knitr::include_graphics("https://gitlab.earth.bsc.es/ghr/clim4health/-/blob/develop-vignettes/inst/figures/c4h_downscale.svg?ref_type=heads")
-```
+<br>
+<div align="center">
+<img src='../inst/figures/c4h_downscale.svg' width="100%" />
+<label> 
+</div>
+<br> 
 
 In particular, we note one final optional parameter, `loocv` (leave-one-out cross-validation). The default of this parameter is `TRUE`, which is generally recommended when downscaling hindcast data (i.e. when `exp_cor` is `NULL`). In the case of `loocv = TRUE`, when applying the bias correction or building the regression model for a given year, the corresponding values from that year are removed. When downscaling forecast data (i.e. `exp_cor` is not `NULL`), this may be set to `FALSE`.
