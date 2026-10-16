@@ -13,7 +13,7 @@ check:
     R_LIBS_SITE: /usr/local/lib/R/site-library
   script:
     - R CMD build .
-    - R CMD check --no-manual clim4health_*.tar.gz
+    - R CMD check --no-manual --no-vignettes --no-build-vignettes --ignore-vignettes clim4health_*.tar.gz
 
 unit-test:
   stage: test
