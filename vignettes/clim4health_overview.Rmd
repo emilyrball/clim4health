@@ -15,7 +15,9 @@ knitr::opts_chunk$set(
   comment = "#>",
   fig.align = "center",
   warning = FALSE,
-  message = FALSE
+  message = FALSE,
+  fig.width = 7,
+  fig.align = "center"
 )
 ```
 
@@ -301,12 +303,12 @@ print(c4h_convert_units(fcst, var = "t2m"))
 
 We can use `c4h_plot()` to plot the forecast, hindcast, and reanalysis data to visualize the raw data.
 
-```{r plot_raw_data 1, fig.width=7, fig.height=2.5}
+```{r plot_raw_data 1, fig.height=2.5}
 # Plot the forecast data
 c4h_plot(fcst, var = "t2m", ensemble = TRUE)
 ```
 
-```{r plot_raw_data 2, fig.width=7, fig.height=6}
+```{r plot_raw_data 2, fig.height=6}
 # Plot the hindcast data
 c4h_plot(hcst, var = "t2m", ensemble = TRUE)
 # Plot the reanalysis data
@@ -348,7 +350,7 @@ print(hcst_aggr$dims)
 
 We can plot the aggregated data in the same way as the gridded data, as `c4h_space()` stores the corresponding polygon geometries in `cube$attrs$area` in the output s2dv_cube `cube`, and `c4h_plot()` can utilize these geometries for visualization.
 
-```{r plot_aggregated_data, fig.width=7, fig.height=6}
+```{r plot_aggregated_data, fig.height=6}
 # Plot the aggregated hindcast data
 c4h_plot(hcst_aggr, ensemble = TRUE)
 # Plot the aggregated reanalysis data
@@ -409,12 +411,12 @@ cal_hcst <- c4h_downscale(
 
 Plot the downscaled forecast and hindcast data to visualise the results of the downscaling.
 
-```{r plot_downscaled_data 1, fig.width=7, fig.height=2.5}
+```{r plot_downscaled_data 1, fig.height=2.5}
 # Plot the downscaled forecast data
 c4h_plot(cal$exp, ensemble = TRUE)
 ```
 
-```{r plot_downscaled_data 2, fig.width=7, fig.height=6}
+```{r plot_downscaled_data 2, fig.height=6}
 # Plot the downscaled hindcast data
 c4h_plot(cal_hcst$exp, ensemble = TRUE)
 ```
@@ -442,7 +444,7 @@ For example, `skill` contains only one element, `skill$CRPSS`, which is a list c
 
 We can also explore the significance of the skill values by adding a layer to the plot using the `sign` parameter.
 
-```{r plot_skill_significance, fig.width=7, fig.height=2.5}
+```{r plot_skill_significance, fig.height=2.5}
 c4h_plotskill(skill$CRPSS$crpss, sign = skill$CRPSS$sign)
 ```
 
@@ -464,7 +466,7 @@ c4h_plotskill(skill$CRPSS$crpss, sign = skill$CRPSS$sign)
 
 For example, we can apply `c4h_index()` to the downscaled forecast data to identify only grid cells where the temperature exceeds 20ºC, and then we can plot this masked dataset.
 
-```{r apply_mask, fig.width=7, fig.height=2.5}
+```{r apply_mask, fig.height=2.5}
 mask <- c4h_index(data = cal$exp, return_mask = FALSE, lower_threshold = 20)
 c4h_plot(mask, ensemble = TRUE)
 ```

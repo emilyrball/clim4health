@@ -15,8 +15,9 @@ knitr::opts_chunk$set(
   comment = "#>",
   fig.align = "center",
   warning = FALSE,
-  message = FALSE,
-  eval = FALSE
+  message = FALSE, 
+  fig.width = 7,
+  fig.align = "center"
 )
 ```
 
@@ -242,7 +243,7 @@ print(forecast$coords$sdate) # start dates are also stored as a coordinate
 
 We can plot the `s2dv_cube` objects using the function `c4h_plot`. The plotting function will search the available dimensions in the data cube and plot maps for each of them. This is problematic for the forecast object, which has three time points and 51 ensemble members, which would mean a total of 153 maps! We can do several things, first, simply select the time points and ensemble members we are interested in:
 
-```{r}
+```{r, fig.height=6}
 c4h_plot(forecast, time = 1:3, ensemble = 1:3)
 ```
 
