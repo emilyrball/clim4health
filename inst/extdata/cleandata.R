@@ -11,8 +11,8 @@ munis <- rename(munis, "munip_code" = "MpCodigo", "munip_name" = "MpNombre") |>
 write_sf(munis, "munip_vallecauca.gpkg")
 
 # Clean station data from
-# https://www.datos.gov.co/Ambiente-y-Desarrollo-Sostenible/Temperatura-Ambiente-del-Aire/sbwg-7ju4/explore/query/SELECT%0A%20%20%60codigoestacion%60%2C%0A%20%20%60codigosensor%60%2C%0A%20%20%60fechaobservacion%60%2C%0A%20%20%60valorobservado%60%2C%0A%20%20%60nombreestacion%60%2C%0A%20%20%60departamento%60%2C%0A%20%20%60municipio%60%2C%0A%20%20%60zonahidrografica%60%2C%0A%20%20%60latitud%60%2C%0A%20%20%60longitud%60%2C%0A%20%20%60descripcionsensor%60%2C%0A%20%20%60unidadmedida%60%0AWHERE%0A%20%20caseless_eq%28%60departamento%60%2C%20%22VALLE%20DEL%20CAUCA%22%29%0A%20%20AND%20%60fechaobservacion%60%0A%20%20%20%20%20%20%20%20BETWEEN%20%222010-01-01T00%3A00%3A00%22%20%3A%3A%20floating_timestamp%0A%20%20%20%20%20%20%20%20AND%20%222012-12-31T23%3A45%3A00%22%20%3A%3A%20floating_timestamp/page/filter
-stations <- read.csv("Temperatura_Ambiente_del_Aire_20250901.csv")
+# https://www.datos.gov.co/Ambiente-y-Desarrollo-Sostenible/Temperatura-Ambiente-del-Aire/sbwg-7ju4/explore/query/SELECT%0A%20%20%60codigoestacion%60%2C%0A%20%20%60codigosensor%60%2C%0A%20%20%60fechaobservacion%60%2C%0A%20%20%60valorobservado%60%2C%0A%20%20%60nombreestacion%60%2C%0A%20%20%60departamento%60%2C%0A%20%20%60municipio%60%2C%0A%20%20%60zonahidrografica%60%2C%0A%20%20%60latitud%60%2C%0A%20%20%60longitud%60%2C%0A%20%20%60descripcionsensor%60%2C%0A%20%20%60unidadmedida%60%0AWHERE%0A%20%20caseless_eq%28%60departamento%60%2C%20%22VALLE%20DEL%20CAUCA%22%29%0A%20%20AND%20%60fechaobservacion%60%0A%20%20%20%20%20%20%20%20BETWEEN%20%222010-01-01T00%3A00%3A00%22%20%3A%3A%20floating_timestamp%0A%20%20%20%20%20%20%20%20AND%20%222013-12-31T23%3A45%3A00%22%20%3A%3A%20floating_timestamp/page/filter
+stations <- read.csv("Temperatura_Ambiente_del_Aire_20261019.csv")
 stations <- rename(
   stations,
   "temp" = "ValorObservado",
@@ -23,7 +23,8 @@ stations <- rename(
 ) |>
   select(station_code, datetime, lat, lon, temp) |>
   mutate(datetime = ymd_hms(datetime), date = as.Date(datetime)) |>
-  filter(temp != 0) # Wrong readings
+  filter(temp != 0) |> # Wrong readings
+  filter(lat >= 1.5 & lat <= 5.5 & lon >= -78.5 & lon <= -74.5) # Filter region
 stations <- stations |>
   group_by(station_code, lat, lon, date) |>
   summarise(
@@ -35,6 +36,6 @@ stations <- stations |>
   ungroup()
 barplot(table(stations$n))
 stations <- stations |>
-  filter(n >= 17) |>
+  filter(n >= 17 & n <= 24) |>
   select(-n)
 write.csv(stations, "stations_vallecauca.csv", row.names = FALSE)
