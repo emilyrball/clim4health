@@ -146,7 +146,6 @@ c4h_downscale <- function(
   # clim4health s2dv_cube objects will have the following dimensions
   # to input into CSDownscale functions
   sdate_dim <- "sdate"
-  time_dim <- "time"
   member_dim <- "ensemble"
   lat_dim <- "latitude"
   lon_dim <- "longitude"
@@ -156,6 +155,24 @@ c4h_downscale <- function(
   obs_dims <- names(dim(obs$data))
   if (!is.null(exp_cor)) {
     exp_dims <- names(dim(exp_cor$data))
+  }
+
+  if (!is.null(obs)) {
+    time_dim <- ""
+    # if data has time dimension > 1, CSDownscale may assume it is daily
+    if (dim(obs$data)[["time"]] > 1) {
+      # check if data is daily
+      time_diff <- min(apply(obs$attrs$Dates, 1, diff) / 86400)
+      if (time_diff == 1) {
+        # if daily, let CSDownscale know
+        time_dim <- "time"
+      }
+      # if not daily, ignore time dimension.
+    }
+    # For analogs, always require time dimension.
+    if (downscale_function == "Analogs") {
+      time_dim <- "time"
+    }
   }
 
   if (!inherits(exp, "s2dv_cube")) {
@@ -393,15 +410,15 @@ c4h_downscale <- function(
   } else {
     if (
       !(length(bbox) == 4 &&
-        is.numeric(bbox) &&
-        all(bbox[c(1, 3)] > -90) ||
-        all(bbox[c(1, 3)] < 90) &&
+          is.numeric(bbox) &&
           all(bbox[c(1, 3)] > -90) ||
-        all(bbox[c(1, 3)] < 90) &&
-          all(bbox[c(2, 4)] > -180) ||
-        all(bbox[c(1, 3)] < 180) &&
-          all(bbox[c(2, 4)] > -180) ||
-        all(bbox[c(1, 3)] < 180))
+          all(bbox[c(1, 3)] < 90) &&
+            all(bbox[c(1, 3)] > -90) ||
+          all(bbox[c(1, 3)] < 90) &&
+            all(bbox[c(2, 4)] > -180) ||
+          all(bbox[c(1, 3)] < 180) &&
+            all(bbox[c(2, 4)] > -180) ||
+          all(bbox[c(1, 3)] < 180))
     ) {
       stop(
         "'bbox' coordinates are out of bound. N,W,S,E coordinates,
