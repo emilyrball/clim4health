@@ -19,7 +19,7 @@ options include 'median', 'min' and 'max'.}
 applying the collapsing function. Defaults to TRUE.}
 }
 \value{
-The collapsed \emph{s2dv_cube}.
+An \emph{s2dv_cube} with the collapsed dimension is kept with length 1.
 }
 \description{
 Collapse one dimension of the \emph{s2dv_cube}. \code{c4h_collapse()} works
@@ -31,7 +31,7 @@ in forecast and hindcast datasets.
 (i.e. the length of the 'sdate' dimension must be one). In this case the
 first "time" of the dataset is assigned as the new s2dv time coordinate.
 To compute time aggregations when 'sdate' has length greater than one,
-use the function \code{c4h_time()} instead.
+use the function \link{c4h_time} instead.
 \item Use dim = "sdate" to compute a climatology, if each 'sdate' corresponds to
 a different year. In this case the first "sdate" of the dataset is assigned
 as the new s2dv sdate coordinate.
@@ -70,4 +70,7 @@ obs$dims
 obs_coll <- c4h_collapse(obs, dim = "sdate")
 obs_coll$dims
 }
+}
+\seealso{
+\link{c4h_time} to do time aggregations of length greater than one.
 }
