@@ -47,7 +47,7 @@
 #' # Load the hindcast data
 #' hcst <- c4h_load(hcst_path,
 #'                  variable = "t2m",
-#'                  year = 2010:2012,
+#'                  year = 2010:2013,
 #'                  month = 1,
 #'                  leadtime_month = 1:3,
 #'                  ext = "nc")
@@ -62,7 +62,7 @@
 #' # Load the reanalysis data with dates to match the hindcast
 #' rean <- c4h_load(rean_path,
 #'                  variable = "t2m",
-#'                  year = 2010:2012,
+#'                  year = 2010:2013,
 #'                  month = 1,
 #'                  leadtime_month = 1:3,
 #'                  ext = "nc")
