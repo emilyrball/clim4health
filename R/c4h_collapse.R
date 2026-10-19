@@ -9,7 +9,7 @@
 #' (i.e. the length of the 'sdate' dimension must be one). In this case the
 #' first "time" of the dataset is assigned as the new s2dv time coordinate.
 #' To compute time aggregations when 'sdate' has length greater than one,
-#' use the function `c4h_time()` instead.
+#' use the function [c4h_time] instead.
 #' * Use dim = "sdate" to compute a climatology, if each 'sdate' corresponds to
 #' a different year. In this case the first "sdate" of the dataset is assigned
 #' as the new s2dv sdate coordinate.
@@ -22,7 +22,9 @@
 #' @param na.rm Logical, indicating whether NA values should be ignored when
 #' applying the collapsing function. Defaults to TRUE.
 #'
-#' @returns The collapsed *s2dv_cube*.
+#' @returns An *s2dv_cube* with the collapsed dimension is kept with length 1.
+#'
+#' @seealso [c4h_time] to do time aggregations of length greater than one.
 #' @export
 #'
 #' @examples
@@ -63,13 +65,16 @@ c4h_collapse <- function(data, dim, fun = "mean", na.rm = TRUE) {
 
   # Check class type
   if (!inherits(data, "s2dv_cube")) {
-    stop("'ch4_collapse' only accepts s2dv_cube objects.")
+    stop("'c4h_collapse' only accepts s2dv_cube objects.")
   }
 
   # Check collapsing dimension
+  if (missing(dim) || !is.character(dim) || length(dim) != 1 || is.na(dim)) {
+    stop("'dim' must be a single character string.")
+  }
   if (!dim %in% c("ensemble", "time", "sdate")) {
     stop(
-      "c4h_collapse can only collapse the 'ensemble', 'sdate'",
+      "c4h_collapse can only collapse the 'ensemble', 'sdate' ",
       "and 'time' dimensions."
     )
   } else if (!dim %in% names(data$dims)) {
@@ -77,48 +82,63 @@ c4h_collapse <- function(data, dim, fun = "mean", na.rm = TRUE) {
   } else if (data$dims[dim] <= 1) {
     stop(paste0("The size of the dimension ", dim, " must be larger than one."))
   }
+  if (
+    dim == "time" && "sdate" %in% names(data$dims) && data$dims[["sdate"]] != 1
+  ) {
+    stop(
+      "The 'sdate' dimension must have length one to collapse 'time'."
+    )
+  }
 
   # Check valid fun
+  if (!is.character(fun) || length(fun) != 1 || is.na(fun)) {
+    stop("'fun' must be a single character string.")
+  }
   if (!fun %in% c("mean", "median", "min", "max")) {
     stop("Valid 'fun' include 'mean', 'median', 'min' and 'max'.")
   }
 
-  # Aggregation ----
-  # Compute aggr
-  keep_margins <- which(names(data$dims) != dim)
-  data_aggr <- .apply_keepdim(data$data, keep_margins, fun, na.rm = na.rm)
-  # Metadata
-  coords_aggr <- data$coords
-  coords_aggr[dim] <- 1
-  attributes(coords_aggr[dim]) <- attributes(data$coords[dim])
-  dims_aggr <- data$dims
-  dims_aggr[dim] <- 1
-  attr_agg <- data$attrs
-  # Update Dates attribute
-  if (dim == "time") {
-    attr_agg$Dates <- data$attrs$Dates[, 1, drop = FALSE]
-    dim(attr_agg$Dates) <- c(sdate = dims_aggr[["sdate"]], time = 1)
-  } else if (dim == "sdate") {
-    attr_agg$Dates <- data$attrs$Dates[1, , drop = FALSE]
-    dim(attr_agg$Dates) <- c(sdate = 1, time = dims_aggr[["time"]])
+  # Check that the data array is consistent with the 'dims' metadata, since
+  # the margins to aggregate are derived from the latter
+  if (!identical(as.integer(unname(data$dims)), as.integer(dim(data$data)))) {
+    stop("The dimensions of 'data$data' do not match 'data$dims'.")
+  }
+  if (is.null(names(dim(data$data)))) {
+    names(dim(data$data)) <- names(data$dims)
+  } else if (!identical(names(dim(data$data)), names(data$dims))) {
+    stop("The dimension names of 'data$data' do not match 'data$dims'.")
   }
 
-  # Create results s2dv
-  out <- list(
-    data = data_aggr,
-    coords = coords_aggr,
-    dims = dims_aggr,
-    attrs = attr_agg
-  )
-  attr(out, "class") <- "s2dv_cube"
+  # Aggregation ----
 
-  return(out)
+  # Start from a copy of the input so that any extra fields are preserved
+  out <- data
+
+  # Collapse the data along `dim`, keeping it with length one
+  keep_margins <- which(names(data$dims) != dim)
+  out$data <- .apply_keepdim(data$data, keep_margins, fun, na.rm = na.rm)
+
+  # Update the metadata
+  out$dims[dim] <- 1
+  out$coords[dim] <- 1
+  attributes(out$coords[[dim]]) <- attributes(data$coords[[dim]])
+
+  # Update the Dates attribute
+  if (dim == "time") {
+    out$attrs$Dates <- data$attrs$Dates[, 1, drop = FALSE]
+    dim(out$attrs$Dates) <- c(sdate = out$dims[["sdate"]], time = 1)
+  } else if (dim == "sdate") {
+    out$attrs$Dates <- data$attrs$Dates[1, , drop = FALSE]
+    dim(out$attrs$Dates) <- c(sdate = 1, time = out$dims[["time"]])
+  }
+
+  out
 }
 
 
 #' Aggregate a multidimensional array while keeping the aggregate dimension
 #'
-#' @param data s2dv object to be aggregated.
+#' @param data an array to be aggregated.
 #' @param margins dimensions to keep.
 #' @param fun function to apply.
 #' @param na.rm logical, indicating whether NA values should be ignored.
@@ -126,10 +146,19 @@ c4h_collapse <- function(data, dim, fun = "mean", na.rm = TRUE) {
 #' @returns The collapsed array with the same number of dimensions as the input.
 #' @noRd
 .apply_keepdim <- function(data, margins, fun, na.rm) {
-  out <- apply(data, margins, fun, na.rm = na.rm)
+  # Return NA (instead of NaN, Inf or -Inf plus a warning) when all values
+  # are missing, so that all supported functions behave consistently
+  fun <- match.fun(fun)
+  safe_fun <- function(x, na.rm) {
+    if (na.rm && all(is.na(x))) {
+      return(NA_real_)
+    }
+    fun(x, na.rm = na.rm)
+  }
+  out <- apply(data, margins, safe_fun, na.rm = na.rm)
   d <- dim(data)
   newdim <- rep(1, length(d))
   names(newdim) <- names(d)
-  newdim[margins] <- dim(out)
+  newdim[margins] <- dim(data)[margins]
   array(out, dim = newdim)
 }
