@@ -27,7 +27,7 @@
 #'
 #' # Forecast
 #' fcst_path <- system.file("extdata", "forecast", package = "clim4health")
-#' fcst <- c4h_load(fcst_path, variable = "t2m", ext = 'nc')
+#' fcst <- c4h_load(fcst_path, variable = "t2m", ext = 'nc', leadtime_month = 1)
 #'
 #' # Spatial aggregation
 #' fcst_aggr <- c4h_space(fcst, munip)
