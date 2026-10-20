@@ -128,3 +128,19 @@
     ))
   }
 }
+
+#' .reverse_latitudes
+#'
+#' Reverse the order of latitudes in a s2dv_cube object. Can be used to
+#' reverse south to north or north to south.
+#'
+#' @param data a s2dv_cube object.
+#' @returns a s2dv_cube object with the latitudes reversed.
+#' @noRd
+.reverse_latitudes <- function(data) {
+  out <- .subset_array_named(data$data,
+                             latitude = rev(seq_along(data$coords$latitude)))
+  data$data <- out
+  data$coords$latitude <- rev(data$coords$latitude)
+  return(data)
+}

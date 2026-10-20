@@ -249,6 +249,18 @@ c4h_downscale <- function(
     }
   }
 
+  # reverse latitudes if stored north to south
+  if (!is.null(obs)) {
+    if (obs$coords$latitude[1] >
+          obs$coords$latitude[length(obs$coords$latitude)]) {
+      obs <- .reverse_latitudes(obs)
+    }
+  }
+  if (exp$coords$latitude[1] >
+        exp$coords$latitude[length(exp$coords$latitude)]) {
+    exp <- .reverse_latitudes(exp)
+  }
+
   if (
     !downscale_function %in% c("Interpolation", "Intbc", "Intlr", "Analogs")
   ) {
@@ -401,12 +413,7 @@ c4h_downscale <- function(
   }
 
   if (is.null(bbox)) {
-    region <- c(
-      min(exp$coords$longitude),
-      max(exp$coords$longitude),
-      min(exp$coords$latitude),
-      max(exp$coords$latitude)
-    )
+    region <- NULL
   } else {
     if (
       !(length(bbox) == 4 &&
@@ -567,7 +574,9 @@ c4h_downscale <- function(
       loocv = loocv,
       ...
     )
-    out$exp <- .manage_dims(out$exp, c(exp_dims, "analogs"))
+    out$exp$data <- drop(.subset_array_named(out$exp$data, analogs = 1))
+    out$exp$coords <- out$exp$coords[!names(out$exp$coords) %in% "analogs"]
+    out$exp <- .manage_dims(out$exp, c(exp_dims))#, "analogs"))
     out$obs <- .manage_dims(out$obs, obs_dims)
   }
 
