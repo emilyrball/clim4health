@@ -50,19 +50,16 @@ c4h_space <- function(
     stop("'areas_id' not found in the 'areas' object.")
   }
 
+  if (data$coords$latitude[1] <
+        data$coords$latitude[length(data$coords$latitude)]) {
+    # if latitude is stored south to north, reverse it
+    data <- .reverse_latitudes(data)
+  }
+
   # read metadata
   coords <- data$coords
   lat <- coords$latitude
   lon <- coords$longitude
-
-  if (lat[1] < lat[length(lat)]) {
-    # if latitude is stored south to north, reverse it
-    lat <- rev(lat)
-    lat_dim <- which(names(dim(data$data)) == "latitude")
-    idx <- lapply(dim(data$data), seq_len)
-    idx[[lat_dim]] <- rev(idx[[lat_dim]])
-    data$data <- do.call(`[`, c(list(data$data), idx, drop = FALSE))
-  }
 
   # transform array to raster stack
   out <- NULL
