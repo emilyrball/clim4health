@@ -211,6 +211,67 @@
   return(df)
 }
 
+#' .s2dv_spatial_type
+#'
+#' Detect the type of spatial data of an s2dv_cube from its dimension names.
+#' If a cube has several spatial dimension sets, the first match in the order
+#' gridded, area, point is returned.
+#'
+#' @param cube The s2dv_cube object.
+#' @returns One of "gridded" (latitude and longitude dimensions), "area"
+#' (area dimension), "point" (location dimension) or "none".
+#' @noRd
+.s2dv_spatial_type <- function(cube) {
+  dim_names <- names(cube$dims)
+  if (all(c("latitude", "longitude") %in% dim_names)) {
+    "gridded"
+  } else if ("area" %in% dim_names) {
+    "area"
+  } else if ("location" %in% dim_names) {
+    "point"
+  } else {
+    "none"
+  }
+}
+
+#' .resolve_crs
+#'
+#' Resolve the CRS to use in a conversion. A user-provided CRS is returned
+#' as is. Otherwise, for formats that use a CRS ('terra', 'stars' and 'sf'),
+#' the CRS is taken from the area geometries if they have one, or WGS 84
+#' (EPSG:4326) is assumed. A message informs about the CRS being assumed.
+#'
+#' @param cube The s2dv_cube object to be transformed.
+#' @param crs The CRS provided by the user, or NULL.
+#' @param output_format The output format requested.
+#' @param spatial_type The output of `.s2dv_spatial_type(cube)`.
+#' @returns The CRS to use, or NULL if the format does not use a CRS.
+#' @noRd
+.resolve_crs <- function(cube, crs, output_format, spatial_type) {
+  if (!is.null(crs) || !output_format %in% c("terra", "stars", "sf")) {
+    return(crs)
+  }
+
+  if (spatial_type == "area") {
+    geom <- cube$attrs$area$geom
+    geom_crs <- if (is.null(geom)) sf::NA_crs_ else sf::st_crs(geom)
+    if (!is.na(geom_crs)) {
+      message("'crs' is not provided. Taking CRS from the input data.")
+      return(geom_crs)
+    }
+    message(
+      "'crs' is not provided and the input data has no CRS. ",
+      "Assuming WGS 84 (EPSG:4326)."
+    )
+  } else {
+    message(
+      "'crs' is not provided. Assuming WGS 84 ",
+      "(EPSG:4326) for gridded data."
+    )
+  }
+  "EPSG:4326"
+}
+
 #' .s2dv_to_sf
 #'
 #' Transform s2dv into sf
@@ -225,13 +286,10 @@
   # Validate cube first
   .validate_s2dv_cube(cube)
 
-  # Spatial coords
-  dim_names <- names(cube$dims)
-  has_latlon <- all(c("latitude", "longitude") %in% dim_names)
-  has_area <- "area" %in% dim_names
+  spatial_type <- .s2dv_spatial_type(cube)
 
   # handle gridded case
-  if (has_latlon) {
+  if (spatial_type == "gridded") {
     rstack <- .s2dv_to_terra(cube, crs = crs, drop = drop)
     pv <- terra::as.polygons(
       rstack,
@@ -240,9 +298,18 @@
       na.rm = FALSE
     )
     sf_obj <- sf::st_as_sf(pv)
-  } else if (has_area) {
+  } else if (spatial_type == "area") {
     # Extract area geometries (assumed to be an sf or WKT vector)
     areas <- cube$attrs$area$geom
+
+    # Assign the CRS if the geometries have none, otherwise transform to it
+    if (!inherits(areas, c("sfc", "sf"))) {
+      areas <- sf::st_as_sfc(areas, crs = crs)
+    } else if (is.na(sf::st_crs(areas))) {
+      sf::st_crs(areas) <- crs
+    } else if (sf::st_crs(areas) != sf::st_crs(crs)) {
+      areas <- sf::st_transform(areas, crs)
+    }
 
     d <- dim(cube$data)
     nd <- .get_dim(d, "dataset")
@@ -303,7 +370,6 @@
                 value = vals,
                 geometry = areas
               ))
-              sf::st_crs(geom_sf) <- crs
 
               # Convert to SpatVector for terra
               vect_layer <- terra::vect(geom_sf)
