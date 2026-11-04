@@ -47,6 +47,21 @@ Once the package is installed, you can load it into your R session using `librar
 library(clim4health)
 ```
 
+```{r vignette_objects, echo = FALSE}
+# c4h_downscale() requires CDO, which may not be available when this vignette
+# is built. The code calls are shown but not run; the pre-computed results are
+# loaded instead (see dev-utils/vignette_objects.R).
+load_vignette_object <- function(name) {
+  readRDS(system.file(
+    "extdata",
+    "vignette_objects",
+    paste0("overview_", name, ".rds"),
+    package = "clim4health",
+    mustWork = TRUE
+  ))
+}
+```
+
 Vignettes loaded in the package can be accessed in R by typing `vignette("vignettename")` (e.g., `vignette("clim4health_overview")`).
 
 ## Data requirements
@@ -214,7 +229,7 @@ library(clim4health)
 
 ### Dataset description
 
-The data used in this example are the monthly mean 2m temperature forecast (issued in January 2025 for 3 months lead time) from ECMWF's System 5.1 seasonal forecast, its corresponding hindcast, as well as reanalysis data from ERA5Land covering the same hindcast period (2010-2012).
+The data used in this example are the monthly mean 2m temperature forecast (issued in January 2025 for 3 months lead time) from ECMWF's System 5.1 seasonal forecast, its corresponding hindcast, as well as reanalysis data from ERA5Land covering the same hindcast period (2010-2013).
 
 > 📝 **NOTE**: in reality, a much longer hindcast period is required to downscale and verify seasonal forecasts, but a short period is used here for demonstration purposes.
 
@@ -375,7 +390,7 @@ To use `c4h_downscale()`, the user must specify different parameters depending o
 
 First, let's downscale the forecast data.
 
-```{r downscaling}
+```{r downscaling, eval = FALSE}
 cal <- c4h_downscale(
   downscale_function = "Intbc", # downscaling method
   obs = rean, # observational data, used to bias adjust the experiment
@@ -384,6 +399,10 @@ cal <- c4h_downscale(
   method_bc = "bias", # for "Intbc", the bias correction method to use
   method_remap = "bilinear"
 ) # the method to remap the data to the new grid
+```
+
+```{r downscaling_load, echo = FALSE}
+cal <- load_vignette_object("fcst")
 ```
 
 > 📝 **NOTE**: you may see warnings when running `c4h_downscale()`. These are completely normal. For example, if you are using ERA5-Land reanalysis near the ocean, you will have many NA values, which may generate warnings.
@@ -398,7 +417,7 @@ cal <- c4h_downscale(
 
 We can also downscale the hindcast data, which is used in the verification step to assess the skill of the forecast model. In this case, we leave the `exp_cor` parameter as NULL.
 
-```{r downscale_hindcast}
+```{r downscale_hindcast, eval = FALSE}
 cal_hcst <- c4h_downscale(
   downscale_function = "Intbc",
   obs = rean,
@@ -407,6 +426,10 @@ cal_hcst <- c4h_downscale(
   method_remap = "bilinear",
   loocv = FALSE
 )
+```
+
+```{r downscale_hindcast_load, echo = FALSE}
+cal_hcst <- load_vignette_object("hcst")
 ```
 
 Plot the downscaled forecast and hindcast data to visualise the results of the downscaling.
@@ -448,7 +471,7 @@ We can also explore the significance of the skill values by adding a layer to th
 c4h_plotskill(skill$CRPSS$crpss, sign = skill$CRPSS$sign)
 ```
 
-> 📝 **NOTE**: in this case, there are no significant values! Don't panic. This is because we only loaded three years of data to compare the hindcast and reanalysis, which is not enough to produce any significant result.
+> 📝 **NOTE**: in this case, there are no significant values! Don't panic. This is because we only loaded four years of data to compare the hindcast and reanalysis, which is not enough to produce any significant result.
 
 ### Masking data
 

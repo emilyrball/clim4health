@@ -35,6 +35,21 @@ First, let's load the package.
 library(clim4health)
 ```
 
+```{r vignette_objects, echo = FALSE}
+# c4h_downscale() requires CDO, which may not be available when this vignette
+# is built. The code calls are shown but not run; the pre-computed results are
+# loaded instead (see dev-utils/vignette_objects.R).
+load_vignette_object <- function(name) {
+  readRDS(system.file(
+    "extdata",
+    "vignette_objects",
+    paste0("verification_", name, ".rds"),
+    package = "clim4health",
+    mustWork = TRUE
+  ))
+}
+```
+
 Let's load some sample data that we can use to demonstrate the verification methods.
 
 ```{r }
@@ -65,10 +80,12 @@ Look at the dimensions of the observed and hindcast datasets (recall we can use 
 
 First, we need to downscale the hindcast to the same spatial resolution as the observations. In the same step, let's convert to degrees Celsius.
 
-```{r }
+```{r convert_units}
 hcst <- c4h_convert_units(hcst, to = "celsius")
 rean <- c4h_convert_units(rean, to = "celsius")
+```
 
+```{r downscale, eval = FALSE}
 dwn <- c4h_downscale(
   "Intbc",
   exp = hcst,
@@ -77,6 +94,12 @@ dwn <- c4h_downscale(
   method_bc = "evmos"
 )
 ```
+
+```{r downscale_load, echo = FALSE}
+dwn <- load_vignette_object("intbc")
+```
+
+> 💡 **Note**: `c4h_downscale()` requires the Climate Data Operators (CDO) to be installed. To keep this vignette reproducible without CDO, the `c4h_downscale()` call above is shown but not run, and the result, which was pre-computed with the script `dev-utils/vignette_objects.R`, is loaded instead. Everything else is run live.
 
 > 💡 **Note**: Instead of downscaling, you could also spatially aggregate the hindcast and reanalysis data using `c4h_space()` to obtain the same spatial resolution, before calculating any skill metrics.
 
@@ -217,7 +240,7 @@ For skill scores where significance testing is applicable (BSS, RPSS, CRPSS, MSS
 
 ## 3. Example skill assessment
 
-Using the data loaded and downscaled above, let's perform an example skill assessment. In this example, we have only loaded 3 years of data for each leadtime, which means that we do not have a lot of information to assess whether the hindcast is skillful or not. However, the general process is (for gridded data):
+Using the data loaded and downscaled above, let's perform an example skill assessment. In this example, we have only loaded 4 years of data for each leadtime, which means that we do not have a lot of information to assess whether the hindcast is skillful or not. However, the general process is (for gridded data):
 
 ```{r }
 skill <- c4h_verify(

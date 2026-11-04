@@ -6,14 +6,14 @@
 \alias{clim4health-package}
 \title{clim4health: Post-Processing of Climate Data for Health Applications}
 \description{
-Obtain, transform and export climate data including reanalyses, (seasonal) forecasts and hindcasts, and weather stations for their use in epidemiological analyses. It is organised in three sequential blocks, input (download and load data), transform (downscaling, verification, spatiotemporal aggregation and threshold-based indicators) and output (visualising and exporting data). Downscaling methods include those described in Duzenli et al. (2026) \doi{10.1038/s41598-026-45067-2} and verification methods are based on those in Manubens et al. (2018) \doi{10.1016/j.envsoft.2018.01.018}.
+Obtain, transform and export climate data including reanalyses, (seasonal) forecasts and hindcasts, and weather stations for their use in epidemiological analyses. It is organised in three sequential blocks, input (download and load data), transform (downscaling, verification, spatiotemporal aggregation and threshold-based indicators) and output (visualising and exporting data). The structure and methods included in the package are described in Ball et al. (2026) \doi{10.12688/wellcomeopenres.27413.1}.
 }
 \seealso{
 Useful links:
 \itemize{
   \item \url{https://gitlab.earth.bsc.es/ghr/clim4health}
   \item \url{https://bsc-es.github.io/GHRtools/docs/clim4health/clim4health}
-  \item Report bugs at \url{https://gitlab.earth.bsc.es/ghr/clim4health/-/issues}
+  \item Report bugs at \url{https://gitlab.earth.bsc.es/ghr/clim4health/-/work_items}
 }
 
 }

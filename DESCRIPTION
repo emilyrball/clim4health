@@ -29,7 +29,7 @@ Description: Obtain, transform and export climate data including reanalyses,
 License: AGPL (>= 3)
 URL: https://gitlab.earth.bsc.es/ghr/clim4health,
     https://bsc-es.github.io/GHRtools/docs/clim4health/clim4health
-BugReports: https://gitlab.earth.bsc.es/ghr/clim4health/-/issues
+BugReports: https://gitlab.earth.bsc.es/ghr/clim4health/-/work_items
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 Depends: 
