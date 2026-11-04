@@ -87,11 +87,13 @@
 #'                          min(lats), max(lons)),
 #'                 ext = "nc")
 #' ### Example with gridded data
-#' dwn <- c4h_downscale("Interpolation", exp = hcst,
-#'                      method_remap = "bilinear",
-#'                      target_grid = system.file("extdata",
-#'                                                "reanalysis/t2m_201001.nc",
-#'                                                package = "clim4health"))
+#' if (nzchar(Sys.which("cdo"))) {
+#'   dwn <- c4h_downscale("Interpolation", exp = hcst,
+#'                        method_remap = "bilinear",
+#'                        target_grid = system.file("extdata",
+#'                                                  "reanalysis/t2m_201001.nc",
+#'                                                  package = "clim4health"))
+#' }
 #' ## Example with polygon data
 #' shp_path <- system.file("extdata", "areas", "munip_vallecauca.gpkg",
 #'                         package = "clim4health")
@@ -103,10 +105,12 @@
 #'                       areas = shp_path,
 #'                       fun = "mean",
 #'                       areas_id = "munip_code")
-#' hcst_agg_cal <- c4h_downscale(downscale_function = "Intbc",
-#'                               exp = hcst_agg,
-#'                               obs = obs_agg,
-#'                               method_bc = "evmos")
+#' if (nzchar(Sys.which("cdo"))) {
+#'   hcst_agg_cal <- c4h_downscale(downscale_function = "Intbc",
+#'                                 exp = hcst_agg,
+#'                                 obs = obs_agg,
+#'                                 method_bc = "evmos")
+#' }
 #' ## Example with station data
 #' point_locs <- clim4health::c4h_load(system.file("extdata",
 #'                                                "stations",
@@ -123,8 +127,10 @@
 #'                        dim_aggregation = "sdate",
 #'                        fun = "mean")
 #'
-#' dwn <- c4h_downscale("Interpolation", exp = hcst,
-#'                      points = points, method_point_interp = "bilinear")
+#' if (nzchar(Sys.which("cdo"))) {
+#'   dwn <- c4h_downscale("Interpolation", exp = hcst,
+#'                        points = points, method_point_interp = "bilinear")
+#' }
 #' }
 
 c4h_downscale <- function(

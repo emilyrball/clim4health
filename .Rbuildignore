@@ -9,3 +9,4 @@ inst/extdata/cleandata.R
 tutorials/.
 ^cran-comments\.md$
 ^dev-utils$
+vignettes/*.html
