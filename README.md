@@ -2,9 +2,9 @@
 
 <!-- badges: start -->
 ![License](https://img.shields.io/badge/License-AGPL_v3-brightgreen.svg?style=flat)
-[![CRAN status](https://www.r-pkg.org/badges/version/clim4health)](https://cran.r-project.org/package=clim4health)
-[![CRAN downloads total](http://cranlogs.r-pkg.org/badges/grand-total/clim4health)](https://cran.r-project.org/package=clim4health)
-[![CRAN downloads month](http://cranlogs.r-pkg.org/badges/clim4health)](https://cran.r-project.org/package=clim4health)
+![CRAN status](https://www.r-pkg.org/badges/version/clim4health)
+![CRAN downloads total](http://cranlogs.r-pkg.org/badges/grand-total/clim4health)
+![CRAN downloads month](http://cranlogs.r-pkg.org/badges/clim4health)
 <!-- ![coverage](https://gitlab.earth.bsc.es/ghr/clim4health/badges/main/coverage.svg) -->
 <!-- badges: end -->
 
