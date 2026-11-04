@@ -43,7 +43,7 @@ hcst_path <- paste0(hcst_path, "/")
 hcst <- c4h_load(
   hcst_path,
   variable = "t2m",
-  year = 2010:2012,
+  year = 2010:2013,
   month = 1,
   leadtime_month = "all",
   ext = "nc"
@@ -54,7 +54,7 @@ rean_path <- paste0(rean_path, "/")
 rean <- c4h_load(
   rean_path,
   variable = "t2m",
-  year = 2010:2012,
+  year = 2010:2013,
   month = 1,
   leadtime_month = 1:3,
   ext = "nc"

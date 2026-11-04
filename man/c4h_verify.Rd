@@ -161,7 +161,7 @@ detailed tutorial on function arguments and usage.
 hcst <- c4h_load(
   system.file("extdata", "hindcast", package = "clim4health"),
   variable = "t2m",
-  year = 2010:2012,
+  year = 2010:2013,
   month = 1,
   leadtime_month = 1:3,
   ext = "nc"
@@ -171,7 +171,7 @@ lons <- hcst$coords$longitude
 obs <- c4h_load(
   system.file("extdata", "reanalysis", package = "clim4health"),
   variable = "t2m",
-  year = 2010:2012,
+  year = 2010:2013,
   month = 1,
   leadtime_month = 1:3,
   bbox = c(max(lats), min(lons), min(lats), max(lons)),
@@ -179,19 +179,27 @@ obs <- c4h_load(
 )
 
 # Example with gridded data
-dwn <- c4h_downscale(
+hcst_dwn <- c4h_downscale(
   "Interpolation",
   exp = hcst,
-  obs = obs,
   method_remap = "bilinear",
   target_grid = system.file(
     "extdata",
     "reanalysis/t2m_201001.nc",
     package = "clim4health"
   )
-)
-hcst_dwn <- dwn$exp
-skill_grid <- c4h_verify(exp = hcst_dwn, obs = obs, metrics = "BSS")
+)$exp
+obs_dwn <- c4h_downscale(
+  "Interpolation",
+  exp = obs,
+  method_remap = "bilinear",
+  target_grid = system.file(
+    "extdata",
+    "reanalysis/t2m_201001.nc",
+    package = "clim4health"
+  )
+)$exp
+skill_grid <- c4h_verify(exp = hcst_dwn, obs = obs_dwn, metrics = "BSS")
 c4h_plotskill(skill_grid$BSS10$bss, skill_grid$BSS10$sign)
 
 # Example with polygon data
@@ -216,7 +224,7 @@ point_locs <- clim4health::c4h_load(system.file("extdata",
                                                "stations",
                                                package = "clim4health"),
                                     ext = "csv",
-                                    year = 2010:2012,
+                                    year = 2010:2013,
                                     month = 1,
                                     leadtime_month = 1:3,
                                     variable = "temp_mean")

@@ -148,7 +148,7 @@ hindcast_path <- paste0(hindcast_path, "/")
 hindcast <- c4h_load(
   hindcast_path,
   variable = "t2m",
-  year = 2010:2012,
+  year = 2010:2013,
   month = 1,
   leadtime_month = 1:3,
   ext = "nc"
@@ -173,7 +173,7 @@ reanalysis_path <- paste0(reanalysis_path, "/")
 reanalysis <- c4h_load(
   reanalysis_path,
   variable = "t2m",
-  year = 2010:2012,
+  year = 2010:2013,
   month = 1,
   leadtime_month = 1:3,
   ext = "nc"

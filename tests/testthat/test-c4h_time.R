@@ -66,8 +66,8 @@ test_that("Time examples run without problems", {
       week_start = "Monday",
       min_valid = 5
     )
-    expect_equal(dim(station_timeseries$data)[["time"]], 1096)
-    expect_equal(dim(stat_week$data)[["time"]], 158)
+    expect_equal(dim(station_timeseries$data)[["time"]], 1461)
+    expect_equal(dim(stat_week$data)[["time"]], 210)
 
     # Load station data with sdate dimension
     station_data <- c4h_load(
@@ -86,8 +86,8 @@ test_that("Time examples run without problems", {
       min_valid = 20
     )
     dim(stat_month$data)
-    expect_equal(dim(station_data$data)[["sdate"]], 93)
-    expect_equal(dim(stat_month$data)[["sdate"]], 3)
+    expect_equal(dim(station_data$data)[["sdate"]], 124)
+    expect_equal(dim(stat_month$data)[["sdate"]], 4)
   })
 
   # Apply daily aggregation
@@ -97,6 +97,6 @@ test_that("Time examples run without problems", {
     dim_aggregation = "time"
   )
   dim(stat_daily$data)
-  expect_equal(dim(station_timeseries$data)[["time"]], 1096)
-  expect_equal(dim(stat_daily$data)[["time"]], 1116)
+  expect_equal(dim(station_timeseries$data)[["time"]], 1461)
+  expect_equal(dim(stat_daily$data)[["time"]], 1488)
 })

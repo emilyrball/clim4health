@@ -88,9 +88,9 @@ test_that("1. Happy path .c4h_load_csv", {
   expect_equal(res$dims[["dataset"]], 1)
   expect_equal(res$dims[["var"]], 1)
   expect_equal(res$dims[["sdate"]], 1)
-  expect_equal(res$dims[["time"]], 1096)
+  expect_equal(res$dims[["time"]], 1461)
   expect_equal(res$dims[["ensemble"]], 1)
-  expect_equal(res$dims[["location"]], 9)
+  expect_equal(res$dims[["location"]], 10)
   # Preserves data value
   expect_equal(16.625, as.vector(res$data)[1])
 })
@@ -109,10 +109,10 @@ test_that("2. Multiple leadtimes .c4h_load_csv", {
   # Check dimensions
   expect_equal(res$dims[["dataset"]], 1)
   expect_equal(res$dims[["var"]], 1)
-  expect_equal(res$dims[["sdate"]], 1096)
+  expect_equal(res$dims[["sdate"]], 1461)
   expect_equal(res$dims[["time"]], 2)
   expect_equal(res$dims[["ensemble"]], 1)
-  expect_equal(res$dims[["location"]], 9)
+  expect_equal(res$dims[["location"]], 10)
 })
 
 test_that("3. Skip header lines .c4h_load_csv", {
@@ -408,7 +408,7 @@ test_that("12. Multiple leadtimes .c4h_load_nc_stars monthly observations", {
 
 test_that("13. Happy path .c4h_load_nc_stars forecast", {
   fcst_path <- system.file("extdata/forecast/", package = "clim4health")
-  fcst_path <- paste0(fcst_path, "/t2m_20250101.nc")
+  fcst_path <- paste0(fcst_path, "/t2m_202501.nc")
 
   res <- .c4h_load_nc_stars(file_list = fcst_path, variable = "t2m")
   expect_s3_class(res, "s2dv_cube")
@@ -428,7 +428,7 @@ test_that("13. Happy path .c4h_load_nc_stars forecast", {
 
 test_that("14. Multiple leadtimes .c4h_load_nc_stars forecast", {
   fcst_path <- system.file("extdata/forecast/", package = "clim4health")
-  fcst_path <- paste0(fcst_path, "/t2m_20250101.nc")
+  fcst_path <- paste0(fcst_path, "/t2m_202501.nc")
 
   res <- .c4h_load_nc_stars(
     file_list = fcst_path,
@@ -451,7 +451,7 @@ test_that("14. Multiple leadtimes .c4h_load_nc_stars forecast", {
 
 test_that("15. Failure when variable is invalid", {
   fcst_path <- system.file("extdata/forecast/", package = "clim4health")
-  file_path <- paste0(fcst_path, "/t2m_20250101.nc")
+  file_path <- paste0(fcst_path, "/t2m_202501.nc")
 
   expect_error(.c4h_load_nc_stars(file_path))
   expect_error(.c4h_load_nc_stars(file_path, variable = NULL))
@@ -481,7 +481,7 @@ test_that("get_csv_dims", {
 
 test_that("get_variables_nc", {
   fcst_path <- system.file("extdata/forecast/", package = "clim4health")
-  fcst_path <- paste0(fcst_path, "/t2m_20250101.nc")
+  fcst_path <- paste0(fcst_path, "/t2m_202501.nc")
 
   expect_message(.get_variables_nc(fcst_path, "t2m"), "Requested variables are")
 
@@ -511,7 +511,7 @@ test_that(".subset_file_list", {
   )
 
   fcst_path <- system.file("extdata/forecast/", package = "clim4health")
-  fcst_path <- paste0(fcst_path, "/t2m_20250101.nc")
+  fcst_path <- paste0(fcst_path, "/t2m_202501.nc")
 
   res_precipitation <- .subset_file_list(
     file_list = c(nc_file, fcst_path),
@@ -523,14 +523,14 @@ test_that(".subset_file_list", {
     file_list = c(nc_file, fcst_path),
     in_var = "temperature"
   )
-  expect_contains(basename(res_temperature), "t2m_20250101.nc")
+  expect_contains(basename(res_temperature), "t2m_202501.nc")
 
   res <- .subset_file_list(
     file_list = c(nc_file, fcst_path),
     in_var = c("precipitation", "temperature")
   )
   expect_contains(basename(res), "test_hourly.nc")
-  expect_contains(basename(res), "t2m_20250101.nc")
+  expect_contains(basename(res), "t2m_202501.nc")
 })
 
 # test esarchive fail conditions

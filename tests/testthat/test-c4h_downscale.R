@@ -125,7 +125,7 @@ mock_s2dv_area <- function(
 # Input validation ----
 test_that("errors if exp is not s2dv_cube", {
   expect_error(
-    c4h_downscale("Interpolation", exp = list(), obs = list()),
+    c4h_downscale("Interpolation", exp = list()),
     "Parameter 'exp' must be an s2dv_cube object loaded "
   )
 })
