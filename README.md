@@ -1,7 +1,7 @@
 # clim4health  <img src='inst/figures/harmonize.png' align="right" width="18%" /> <span> <span> <img src='inst/figures/BSC.jpg' align="right" width="16%" /> 
 
 <!-- badges: start -->
-[![License](https://img.shields.io/badge/License-AGPL_v3-brightgreen.svg?style=flat)]
+![License](https://img.shields.io/badge/License-AGPL_v3-brightgreen.svg?style=flat)
 [![CRAN status](https://www.r-pkg.org/badges/version/clim4health)](https://cran.r-project.org/package=clim4health)
 [![CRAN downloads total](http://cranlogs.r-pkg.org/badges/grand-total/clim4health)](https://cran.r-project.org/package=clim4health)
 [![CRAN downloads month](http://cranlogs.r-pkg.org/badges/clim4health)](https://cran.r-project.org/package=clim4health)
