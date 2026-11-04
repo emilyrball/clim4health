@@ -186,7 +186,7 @@ For a binary event such as "temperature above mean" and a probabilistic forecast
 
 <br>
 <div align="center">
-<img src='../inst/figures/metofficegovuk_xsmall.jpg' width="100%" />
+<img src='../inst/figures/metofficegovuk_xsmall.jpg' width="80%" />
 <label> 
 </div>
 <br> 

@@ -91,7 +91,7 @@ print(hcst$coords$latitude)
 
 We can also plot the datasets to visually confirm the higher spatial resolution.
 
-```{r plot_raw, fig.height=6}
+```{r plot_raw, fig.height=6, fig.width=6}
 # Hindcast data
 c4h_plot(hcst, ensemble = TRUE, coordgrid = TRUE)
 
@@ -187,13 +187,13 @@ You might see some warning messages related to the downscaling functionality - d
 
 `c4h_downscale()` returns a list of `s2dv_cube` objects including the downscaled experimental (i.e. forecast or hindcast) and observational data. We can visualise the downscaled hindcast using `c4h_plot()`.
 
-```{r, fig.height=6}
+```{r, fig.height=6, fig.width=6}
 c4h_plot(dwn$exp, ensemble = TRUE)
 ```
 
 We can compare this to the observations. Now the hindcast spatial resolution has been increased.
 
-```{r, fig.height=6}
+```{r, fig.height=6, fig.width=6}
 c4h_plot(rean)
 ```
 
@@ -225,7 +225,7 @@ dwn <- c4h_downscale(
 
 > 💡 **Note**: You will now see even more warnings related to the downscaling - again, this is completely normal. In this case, it is because we are using a reanalysis dataset which contains NA values over the ocean.
 
-```{r, fig.height=6}
+```{r, fig.height=6, fig.width=6}
 c4h_plot(dwn$exp, ensemble = TRUE)
 ```
 
@@ -274,7 +274,7 @@ dwn <- c4h_downscale("Analogs", exp = hcst, obs = rean)
 
 Plot the output.
 
-```{r, fig.height=6}
+```{r, fig.height=6, fig.width=6}
 c4h_plot(dwn$exp, ensemble = TRUE)
 ```
 
@@ -323,7 +323,7 @@ dwn <- c4h_downscale(
 
 Let's plot the output of this downscaling.
 
-```{r plot_point_interpolation, fig.height=6}
+```{r plot_point_interpolation, fig.height=6, fig.width=6}
 c4h_plot(dwn$exp, ensemble = TRUE, boundaries = "countries")
 ```
 
@@ -375,7 +375,7 @@ cal <- c4h_downscale(
 
 We can plot the raw hindcast data, the calibrated hindcast data, and the observations. To plot the data using `boundaries = "countries"`, you must have the suggested package `spData` installed.
 
-```{r, fig.height=6}
+```{r, fig.height=6, fig.width=6}
 c4h_plot(hcst_aggr, ensemble = TRUE, boundaries = "countries")
 c4h_plot(cal$exp, ensemble = TRUE, boundaries = "countries")
 c4h_plot(rean_aggr, ensemble = TRUE, boundaries = "countries")
