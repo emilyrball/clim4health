@@ -18,3 +18,8 @@
 * The example station, reanalysis and hindcast data now include 2013,
   examples and vignettes have been updated accordingly. 
 * Vignettes have been revised and the figures are now correctly displayed.
+
+
+# clim4health 0.1.0
+
+* Initial CRAN submission.
