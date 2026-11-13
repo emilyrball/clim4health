@@ -1,10 +1,10 @@
 ---
-title: "clim4health verification"
+title: "Verification function"
 output:
   rmarkdown::html_vignette:
     toc: true
 vignette: >
-  %\VignetteIndexEntry{clim4health verification}
+  %\VignetteIndexEntry{verification functions}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

@@ -1,10 +1,10 @@
 ---
-title: "clim4health get"
+title: "Get function"
 output:
   rmarkdown::html_vignette:
     toc: true
 vignette: >
-  %\VignetteIndexEntry{clim4health get}
+  %\VignetteIndexEntry{get function}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

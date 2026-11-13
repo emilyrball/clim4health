@@ -1,10 +1,10 @@
 ---
-title: "Introduction to s2dv_cube objects"
+title: "s2dv_cube objects"
 output:
   rmarkdown::html_vignette:
     toc: true
 vignette: >
-  %\VignetteIndexEntry{Introduction to s2dv_cube objects}
+  %\VignetteIndexEntry{s2dv_cube objects}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

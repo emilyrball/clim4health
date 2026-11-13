@@ -1,10 +1,10 @@
 ---
-title: "clim4health overview"
+title: "Getting started"
 output:
   rmarkdown::html_vignette:
     toc: true
 vignette: >
-  %\VignetteIndexEntry{clim4health overview}
+  %\VignetteIndexEntry{getting started}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -21,7 +21,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-# Overview
+## Overview
 
 **clim4health** is an R package designed to load, transform, process, plot, and save climate data. It is specifically designed for use in downscaling and verification of seasonal forecast data.
 

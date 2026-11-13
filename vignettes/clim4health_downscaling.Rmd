@@ -1,10 +1,10 @@
 ---
-title: "clim4health downscale"
+title: "Downscaling function"
 output:
   rmarkdown::html_vignette:
     toc: true
 vignette: >
-  %\VignetteIndexEntry{clim4health downscale}
+  %\VignetteIndexEntry{downscaling function}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
